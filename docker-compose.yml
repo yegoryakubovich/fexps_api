@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  app:
+    container_name: app
+    build:
+      dockerfile: dockerfile
+    environment:
+      MODULE_NAME: "main"
+      MAX_WORKERS: 2
+    ports:
+      - "5000:80"
