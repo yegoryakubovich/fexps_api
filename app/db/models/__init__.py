@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from .account_roles import AccountRole
 from .action import Action
 from .action_parameter import ActionParameter
@@ -32,23 +31,6 @@ from .account import Account
 from .session import Session
 
 
-models = (
-    Action,
-    ActionParameter,
 
-    Language,
-    Text,
-    TextTranslation,
-    TextPack,
-    Country,
-    Timezone,
-    Currency,
-    Account,
-    Session,
 
-    # Roles & permissions
-    Role,
-    Permission,
-    RolePermission,
-    AccountRole,
-)
+

@@ -15,7 +15,7 @@
 #
 
 
-from app.repositories import CountryRepository
+import app.repositories as repo
 from app.services.base import BaseService
 
 
@@ -33,7 +33,7 @@ class CountryService(BaseService):
                     'timezone_default_id_str': country.timezone_default.id_str,
                     'currency_default_id_str': country.currency_default.id_str,
                 }
-                for country in await CountryRepository().get_list()
+                for country in await repo.country.get_list()
             ],
         }
         return countries

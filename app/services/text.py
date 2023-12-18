@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Text
-from app.repositories import TextRepository, TextTranslationRepository
+import app.repositories as repo
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -28,10 +28,10 @@ class TextService(BaseService):
     ) -> dict:
         texts_list = []
 
-        texts = await TextRepository().get_list()
+        texts = await repo.text.get_list()
         for text in texts:
             text: Text
-            translations = await TextTranslationRepository().get_list_by_text(text=text)
+            translations = await repo.text_translation.get_list_by_text(text=text)
             texts_list.append(
                 {
                     'key': text.key,
@@ -57,7 +57,7 @@ class TextService(BaseService):
             value_default: str,
             return_model: bool = False,
     ) -> dict | Text:
-        text = await TextRepository().create(
+        text = await repo.text.create(
             key=key,
             value_default=value_default,
         )
@@ -82,8 +82,8 @@ class TextService(BaseService):
             value_default: str = None,
             new_key: str = None,
     ) -> dict:
-        text = await TextRepository().get_by_key(key=key)
-        await TextRepository().update(
+        text = await repo.text.get_by_key(key=key)
+        await repo.text.update(
             text=text,
             value_default=value_default,
             new_key=new_key,
@@ -121,8 +121,8 @@ class TextService(BaseService):
             session: Session,
             key: str,
     ) -> dict:
-        text = await TextRepository().get_by_key(key=key)
-        await TextRepository().delete(
+        text = await repo.text.get_by_key(key=key)
+        await repo.text.delete(
             text=text,
         )
         await self.create_action(

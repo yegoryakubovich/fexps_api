@@ -17,14 +17,13 @@ from typing import Optional
 
 from sqlalchemy import select
 
-import app.repositories as repo
 from app.db.base_repository import BaseRepository
-from app.db.models import Text, Language
+from app.db.models import Permission
 
 
-class TextRepository(BaseRepository[Text]):
+class PermissionRepository(BaseRepository[Permission]):
 
-    async def get_by_id(self, id: int) -> Optional[Text]:
+    async def get_by_id(self, id: int) -> Optional[Permission]:
         result = await self.get(id=id)
         if not result:
             return
@@ -32,20 +31,18 @@ class TextRepository(BaseRepository[Text]):
             return
         return result
 
-    async def delete(self, db_obj: Text) -> Optional[Text]:
+    async def delete(self, db_obj: Permission) -> Optional[Permission]:
         return await self.update(db_obj, is_deleted=True)
 
-    async def get_by_key(self, key: str) -> Optional[Text]:
+    async def get_by_str_id(self, id_str: str) -> Optional[Permission]:
         async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.key == key))
-            return result.scalars().first()
-
-    async def get_value(self, db_obj: Text, language: Language = None) -> str:
-        if language:
-            result = await repo.text_translation.get_all(text=db_obj, language=language, is_deleted=False)
-            if result:
-                return result[0].value
-        return db_obj.value_default
+            result = await session.execute(select(self.model).where(self.model.id_str == id_str))
+            result = result.scalars().first()
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
 
 
-text = TextRepository(Text)
+permission = PermissionRepository(Permission)

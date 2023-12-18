@@ -15,7 +15,7 @@
 #
 
 
-from app.repositories import LanguageRepository
+import app.repositories as repo
 from app.services.base import BaseService
 
 
@@ -29,7 +29,7 @@ class LanguageService(BaseService):
                     'id_str': language.id_str,
                     'name': language.name,
                 }
-                for language in await LanguageRepository().get_list()
+                for language in await repo.language.get_list()
             ],
         }
         return languages

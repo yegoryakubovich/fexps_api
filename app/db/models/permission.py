@@ -13,19 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, ForeignKeyField, CharField, BooleanField
+class Permission(Base):
+    __tablename__ = 'permissions'
 
-from .base import BaseModel
-from .text import Text
+    id = Column(BigInteger, primary_key=True)
 
-
-class Permission(BaseModel):
-    id = PrimaryKeyField()
-    id_str = CharField(max_length=128)
-    name_text = ForeignKeyField(model=Text)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'permissions'
+    id_str = Column(String(16))
+    name_text_id = Column(BigInteger, ForeignKey("texts.id"))
+    is_deleted = Column(Boolean, default=False)

@@ -13,18 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from app.db.base_repository import BaseRepository
+from app.db.models import Action
 
 
-from app.db.models import Action, ActionParameter
+class ActionRepository(BaseRepository[Action]):
+    pass
 
 
-class ActionRepository:
-    model = Action
-
-    @staticmethod
-    async def create(model: str, model_id: int, action: str) -> Action:
-        return Action.create(model=model, model_id=model_id, action=action)
-
-    @staticmethod
-    async def create_parameter(action: Action, key: str, value: str) -> ActionParameter:
-        return ActionParameter.create(action=action, key=key, value=value)
+action = ActionRepository(Action)

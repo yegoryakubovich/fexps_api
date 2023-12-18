@@ -13,18 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, String, Boolean
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, BooleanField
+class Language(Base):
+    __tablename__ = 'languages'
 
-from .base import BaseModel
+    id = Column(BigInteger, primary_key=True)
 
-
-class Language(BaseModel):
-    id = PrimaryKeyField()
-    id_str = CharField(max_length=16)
-    name = CharField(max_length=32)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'languages'
+    id_str = Column(String(16))
+    name = Column(String(32))
+    is_deleted = Column(Boolean, default=False)

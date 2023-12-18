@@ -13,52 +13,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 from json import dumps
+from select import select
+from typing import Optional
 
-from peewee import DoesNotExist
-
-from app.db.models import Language, TextPack, Text
-from .text import TextRepository
-from .base import BaseRepository
+import app.repositories as repo
+from app.db.base_repository import BaseRepository
+from app.db.models import TextPack, Language
 from config import PATH_TEXTS_PACKS
 
 
-class TextPackRepository(BaseRepository):
-    model = TextPack
+class TextPackRepository(BaseRepository[TextPack]):
 
-    @staticmethod
-    async def create(language: Language):
+    async def get_by_id(self, id: int) -> Optional[TextPack]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def delete(self, db_obj: TextPack) -> Optional[TextPack]:
+        return await self.update(db_obj, is_deleted=True)
+
+    async def create_by_language(self, language: Language) -> Optional[TextPack]:
         json = {}
-        for text in Text.select():
-            value = await TextRepository.get_value(text=text, language=language)
+        for text in await repo.text.get_all():
+            value = await repo.text.get_value(text, language=language)
             key = text.key
             json[key] = value
-
-        text_pack = TextPack.create(language=language)
-
+        text_pack = await self.create(language=language)
         with open(f'{PATH_TEXTS_PACKS}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
             md_file.write(dumps(json))
-
         return text_pack
 
     async def create_all(self):
-        for language in Language.select():
-            await self.create(language=language)
+        for language in await repo.language.get_all():
+            await self.create_by_language(language=language)
 
-    @staticmethod
-    async def get_current(language: Language) -> TextPack:
-        try:
-            text_pack = TextPack.select().where(
-                (TextPack.language == language) &
-                (TextPack.is_deleted == False)
-            ).order_by(TextPack.id.desc()).get()
-            return text_pack
-        except DoesNotExist:
-            return TextPack(id=0)  # FIXME
+    async def get_current(self, language: Language) -> Optional[TextPack]:
+        async with self.get_session() as session:
+            result = await session.execute(
+                select(self.model).order_by(self.model.id.desc()).filter_by(language=language, is_deleted=False)
+            )
+            text_pack_all = result.scalars().all()
+        if not text_pack_all:
+            return await self.get(id=0)
+        return text_pack_all[0]
 
-    @staticmethod
-    async def delete(text_pack: TextPack):
-        text_pack.is_deleted = True
-        text_pack.save()
+
+
+text_pack = TextPackRepository(TextPack)

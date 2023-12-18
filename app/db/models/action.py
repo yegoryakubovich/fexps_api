@@ -13,21 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 from datetime import datetime
-from peewee import PrimaryKeyField, CharField, BigIntegerField, DateTimeField
-from pytz import UTC
 
-from .base import BaseModel
+from sqlalchemy import Column, BigInteger, String, Boolean, DateTime
+
+from app.db.base_class import Base
 
 
-class Action(BaseModel):
-    id = PrimaryKeyField()
-    datetime = DateTimeField(default=lambda: datetime.now(tz=UTC))
-    model = CharField(max_length=64)
-    model_id = BigIntegerField()
-    action = CharField(max_length=256)
+class Action(Base):
+    __tablename__ = 'actions'
 
-    class Meta:
-        db_table = 'actions'
+    id = Column(BigInteger, primary_key=True)
+
+    datetime = Column(DateTime, default=datetime.utcnow)
+    model = Column(String(64))
+    model_id = Column(BigInteger)
+    action = Column(String(256))

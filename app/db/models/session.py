@@ -13,20 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, BooleanField
+class Session(Base):
+    __tablename__ = 'sessions'
 
-from .account import Account
-from .base import BaseModel
+    id = Column(BigInteger, primary_key=True)
 
-
-class Session(BaseModel):
-    id = PrimaryKeyField()
-    account = ForeignKeyField(model=Account, backref='parameters')
-    token_salt = CharField(max_length=32)
-    token_hash = CharField(max_length=32)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'sessions'
+    account_id = Column(BigInteger, ForeignKey("accounts.id"))
+    account = relationship("Account", backref="parameters")
+    token_salt = Column(String(32))
+    token_hash = Column(String(32))
+    is_deleted = Column(Boolean, default=False)

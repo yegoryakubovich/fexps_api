@@ -13,20 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, ForeignKeyField, BooleanField
+class RolePermission(Base):
+    __tablename__ = 'roles_permissions'
 
-from . import Permission
-from .base import BaseModel
-from .role import Role
+    id = Column(BigInteger, primary_key=True)
 
-
-class RolePermission(BaseModel):
-    id = PrimaryKeyField()
-    role = ForeignKeyField(model=Role)
-    permission = ForeignKeyField(model=Permission)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'roles_permissions'
+    role_id = Column(BigInteger, ForeignKey("roles.id"))
+    permission_id = Column(BigInteger, ForeignKey("permissions.id"))
+    is_deleted = Column(Boolean, default=False)

@@ -15,19 +15,16 @@
 #
 
 
-from .exception import ApiException
-from .middleware import Middleware
-from .router import Router
-from .response import Response, ResponseState
-from . import crypto
 from . import client
+from . import crypto
+from .exception import ApiException
+from .response import Response, ResponseState
+from .router import Router
 from .use_schema import use_schema
 from .validation_error import validation_error
 
-
 __all__ = [
     'ApiException',
-    'Middleware',
     'Router',
     'Response',
     'ResponseState',

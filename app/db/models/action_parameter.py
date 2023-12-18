@@ -13,19 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, String, ForeignKey
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField
+class ActionParameter(Base):
+    __tablename__ = 'actions_parameters'
 
-from .action import Action
-from .base import BaseModel
+    id = Column(BigInteger, primary_key=True)
 
-
-class ActionParameter(BaseModel):
-    id = PrimaryKeyField()
-    action = ForeignKeyField(model=Action, backref='parameters')
-    key = CharField(max_length=256)
-    value = CharField(max_length=256, null=True)
-
-    class Meta:
-        db_table = 'actions_parameters'
+    action_id = Column(BigInteger, ForeignKey("actions.id"))
+    key = Column(String(256))
+    value = Column(String(256), nullable=True)

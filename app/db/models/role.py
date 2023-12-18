@@ -13,18 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, ForeignKeyField, BooleanField
+class Role(Base):
+    __tablename__ = 'roles'
 
-from .base import BaseModel
-from .text import Text
+    id = Column(BigInteger, primary_key=True)
 
-
-class Role(BaseModel):
-    id = PrimaryKeyField()
-    name_text = ForeignKeyField(model=Text)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'roles'
+    name_text_id = Column(BigInteger, ForeignKey("texts.id"))
+    is_deleted = Column(Boolean, default=False)
