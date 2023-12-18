@@ -13,13 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.db.db import db
-from app.db.db_manager import db_manager_sync
-from app.db.models import models
-
-
-@db_manager_sync
-def create_models():
-    db.create_tables(models=models)

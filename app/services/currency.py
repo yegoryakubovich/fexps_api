@@ -15,7 +15,7 @@
 #
 
 
-from app.repositories import CurrencyRepository
+import app.repositories as repo
 from app.services.base import BaseService
 
 
@@ -28,7 +28,7 @@ class CurrencyService(BaseService):
                     'id': currency.id,
                     'id_str': currency.id_str,
                 }
-                for currency in await CurrencyRepository().get_list()
+                for currency in await repo.currency.get_list()
             ],
         }
         return currencies

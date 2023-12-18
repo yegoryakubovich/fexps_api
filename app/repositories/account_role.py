@@ -13,27 +13,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
+
+import app.repositories as repo
+from app.db.base_repository import BaseRepository
+from app.db.models import AccountRole, Permission, Account
 
 
-from app.db.models import AccountRole, Account, Permission
-from .role_permission import RolePermissionRepository
-from .base import BaseRepository
+class AccountRoleRepository(BaseRepository[AccountRole]):
 
+    async def get_by_id(self, id: int) -> Optional[AccountRole]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
 
-class AccountRoleRepository(BaseRepository):
-    model = AccountRole
+    async def delete(self, db_obj: AccountRole) -> Optional[AccountRole]:
+        return await self.update(db_obj, is_deleted=True)
 
-    @staticmethod
-    async def get_account_permissions(account: Account, only_id_str=False) -> list[str | Permission]:
-        permissions = []
-
-        for account_role in AccountRole.select().where(
-                (AccountRole.account == account) &
-                (AccountRole.is_deleted == False)
-        ):
-            permissions += await RolePermissionRepository.get_permissions_by_role(
-                role=account_role.role,
-                only_id_str=only_id_str,
+    async def get_account_permissions(self, account: Account, only_id_str=False) -> list[str | Permission]:
+        result = []
+        for account_role in await self.get_all(account_id=account.id, is_deleted=False):
+            result += await repo.role_permission.get_permissions_by_role(
+                role=account_role.role, only_id_str=only_id_str
             )
+        return result
 
-        return permissions
+
+account_role = AccountRoleRepository(AccountRole)

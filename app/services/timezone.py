@@ -15,7 +15,7 @@
 #
 
 
-from app.repositories import TimezoneRepository
+import app.repositories as repo
 from app.services.base import BaseService
 
 
@@ -29,7 +29,7 @@ class TimezoneService(BaseService):
                     'id_str': timezone.id_str,
                     'deviation': timezone.deviation
                 }
-                for timezone in await TimezoneRepository().get_list()
+                for timezone in await repo.timezone.get_list()
             ],
         }
         return timezones

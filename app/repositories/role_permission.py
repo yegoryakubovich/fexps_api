@@ -13,31 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional, List
+
+from app.db.base_repository import BaseRepository
+from app.db.models import RolePermission, Role, Permission
 
 
-from app.db.models import Role, RolePermission, Permission
-from .base import BaseRepository
+class RolePermissionRepository(BaseRepository[RolePermission]):
+
+    async def get_by_id(self, id: int) -> Optional[RolePermission]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def delete(self, db_obj: RolePermission) -> Optional[RolePermission]:
+        return await self.update(db_obj, is_deleted=True)
+
+    async def get_permissions_by_role(self, role: Role, only_id_str=False) -> [List[str], List[Permission]]:
+        result = []
+        for role_permission in await self.get_all(role=role, is_deleted=False):
+            result.append(role_permission.permission.id_str if only_id_str else role_permission.permission)
+        return result
 
 
-class RolePermissionRepository(Role, BaseRepository):
-    model = RolePermission
-
-    @staticmethod
-    async def create(
-            role: Role,
-            permission: Permission,
-    ) -> RolePermission:
-        return RolePermission.create(
-            role=role,
-            permission=permission,
-        )
-
-    @staticmethod
-    async def get_permissions_by_role(role: Role, only_id_str=False) -> list[str]:
-        return [
-            role_permission.permission.id_str if only_id_str else role_permission.permission
-            for role_permission in RolePermission.select().where(
-                (RolePermission.role == role) &
-                (RolePermission.is_deleted == False)
-            )
-        ]
+role_permission = RolePermissionRepository(RolePermission)

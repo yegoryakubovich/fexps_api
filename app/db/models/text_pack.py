@@ -13,18 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, ForeignKeyField, BooleanField
+class TextPack(Base):
+    __tablename__ = 'texts_packs'
 
-from .language import Language
-from .base import BaseModel
+    id = Column(BigInteger, primary_key=True)
 
-
-class TextPack(BaseModel):
-    id = PrimaryKeyField()
-    language = ForeignKeyField(model=Language)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'texts_packs'
+    language_id = Column(BigInteger, ForeignKey("languages.id"))
+    is_deleted = Column(Boolean, default=False)

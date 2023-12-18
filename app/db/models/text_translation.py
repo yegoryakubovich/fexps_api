@@ -13,21 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, ForeignKey, String, Boolean
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, BooleanField
+class TextTranslation(Base):
+    __tablename__ = 'texts_translations'
 
-from .base import BaseModel
-from .language import Language
-from .text import Text
+    id = Column(BigInteger, primary_key=True)
 
-
-class TextTranslation(BaseModel):
-    id = PrimaryKeyField()
-    text = ForeignKeyField(model=Text, backref='translations')
-    language = ForeignKeyField(model=Language)
-    value = CharField(max_length=1024)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'texts_translations'
+    text_id = Column(BigInteger, ForeignKey("texts.id"))
+    text = relationship("Text", backref="translations")
+    language_id = Column(BigInteger, ForeignKey("languages.id"))
+    value = Column(String(1024))
+    is_deleted = Column(Boolean, default=False)

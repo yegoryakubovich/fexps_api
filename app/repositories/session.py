@@ -13,19 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
+
+from app.db.base_repository import BaseRepository
+from app.db.models import Session
 
 
-from .base import BaseRepository
-from app.db.models import Session, Account
+class SessionRepository(BaseRepository[Session]):
+
+    async def get_by_id(self, id: int) -> Optional[Session]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def delete(self, db_obj: Session) -> Optional[Session]:
+        return await self.update(db_obj, is_deleted=True)
 
 
-class SessionRepository(BaseRepository):
-    model = Session
-
-    @staticmethod
-    async def create(account: Account, token_hash: str, token_salt: str) -> Session:
-        return Session.create(
-            account=account,
-            token_hash=token_hash,
-            token_salt=token_salt,
-        )
+session = SessionRepository(Session)

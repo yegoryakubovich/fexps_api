@@ -19,14 +19,22 @@ import logging
 
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
-from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.db import create_models
-from app.utils.validation_error import validation_error
-from app.utils.client import init
-from app.utils.middleware import Middleware
+import app.repositories as repo
+from app.db.init_db import init_db
 from app.routers import routers
+from app.utils.client import init
+from app.utils.validation_error import validation_error
 from config import VERSION
+
+
+async def on_startup():
+    try:
+        await init_db()
+        logging.info("Success connect to database ")
+    except ConnectionRefusedError:
+        logging.error("Failed to connect to database ")
+        exit(1)
 
 
 app = FastAPI(
@@ -43,14 +51,12 @@ app = FastAPI(
     },
     dependencies=[Depends(init)],
     exception_handlers={RequestValidationError: validation_error},
+    on_startup=[on_startup]
 )
-app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=Middleware())
 [app.include_router(router) for router in routers]
 
 
 def create_app():
     logging.basicConfig(level=logging.DEBUG)
     logging.info(msg='Application starting...')
-
-    create_models()
     return app

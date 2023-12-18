@@ -13,31 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, BooleanField
+class Account(Base):
+    __tablename__ = 'accounts'
 
-from .base import BaseModel
-from .country import Country
-from .currency import Currency
-from .language import Language
-from .timezone import Timezone
+    id = Column(BigInteger, primary_key=True)
 
-
-class Account(BaseModel):
-    id = PrimaryKeyField()
-    username = CharField(max_length=32)
-    password_salt = CharField(max_length=32)
-    password_hash = CharField(max_length=32)
-    firstname = CharField(max_length=32)
-    lastname = CharField(max_length=32)
-    surname = CharField(max_length=32, null=True)
-    country = ForeignKeyField(model=Country)
-    language = ForeignKeyField(model=Language)
-    timezone = ForeignKeyField(model=Timezone)
-    currency = ForeignKeyField(model=Currency)
-    is_active = BooleanField(default=False)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'accounts'
+    username = Column(String(32))
+    password_salt = Column(String(32))
+    password_hash = Column(String(32))
+    firstname = Column(String(32))
+    lastname = Column(String(32))
+    surname = Column(String(32), nullable=True)
+    country_id = Column(BigInteger, ForeignKey("countries.id"))
+    language_id = Column(BigInteger, ForeignKey("languages.id"))
+    timezone_id = Column(BigInteger, ForeignKey("timezones.id"))
+    currency_id = Column(BigInteger, ForeignKey("currencies.id"))
+    is_active = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False)

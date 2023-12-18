@@ -13,20 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, ForeignKeyField, BooleanField
+class AccountRole(Base):
+    __tablename__ = 'accounts_roles'
 
-from .account import Account
-from .base import BaseModel
-from .role import Role
+    id = Column(BigInteger, primary_key=True)
 
-
-class AccountRole(BaseModel):
-    id = PrimaryKeyField()
-    account = ForeignKeyField(model=Account, backref='roles')
-    role = ForeignKeyField(model=Role)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'accounts_roles'
+    account_id = Column(BigInteger, ForeignKey("accounts.id"))
+    account = relationship("Account", backref="roles")
+    role = Column(BigInteger, ForeignKey("countries.id"))
+    is_deleted = Column(Boolean, default=False)

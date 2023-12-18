@@ -18,7 +18,7 @@
 from json import loads
 
 from app.db.models import TextPack, Session
-from app.repositories import TextPackRepository, LanguageRepository
+import app.repositories as repo
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import PATH_TEXTS_PACKS
@@ -29,8 +29,8 @@ class TextPackService(BaseService):
 
     @staticmethod
     async def get(language_id_str: str):
-        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository.get_current(language=language)
+        language = await repo.language.get_by_id_str(id_str=language_id_str)
+        text_pack = await repo.text_pack.get_current(language=language)
 
         # FIXME
         if text_pack.id == 0:
@@ -50,8 +50,8 @@ class TextPackService(BaseService):
 
     @session_required()
     async def create(self, session: Session, language_id_str: str):
-        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository.create(language=language)
+        language = await repo.language.get_by_id_str(id_str=language_id_str)
+        text_pack = await repo.text_pack.create(language=language)
         await self.create_action(
             model=text_pack,
             action='create',
@@ -65,8 +65,8 @@ class TextPackService(BaseService):
 
     @session_required()
     async def delete(self, session: Session, id_: int):
-        text_pack = await TextPackRepository().get_by_id(id_=id_)
-        await TextPackRepository().delete(text_pack=text_pack)
+        text_pack = await repo.text_pack.get_by_id(id_=id_)
+        await repo.text_pack.delete(text_pack=text_pack)
         await self.create_action(
             model=text_pack,
             action='delete',

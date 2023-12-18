@@ -13,19 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, BooleanField
+class Currency(Base):
+    __tablename__ = 'currencies'
 
-from .text import Text
-from .base import BaseModel
+    id = Column(BigInteger, primary_key=True)
 
-
-class Currency(BaseModel):
-    id = PrimaryKeyField()
-    id_str = CharField(max_length=16)
-    name_text = ForeignKeyField(model=Text)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'currencies'
+    id_str = Column(String(16))
+    name_text_id = Column(BigInteger, ForeignKey("texts.id"))
+    is_deleted = Column(Boolean, default=False)

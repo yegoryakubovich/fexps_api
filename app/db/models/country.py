@@ -13,25 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey
+
+from app.db.base_class import Base
 
 
-from peewee import PrimaryKeyField, CharField, ForeignKeyField, BooleanField
+class Country(Base):
+    __tablename__ = 'countries'
 
-from .language import Language
-from .currency import Currency
-from .timezone import Timezone
-from .base import BaseModel
-from .text import Text
+    id = Column(BigInteger, primary_key=True)
 
-
-class Country(BaseModel):
-    id = PrimaryKeyField()
-    id_str = CharField(max_length=16)
-    name_text = ForeignKeyField(model=Text)
-    language_default = ForeignKeyField(model=Language, null=True)
-    timezone_default = ForeignKeyField(model=Timezone, null=True)
-    currency_default = ForeignKeyField(model=Currency, null=True)
-    is_deleted = BooleanField(default=False)
-
-    class Meta:
-        db_table = 'countries'
+    id_str = Column(String(16))
+    name_text_id = Column(BigInteger, ForeignKey("texts.id"))
+    language_default_id = Column(BigInteger, ForeignKey("languages.id"))
+    timezone_default_id = Column(BigInteger, ForeignKey("timezones.id"))
+    currency_default_id = Column(BigInteger, ForeignKey("currencies.id"))
+    is_deleted = Column(Boolean, default=False)

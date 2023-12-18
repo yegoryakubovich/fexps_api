@@ -13,60 +13,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
+
+from sqlalchemy import select
+
+from app.db.base_repository import BaseRepository
+from app.db.models import Account
 
 
-from peewee import DoesNotExist
+class AccountRepository(BaseRepository[Account]):
 
-from app.db.models import Account, Country, Language, Timezone, Currency
-from .base import BaseRepository
-from app.utils import ApiException
+    async def get_by_id(self, id: int) -> Optional[Account]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def delete(self, db_obj: Account) -> Optional[Account]:
+        return await self.update(db_obj, is_deleted=True)
+
+    async def get_by_username(self, username: str) -> Account:
+        async with self.get_session() as session:
+            result = await session.execute(select(self.model).where(self.model.username == username))
+            return result.scalars().first()
 
 
-class AccountWithUsernameDoeNotExist(ApiException):
-    pass
-
-
-class AccountRepository(BaseRepository):
-    model = Account
-
-    @staticmethod
-    async def create(
-            username: str,
-            password_salt: str,
-            password_hash: str,
-            firstname: str,
-            lastname: str,
-            country: Country,
-            language: Language,
-            timezone: Timezone,
-            currency: Currency,
-            surname: str = None,
-    ) -> Account:
-        account = Account.create(
-            username=username,
-            password_salt=password_salt,
-            password_hash=password_hash,
-            firstname=firstname,
-            lastname=lastname,
-            surname=surname,
-            country=country,
-            language=language,
-            timezone=timezone,
-            currency=currency,
-        )
-        return account
-
-    @staticmethod
-    async def get_by_username(username: str) -> Account:
-        try:
-            return Account.get(Account.username == username)
-        except DoesNotExist:
-            raise AccountWithUsernameDoeNotExist(f'Account @{username} does not exist')
-
-    @staticmethod
-    async def is_exist(username: str) -> bool:
-        try:
-            Account.get(Account.username == username)
-            return True
-        except DoesNotExist:
-            return False
+account = AccountRepository(Account)

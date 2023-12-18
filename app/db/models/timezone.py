@@ -14,17 +14,16 @@
 # limitations under the License.
 #
 
+from sqlalchemy import Column, BigInteger, String, Boolean, Integer
 
-from peewee import PrimaryKeyField, CharField, IntegerField, BooleanField
-
-from .base import BaseModel
+from app.db.base_class import Base
 
 
-class Timezone(BaseModel):
-    id = PrimaryKeyField()
-    id_str = CharField(max_length=16)
-    deviation = IntegerField(default=0)
-    is_deleted = BooleanField(default=False)
+class Timezone(Base):
+    __tablename__ = 'timezones'
 
-    class Meta:
-        db_table = 'timezones'
+    id = Column(BigInteger, primary_key=True)
+
+    id_str = Column(String(16))
+    deviation = Column(Integer, default=0)
+    is_deleted = Column(Boolean, default=False)

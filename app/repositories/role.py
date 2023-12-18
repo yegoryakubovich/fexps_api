@@ -13,29 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
 
-
-from peewee import DoesNotExist
-
+from app.db.base_repository import BaseRepository
 from app.db.models import Role
-from .base import BaseRepository
 
 
-class RoleRepository(Role, BaseRepository):
-    model = Role
+class RoleRepository(BaseRepository[Role]):
 
-    @staticmethod
-    async def create(
-            name_text: str,
-    ) -> Role:
-        return Role.create(
-            name_text=name_text,
-        )
+    async def get_by_id(self, id: int) -> Optional[Role]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
 
-    @staticmethod
-    async def is_exist(id_str: str) -> bool:
-        try:
-            Role.get(Role.id_str == id_str)
-            return True
-        except DoesNotExist:
-            return False
+    async def delete(self, db_obj: Role) -> Optional[Role]:
+        return await self.update(db_obj, is_deleted=True)
+
+
+role = RoleRepository(Role)

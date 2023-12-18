@@ -13,11 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
 
+from sqlalchemy import select
 
+from app.db.base_repository import BaseRepository
 from app.db.models import Timezone
-from .base import BaseRepository
 
 
-class TimezoneRepository(BaseRepository):
-    model = Timezone
+class TimezoneRepository(BaseRepository[Timezone]):
+
+    async def get_by_id(self, id: int) -> Optional[Timezone]:
+        result = await self.get(id=id)
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def get_by_str_id(self, id_str: str) -> Optional[Timezone]:
+        async with self.get_session() as session:
+            result = await session.execute(select(self.model).where(self.model.id_str == id_str))
+            result = result.scalars().first()
+        if not result:
+            return
+        if result.is_deleted:
+            return
+        return result
+
+    async def delete(self, db_obj: Timezone) -> Optional[Timezone]:
+        return await self.update(db_obj, is_deleted=True)
+
+
+timezone = TimezoneRepository(Timezone)
