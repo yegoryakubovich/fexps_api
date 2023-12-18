@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional
 
-from app.db.base_repository import BaseRepository
+from .base import BaseRepository
 from app.db.models import Session
 
 
 class SessionRepository(BaseRepository[Session]):
 
-    async def get_by_id(self, id: int) -> Optional[Session]:
-        result = await self.get(id=id)
+    async def get_by_id(self, id_: int) -> Optional[Session]:
+        result = await self.get(id_=id_)
         if not result:
             return
         if result.is_deleted:

@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from json import dumps
 from select import select
 from typing import Optional
 
 import app.repositories as repo
-from app.db.base_repository import BaseRepository
+from .base import BaseRepository
 from app.db.models import TextPack, Language
 from config import PATH_TEXTS_PACKS
 
@@ -26,7 +28,7 @@ from config import PATH_TEXTS_PACKS
 class TextPackRepository(BaseRepository[TextPack]):
 
     async def get_by_id(self, id: int) -> Optional[TextPack]:
-        result = await self.get(id=id)
+        result = await self.get(id_=id)
         if not result:
             return
         if result.is_deleted:
@@ -58,7 +60,7 @@ class TextPackRepository(BaseRepository[TextPack]):
             )
             text_pack_all = result.scalars().all()
         if not text_pack_all:
-            return await self.get(id=0)
+            return await self.get(id_=0)
         return text_pack_all[0]
 
 

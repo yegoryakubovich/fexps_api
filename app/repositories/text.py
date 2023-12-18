@@ -13,19 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional
 
 from sqlalchemy import select
 
 import app.repositories as repo
-from app.db.base_repository import BaseRepository
+from .base import BaseRepository
 from app.db.models import Text, Language
 
 
 class TextRepository(BaseRepository[Text]):
 
     async def get_by_id(self, id: int) -> Optional[Text]:
-        result = await self.get(id=id)
+        result = await self.get(id_=id)
         if not result:
             return
         if result.is_deleted:

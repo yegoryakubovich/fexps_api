@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional, List
 
-from app.db.base_repository import BaseRepository
+from .base import BaseRepository
 from app.db.models import TextTranslation, Text, Language
 
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):
 
     async def get_by_id(self, id: int) -> Optional[TextTranslation]:
-        result = await self.get(id=id)
+        result = await self.get(id_=id)
         if not result:
             return
         if result.is_deleted:
