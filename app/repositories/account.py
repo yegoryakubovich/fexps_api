@@ -13,31 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional
 
-from sqlalchemy import select
-
-from app.db.base_repository import BaseRepository
 from app.db.models import Account
+from .base import BaseRepository, ModelDoesNotExist
+from ..utils import ApiException
+
+
+class AccountWithUsernameDoeNotExist(ApiException):
+    pass
 
 
 class AccountRepository(BaseRepository[Account]):
 
-    async def get_by_id(self, id: int) -> Optional[Account]:
-        result = await self.get(id=id)
-        if not result:
-            return
-        if result.is_deleted:
-            return
+    async def get_by_id(self, id_: int) -> Optional[Account]:
+        result = await self.get(id_=id_)
+        if not result or result.is_deleted:
+            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
         return result
 
     async def delete(self, db_obj: Account) -> Optional[Account]:
         return await self.update(db_obj, is_deleted=True)
 
-    async def get_by_username(self, username: str) -> Account:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.username == username))
-            return result.scalars().first()
+    async def get_by_username(self, username: str) -> Optional[Account]:
+        result = await self.get_all(username=username)
+        if not result:
+            raise AccountWithUsernameDoeNotExist(f'Account @{username} does not exist')
+        return result[0]
 
 
 account = AccountRepository(Account)

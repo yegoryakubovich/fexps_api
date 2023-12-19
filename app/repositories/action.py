@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from app.db.base_repository import BaseRepository
+
+
+from .base import BaseRepository
 from app.db.models import Action
 
 

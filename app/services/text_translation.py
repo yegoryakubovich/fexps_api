@@ -33,7 +33,7 @@ class TextTranslationService(BaseService):
     ) -> dict | TextTranslation:
         text: Text = await repo.text.get_by_key(key=text_key)
         language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation = await repo.text_translation.create(
+        text_translation = await repo.text_translation.create_text_translation(
             text=text,
             language=language,
             value=value,
@@ -64,9 +64,9 @@ class TextTranslationService(BaseService):
     ) -> dict:
         text: Text = await repo.text.get_by_key(key=text_key)
         language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await repo.text_translation.get(text=text, language=language)
+        text_translation: TextTranslation = await repo.text_translation.get_by_text_lang(text=text, language=language)
         await repo.text_translation.update(
-            text_translation=text_translation,
+            text_translation,
             value=value,
         )
         await self.create_action(

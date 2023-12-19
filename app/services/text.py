@@ -57,7 +57,7 @@ class TextService(BaseService):
             value_default: str,
             return_model: bool = False,
     ) -> dict | Text:
-        text = await repo.text.create(
+        text = await repo.text.create_text(
             key=key,
             value_default=value_default,
         )
@@ -83,8 +83,8 @@ class TextService(BaseService):
             new_key: str = None,
     ) -> dict:
         text = await repo.text.get_by_key(key=key)
-        await repo.text.update(
-            text=text,
+        await repo.text.update_text(
+            text,
             value_default=value_default,
             new_key=new_key,
         )

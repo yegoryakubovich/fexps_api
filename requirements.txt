@@ -1,7 +1,5 @@
 fastapi
 uvicorn
-peewee
-pymysql
 pytz
 inflection
 starlette==0.34.0

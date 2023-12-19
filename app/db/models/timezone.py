@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 from sqlalchemy import Column, BigInteger, String, Boolean, Integer
 
 from app.db.base_class import Base

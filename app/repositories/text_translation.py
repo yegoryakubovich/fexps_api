@@ -13,20 +13,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional, List
 
-from app.db.base_repository import BaseRepository
 from app.db.models import TextTranslation, Text, Language
+from .base import BaseRepository, ModelDoesNotExist
+from ..utils import ApiException
+
+
+class TextTranslationDoesNotExist(ApiException):
+    pass
+
+
+class TextTranslationExist(ApiException):
+    pass
 
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):
 
-    async def get_by_id(self, id: int) -> Optional[TextTranslation]:
-        result = await self.get(id=id)
-        if not result:
-            return
-        if result.is_deleted:
-            return
+    async def get_by_id(self, id_: int) -> Optional[TextTranslation]:
+        result = await self.get(id_=id_)
+        if not result or result.is_deleted:
+            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
         return result
 
     async def delete(self, db_obj: TextTranslation) -> Optional[TextTranslation]:
@@ -34,20 +43,17 @@ class TextTranslationRepository(BaseRepository[TextTranslation]):
 
     async def get_by_text_lang(self, text: Text, language: Language) -> Optional[TextTranslation]:
         result = await self.get_all(text=text, language=language, is_deleted=False)
-        if result:
-            return result[0]
+        if not result:
+            raise TextTranslationDoesNotExist(f'Text translation with language "{language.id_str}" does not exist')
+        return result[0]
 
     async def get_list_by_text(self, text: Text) -> List[TextTranslation]:
         return await self.get_all(text=text, is_deleted=False)
 
-    async def create(self, text: Text, language: Language, value:str):
-        result = await self.get_all(text=text, language=language)
-        if result:
-            return result
-        return await self.create(text=text, language=language,value=value)
-
-
-
+    async def create_text_translation(self, text: Text, language: Language, value: str):
+        if await self.get_all(text=text, language=language):
+            raise TextTranslationExist(f'Text translation with language "{language.id_str}" already exist')
+        return await self.create(text=text, language=language, value=value)
 
 
 text_translation = TextTranslationRepository(TextTranslation)

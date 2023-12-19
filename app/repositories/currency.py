@@ -13,22 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional
 
 from sqlalchemy import select
 
-from app.db.base_repository import BaseRepository
 from app.db.models import Currency
+from .base import BaseRepository, ModelDoesNotExist
 
 
 class CurrencyRepository(BaseRepository[Currency]):
 
-    async def get_by_id(self, id: int) -> Optional[Currency]:
-        result = await self.get(id=id)
-        if not result:
-            return
-        if result.is_deleted:
-            return
+    async def get_by_id(self, id_: int) -> Optional[Currency]:
+        result = await self.get(id_=id_)
+        if not result or result.is_deleted:
+            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
         return result
 
     async def delete(self, db_obj: Currency) -> Optional[Currency]:
@@ -38,10 +38,8 @@ class CurrencyRepository(BaseRepository[Currency]):
         async with self.get_session() as session:
             result = await session.execute(select(self.model).where(self.model.id_str == id_str))
             result = result.scalars().first()
-        if not result:
-            return
-        if result.is_deleted:
-            return
+        if not result or result.is_deleted:
+            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
         return result
 
 
