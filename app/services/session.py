@@ -33,7 +33,7 @@ class SessionService(BaseService):
 
         # Create session and action
         session = await repo.session.create(
-            account=account,
+            account_id=account.id,
             token_hash=token_hash,
             token_salt=token_salt,
         )

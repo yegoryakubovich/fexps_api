@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import Account
-from .base import BaseRepository, ModelDoesNotExist
+from .base import BaseRepository
 from ..utils import ApiException
 
 
@@ -27,15 +27,6 @@ class AccountWithUsernameDoeNotExist(ApiException):
 
 
 class AccountRepository(BaseRepository[Account]):
-
-    async def get_by_id(self, id_: int) -> Optional[Account]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Account) -> Optional[Account]:
-        return await self.update(db_obj, is_deleted=True)
 
     async def get_by_username(self, username: str) -> Optional[Account]:
         result = await self.get_all(username=username)

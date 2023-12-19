@@ -15,22 +15,12 @@
 #
 
 
-from typing import Optional
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Session
+from .base import BaseRepository
 
 
 class SessionRepository(BaseRepository[Session]):
-
-    async def get_by_id(self, id_: int) -> Optional[Session]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Session) -> Optional[Session]:
-        return await self.update(db_obj, is_deleted=True)
+    pass
 
 
 session = SessionRepository(Session)

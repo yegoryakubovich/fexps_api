@@ -27,15 +27,6 @@ from config import PATH_TEXTS_PACKS
 
 class TextPackRepository(BaseRepository[TextPack]):
 
-    async def get_by_id(self, id_: int) -> Optional[TextPack]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: TextPack) -> Optional[TextPack]:
-        return await self.update(db_obj, is_deleted=True)
-
     async def create_by_language(self, language: Language) -> Optional[TextPack]:
         json = {}
         for text in await repo.text.get_all():

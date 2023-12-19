@@ -24,15 +24,6 @@ from app.db.models import AccountRole, Permission, Account
 
 class AccountRoleRepository(BaseRepository[AccountRole]):
 
-    async def get_by_id(self, id_: int) -> Optional[AccountRole]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: AccountRole) -> Optional[AccountRole]:
-        return await self.update(db_obj, is_deleted=True)
-
     async def get_account_permissions(self, account: Account, only_id_str=False) -> list[str | Permission]:
         result = []
         for account_role in await self.get_all(account_id=account.id, is_deleted=False):

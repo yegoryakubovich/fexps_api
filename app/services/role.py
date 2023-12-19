@@ -42,7 +42,7 @@ class RoleService(BaseService):
         name_text = await repo.text.get_by_key(key=name_text_key)
 
         role = await repo.role.create(
-            name_text=name_text,
+            name_text_id=name_text.id,
         )
         await self.create_action(
             model=role,

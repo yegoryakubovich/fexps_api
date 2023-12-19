@@ -23,15 +23,6 @@ from app.db.models import RolePermission, Role, Permission
 
 class RolePermissionRepository(BaseRepository[RolePermission]):
 
-    async def get_by_id(self, id_: int) -> Optional[RolePermission]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: RolePermission) -> Optional[RolePermission]:
-        return await self.update(db_obj, is_deleted=True)
-
     async def get_permissions_by_role(self, role: Role, only_id_str=False) -> [List[str], List[Permission]]:
         result = []
         for role_permission in await self.get_all(role=role, is_deleted=False):

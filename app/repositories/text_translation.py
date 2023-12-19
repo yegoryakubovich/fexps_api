@@ -32,15 +32,6 @@ class TextTranslationExist(ApiException):
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):
 
-    async def get_by_id(self, id_: int) -> Optional[TextTranslation]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: TextTranslation) -> Optional[TextTranslation]:
-        return await self.update(db_obj, is_deleted=True)
-
     async def get_by_text_lang(self, text: Text, language: Language) -> Optional[TextTranslation]:
         result = await self.get_all(text=text, language=language, is_deleted=False)
         if not result:

@@ -15,12 +15,17 @@
 #
 
 
+from typing import Optional
+
+import app.repositories as repo
+from app.db.models import Action, ActionParameter
 from .base import BaseRepository
-from app.db.models import Action
 
 
 class ActionRepository(BaseRepository[Action]):
-    pass
+
+    async def create_parameter(self, action: Action, key: str, value: str) -> Optional[ActionParameter]:
+        return repo.action_parameter.create(action_id=action, key=key, value=value)
 
 
 action = ActionRepository(Action)

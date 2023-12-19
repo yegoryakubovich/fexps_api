@@ -24,23 +24,7 @@ from app.db.models import Language
 
 
 class LanguageRepository(BaseRepository[Language]):
-
-    async def get_by_id(self, id_: int) -> Optional[Language]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Language) -> Optional[Language]:
-        return await self.update(db_obj, is_deleted=True)
-
-    async def get_by_str_id(self, id_str: str) -> Optional[Language]:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.id_str == id_str))
-            result = result.scalars().first()
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
-        return result
+    pass
 
 
 language = LanguageRepository(Language)

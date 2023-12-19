@@ -24,23 +24,7 @@ from .base import BaseRepository, ModelDoesNotExist
 
 
 class CurrencyRepository(BaseRepository[Currency]):
-
-    async def get_by_id(self, id_: int) -> Optional[Currency]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Currency) -> Optional[Currency]:
-        return await self.update(db_obj, is_deleted=True)
-
-    async def get_by_str_id(self, id_str: str) -> Optional[Currency]:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.id_str == id_str))
-            result = result.scalars().first()
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
-        return result
+    pass
 
 
 currency = CurrencyRepository(Currency)

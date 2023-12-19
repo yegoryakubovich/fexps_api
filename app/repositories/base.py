@@ -39,16 +39,30 @@ class BaseRepository(Generic[ModelType]):
         return SessionLocal()
 
     async def is_exist(self, **filters) -> bool:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).filter_by(**filters))
-            if not result.scalars().all():
-                return False
+        result = await self.get_all(**filters)
+        if result:
             return True
+        return False
+
+    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
+        return await self.update(db_obj, is_deleted=True)
 
     async def get(self, id_: int) -> Optional[ModelType]:
         async with self.get_session() as session:
             result = await session.execute(select(self.model).where(self.model.id == id_))
             return result.scalars().first()
+
+    async def get_by_id(self, id_: int) -> Optional[ModelType]:
+        result = await self.get_all(id_=id_, is_deleted=False)
+        if not result:
+            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
+        return result[0]
+
+    async def get_by_id_str(self, id_str: str) -> Optional[ModelType]:
+        result = await self.get_all(id_str=id_str, is_deleted=False)
+        if not result:
+            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
+        return result[0]
 
     async def create(self, **obj_in_data) -> ModelType:
         async with self.get_session() as session:
@@ -60,6 +74,11 @@ class BaseRepository(Generic[ModelType]):
             await session.refresh(db_obj)
 
             return db_obj
+
+    async def get_by(self, **filters) -> List[ModelType]:
+        async with self.get_session() as session:
+            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
+            return result.scalars().first()
 
     async def get_all(self, **filters) -> List[ModelType]:
         async with self.get_session() as session:

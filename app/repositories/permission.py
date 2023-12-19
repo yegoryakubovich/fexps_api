@@ -24,23 +24,7 @@ from app.db.models import Permission
 
 
 class PermissionRepository(BaseRepository[Permission]):
-
-    async def get_by_id(self, id_: int) -> Optional[Permission]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Permission) -> Optional[Permission]:
-        return await self.update(db_obj, is_deleted=True)
-
-    async def get_by_str_id(self, id_str: str) -> Optional[Permission]:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.id_str == id_str))
-            result = result.scalars().first()
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
-        return result
+    pass
 
 
 permission = PermissionRepository(Permission)

@@ -39,15 +39,6 @@ class NoRequiredParameters(ApiException):
 
 class TextRepository(BaseRepository[Text]):
 
-    async def get_by_id(self, id_: int) -> Optional[Text]:
-        result = await self.get(id_=id_)
-        if not result or result.is_deleted:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
-
-    async def delete(self, db_obj: Text) -> Optional[Text]:
-        return await self.update(db_obj, is_deleted=True)
-
     async def get_by_key(self, key: str) -> Optional[Text]:
         result = await self.get_all(key=key, is_deleted=False)
         if not result:

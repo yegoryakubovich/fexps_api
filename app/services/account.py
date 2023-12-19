@@ -15,8 +15,8 @@
 #
 
 
-from app.db.models import Account
 import app.repositories as repo
+from app.db.models import Account
 from app.services import AccountRoleService
 from app.services.base import BaseService
 from app.utils import ApiException
@@ -72,10 +72,10 @@ class AccountService(BaseService):
             firstname=firstname,
             lastname=lastname,
             surname=surname,
-            country=country,
-            language=language,
-            timezone=timezone,
-            currency=currency,
+            country_id=country.id,
+            language_id=language.id,
+            timezone_id=timezone.id,
+            currency_id=currency.id,
         )
         # Create action
         await self.create_action(
@@ -120,10 +120,10 @@ class AccountService(BaseService):
             'firstname': account.firstname,
             'lastname': account.lastname,
             'surname': account.surname,
-            'country': account.country.id_str,
-            'language': account.language.id_str,
-            'timezone': account.timezone.id_str,
-            'currency': account.currency.id_str,
+            'country': (await repo.country.get(account.country_id)).id_str,
+            'language': (await repo.language.get(account.language_id)).id_str,
+            'timezone': (await repo.timezone.get(account.timezone_id)).id_str,
+            'currency': (await repo.currency.get(account.currency_id)).id_str,
             'permissions': permissions,
             'text_pack_id': text_pack.id,
         }

@@ -66,7 +66,7 @@ class TextPackService(BaseService):
     @session_required()
     async def delete(self, session: Session, id_: int):
         text_pack = await repo.text_pack.get_by_id(id_=id_)
-        await repo.text_pack.delete(text_pack=text_pack)
+        await repo.text_pack.delete(text_pack)
         await self.create_action(
             model=text_pack,
             action='delete',

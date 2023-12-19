@@ -15,8 +15,8 @@
 #
 
 
-from app.db.models import Language, Session, Text, TextTranslation
 import app.repositories as repo
+from app.db.models import Language, Session, Text, TextTranslation
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -92,9 +92,7 @@ class TextTranslationService(BaseService):
         text: Text = await repo.text.get_by_key(key=text_key)
         language: Language = await repo.language.get_by_id_str(id_str=language)
         text_translation: TextTranslation = await repo.text_translation.get(text=text, language=language)
-        await repo.text_translation.delete(
-            text_translation=text_translation,
-        )
+        await repo.text_translation.delete(text_translation)
         await self.create_action(
             model=text_translation,
             action='delete',
