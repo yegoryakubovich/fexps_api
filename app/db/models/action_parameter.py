@@ -16,6 +16,7 @@
 
 
 from sqlalchemy import Column, BigInteger, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -26,5 +27,6 @@ class ActionParameter(Base):
     id = Column(BigInteger, primary_key=True)
 
     action_id = Column(BigInteger, ForeignKey("actions.id"))
+    action = relationship("Action", uselist=False, lazy="selectin")
     key = Column(String(256))
     value = Column(String(256), nullable=True)

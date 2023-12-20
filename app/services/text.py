@@ -38,7 +38,7 @@ class TextService(BaseService):
                     'value_default': text.value_default,
                     'translations': [
                         {
-                            'language': (await repo.text_translation.get(translation.id)).id_str,
+                            'language': translation.language.id_str,
                             'value': translation.value,
                         }
                         for translation in translations

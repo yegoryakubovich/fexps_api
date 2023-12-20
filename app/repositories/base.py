@@ -64,7 +64,7 @@ class BaseRepository(Generic[ModelType]):
             raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
         return result[0]
 
-    async def create(self, **obj_in_data) -> ModelType:
+    async def create(self, **obj_in_data) -> ModelType:  # TUT
         async with self.get_session() as session:
             db_obj = self.model(**obj_in_data)
 
@@ -75,12 +75,12 @@ class BaseRepository(Generic[ModelType]):
 
             return db_obj
 
-    async def get_by(self, **filters) -> List[ModelType]:
+    async def get_by(self, **filters) -> List[ModelType]:  # TUT
         async with self.get_session() as session:
             result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().first()
 
-    async def get_all(self, **filters) -> List[ModelType]:
+    async def get_all(self, **filters) -> List[ModelType]:  # TUT
         async with self.get_session() as session:
             result = await session.execute(select(self.model).filter_by(**filters))
             return result.scalars().all()
@@ -94,7 +94,7 @@ class BaseRepository(Generic[ModelType]):
             await session.execute(delete(self.model).where(self.model.id == id_))
             await session.commit()
 
-    async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
+    async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:  # TUT
         async with self.get_session() as session:
             for field, value in obj_in_data.items():
                 setattr(db_obj, field, obj_in_data[field])

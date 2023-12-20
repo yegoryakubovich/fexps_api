@@ -16,6 +16,7 @@
 
 
 from sqlalchemy import Column, BigInteger, ForeignKey, Boolean
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -26,4 +27,5 @@ class TextPack(Base):
     id = Column(BigInteger, primary_key=True)
 
     language_id = Column(BigInteger, ForeignKey("languages.id"))
+    language = relationship("Language", uselist=False, lazy="selectin")
     is_deleted = Column(Boolean, default=False)

@@ -27,7 +27,7 @@ class Session(Base):
     id = Column(BigInteger, primary_key=True)
 
     account_id = Column(BigInteger, ForeignKey("accounts.id"))
-    account = relationship("Account", backref="parameters")
+    account = relationship("Account", backref="parameters", uselist=False, lazy="selectin")
     token_salt = Column(String(32))
     token_hash = Column(String(32))
     is_deleted = Column(Boolean, default=False)

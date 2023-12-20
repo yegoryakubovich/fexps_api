@@ -19,11 +19,13 @@ import logging
 
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import app.repositories as repo
 from app.db.init_db import init_db
 from app.routers import routers
 from app.utils.client import init
+from app.utils.middleware import Middleware
 from app.utils.validation_error import validation_error
 from config import VERSION
 
@@ -53,6 +55,7 @@ app = FastAPI(
     exception_handlers={RequestValidationError: validation_error},
     on_startup=[on_startup]
 )
+app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=Middleware())
 [app.include_router(router) for router in routers]
 
 

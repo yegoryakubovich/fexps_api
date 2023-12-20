@@ -27,6 +27,7 @@ class AccountRole(Base):
     id = Column(BigInteger, primary_key=True)
 
     account_id = Column(BigInteger, ForeignKey("accounts.id"))
-    account = relationship("Account", backref="roles")
-    role = Column(BigInteger, ForeignKey("countries.id"))
+    account = relationship("Account", backref="roles", uselist=False, lazy="selectin")
+    role_id = Column(BigInteger, ForeignKey("roles.id"))
+    role = relationship("Role", uselist=False, lazy="selectin")
     is_deleted = Column(Boolean, default=False)

@@ -16,6 +16,7 @@
 
 
 from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -27,4 +28,5 @@ class Currency(Base):
 
     id_str = Column(String(16))
     name_text_id = Column(BigInteger, ForeignKey("texts.id"))
+    name_text = relationship("Text", uselist=False, lazy="selectin")
     is_deleted = Column(Boolean, default=False)
