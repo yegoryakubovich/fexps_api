@@ -23,6 +23,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 import app.repositories as repo
 from app.db.init_db import init_db
+from app.db.models import Account, Country, Timezone, Currency, Text
 from app.routers import routers
 from app.utils.client import init
 from app.utils.middleware import Middleware
@@ -37,6 +38,18 @@ async def on_startup():
     except ConnectionRefusedError:
         logging.error("Failed to connect to database ")
         exit(1)
+
+    country = await repo.country.get(1)
+    language = await repo.language.get(1)
+    timezone = await repo.timezone.get(1)
+    currency = await repo.currency.get(1)
+
+    acc: Account = await repo.account.create(
+        username="kekacik12322", password_salt="112ske", password_hash="112ske", firstname="frank", lastname="frunk",
+        country=country, language=language, timezone=timezone, currency=currency,
+    )
+    print(acc.language.id_str)
+    print(acc.country.currency_default.name_text.value_default)
 
 
 app = FastAPI(

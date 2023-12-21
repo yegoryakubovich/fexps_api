@@ -38,6 +38,17 @@ class BaseRepository(Generic[ModelType]):
     def get_session():
         return SessionLocal()
 
+    @staticmethod
+    def convert_obj(obj_in_data: dict) -> dict:
+        result = {}
+        for key, value in obj_in_data.items():
+            for type_ in [str, int, bool]:
+                if isinstance(value, type_):
+                    result[key] = value
+                    continue
+            result[f"{key}_id"] = value.id
+        return result
+
     async def is_exist(self, **filters) -> bool:
         result = await self.get_all(**filters)
         if result:
@@ -64,7 +75,8 @@ class BaseRepository(Generic[ModelType]):
             raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
         return result[0]
 
-    async def create(self, **obj_in_data) -> ModelType:  # TUT
+    async def create(self, **obj_in_data) -> ModelType:
+        obj_in_data = self.convert_obj(obj_in_data)
         async with self.get_session() as session:
             db_obj = self.model(**obj_in_data)
 
@@ -75,12 +87,12 @@ class BaseRepository(Generic[ModelType]):
 
             return db_obj
 
-    async def get_by(self, **filters) -> List[ModelType]:  # TUT
+    async def get_by(self, **filters) -> List[ModelType]:
         async with self.get_session() as session:
             result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().first()
 
-    async def get_all(self, **filters) -> List[ModelType]:  # TUT
+    async def get_all(self, **filters) -> List[ModelType]:
         async with self.get_session() as session:
             result = await session.execute(select(self.model).filter_by(**filters))
             return result.scalars().all()
@@ -94,11 +106,15 @@ class BaseRepository(Generic[ModelType]):
             await session.execute(delete(self.model).where(self.model.id == id_))
             await session.commit()
 
-    async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:  # TUT
+    async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
+        obj_in_data = self.convert_obj(obj_in_data)
         async with self.get_session() as session:
             for field, value in obj_in_data.items():
                 setattr(db_obj, field, obj_in_data[field])
+
             session.add(db_obj)
+
             await session.commit()
             await session.refresh(db_obj)
+
             return db_obj
