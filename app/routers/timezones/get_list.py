@@ -15,16 +15,16 @@
 #
 
 
-from app.services import CurrencyService
+from app.services import TimezoneService
 from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/get',
+    prefix='/list/get',
 )
 
 
 @router.get()
 async def route():
-    result = await CurrencyService().get_list()
+    result = await TimezoneService().get_list()
     return Response(**result)

@@ -20,7 +20,7 @@ from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/get',
+    prefix='/list/get',
 )
 
 

@@ -15,13 +15,15 @@
 #
 
 
-from .get import router as router_get
+from .get_list import router as router_get
+from .create import router as router_create
 from app.utils import Router
 
 
 router = Router(
     prefix='/languages',
     routes_included=[
+        router_create,
         router_get,
     ],
     tags=['Languages'],

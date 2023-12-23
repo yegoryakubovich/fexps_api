@@ -15,14 +15,16 @@
 #
 
 
-from .get_list import router as router_get
-from app.utils import Router
+from app.services import LanguageService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/currencies',
-    routes_included=[
-        router_get,
-    ],
-    tags=['Currencies'],
+    prefix='/list/get',
 )
+
+
+@router.get()
+async def route():
+    result = await LanguageService().get_list()
+    return Response(**result)

@@ -64,7 +64,7 @@ class BaseRepository(Generic[ModelType]):
             return result.scalars().first()
 
     async def get_by_id(self, id_: int) -> Optional[ModelType]:
-        result = await self.get_all(id_=id_, is_deleted=False)
+        result = await self.get_all(id=id_, is_deleted=False)
         if not result:
             raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
         return result[0]
