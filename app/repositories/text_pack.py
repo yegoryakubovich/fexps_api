@@ -16,13 +16,12 @@
 
 
 from json import dumps
-from select import select
 from typing import Optional
 
 import app.repositories as repo
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import TextPack, Language
 from config import PATH_TEXTS_PACKS
+from .base import BaseRepository
 
 
 class TextPackRepository(BaseRepository[TextPack]):
@@ -43,15 +42,10 @@ class TextPackRepository(BaseRepository[TextPack]):
             await self.create_by_language(language=language)
 
     async def get_current(self, language: Language) -> Optional[TextPack]:
-        async with self.get_session() as session:
-            result = await session.execute(
-                select(self.model).order_by(self.model.id.desc()).filter_by(language=language, is_deleted=False)
-            )
-            text_pack_all = result.scalars().all()
+        text_pack_all = await self.get_all(language=language, is_deleted=False)
         if not text_pack_all:
-            return await self.get(id_=0)
+            return await self.get_or_create(id=0)
         return text_pack_all[0]
-
 
 
 text_pack = TextPackRepository(TextPack)

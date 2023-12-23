@@ -28,13 +28,13 @@ router = Router(
 
 class TextPackDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
+    id: int = Field()
 
 
 @router.post()
 async def route(schema: TextPackDeleteSchema):
     result = await TextPackService().delete(
         token=schema.token,
-        id_=schema.id_,
+        id_=schema.id,
     )
     return Response(**result)

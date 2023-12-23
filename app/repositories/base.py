@@ -42,10 +42,11 @@ class BaseRepository(Generic[ModelType]):
     def convert_obj(obj_in_data: dict) -> dict:
         result = {}
         for key, value in obj_in_data.items():
-            for type_ in [str, int, bool]:
-                if isinstance(value, type_):
-                    result[key] = value
-                    continue
+            if not value:
+                continue
+            if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
+                result[key] = value
+                continue
             result[f"{key}_id"] = value.id
         return result
 
@@ -75,6 +76,12 @@ class BaseRepository(Generic[ModelType]):
             raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
         return result[0]
 
+    async def get_or_create(self, **obj_in_data) -> ModelType:
+        result = await self.get_all(**obj_in_data)
+        if not result:
+            return await self.create(**obj_in_data)
+        return result[0]
+
     async def create(self, **obj_in_data) -> ModelType:
         obj_in_data = self.convert_obj(obj_in_data)
         async with self.get_session() as session:
@@ -94,7 +101,7 @@ class BaseRepository(Generic[ModelType]):
 
     async def get_all(self, **filters) -> List[ModelType]:
         async with self.get_session() as session:
-            result = await session.execute(select(self.model).filter_by(**filters))
+            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().all()
 
     async def get_list(self) -> List[ModelType]:

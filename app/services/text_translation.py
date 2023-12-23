@@ -91,7 +91,7 @@ class TextTranslationService(BaseService):
     ) -> dict:
         text: Text = await repo.text.get_by_key(key=text_key)
         language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await repo.text_translation.get(text=text, language=language)
+        text_translation: TextTranslation = await repo.text_translation.get_by_text_lang(text=text, language=language)
         await repo.text_translation.delete(text_translation)
         await self.create_action(
             model=text_translation,
