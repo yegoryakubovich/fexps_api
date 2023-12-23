@@ -53,7 +53,7 @@ class TextRepository(BaseRepository[Text]):
         return db_obj.value_default
 
     async def create_text(self, key: str, value_default: str):
-        if await self.get_all(key=key):
+        if await self.get_all(key=key, is_deleted=False):
             raise TextExist(f'Text with key "{key}" already exist')
         return await self.create(key=key, value_default=value_default)
 
