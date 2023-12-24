@@ -15,14 +15,22 @@
 #
 
 
-from app.db import base  # noqa: F401
-from app.db.base import Base
-from app.db.session import engine
+from .get_list import router as router_get_list
+from .get import router as router_get
+from .create import router as router_create
+from .update import router as router_update
+from .delete import router as router_delete
+from app.utils import Router
 
-import app.db.models, app.repositories  # noqa
 
-
-async def init_db() -> None:
-    async with engine.begin() as conn:
-        # noinspection PyUnresolvedReferences
-        await conn.run_sync(Base.metadata.create_all)
+router = Router(
+    prefix='/methods',
+    routes_included=[
+        router_get_list,
+        router_get,
+        router_create,
+        router_update,
+        router_delete,
+    ],
+    tags=['Methods'],
+)

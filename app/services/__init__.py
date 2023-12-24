@@ -28,24 +28,4 @@ from .timezone import TimezoneService
 from .currency import CurrencyService
 from .text import TextService
 from .text_pack import TextPackService
-
-
-__all__ = [
-    'ActionService',
-    'AccountService',
-
-    'SessionService',
-    'SessionGetByTokenService',
-
-    'CountryService',
-    'LanguageService',
-    'TimezoneService',
-    'CurrencyService',
-
-    'TextService',
-    'TextTranslationService',
-    'TextPackService',
-
-    'RoleService',
-    'AccountRoleService',
-]
+from .method import MethodService

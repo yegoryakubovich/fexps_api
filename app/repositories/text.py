@@ -17,11 +17,9 @@
 
 from typing import Optional
 
-from sqlalchemy import select
-
 import app.repositories as repo
 from app.db.models import Text, Language
-from .base import BaseRepository, ModelDoesNotExist
+from .base import BaseRepository
 from ..utils import ApiException
 
 
@@ -45,7 +43,8 @@ class TextRepository(BaseRepository[Text]):
             raise TextDoesNotExist(f'Text with key "{key}" does not exist')
         return result[0]
 
-    async def get_value(self, db_obj: Text, language: Language = None) -> str:
+    @staticmethod
+    async def get_value(db_obj: Text, language: Language = None) -> str:
         if language:
             result = await repo.text_translation.get_all(text=db_obj, language=language, is_deleted=False)
             if result:

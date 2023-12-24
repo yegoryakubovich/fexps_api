@@ -15,10 +15,10 @@
 #
 
 
-from typing import Optional, List
+from typing import List
 
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import RolePermission, Role, Permission
+from .base import BaseRepository
 
 
 class RolePermissionRepository(BaseRepository[RolePermission]):

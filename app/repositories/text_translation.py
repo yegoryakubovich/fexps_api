@@ -18,7 +18,7 @@
 from typing import Optional, List
 
 from app.db.models import TextTranslation, Text, Language
-from .base import BaseRepository, ModelDoesNotExist
+from .base import BaseRepository
 from ..utils import ApiException
 
 

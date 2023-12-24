@@ -15,11 +15,9 @@
 #
 
 
-from typing import Optional
-
 import app.repositories as repo
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import AccountRole, Permission, Account
+from .base import BaseRepository
 
 
 class AccountRoleRepository(BaseRepository[AccountRole]):

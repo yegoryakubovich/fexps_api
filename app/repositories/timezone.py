@@ -15,12 +15,8 @@
 #
 
 
-from typing import Optional
-
-from sqlalchemy import select
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Timezone
+from .base import BaseRepository
 
 
 class TimezoneRepository(BaseRepository[Timezone]):
