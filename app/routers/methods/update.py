@@ -15,14 +15,27 @@
 #
 
 
-from app.db import base  # noqa: F401
-from app.db.base import Base
-from app.db.session import engine
+from pydantic import Field, BaseModel
 
-import app.db.models, app.repositories  # noqa
+from app.services import MethodService
+from app.utils import Router, Response
 
 
-async def init_db() -> None:
-    async with engine.begin() as conn:
-        # noinspection PyUnresolvedReferences
-        await conn.run_sync(Base.metadata.create_all)
+router = Router(
+    prefix='/update',
+)
+
+
+class MethodCreateSchema(BaseModel):
+    id: int = Field()
+    is_active: bool = Field()
+
+
+@router.post()
+async def route(schema: MethodCreateSchema):
+    result = await MethodService().update(
+        token=schema.token,
+        id_=schema.id,
+        is_active=schema.is_active,
+    )
+    return Response(**result)

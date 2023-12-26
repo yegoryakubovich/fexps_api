@@ -23,6 +23,7 @@ from app.db.base_class import Base
 from app.db.session import SessionLocal
 from app.utils import ApiException
 
+
 ModelType = TypeVar('ModelType', bound=Base)
 
 

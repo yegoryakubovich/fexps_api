@@ -25,5 +25,6 @@ from .base import BaseRepository
 class ActionRepository(BaseRepository[Action]):
     model = Action
 
-    async def create_parameter(self, action: Action, key: str, value: str) -> Optional[ActionParameter]:
+    @staticmethod
+    async def create_parameter(action: Action, key: str, value: str) -> Optional[ActionParameter]:
         return await ActionParameterRepository().create(action=action, key=key, value=value)

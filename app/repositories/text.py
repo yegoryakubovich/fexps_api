@@ -42,11 +42,12 @@ class TextRepository(BaseRepository[Text]):
             raise TextDoesNotExist(f'Text with key "{key}" does not exist')
         return result
 
-    async def get_value(self, db_obj: Text, language: Language = None) -> str:
+    @staticmethod
+    async def get_value(db_obj: Text, language: Language = None) -> str:
         if language:
-            result = await TextTranslationRepository().get_list(text=db_obj, language=language)
+            result = await TextTranslationRepository().get(text=db_obj, language=language)
             if result:
-                return result[0].value
+                return result.value
         return db_obj.value_default
 
     async def create(self, key: str, value_default: str) -> Text:
