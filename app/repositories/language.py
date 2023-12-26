@@ -15,16 +15,9 @@
 #
 
 
-from typing import Optional
-
-from sqlalchemy import select
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Language
+from .base import BaseRepository
 
 
 class LanguageRepository(BaseRepository[Language]):
-    pass
-
-
-language = LanguageRepository(Language)
+    model = Language

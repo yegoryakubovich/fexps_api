@@ -15,12 +15,9 @@
 #
 
 
-from .base import BaseRepository
 from app.db.models import ActionParameter
+from .base import BaseRepository
 
 
 class ActionParameterRepository(BaseRepository[ActionParameter]):
-    pass
-
-
-action_parameter = ActionParameterRepository(ActionParameter)
+    model = ActionParameter

@@ -17,15 +17,13 @@
 
 from typing import Optional
 
-import app.repositories as repo
 from app.db.models import Action, ActionParameter
+from .action_parameter import ActionParameterRepository
 from .base import BaseRepository
 
 
 class ActionRepository(BaseRepository[Action]):
+    model = Action
 
     async def create_parameter(self, action: Action, key: str, value: str) -> Optional[ActionParameter]:
-        return repo.action_parameter.create(action=action, key=key, value=value)
-
-
-action = ActionRepository(Action)
+        return await ActionParameterRepository().create(action=action, key=key, value=value)

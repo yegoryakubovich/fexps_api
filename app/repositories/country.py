@@ -15,16 +15,9 @@
 #
 
 
-from typing import Optional
-
-from sqlalchemy import select
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Country
+from .base import BaseRepository
 
 
 class CountryRepository(BaseRepository[Country]):
-    pass
-
-
-country = CountryRepository(Country)
+    model = Country

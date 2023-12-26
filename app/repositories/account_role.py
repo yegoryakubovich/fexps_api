@@ -15,22 +15,18 @@
 #
 
 
-from typing import Optional
-
-import app.repositories as repo
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import AccountRole, Permission, Account
+from app.repositories.role_permission import RolePermissionRepository
+from .base import BaseRepository
 
 
 class AccountRoleRepository(BaseRepository[AccountRole]):
+    model = AccountRole
 
     async def get_account_permissions(self, account: Account, only_id_str=False) -> list[str | Permission]:
         result = []
-        for account_role in await self.get_all(account_id=account.id, is_deleted=False):
-            result += await repo.role_permission.get_permissions_by_role(
+        for account_role in await self.get_list(account_id=account.id):
+            result += await RolePermissionRepository().get_permissions_by_role(
                 role=account_role.role, only_id_str=only_id_str
             )
         return result
-
-
-account_role = AccountRoleRepository(AccountRole)

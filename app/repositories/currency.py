@@ -15,16 +15,9 @@
 #
 
 
-from typing import Optional
-
-from sqlalchemy import select
-
 from app.db.models import Currency
-from .base import BaseRepository, ModelDoesNotExist
+from .base import BaseRepository
 
 
 class CurrencyRepository(BaseRepository[Currency]):
-    pass
-
-
-currency = CurrencyRepository(Currency)
+    model = Currency

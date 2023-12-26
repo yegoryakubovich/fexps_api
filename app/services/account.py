@@ -15,8 +15,13 @@
 #
 
 
-import app.repositories as repo
 from app.db.models import Account
+from app.repositories.account import AccountRepository
+from app.repositories.country import CountryRepository
+from app.repositories.currency import CurrencyRepository
+from app.repositories.language import LanguageRepository
+from app.repositories.text_pack import TextPackRepository
+from app.repositories.timezone import TimezoneRepository
 from app.services import AccountRoleService
 from app.services.base import BaseService
 from app.utils import ApiException
@@ -49,7 +54,7 @@ class AccountService(BaseService):
             currency_id_str: str,
             surname: str = None,
     ) -> dict:
-        if await repo.account.is_exist(username=username):
+        if await AccountRepository().is_exist(username=username):
             raise AccountUsernameExist(f'Account with username "{username}" already exist')
 
         # Generate salt and password hash
@@ -59,13 +64,13 @@ class AccountService(BaseService):
         # Get other parameters
         country, language, timezone, currency = [
             await repository.get_by_id_str(id_str=id_str) for repository, id_str in zip(
-                [repo.country, repo.language, repo.timezone, repo.currency],
+                [CountryRepository(), LanguageRepository(), TimezoneRepository(), CurrencyRepository()],
                 [country_id_str, language_id_str, timezone_id_str, currency_id_str],
             )
         ]
 
         # Create account
-        account = await repo.account.create(
+        account = await AccountRepository().create(
             username=username,
             password_salt=password_salt,
             password_hash=password_hash,
@@ -107,13 +112,13 @@ class AccountService(BaseService):
     async def check_username(
             username: str,
     ):
-        if await repo.account.is_exist(username=username):
+        if await AccountRepository().is_exist(username=username):
             raise AccountUsernameExist(f'Account with username "{username}" already exist')
         return {}
 
     @session_required(return_account=True)
     async def get(self, account: Account) -> dict:
-        text_pack = await repo.text_pack.get_current(language=account.language)
+        text_pack = await TextPackRepository().get_current(language=account.language)
         permissions = await AccountRoleService.get_permissions(account=account)
         return {
             'username': account.username,

@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import app.repositories as repo
+from app.repositories.timezone import TimezoneRepository
 from app.services.base import BaseService
 
 
@@ -29,7 +27,7 @@ class TimezoneService(BaseService):
                     'id_str': timezone.id_str,
                     'deviation': timezone.deviation
                 }
-                for timezone in await repo.timezone.get_list()
+                for timezone in await TimezoneRepository().get_list()
             ],
         }
         return timezones

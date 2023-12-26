@@ -15,8 +15,8 @@
 #
 
 
-import app.repositories as repo
 from app.db.models import Session
+from app.repositories.session import SessionRepository
 from app.services.base import BaseService
 from app.utils import ApiException
 from app.utils.crypto import create_hash_by_string_and_salt
@@ -40,10 +40,10 @@ class SessionGetByTokenService(BaseService):
             raise WrongTokenFormat('Token does not match format')
         session_id = int(session_id_str)
 
-        session: Session = await repo.session.get_by_id(id_=session_id)
+        session: Session = await SessionRepository().get_by_id(id_=session_id)
         if session.token_hash == await create_hash_by_string_and_salt(
-            string=token,
-            salt=session.token_salt,
+                string=token,
+                salt=session.token_salt,
         ):
             return session
         else:

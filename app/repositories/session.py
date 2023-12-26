@@ -20,7 +20,4 @@ from .base import BaseRepository
 
 
 class SessionRepository(BaseRepository[Session]):
-    pass
-
-
-session = SessionRepository(Session)
+    model = Session

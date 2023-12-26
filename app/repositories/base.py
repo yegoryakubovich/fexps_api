@@ -15,9 +15,9 @@
 #
 
 
-from typing import TypeVar, Generic, Type, List, Optional
+from typing import TypeVar, Generic, List, Optional, Any
 
-from sqlalchemy import select, delete
+from sqlalchemy import select
 
 from app.db.base_class import Base
 from app.db.session import SessionLocal
@@ -31,8 +31,7 @@ class ModelDoesNotExist(ApiException):
 
 
 class BaseRepository(Generic[ModelType]):
-    def __init__(self, model: Type[ModelType]):
-        self.model = model
+    model: Any
 
     @staticmethod
     def get_session():
@@ -44,6 +43,7 @@ class BaseRepository(Generic[ModelType]):
         for key, value in obj_in_data.items():
             if not value:
                 continue
+            print(f"{type(value)} - {value}")
             if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
                 result[key] = value
                 continue
@@ -51,36 +51,29 @@ class BaseRepository(Generic[ModelType]):
         return result
 
     async def is_exist(self, **filters) -> bool:
-        result = await self.get_all(**filters)
+        result = await self.get(**filters)
         if result:
             return True
         return False
 
-    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
-        return await self.update(db_obj, is_deleted=True)
-
-    async def get(self, id_: int) -> Optional[ModelType]:
+    async def get(self, **filters) -> Optional[ModelType]:
         async with self.get_session() as session:
-            result = await session.execute(select(self.model).where(self.model.id == id_))
+            result = await session.execute(
+                select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
+            )
             return result.scalars().first()
 
     async def get_by_id(self, id_: int) -> Optional[ModelType]:
-        result = await self.get_all(id=id_, is_deleted=False)
+        result = await self.get(id=id_)
         if not result:
             raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result[0]
+        return result
 
     async def get_by_id_str(self, id_str: str) -> Optional[ModelType]:
-        result = await self.get_all(id_str=id_str, is_deleted=False)
+        result = await self.get(id_str=id_str)
         if not result:
             raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
-        return result[0]
-
-    async def get_or_create(self, **obj_in_data) -> ModelType:
-        result = await self.get_all(**obj_in_data)
-        if not result:
-            return await self.create(**obj_in_data)
-        return result[0]
+        return result
 
     async def create(self, **obj_in_data) -> ModelType:
         obj_in_data = self.convert_obj(obj_in_data)
@@ -94,24 +87,15 @@ class BaseRepository(Generic[ModelType]):
 
             return db_obj
 
-    async def get_by(self, **filters) -> List[ModelType]:
+    async def get_list(self, **filters) -> List[ModelType]:
         async with self.get_session() as session:
-            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
-            return result.scalars().first()
-
-    async def get_all(self, **filters) -> List[ModelType]:
-        async with self.get_session() as session:
-            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
+            result = await session.execute(
+                select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
+            )
             return result.scalars().all()
 
-    async def get_list(self) -> List[ModelType]:
-        result = await self.get_all(is_deleted=False)
-        return result
-
-    async def remove(self, id_: int):
-        async with self.get_session() as session:
-            await session.execute(delete(self.model).where(self.model.id == id_))
-            await session.commit()
+    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
+        return await self.update(db_obj, is_deleted=True)
 
     async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
         obj_in_data = self.convert_obj(obj_in_data)

@@ -15,14 +15,9 @@
 #
 
 
-from typing import Optional
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Role
+from .base import BaseRepository
 
 
 class RoleRepository(BaseRepository[Role]):
-    pass
-
-
-role = RoleRepository(Role)
+    model = Role

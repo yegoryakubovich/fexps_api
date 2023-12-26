@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import app.repositories as repo
+from app.repositories.country import CountryRepository
 from app.services.base import BaseService
 
 
@@ -33,7 +31,7 @@ class CountryService(BaseService):
                     'timezone_default_id_str': country.timezone_default.id_str,
                     'currency_default_id_str': country.currency_default.id_str,
                 }
-                for country in await repo.country.get_list()
+                for country in await CountryRepository().get_list()
             ],
         }
         return countries

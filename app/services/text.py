@@ -15,8 +15,9 @@
 #
 
 
-import app.repositories as repo
 from app.db.models import Session, Text
+from app.repositories.text import TextExist, TextRepository
+from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -28,10 +29,10 @@ class TextService(BaseService):
     ) -> dict:
         texts_list = []
 
-        texts = await repo.text.get_list()
+        texts = await TextRepository().get_list()
         for text in texts:
             text: Text
-            translations = await repo.text_translation.get_list_by_text(text=text)
+            translations = await TextTranslationRepository().get_list_by_text(text=text)
             texts_list.append(
                 {
                     'key': text.key,
@@ -57,10 +58,9 @@ class TextService(BaseService):
             value_default: str,
             return_model: bool = False,
     ) -> dict | Text:
-        text = await repo.text.create_text(
-            key=key,
-            value_default=value_default,
-        )
+        if await TextRepository().get(key=key):
+            raise TextExist(f'Text with key "{key}" already exist')
+        text = await TextRepository().create(key=key, value_default=value_default)
         await self.create_action(
             model=text,
             action='create',
@@ -82,8 +82,8 @@ class TextService(BaseService):
             value_default: str = None,
             new_key: str = None,
     ) -> dict:
-        text = await repo.text.get_by_key(key=key)
-        await repo.text.update_text(
+        text = await TextRepository().get_by_key(key=key)
+        await TextRepository().update_text(
             text,
             value_default=value_default,
             new_key=new_key,
@@ -121,8 +121,8 @@ class TextService(BaseService):
             session: Session,
             key: str,
     ) -> dict:
-        text = await repo.text.get_by_key(key=key)
-        await repo.text.delete(text)
+        text = await TextRepository().get_by_key(key=key)
+        await TextRepository().delete(text)
         await self.create_action(
             model=text,
             action='delete',

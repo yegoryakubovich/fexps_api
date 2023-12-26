@@ -27,12 +27,10 @@ class AccountWithUsernameDoeNotExist(ApiException):
 
 
 class AccountRepository(BaseRepository[Account]):
+    model = Account
 
     async def get_by_username(self, username: str) -> Optional[Account]:
-        result = await self.get_all(username=username)
+        result = await self.get(username=username)
         if not result:
             raise AccountWithUsernameDoeNotExist(f'Account @{username} does not exist')
-        return result[0]
-
-
-account = AccountRepository(Account)
+        return result

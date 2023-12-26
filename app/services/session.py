@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import app.repositories as repo
+from app.repositories.account import AccountRepository
+from app.repositories.session import SessionRepository
 from app.services.account import AccountService
 from app.services.base import BaseService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
@@ -23,7 +22,7 @@ from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 
 class SessionService(BaseService):
     async def create(self, username: str, password: str) -> dict:
-        account = await repo.account.get_by_username(username=username)
+        account = await AccountRepository().get_by_username(username=username)
         await AccountService().check_password(account=account, password=password)
 
         # Create token hash
@@ -32,11 +31,7 @@ class SessionService(BaseService):
         token_hash = await create_hash_by_string_and_salt(string=token, salt=token_salt)
 
         # Create session and action
-        session = await repo.session.create(
-            account=account,
-            token_hash=token_hash,
-            token_salt=token_salt,
-        )
+        session = await SessionRepository().create(account=account, token_hash=token_hash, token_salt=token_salt)
         await self.create_action(
             model=session,
             action='create',

@@ -15,16 +15,9 @@
 #
 
 
-from typing import Optional
-
-from sqlalchemy import select
-
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import Permission
+from .base import BaseRepository
 
 
 class PermissionRepository(BaseRepository[Permission]):
-    pass
-
-
-permission = PermissionRepository(Permission)
+    model = Permission

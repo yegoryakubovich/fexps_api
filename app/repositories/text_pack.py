@@ -18,34 +18,38 @@
 from json import dumps
 from typing import Optional
 
-import app.repositories as repo
 from app.db.models import TextPack, Language
 from config import PATH_TEXTS_PACKS
 from .base import BaseRepository
+from .language import LanguageRepository
+from .text import TextRepository
+from ..utils import ApiException
+
+
+class TextPackDoesNotExist(ApiException):
+    pass
 
 
 class TextPackRepository(BaseRepository[TextPack]):
+    model = TextPack
 
     async def create_by_language(self, language: Language) -> Optional[TextPack]:
         json = {}
-        for text in await repo.text.get_all():
-            value = await repo.text.get_value(text, language=language)
+        for text in await TextRepository().get_list():
+            value = await TextRepository().get_value(text, language=language)
             key = text.key
             json[key] = value
         text_pack = await self.create(language=language)
         with open(f'{PATH_TEXTS_PACKS}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
-            md_file.write(dumps(json))
+            md_file.write(dumps(json, ensure_ascii=False))
         return text_pack
 
     async def create_all(self):
-        for language in await repo.language.get_all():
+        for language in await LanguageRepository().get_list():
             await self.create_by_language(language=language)
 
     async def get_current(self, language: Language) -> Optional[TextPack]:
-        text_pack_all = await self.get_all(language=language, is_deleted=False)
+        text_pack_all = await self.get_list(language=language)
         if not text_pack_all:
-            return await self.get_or_create(id=0)
+            raise TextPackDoesNotExist(f'TextPack with language "{language.name}" does not exist')
         return text_pack_all[0]
-
-
-text_pack = TextPackRepository(TextPack)

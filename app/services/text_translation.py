@@ -15,8 +15,10 @@
 #
 
 
-import app.repositories as repo
 from app.db.models import Language, Session, Text, TextTranslation
+from app.repositories.language import LanguageRepository
+from app.repositories.text import TextRepository
+from app.repositories.text_translation import TextTranslationExist, TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -31,20 +33,18 @@ class TextTranslationService(BaseService):
             value: str,
             return_model: bool = False
     ) -> dict | TextTranslation:
-        text: Text = await repo.text.get_by_key(key=text_key)
-        language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation = await repo.text_translation.create_text_translation(
-            text=text,
-            language=language,
-            value=value,
-        )
+        text: Text = await TextRepository().get_by_key(key=text_key)
+        language: Language = await LanguageRepository().get_by_id_str(id_str=language)
+        if await TextTranslationRepository().get(text=text, language=language):
+            raise TextTranslationExist(f'Text translation with language "{language.id_str}" already exist')
+        text_translation = await TextTranslationRepository().create(text=text, language=language, value=value)
         await self.create_action(
             model=text_translation,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'text_key': text_key,
-                'language': language,
+                'language': language.id_str,
                 'value': value,
             },
         )
@@ -62,10 +62,11 @@ class TextTranslationService(BaseService):
             language: str,
             value: str,
     ) -> dict:
-        text: Text = await repo.text.get_by_key(key=text_key)
-        language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await repo.text_translation.get_by_text_lang(text=text, language=language)
-        await repo.text_translation.update(
+        text: Text = await TextRepository().get_by_key(key=text_key)
+        language: Language = await LanguageRepository().get_by_id_str(id_str=language)
+        text_translation: TextTranslation = await TextTranslationRepository().get_by_text_lang(text=text,
+                                                                                               language=language)
+        await TextTranslationRepository().update(
             text_translation,
             value=value,
         )
@@ -89,10 +90,12 @@ class TextTranslationService(BaseService):
             text_key: str,
             language: str,
     ) -> dict:
-        text: Text = await repo.text.get_by_key(key=text_key)
-        language: Language = await repo.language.get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await repo.text_translation.get_by_text_lang(text=text, language=language)
-        await repo.text_translation.delete(text_translation)
+        text: Text = await TextRepository().get_by_key(key=text_key)
+        language: Language = await LanguageRepository().get_by_id_str(id_str=language)
+        text_translation: TextTranslation = await TextTranslationRepository().get_by_text_lang(
+            text=text, language=language,
+        )
+        await TextTranslationRepository().delete(text_translation)
         await self.create_action(
             model=text_translation,
             action='delete',

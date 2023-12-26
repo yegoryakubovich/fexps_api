@@ -16,7 +16,8 @@
 
 
 from app.db.models import Role, Session
-import app.repositories as repo
+from app.repositories.role import RoleRepository
+from app.repositories.text import TextRepository
 from app.services.base import BaseService
 from app.utils import ApiException
 from app.utils.decorators import session_required
@@ -36,14 +37,11 @@ class RoleService(BaseService):
             id_str: str,
             name_text_key: str,
     ) -> dict:
-        if await repo.role.is_exist(id_str=id_str):
+        if await RoleRepository().is_exist(id_str=id_str):
             raise RoleAlreadyExist(f'Role "{id_str}" already exist')
 
-        name_text = await repo.text.get_by_key(key=name_text_key)
-
-        role = await repo.role.create(
-            name_text=name_text,
-        )
+        name_text = await TextRepository().get_by_key(key=name_text_key)
+        role = await RoleRepository().create(name_text=name_text)
         await self.create_action(
             model=role,
             action='create',

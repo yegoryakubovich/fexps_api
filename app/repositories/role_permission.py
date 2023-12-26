@@ -15,19 +15,17 @@
 #
 
 
-from typing import Optional, List
+from typing import List
 
-from .base import BaseRepository, ModelDoesNotExist
 from app.db.models import RolePermission, Role, Permission
+from .base import BaseRepository
 
 
 class RolePermissionRepository(BaseRepository[RolePermission]):
+    model = RolePermission
 
     async def get_permissions_by_role(self, role: Role, only_id_str=False) -> [List[str], List[Permission]]:
         result = []
-        for role_permission in await self.get_all(role=role, is_deleted=False):
+        for role_permission in await self.get_list(role=role):
             result.append(role_permission.permission.id_str if only_id_str else role_permission.permission)
         return result
-
-
-role_permission = RolePermissionRepository(RolePermission)

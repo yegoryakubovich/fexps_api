@@ -18,7 +18,7 @@
 from typing import Optional, List
 
 from app.db.models import TextTranslation, Text, Language
-from .base import BaseRepository, ModelDoesNotExist
+from .base import BaseRepository
 from ..utils import ApiException
 
 
@@ -31,20 +31,13 @@ class TextTranslationExist(ApiException):
 
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):
+    model = TextTranslation
 
     async def get_by_text_lang(self, text: Text, language: Language) -> Optional[TextTranslation]:
-        result = await self.get_all(text=text, language=language, is_deleted=False)
+        result = await self.get_list(text=text, language=language)
         if not result:
             raise TextTranslationDoesNotExist(f'Text translation with language "{language.id_str}" does not exist')
         return result[0]
 
     async def get_list_by_text(self, text: Text) -> List[TextTranslation]:
-        return await self.get_all(text=text, is_deleted=False)
-
-    async def create_text_translation(self, text: Text, language: Language, value: str):
-        if await self.get_all(text=text, language=language):
-            raise TextTranslationExist(f'Text translation with language "{language.id_str}" already exist')
-        return await self.create(text=text, language=language, value=value)
-
-
-text_translation = TextTranslationRepository(TextTranslation)
+        return await self.get_list(text=text)

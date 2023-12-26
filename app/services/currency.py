@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import app.repositories as repo
+from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
 
 
@@ -28,7 +26,7 @@ class CurrencyService(BaseService):
                     'id': currency.id,
                     'id_str': currency.id_str,
                 }
-                for currency in await repo.currency.get_list()
+                for currency in await CurrencyRepository().get_list()
             ],
         }
         return currencies

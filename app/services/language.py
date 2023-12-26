@@ -13,9 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import app.repositories as repo
+from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
 
 
@@ -29,7 +27,7 @@ class LanguageService(BaseService):
                     'id_str': language.id_str,
                     'name': language.name,
                 }
-                for language in await repo.language.get_list()
+                for language in await LanguageRepository().get_list()
             ],
         }
         return languages
