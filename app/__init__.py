@@ -34,9 +34,9 @@ from config import VERSION
 async def on_startup():
     try:
         await init_db()
-        logging.info("Success connect to database ")
+        logging.info('Success connect to database')
     except ConnectionRefusedError:
-        logging.error("Failed to connect to database ")
+        logging.error('Failed to connect to database')
         exit(1)
 
 
