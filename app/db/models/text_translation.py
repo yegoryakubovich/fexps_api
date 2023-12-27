@@ -26,9 +26,9 @@ class TextTranslation(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    text_id = Column(BigInteger, ForeignKey("texts.id"))
+    text_id = Column(BigInteger, ForeignKey("texts.id", ondelete='CASCADE'))
     text = relationship("Text", backref="translations", uselist=False, lazy="selectin")
-    language_id = Column(BigInteger, ForeignKey("languages.id"))
+    language_id = Column(BigInteger, ForeignKey("languages.id", ondelete='SET NULL'), nullable=True)
     language = relationship("Language", uselist=False, lazy="selectin")
 
     value = Column(String(1024))
