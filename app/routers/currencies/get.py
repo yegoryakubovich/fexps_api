@@ -15,17 +15,22 @@
 #
 
 
-from .account_role import AccountRoleRepository
-from .action import ActionRepository
-from .account import AccountRepository
-from .role import RoleRepository
-from .role_permission import RolePermissionRepository
-from .session import SessionRepository
-from .country import CountryRepository
-from .language import LanguageRepository
-from .text_translation import TextTranslationRepository
-from .timezone import TimezoneRepository
-from .currency import CurrencyRepository
-from .text import TextRepository
-from .text_pack import TextPackRepository
-from .base import ModelDoesNotExist
+from fastapi import Depends
+from pydantic import Field, BaseModel
+from app.services import CurrencyService
+from app.utils import Router, Response
+
+
+router = Router(
+    prefix='/get',
+)
+
+
+class CurrencyGetSchema(BaseModel):
+    id_str: str = Field(min_length=2, max_length=32)
+
+
+@router.get()
+async def route(schema: CurrencyGetSchema = Depends()):
+    result = await CurrencyService().get(id_str=schema.id_str)
+    return Response(**result)

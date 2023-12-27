@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import Currency
+from app.db.models import Currency, Text
 from .base import BaseRepository
 
 
-class CurrencyRepository(BaseRepository[Currency]):
+class CurrencyRepository(BaseRepository):
     model = Currency

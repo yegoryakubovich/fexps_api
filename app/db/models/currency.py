@@ -25,8 +25,5 @@ class Currency(Base):
     __tablename__ = 'currencies'
 
     id = Column(BigInteger, primary_key=True)
-
     id_str = Column(String(16))
-    name_text_id = Column(BigInteger, ForeignKey("texts.id", ondelete='SET NULL'), nullable=True)
-    name_text = relationship("Text", uselist=False, lazy="selectin")
     is_deleted = Column(Boolean, default=False)
