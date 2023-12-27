@@ -34,35 +34,30 @@ class ModelDoesNotExist(ApiException):
 class BaseRepository(Generic[ModelType]):
     model: Any
 
-    @staticmethod
-    def get_session():
-        return SessionLocal()
-
-    @staticmethod
-    def convert_obj(obj_in_data: dict) -> dict:
-        result = {}
-        for key, value in obj_in_data.items():
-            if not value:
-                continue
-            print(f"{type(value)} - {value}")
-            if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
-                result[key] = value
-                continue
-            result[f"{key}_id"] = value.id
-        return result
-
     async def is_exist(self, **filters) -> bool:
         result = await self.get(**filters)
         if result:
             return True
         return False
 
-    async def get(self, **filters) -> Optional[ModelType]:
-        async with self.get_session() as session:
+    async def create(self, **obj_in_data) -> ModelType:
+        obj_in_data = self._convert_obj(obj_in_data)
+        async with self._get_session() as session:
+            db_obj = self.model(**obj_in_data)
+
+            session.add(db_obj)
+
+            await session.commit()
+            await session.refresh(db_obj)
+
+            return db_obj
+
+    async def get_list(self, **filters) -> List[ModelType]:
+        async with self._get_session() as session:
             result = await session.execute(
                 select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
             )
-            return result.scalars().first()
+            return result.scalars().all()
 
     async def get_by_id(self, id_: int) -> Optional[ModelType]:
         result = await self.get(id=id_)
@@ -76,37 +71,40 @@ class BaseRepository(Generic[ModelType]):
             raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
         return result
 
-    async def create(self, **obj_in_data) -> ModelType:
-        obj_in_data = self.convert_obj(obj_in_data)
-        async with self.get_session() as session:
-            db_obj = self.model(**obj_in_data)
-
-            session.add(db_obj)
-
-            await session.commit()
-            await session.refresh(db_obj)
-
-            return db_obj
-
-    async def get_list(self, **filters) -> List[ModelType]:
-        async with self.get_session() as session:
+    async def get(self, **filters) -> Optional[ModelType]:
+        async with self._get_session() as session:
             result = await session.execute(
                 select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
             )
-            return result.scalars().all()
-
-    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
-        return await self.update(db_obj, is_deleted=True)
+            return result.scalars().first()
 
     async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
-        obj_in_data = self.convert_obj(obj_in_data)
-        async with self.get_session() as session:
+        obj_in_data = self._convert_obj(obj_in_data)
+        async with self._get_session() as session:
             for field, value in obj_in_data.items():
                 setattr(db_obj, field, obj_in_data[field])
 
             session.add(db_obj)
-
             await session.commit()
             await session.refresh(db_obj)
-
             return db_obj
+
+    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
+        return await self.update(db_obj, is_deleted=True)
+
+    @staticmethod
+    def _get_session():
+        return SessionLocal()
+
+    @staticmethod
+    def _convert_obj(obj_in_data: dict) -> dict:
+        result = {}
+        for key, value in obj_in_data.items():
+            if not value:
+                continue
+            print(f"{type(value)} - {value}")
+            if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
+                result[key] = value
+                continue
+            result[f"{key}_id"] = value.id
+        return result

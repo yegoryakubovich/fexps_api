@@ -13,11 +13,68 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from app.repositories.currency import CurrencyRepository
+
+
+from app.db.models import Session
+from app.repositories import CurrencyRepository
 from app.services.base import BaseService
+from app.utils.decorators import session_required
 
 
 class CurrencyService(BaseService):
+    @session_required()
+    async def create(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().create(
+            id_str=id_str,
+        )
+
+        await self.create_action(
+            model=currency,
+            action='create',
+            parameters={
+                'creator': f'session_{session.id}',
+                'id_str': id_str,
+            }
+        )
+
+        return {'id': currency.id}
+
+    @session_required()
+    async def delete(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+        await self.delete(model=currency)
+
+        await self.create_action(
+            model=currency,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+            }
+        )
+
+        return {}
+
+    @staticmethod
+    async def get(
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+        return {
+            'currency': {
+                'id': currency.id,
+                'id_str': currency.id_str,
+            }
+        }
+
     @staticmethod
     async def get_list() -> dict:
         currencies = {

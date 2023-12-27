@@ -26,6 +26,6 @@ class TextPack(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    language_id = Column(BigInteger, ForeignKey("languages.id"))
-    language = relationship("Language", uselist=False, lazy="selectin")
+    language_id = Column(BigInteger, ForeignKey('languages.id'))
+    language = relationship('Language', uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

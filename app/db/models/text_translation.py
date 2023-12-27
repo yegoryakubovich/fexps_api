@@ -26,10 +26,10 @@ class TextTranslation(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    text_id = Column(BigInteger, ForeignKey("texts.id"))
-    text = relationship("Text", backref="translations", uselist=False, lazy="selectin")
-    language_id = Column(BigInteger, ForeignKey("languages.id"))
-    language = relationship("Language", uselist=False, lazy="selectin")
+    text_id = Column(BigInteger, ForeignKey('texts.id'))
+    text = relationship('Text', backref='translations', uselist=False, lazy='selectin')
+    language_id = Column(BigInteger, ForeignKey('languages.id'))
+    language = relationship('Language', uselist=False, lazy='selectin')
 
     value = Column(String(1024))
     is_deleted = Column(Boolean, default=False)

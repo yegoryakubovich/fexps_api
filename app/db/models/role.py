@@ -26,6 +26,6 @@ class Role(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    name_text_id = Column(BigInteger, ForeignKey("texts.id"))
-    name_text = relationship("Text", uselist=False, lazy="selectin")
+    name_text_id = Column(BigInteger, ForeignKey('texts.id'))
+    name_text = relationship('Text', uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

@@ -15,17 +15,26 @@
 #
 
 
-from .account_role import AccountRoleRepository
-from .action import ActionRepository
-from .account import AccountRepository
-from .role import RoleRepository
-from .role_permission import RolePermissionRepository
-from .session import SessionRepository
-from .country import CountryRepository
-from .language import LanguageRepository
-from .text_translation import TextTranslationRepository
-from .timezone import TimezoneRepository
-from .currency import CurrencyRepository
-from .text import TextRepository
-from .text_pack import TextPackRepository
-from .base import ModelDoesNotExist
+from pydantic import BaseModel, Field
+
+from app.services import CurrencyService
+from app.utils import Router, Response
+
+
+router = Router(
+    prefix='/create',
+)
+
+
+class CurrencyCreateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_str: str = Field(min_length=2, max_length=32)
+
+
+@router.post()
+async def route(schema: CurrencyCreateSchema):
+    result = await CurrencyService().create(
+        token=schema.token,
+        id_str=schema.id_str,
+    )
+    return Response(**result)
