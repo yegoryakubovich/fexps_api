@@ -14,31 +14,25 @@
 # limitations under the License.
 #
 
-"""FIRST"""
+
 from .action import Action
 from .text import Text
 from .timezone import Timezone
 from .language import Language
 
-
-"""SECOND"""
 from .action_parameter import ActionParameter
 from .permission import Permission
 from .currency import Currency
 from .role import Role
 from .text_translation import TextTranslation
 from .text_pack import TextPack
+from .method import Method
+from .requisite import Requisite
 
-
-"""THREE"""
 from .country import Country
 from .role_permission import RolePermission
 
-
-"""FOUR"""
 from .account import Account
 
-
-"""OTHER"""
 from .session import Session
 from .account_roles import AccountRole

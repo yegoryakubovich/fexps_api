@@ -15,12 +15,28 @@
 #
 
 
-from app.services.base import BaseService
-from app.utils.decorators import session_required
+from pydantic import BaseModel, Field
+
+from app.services import TimezoneService
+from app.utils import Router, Response
 
 
-class MethodService(BaseService):
-    @session_required()
-    async def create(self):
-        pass
+router = Router(
+    prefix='/create',
+)
 
+
+class TimezoneCreateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_str: str = Field(min_length=1, max_length=16)
+    deviation: int = Field()
+
+
+@router.post()
+async def route(schema: TimezoneCreateSchema):
+    result = await TimezoneService().create(
+        token=schema.token,
+        id_str=schema.id_str,
+        deviation=schema.deviation,
+    )
+    return Response(**result)

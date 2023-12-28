@@ -15,12 +15,23 @@
 #
 
 
-from app.services.base import BaseService
-from app.utils.decorators import session_required
+from fastapi import Depends
+from pydantic import BaseModel, Field
+
+from app.services import LanguageService
+from app.utils import Router, Response
 
 
-class MethodService(BaseService):
-    @session_required()
-    async def create(self):
-        pass
+router = Router(
+    prefix='/get',
+)
 
+
+class LanguageGetSchema(BaseModel):
+    id_str: str = Field(min_length=1, max_length=16)
+
+
+@router.get()
+async def route(schema: LanguageGetSchema = Depends()):
+    result = await LanguageService().get(id_str=schema.id_str)
+    return Response(**result)

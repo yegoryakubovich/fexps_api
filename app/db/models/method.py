@@ -15,24 +15,20 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class Country(Base):
-    __tablename__ = 'countries'
+class Method(Base):
+    __tablename__ = 'methods'
 
     id = Column(BigInteger, primary_key=True)
-
-    id_str = Column(String(16))
+    currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
+    currency = relationship('Currency', uselist=False, lazy='selectin')
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', uselist=False, lazy='selectin')
-    language_default_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)
-    language_default = relationship('Language', uselist=False, lazy='selectin')
-    timezone_default_id = Column(BigInteger, ForeignKey('timezones.id', ondelete='SET NULL'), nullable=True)
-    timezone_default = relationship('Timezone', uselist=False, lazy='selectin')
-    currency_default_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
-    currency_default = relationship('Currency', uselist=False, lazy='selectin')
+    schema_fields = Column(JSON())
+    is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
