@@ -13,19 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from .account_role import AccountRoleRepository
-from .action import ActionRepository
-from .account import AccountRepository
-from .role import RoleRepository
-from .role_permission import RolePermissionRepository
-from .session import SessionRepository
-from .country import CountryRepository
-from .language import LanguageRepository
-from .text_translation import TextTranslationRepository
-from .timezone import TimezoneRepository
-from .currency import CurrencyRepository
-from .text import TextRepository
-from .text_pack import TextPackRepository
-from .base import ModelDoesNotExist
