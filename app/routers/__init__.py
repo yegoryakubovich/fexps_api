@@ -22,6 +22,7 @@ from .languages import router as router_languages
 from .countries import router as router_countries
 from .currencies import router as router_currencies
 from .timezones import router as router_timezones
+from .contacts import router as router_contacts
 from .roles import router as router_roles
 from .texts import router as router_texts
 
@@ -34,6 +35,7 @@ routers = [
     router_countries,
     router_currencies,
     router_timezones,
+    router_contacts,
     router_roles,
     router_texts,
 ]

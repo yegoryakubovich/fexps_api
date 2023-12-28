@@ -15,18 +15,19 @@
 #
 
 
-from .account_role import AccountRoleService
-from .action import ActionService
-from .account import AccountService, WrongPassword
-from .role import RoleService
-from .session import SessionService
-from .country import CountryService
-from .language import LanguageService
-from .session_get_by_token import SessionGetByTokenService
-from .text_translation import TextTranslationService
-from .timezone import TimezoneService
-from .currency import CurrencyService
-from .text import TextService
-from .text_pack import TextPackService
-from .method import MethodService
-from .contacts import ContactService
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
+from .get import router as router_get
+from .get_list import router as router_get_list
+
+router = Router(
+    prefix='/contacts',
+    routes_included=[
+        router_create,
+        router_delete,
+        router_get,
+        router_get_list,
+    ],
+    tags=['Contacts'],
+)

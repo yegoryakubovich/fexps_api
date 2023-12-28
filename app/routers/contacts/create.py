@@ -15,18 +15,26 @@
 #
 
 
-from .account_role import AccountRoleService
-from .action import ActionService
-from .account import AccountService, WrongPassword
-from .role import RoleService
-from .session import SessionService
-from .country import CountryService
-from .language import LanguageService
-from .session_get_by_token import SessionGetByTokenService
-from .text_translation import TextTranslationService
-from .timezone import TimezoneService
-from .currency import CurrencyService
-from .text import TextService
-from .text_pack import TextPackService
-from .method import MethodService
-from .contacts import ContactService
+from pydantic import BaseModel, Field
+
+from app.services import ContactService
+from app.utils import Router, Response
+
+
+router = Router(
+    prefix='/create',
+)
+
+
+class CreateContactSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    name_text_key: str = Field(min_length=2, max_length=128)
+
+
+@router.post()
+async def route(schema: CreateContactSchema):
+    result = await ContactService().create(
+        token=schema.token,
+        name_text_key=schema.name_text_key,
+    )
+    return Response(**result)

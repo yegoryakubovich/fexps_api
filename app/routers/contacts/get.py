@@ -15,18 +15,22 @@
 #
 
 
-from .account_role import AccountRoleService
-from .action import ActionService
-from .account import AccountService, WrongPassword
-from .role import RoleService
-from .session import SessionService
-from .country import CountryService
-from .language import LanguageService
-from .session_get_by_token import SessionGetByTokenService
-from .text_translation import TextTranslationService
-from .timezone import TimezoneService
-from .currency import CurrencyService
-from .text import TextService
-from .text_pack import TextPackService
-from .method import MethodService
-from .contacts import ContactService
+from fastapi import Depends
+from pydantic import Field, BaseModel
+from app.services import ContactService
+from app.utils import Router, Response
+
+
+router = Router(
+    prefix='/get',
+)
+
+
+class ContactGetSchema(BaseModel):
+    id: int = Field()
+
+
+@router.get()
+async def route(schema: ContactGetSchema = Depends()):
+    result = await ContactService().get(id_=schema.id)
+    return Response(**result)
