@@ -73,10 +73,10 @@ class ContactService(BaseService):
             session: Session,
             id_: int,
     ) -> dict:
-        text = await ContactRepository().get(id=id_)
-        await ContactRepository().delete(text)
+        contact = await ContactRepository().get(id=id_)
+        await ContactRepository().delete(contact)
         await self.create_action(
-            model=text,
+            model=contact,
             action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
