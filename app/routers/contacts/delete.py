@@ -28,7 +28,7 @@ router = Router(
 
 class LanguageDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field(min_length=1, max_length=16)
+    id: int = Field()
 
 
 @router.post()
