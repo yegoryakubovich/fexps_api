@@ -1,0 +1,131 @@
+#
+# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
+from app.db.models import Account, AccountContact
+from app.repositories.account_contacts import AccountContactRepository
+from app.repositories.contacts import ContactRepository
+from app.services.base import BaseService
+from app.utils import ApiException
+from app.utils.decorators import session_required
+
+
+class AccountMissingRole(ApiException):
+    pass
+
+
+class AccountContactService(BaseService):
+    model = AccountContact
+
+    @session_required(return_account=True)
+    async def create(
+            self,
+            account: Account,
+            contact_id: int,
+            value: str
+    ) -> dict:
+        contact = await ContactRepository().get_by_id(id_=contact_id)
+        account_contact = await AccountContactRepository().create(account=account, contact=contact, value=value)
+        await self.create_action(
+            model=contact,
+            action='create',
+            parameters={
+                'creator': f'account_{account.id}',
+            },
+        )
+        return {'account_contact_id': account_contact.id}
+
+    @session_required(return_account=True)
+    async def get_list(
+            self,
+            account: Account,
+    ) -> dict:
+        print(account)
+        account_contacts_list = []
+
+        account_contacts = await AccountContactRepository().get_list(account=account)
+        for account_contact in account_contacts:
+            contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
+            account_contacts_list.append(
+                {
+                    'id': account_contact.id,
+                    'contact_id': contact.id,
+                    'contact_name_key': contact.name_text.key,
+                    'value': account_contact.value,
+                }
+            )
+        return {
+            'account_contacts': account_contacts_list,
+        }
+
+    @session_required(return_account=True)
+    async def get(
+            self,
+            account: Account,
+            id_: int
+    ) -> dict:
+        account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
+        contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
+        return {
+            'id': account_contact.id,
+            'contact_id': contact.id,
+            'contact_name_key': contact.name_text.key,
+            'value': account_contact.value,
+        }
+
+    @session_required(return_account=True)
+    async def update(
+            self,
+            account: Account,
+            id_: int,
+            value: str,
+    ) -> dict:
+        account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
+        await AccountContactRepository().update(
+            account_contact,
+            value=value,
+        )
+
+        # FIXME
+        action_parameters = {
+            'updater': f'account_{account.id}',
+        }
+
+        await self.create_action(
+            model=account_contact,
+            action='update',
+            parameters=action_parameters,
+        )
+
+        return {}
+
+    @session_required(return_account=True)
+    async def delete(
+            self,
+            account: Account,
+            id_: int,
+    ) -> dict:
+        account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
+        await AccountContactRepository().delete(account_contact)
+        await self.create_action(
+            model=account_contact,
+            action='delete',
+            parameters={
+                'deleter': f'account_{account.id}',
+                'id': id_,
+            },
+        )
+        return {}

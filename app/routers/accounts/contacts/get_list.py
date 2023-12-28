@@ -15,19 +15,25 @@
 #
 
 
-from app.utils import Router
-from .check_username import router as router_check_username
-from .contacts import router as router_contacts
-from .create import router as router_create
-from .get import router as router_get
+from fastapi import Depends
+from pydantic import BaseModel, Field
+
+from app.services import AccountContactService
+from app.utils import Response, Router
+
 
 router = Router(
-    prefix='/accounts',
-    routes_included=[
-        router_get,
-        router_create,
-        router_check_username,
-        router_contacts,
-    ],
-    tags=['Accounts'],
+    prefix='/list/get',
 )
+
+
+class AccountContactListGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.post()
+async def route(schema: AccountContactListGetSchema = Depends()):
+    result = await AccountContactService().get_list(
+        token=schema.token,
+    )
+    return Response(**result)

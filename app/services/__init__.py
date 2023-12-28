@@ -30,3 +30,4 @@ from .text import TextService
 from .text_pack import TextPackService
 from .method import MethodService
 from .contacts import ContactService
+from .account_contacts import AccountContactService

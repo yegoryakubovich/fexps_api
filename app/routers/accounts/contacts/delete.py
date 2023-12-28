@@ -10,24 +10,31 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific AccountContact governing permissions and
 # limitations under the License.
 #
 
 
-from app.utils import Router
-from .check_username import router as router_check_username
-from .contacts import router as router_contacts
-from .create import router as router_create
-from .get import router as router_get
+from pydantic import BaseModel, Field
+
+from app.services import ContactService, AccountContactService
+from app.utils import Router, Response
+
 
 router = Router(
-    prefix='/accounts',
-    routes_included=[
-        router_get,
-        router_create,
-        router_check_username,
-        router_contacts,
-    ],
-    tags=['Accounts'],
+    prefix='/delete',
 )
+
+
+class AccountContactDeleteSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.post()
+async def route(schema: AccountContactDeleteSchema):
+    result = await AccountContactService().delete(
+        token=schema.token,
+        id_=schema.id,
+    )
+    return Response(**result)

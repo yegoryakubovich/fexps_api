@@ -15,19 +15,28 @@
 #
 
 
-from app.utils import Router
-from .check_username import router as router_check_username
-from .contacts import router as router_contacts
-from .create import router as router_create
-from .get import router as router_get
+from pydantic import BaseModel, Field
+
+from app.services import AccountContactService
+from app.utils import Response, Router
+
 
 router = Router(
-    prefix='/accounts',
-    routes_included=[
-        router_get,
-        router_create,
-        router_check_username,
-        router_contacts,
-    ],
-    tags=['Accounts'],
+    prefix='/update',
 )
+
+
+class AccountContactUpdateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+    value: str = Field(min_length=1, max_length=128)
+
+
+@router.post()
+async def route(schema: AccountContactUpdateSchema):
+    result = await AccountContactService().update(
+        token=schema.token,
+        id_=schema.id,
+        value=schema.value,
+    )
+    return Response(**result)

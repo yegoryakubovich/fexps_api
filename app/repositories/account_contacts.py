@@ -13,11 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
 
-
-from app.db.models import AccountContact
+from app.db.models import AccountContact, Account
 from .base import BaseRepository
+from ..utils import ApiException
+
+
+class AccountContactNotFound(ApiException):
+    pass
 
 
 class AccountContactRepository(BaseRepository[AccountContact]):
     model = AccountContact
+
+    async def get_by_account_and_id(self, account: Account, id_: int) -> Optional[AccountContact]:
+        result = await self.get(account=account, id=id_)
+        if not result:
+            raise AccountContactNotFound(f'{self.model.__name__}.{id_} does not exist')
+        return result
