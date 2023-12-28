@@ -102,7 +102,6 @@ class BaseRepository(Generic[ModelType]):
         for key, value in obj_in_data.items():
             if not value:
                 continue
-            print(f"{type(value)} - {value}")
             if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
                 result[key] = value
                 continue
