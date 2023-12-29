@@ -28,13 +28,17 @@ router = Router(
 
 class MethodCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    name: str = Field(min_length=1, max_length=32)
+    currency_id_str: str = Field(min_length=2, max_length=32)
+    name_text_key: str = Field(min_length=2, max_length=128)
+    schema_fields: list[dict] = Field(default=[{"key": "string", "type": "string", "name": "string"}])
 
 
 @router.post()
 async def route(schema: MethodCreateSchema):
     result = await MethodService().create(
         token=schema.token,
-        name=schema.name,
+        currency_id_str=schema.currency_id_str,
+        name_text_key=schema.name_text_key,
+        schema_fields=schema.schema_fields,
     )
     return Response(**result)

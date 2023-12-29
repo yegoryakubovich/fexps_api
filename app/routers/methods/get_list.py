@@ -15,9 +15,8 @@
 #
 
 
-from app.services import CurrencyService
+from app.services import MethodService
 from app.utils import Router, Response
-
 
 router = Router(
     prefix='/list/get',
@@ -26,5 +25,5 @@ router = Router(
 
 @router.get()
 async def route():
-    result = await CurrencyService().get_list()
+    result = await MethodService().get_list()
     return Response(**result)

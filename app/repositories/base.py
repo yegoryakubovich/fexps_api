@@ -23,11 +23,14 @@ from app.db.base_class import Base
 from app.db.session import SessionLocal
 from app.utils import ApiException
 
-
 ModelType = TypeVar('ModelType', bound=Base)
 
 
 class ModelDoesNotExist(ApiException):
+    pass
+
+
+class NoRequiredParameters(ApiException):
     pass
 
 
@@ -102,7 +105,7 @@ class BaseRepository(Generic[ModelType]):
         for key, value in obj_in_data.items():
             if not value:
                 continue
-            if isinstance(value, str) or isinstance(value, int) or isinstance(value, bool):
+            if type(value) in [str, int, bool, list, dict]:
                 result[key] = value
                 continue
             result[f"{key}_id"] = value.id

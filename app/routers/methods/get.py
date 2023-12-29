@@ -23,18 +23,17 @@ from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/delete',
+    prefix='/get',
 )
 
 
-class MethodCreateSchema(BaseModel):
+class MethodGetSchema(BaseModel):
     id: int = Field()
 
 
 @router.get()
-async def route(schema: MethodCreateSchema = Depends()):
+async def route(schema: MethodGetSchema = Depends()):
     result = await MethodService().get(
-        token=schema.token,
         id_=schema.id,
     )
     return Response(**result)

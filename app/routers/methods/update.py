@@ -15,27 +15,31 @@
 #
 
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from app.services import MethodService
-from app.utils import Router, Response
-
+from app.utils import Response, Router
 
 router = Router(
     prefix='/update',
 )
 
 
-class MethodCreateSchema(BaseModel):
+class MethodUpdateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
     id: int = Field()
-    is_active: bool = Field()
+    currency_id_str: str = Field(default=None, min_length=2, max_length=32)
+    name_text_key: str = Field(default=None, min_length=2, max_length=128)
+    schema_fields: list[dict] = Field(default=None)  # FIXME
 
 
 @router.post()
-async def route(schema: MethodCreateSchema):
+async def route(schema: MethodUpdateSchema):
     result = await MethodService().update(
         token=schema.token,
         id_=schema.id,
-        is_active=schema.is_active,
+        currency_id_str=schema.currency_id_str or None,
+        name_text_key=schema.name_text_key or None,
+        schema_fields=schema.schema_fields or None,
     )
     return Response(**result)

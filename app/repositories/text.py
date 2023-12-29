@@ -16,7 +16,7 @@
 
 
 from app.db.models import Text, Language
-from .base import BaseRepository
+from .base import BaseRepository, NoRequiredParameters
 from .text_translation import TextTranslationRepository
 from ..utils import ApiException
 
@@ -26,10 +26,6 @@ class TextDoesNotExist(ApiException):
 
 
 class TextExist(ApiException):
-    pass
-
-
-class NoRequiredParameters(ApiException):
     pass
 
 
@@ -61,4 +57,6 @@ class TextRepository(BaseRepository[Text]):
         if new_key:
             await self.update(db_obj, key=new_key)
         if not value_default and not new_key:
-            raise NoRequiredParameters('One of the following parameters must be filled in: value_default, new_key')
+            raise NoRequiredParameters(
+                'One of the following parameters must be filled in: value_default, new_key'
+            )

@@ -57,7 +57,7 @@ class ContactService(BaseService):
     @staticmethod
     async def get_list() -> dict:
         contacts = {
-            'languages': [
+            'contacts': [
                 {
                     'id': contact.id,
                     'id_str': contact.name_text.key,

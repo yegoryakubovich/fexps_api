@@ -19,6 +19,7 @@ from .favicon import router as router_favicon
 from .accounts import router as router_accounts
 from .sessions import router as router_sessions
 from .languages import router as router_languages
+from .methods import router as router_methods
 from .countries import router as router_countries
 from .currencies import router as router_currencies
 from .timezones import router as router_timezones
@@ -32,6 +33,7 @@ routers = [
     router_accounts,
     router_sessions,
     router_languages,
+    router_methods,
     router_countries,
     router_currencies,
     router_timezones,
