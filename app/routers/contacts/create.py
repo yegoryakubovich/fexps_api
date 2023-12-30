@@ -28,13 +28,13 @@ router = Router(
 
 class ContactCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    name_text_key: str = Field(min_length=2, max_length=128)
+    name: str = Field(min_length=1, max_length=1024)
 
 
 @router.post()
 async def route(schema: ContactCreateSchema):
     result = await ContactService().create(
         token=schema.token,
-        name_text_key=schema.name_text_key,
+        name=schema.name,
     )
     return Response(**result)

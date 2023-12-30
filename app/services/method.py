@@ -13,37 +13,87 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 from app.db.models import Method, Session
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
+from app.utils import ApiException
+from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
+
+
+class FieldsMissingParams(ApiException):
+    pass
+
+
+class FieldsValidationError(ApiException):
+    pass
+
+
+class MethodFieldType:
+    str = 'str'
+    int = 'int'
 
 
 class MethodService(BaseService):
     model = Method
+
+    @staticmethod
+    async def check_validation_fields(fields: list[dict]) -> None:
+        for i, field in enumerate(fields, start=1):
+            for key in ['key', 'type', 'name']:
+                if not field.get(key):
+                    raise FieldsMissingParams(f'fields.{i} missing parameter "{key}"')
+            if field.get('type') not in [MethodFieldType.str, MethodFieldType.int]:
+                raise FieldsValidationError(f'fields.{i}.type must contain {MethodFieldType.str}/{MethodFieldType.int}')
+
+    @staticmethod
+    async def check_validation_scheme(method: Method, fields: dict):
+        for field in method.schema_fields:
+            field_key = field.get('key')
+            field_type = field.get('type')
+            field_result = fields.get(field_key)
+            if not field_result:
+                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
+            if field_type == MethodFieldType.str and not isinstance(field_result, str):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+            if field_type == MethodFieldType.int and not isinstance(field_result, int):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
 
     @session_required()
     async def create(
             self,
             session: Session,
             currency_id_str: str,
-            name_text_key: str,
-            schema_fields: list[dict],
+            name: str,
+            fields: list[dict],
     ) -> dict:
+        await self.check_validation_fields(fields=fields)
+        for field in fields:
+            name_text = await TextRepository().create(
+                key=f'method_field_{await create_id_str()}',
+                value_default=field.get('name'),
+            )
+            field['name_text_key'] = name_text.key
         currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
-        name_text = await TextRepository().get_by_key(key=name_text_key)
+        name_text = await TextRepository().create(
+            key=f'method_{await create_id_str()}',
+            value_default=name,
+        )
         method = await MethodRepository().create(
             currency=currency,
             name_text=name_text,
-            schema_fields=schema_fields
+            schema_fields=fields
         )
         await self.create_action(
             model=method,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
+                'name_text_id': f'{name_text.id}',
+                'currency_id_str': f'{currency.id_str}'
             },
         )
         return {'method_id': method.id}
@@ -103,25 +153,20 @@ class MethodService(BaseService):
             session: Session,
             id_: int,
             currency_id_str: str = None,
-            name_text_key: str = None,
             schema_fields: list = None,
     ) -> dict:
         text = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
             text,
             currency_id_str=currency_id_str,
-            name_text_key=name_text_key,
             schema_fields=schema_fields,
         )
-
         action_parameters = {
             'updater': f'session_{session.id}',
             'id': id_,
         }
         if currency_id_str:
             action_parameters['currency_id_str'] = currency_id_str
-        if name_text_key:
-            action_parameters['name_text_key'] = name_text_key
         if schema_fields:
             action_parameters['schema_fields'] = schema_fields
         await self.create_action(

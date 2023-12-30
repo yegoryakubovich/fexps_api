@@ -117,7 +117,10 @@ class AccountService(BaseService):
         return {}
 
     @session_required(return_account=True)
-    async def get(self, account: Account) -> dict:
+    async def get(
+            self,
+            account: Account
+    ) -> dict:
         text_pack = await TextPackRepository().get_current(language=account.language)
         permissions = await AccountRoleService.get_permissions(account=account)
         return {

@@ -16,9 +16,10 @@
 
 
 from app.db.models import Session, Contact
-from app.repositories.contacts import ContactRepository
+from app.repositories.contact import ContactRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
+from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 
 
@@ -29,15 +30,19 @@ class ContactService(BaseService):
     async def create(
             self,
             session: Session,
-            name_text_key: str,
+            name: str,
     ) -> dict:
-        name_text = await TextRepository().get_by_key(key=name_text_key)
+        name_text = await TextRepository().create(
+            key=f'contact_{await create_id_str()}',
+            value_default=name,
+        )
         contact = await ContactRepository().create(name_text=name_text)
         await self.create_action(
             model=contact,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
+                'name_text_id': f'{name_text.id}',
             },
         )
         return {'contact_id': contact.id}

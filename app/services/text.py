@@ -28,7 +28,6 @@ class TextService(BaseService):
             self,
     ) -> dict:
         texts_list = []
-
         texts = await TextRepository().get_list()
         for text in texts:
             text: Text
@@ -88,31 +87,20 @@ class TextService(BaseService):
             value_default=value_default,
             new_key=new_key,
         )
-
         action_parameters = {
             'updater': f'session_{session.id}',
             'key': key,
-
         }
         if value_default:
-            action_parameters.update(
-                {
-                    'value_default': value_default,
-                }
-            )
+            action_parameters['value_default'] = value_default
         if new_key:
-            action_parameters.update(
-                {
-                    'new_key': new_key,
-                }
-            )
+            action_parameters['new_key'] = new_key
 
         await self.create_action(
             model=text,
             action='update',
             parameters=action_parameters,
         )
-
         return {}
 
     @session_required()
@@ -131,5 +119,4 @@ class TextService(BaseService):
                 'key': key,
             },
         )
-
         return {}

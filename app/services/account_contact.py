@@ -15,47 +15,51 @@
 #
 
 
-from app.db.models import Account, AccountContact
-from app.repositories.account_contacts import AccountContactRepository
-from app.repositories.contacts import ContactRepository
+from app.db.models import Account, AccountContact, Session
+from app.repositories.account_contact import AccountContactRepository
+from app.repositories.contact import ContactRepository
 from app.services.base import BaseService
 from app.utils import ApiException
 from app.utils.decorators import session_required
 
 
-class AccountMissingRole(ApiException):
+class AccountContactsAlreadyExists(ApiException):
     pass
 
 
 class AccountContactService(BaseService):
     model = AccountContact
 
-    @session_required(return_account=True)
+    @session_required()
     async def create(
             self,
-            account: Account,
+            session: Session,
             contact_id: int,
             value: str
     ) -> dict:
+        account = session.account
         contact = await ContactRepository().get_by_id(id_=contact_id)
+        if await AccountContactRepository().get(account=account, contact=contact):
+            raise AccountContactsAlreadyExists('Account Contact has already exists')
         account_contact = await AccountContactRepository().create(account=account, contact=contact, value=value)
         await self.create_action(
             model=contact,
             action='create',
             parameters={
-                'creator': f'account_{account.id}',
+                'creator': f'session_{session.id}',
+                'id': f'{account_contact.id}',
+                'contact_id': f'{contact.id}',
             },
         )
         return {'account_contact_id': account_contact.id}
 
-    @session_required(return_account=True)
+    @session_required()
     async def get_list(
             self,
-            account: Account,
+            session: Session,
     ) -> dict:
-        print(account)
+        account = session.account
         account_contacts_list = []
-
         account_contacts = await AccountContactRepository().get_list(account=account)
         for account_contact in account_contacts:
             contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
@@ -71,12 +75,13 @@ class AccountContactService(BaseService):
             'account_contacts': account_contacts_list,
         }
 
-    @session_required(return_account=True)
+    @session_required()
     async def get(
             self,
-            account: Account,
+            session: Session,
             id_: int
     ) -> dict:
+        account = session.account
         account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
         contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
         return {
@@ -86,20 +91,19 @@ class AccountContactService(BaseService):
             'value': account_contact.value,
         }
 
-    @session_required(return_account=True)
+    @session_required()
     async def update(
             self,
-            account: Account,
+            session: Session,
             id_: int,
             value: str,
     ) -> dict:
+        account = session.account
         account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
         await AccountContactRepository().update(
             account_contact,
             value=value,
         )
-
-        # FIXME
         action_parameters = {
             'updater': f'account_{account.id}',
         }
@@ -112,19 +116,20 @@ class AccountContactService(BaseService):
 
         return {}
 
-    @session_required(return_account=True)
+    @session_required()
     async def delete(
             self,
-            account: Account,
+            session: Session,
             id_: int,
     ) -> dict:
+        account = session.account
         account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
         await AccountContactRepository().delete(account_contact)
         await self.create_action(
             model=account_contact,
             action='delete',
             parameters={
-                'deleter': f'account_{account.id}',
+                'deleter': f'session_{session.id}',
                 'id': id_,
             },
         )

@@ -15,30 +15,27 @@
 #
 
 
+from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services import MethodService
+from app.services import RequisiteService
 from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/create',
+    prefix='/get',
 )
 
 
-class MethodCreateSchema(BaseModel):
+class RequisiteGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    currency_id_str: str = Field(min_length=2, max_length=32)
-    name: str = Field(min_length=1, max_length=1024)
-    fields: list[dict] = Field(description='[{"key": "string", "type": "str/int", "name": "string"}]')
+    id: int = Field()
 
 
-@router.post()
-async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+@router.get()
+async def route(schema: RequisiteGetSchema = Depends()):
+    result = await RequisiteService().get(
         token=schema.token,
-        currency_id_str=schema.currency_id_str,
-        name=schema.name,
-        fields=schema.fields,
+        id_=schema.id,
     )
     return Response(**result)

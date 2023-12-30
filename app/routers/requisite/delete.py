@@ -10,35 +10,31 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific Requisite governing permissions and
 # limitations under the License.
 #
 
 
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
-from app.services import MethodService
+from app.services import RequisiteService, RequisiteService, RequisiteService
 from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/create',
+    prefix='/delete',
 )
 
 
-class MethodCreateSchema(BaseModel):
+class RequisiteDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    currency_id_str: str = Field(min_length=2, max_length=32)
-    name: str = Field(min_length=1, max_length=1024)
-    fields: list[dict] = Field(description='[{"key": "string", "type": "str/int", "name": "string"}]')
+    id: int = Field()
 
 
 @router.post()
-async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+async def route(schema: RequisiteDeleteSchema):
+    result = await RequisiteService().delete(
         token=schema.token,
-        currency_id_str=schema.currency_id_str,
-        name=schema.name,
-        fields=schema.fields,
+        id_=schema.id,
     )
     return Response(**result)

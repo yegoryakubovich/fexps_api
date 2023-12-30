@@ -14,31 +14,24 @@
 # limitations under the License.
 #
 
+from fastapi import Depends
+from pydantic import BaseModel, Field
 
-from pydantic import Field, BaseModel
-
-from app.services import MethodService
-from app.utils import Router, Response
-
+from app.services import RequisiteService
+from app.utils import Response, Router
 
 router = Router(
-    prefix='/create',
+    prefix='/list/get',
 )
 
 
-class MethodCreateSchema(BaseModel):
+class RequisiteListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    currency_id_str: str = Field(min_length=2, max_length=32)
-    name: str = Field(min_length=1, max_length=1024)
-    fields: list[dict] = Field(description='[{"key": "string", "type": "str/int", "name": "string"}]')
 
 
-@router.post()
-async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+@router.get()
+async def route(schema: RequisiteListGetSchema = Depends()):
+    result = await RequisiteService().get_list(
         token=schema.token,
-        currency_id_str=schema.currency_id_str,
-        name=schema.name,
-        fields=schema.fields,
     )
     return Response(**result)

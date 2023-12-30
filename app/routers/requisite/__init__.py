@@ -15,15 +15,19 @@
 #
 
 
-from app.db.models import Requisite, Account
-from .base import BaseRepository, ModelDoesNotExist
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
+from .get import router as router_get
+from .get_list import router as router_get_list
 
-
-class RequisiteRepository(BaseRepository[Requisite]):
-    model = Requisite
-
-    async def get_by_account_and_id(self, account: Account, id_: int) -> Requisite:
-        result = await self.get(account=account, id=id_)
-        if not result:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
-        return result
+router = Router(
+    prefix='/requisite',
+    routes_included=[
+        router_create,
+        router_delete,
+        router_get,
+        router_get_list,
+    ],
+    tags=['Requisite'],
+)

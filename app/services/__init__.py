@@ -29,5 +29,6 @@ from .currency import CurrencyService
 from .text import TextService
 from .text_pack import TextPackService
 from .method import MethodService
-from .contacts import ContactService
-from .account_contacts import AccountContactService
+from .contact import ContactService
+from .account_contact import AccountContactService
+from .requisite import RequisiteService

@@ -29,8 +29,7 @@ class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
     currency_id_str: str = Field(default=None, min_length=2, max_length=32)
-    name_text_key: str = Field(default=None, min_length=2, max_length=128)
-    schema_fields: list[dict] = Field(default=None)  # FIXME
+    schema_fields: list[dict] = Field(default=None)
 
 
 @router.post()
@@ -39,7 +38,6 @@ async def route(schema: MethodUpdateSchema):
         token=schema.token,
         id_=schema.id,
         currency_id_str=schema.currency_id_str or None,
-        name_text_key=schema.name_text_key or None,
         schema_fields=schema.schema_fields or None,
     )
     return Response(**result)

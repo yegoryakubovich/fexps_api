@@ -18,7 +18,6 @@
 from app.db.models import Method
 from .base import BaseRepository, NoRequiredParameters
 from .currency import CurrencyRepository
-from .text import TextRepository
 
 
 class MethodRepository(BaseRepository[Method]):
@@ -29,9 +28,6 @@ class MethodRepository(BaseRepository[Method]):
         if currency_id_str:
             currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
             await self.update(db_obj, currency=currency)
-        if name_text_key:
-            name_text = await TextRepository().get_by_key(key=name_text_key)
-            await self.update(db_obj, name_text=name_text)
         if schema_fields:
             await self.update(db_obj, schema_fields=schema_fields)
         if not currency_id_str and not name_text_key and not schema_fields:

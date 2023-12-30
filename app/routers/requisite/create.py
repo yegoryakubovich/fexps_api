@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import MethodService
+from app.services.requisite import RequisiteService
 from app.utils import Router, Response
 
 
@@ -26,19 +26,17 @@ router = Router(
 )
 
 
-class MethodCreateSchema(BaseModel):
+class RequisiteCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    currency_id_str: str = Field(min_length=2, max_length=32)
-    name: str = Field(min_length=1, max_length=1024)
-    fields: list[dict] = Field(description='[{"key": "string", "type": "str/int", "name": "string"}]')
+    method_id: int = Field()
+    fields: dict = Field()
 
 
 @router.post()
-async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+async def route(schema: RequisiteCreateSchema):
+    result = await RequisiteService().create(
         token=schema.token,
-        currency_id_str=schema.currency_id_str,
-        name=schema.name,
+        method_id=schema.method_id,
         fields=schema.fields,
     )
     return Response(**result)

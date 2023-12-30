@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Account
+from app.db.models import Account, Permission
 from app.repositories.account_role import AccountRoleRepository
 from app.services.base import BaseService
 from app.utils import ApiException
@@ -28,7 +28,9 @@ class AccountMissingRole(ApiException):
 class AccountRoleService(BaseService):
 
     @staticmethod
-    async def get_permissions(account: Account):
+    async def get_permissions(
+            account: Account
+    ) -> list[str | Permission]:
         permissions = await AccountRoleRepository().get_account_permissions(
             account=account,
             only_id_str=True,
