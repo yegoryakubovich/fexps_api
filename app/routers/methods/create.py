@@ -28,7 +28,7 @@ router = Router(
 
 class MethodCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    currency_id_str: str = Field(min_length=2, max_length=32)
+    currency: str = Field(min_length=2, max_length=32)
     name: str = Field(min_length=1, max_length=1024)
     fields: list[dict] = Field(description='[{"key": "string", "type": "str/int", "name": "string"}]')
 
@@ -37,7 +37,7 @@ class MethodCreateSchema(BaseModel):
 async def route(schema: MethodCreateSchema):
     result = await MethodService().create(
         token=schema.token,
-        currency_id_str=schema.currency_id_str,
+        currency_id_str=schema.currency,
         name=schema.name,
         fields=schema.fields,
     )

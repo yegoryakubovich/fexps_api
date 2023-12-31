@@ -18,6 +18,7 @@
 from app.services import MethodService
 from app.utils import Router, Response
 
+
 router = Router(
     prefix='/list/get',
 )
