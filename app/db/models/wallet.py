@@ -15,19 +15,18 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, BigInteger, Boolean, String
 
 from app.db.base_class import Base
 
 
-class AccountContact(Base):
-    __tablename__ = 'accounts_contacts'
+class Wallet(Base):
+    __tablename__ = 'wallets'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', uselist=False, lazy='selectin')
-    contact_id = Column(BigInteger, ForeignKey('contacts.id', ondelete='SET NULL'), nullable=True)
-    contact = relationship('Contact', uselist=False, lazy='selectin')
-    value = Column(String(256))
+
+    name = Column(String(32), default='Wallet')
+    value = Column(BigInteger(), default=0)
+    value_banned = Column(BigInteger(), default=0)
+    value_can_minus = Column(BigInteger(), default=0)
     is_deleted = Column(Boolean, default=False)

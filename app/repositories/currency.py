@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Currency, Text
+from app.db.models import Currency
 from .base import BaseRepository
 
 

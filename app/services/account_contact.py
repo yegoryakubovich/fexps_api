@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Account, AccountContact, Session
+from app.db.models import AccountContact, Session
 from app.repositories.account_contact import AccountContactRepository
 from app.repositories.contact import ContactRepository
 from app.services.base import BaseService

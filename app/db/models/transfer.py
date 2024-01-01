@@ -15,19 +15,20 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
+from sqlalchemy import Column, Boolean, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class AccountContact(Base):
-    __tablename__ = 'accounts_contacts'
+class Transfer(Base):
+    __tablename__ = 'transfers'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', uselist=False, lazy='selectin')
-    contact_id = Column(BigInteger, ForeignKey('contacts.id', ondelete='SET NULL'), nullable=True)
-    contact = relationship('Contact', uselist=False, lazy='selectin')
-    value = Column(String(256))
+
+    wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
+    wallet_from = relationship('Wallet', uselist=False, lazy='selectin')
+    wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
+    wallet_to = relationship('Wallet', uselist=False, lazy='selectin')
+    value = Column(BigInteger(), default=0)
     is_deleted = Column(Boolean, default=False)

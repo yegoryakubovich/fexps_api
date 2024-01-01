@@ -21,13 +21,19 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class AccountContact(Base):
-    __tablename__ = 'accounts_contacts'
+class WalletAccountRoles:
+    OWNER = 'owner'
+    CONFIDANT = 'confidant'
+
+
+class WalletAccount(Base):
+    __tablename__ = 'wallets_accounts'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', uselist=False, lazy='selectin')
-    contact_id = Column(BigInteger, ForeignKey('contacts.id', ondelete='SET NULL'), nullable=True)
-    contact = relationship('Contact', uselist=False, lazy='selectin')
-    value = Column(String(256))
+
+    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
+    wallet = relationship('Wallet', backref='accounts', uselist=False, lazy='selectin')
+    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
+    account = relationship('Account', backref='wallets', uselist=False, lazy='selectin')
+    role = Column(String(32), default=WalletAccountRoles.OWNER)
     is_deleted = Column(Boolean, default=False)

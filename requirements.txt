@@ -2,7 +2,7 @@ fastapi
 uvicorn==0.25.0
 pytz
 inflection
-starlette
+starlette==0.34.0
 pydantic==2.5.3
-sqlalchemy
+sqlalchemy==2.0.24
 aiomysql

@@ -17,9 +17,8 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import MethodService, MethodService
+from app.services import MethodService
 from app.utils import Router, Response
-
 
 router = Router(
     prefix='/delete',

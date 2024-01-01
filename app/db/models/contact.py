@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base

@@ -26,7 +26,7 @@ class AccountRole(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='CASCADE'))
+    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
     account = relationship('Account', backref='roles', uselist=False, lazy='selectin')
     role_id = Column(BigInteger, ForeignKey('roles.id'))
     role = relationship('Role', uselist=False, lazy='selectin')

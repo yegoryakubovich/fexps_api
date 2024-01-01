@@ -17,9 +17,8 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import ContactService, AccountContactService
+from app.services import AccountContactService
 from app.utils import Router, Response
-
 
 router = Router(
     prefix='/delete',
