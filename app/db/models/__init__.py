@@ -19,6 +19,7 @@ from .action import Action
 from .text import Text
 from .timezone import Timezone
 from .language import Language
+from .wallet import Wallet
 
 from .action_parameter import ActionParameter
 from .permission import Permission
@@ -39,3 +40,4 @@ from .account import Account
 from .session import Session
 from .account_role import AccountRole
 from .account_contact import AccountContact
+from .wallet_account import WalletAccount, WalletAccountRoles
