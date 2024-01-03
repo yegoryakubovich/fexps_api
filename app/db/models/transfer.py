@@ -26,9 +26,9 @@ class Transfer(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
-    wallet_from = relationship('Wallet', uselist=False, lazy='selectin')
-    wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
-    wallet_to = relationship('Wallet', uselist=False, lazy='selectin')
+    wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
+    wallet_from = relationship('Wallet', foreign_keys=wallet_from_id, uselist=False, lazy='selectin')
+    wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
+    wallet_to = relationship('Wallet', foreign_keys=wallet_to_id, uselist=False, lazy='selectin')
     value = Column(BigInteger(), default=0)
     is_deleted = Column(Boolean, default=False)

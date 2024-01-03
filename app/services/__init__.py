@@ -33,3 +33,4 @@ from .contact import ContactService
 from .account_contact import AccountContactService
 from .requisite import RequisiteService
 from .wallet import WalletService
+from .transfer import TransferService

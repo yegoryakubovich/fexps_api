@@ -30,6 +30,7 @@ from .text_pack import TextPack
 from .method import Method
 from .requisite import Requisite
 from .contact import Contact
+from .transfer import Transfer
 
 from .country import Country
 from .role_permission import RolePermission
