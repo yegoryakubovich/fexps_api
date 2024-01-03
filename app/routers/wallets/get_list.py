@@ -26,11 +26,11 @@ router = Router(
 )
 
 
-class RequisiteListGetSchema(BaseModel):
+class WalletListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: RequisiteListGetSchema = Depends()):
+async def route(schema: WalletListGetSchema = Depends()):
     result = await WalletService().get_list(token=schema.token)
     return Response(**result)

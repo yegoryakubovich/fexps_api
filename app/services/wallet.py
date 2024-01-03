@@ -16,7 +16,7 @@
 
 
 from app.db.models import Wallet, Session
-from app.repositories.wallet import WalletRepository, WalletLimitReachedNotFound
+from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -34,7 +34,7 @@ class WalletService(BaseService):
     ) -> dict:
         account = session.account
         if len(await WalletAccountRepository().get_list(account=account)) >= WALLET_MAX_COUNT:
-            raise WalletLimitReachedNotFound("Wallet limit reached.")
+            raise WalletLimitReached("Wallet limit reached.")
         wallet = await WalletRepository().create(name=name)
         wallet_account = await WalletAccountRepository().create(account=account, wallet=wallet)
         await self.create_action(
@@ -75,7 +75,7 @@ class WalletService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
-        requisites = {
+        wallets = {
             'wallets': [
                 {
                     'id': wallet_account.wallet.id,
@@ -88,7 +88,7 @@ class WalletService(BaseService):
             ],
         }
 
-        return requisites
+        return wallets
 
     @session_required()
     async def delete(

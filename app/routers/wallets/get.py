@@ -26,13 +26,13 @@ router = Router(
 )
 
 
-class ContactGetSchema(BaseModel):
+class WalletGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
 
 @router.get()
-async def route(schema: ContactGetSchema = Depends()):
+async def route(schema: WalletGetSchema = Depends()):
     result = await WalletService().get(
         token=schema.token,
         id_=schema.id,

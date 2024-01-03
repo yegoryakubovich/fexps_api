@@ -20,7 +20,7 @@ from .base import BaseRepository
 from ..utils import ApiException
 
 
-class WalletLimitReachedNotFound(ApiException):
+class WalletLimitReached(ApiException):
     pass
 
 
