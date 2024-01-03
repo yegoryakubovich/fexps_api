@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import RequisiteService, WalletService
+from app.services import WalletService
 from app.utils import Response, Router
 
 router = Router(
@@ -32,7 +32,5 @@ class RequisiteListGetSchema(BaseModel):
 
 @router.get()
 async def route(schema: RequisiteListGetSchema = Depends()):
-    result = await WalletService().get_list(
-        token=schema.token,
-    )
+    result = await WalletService().get_list(token=schema.token)
     return Response(**result)

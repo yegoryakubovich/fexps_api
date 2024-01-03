@@ -21,7 +21,6 @@ from pydantic import Field, BaseModel
 from app.services import MethodService
 from app.utils import Router, Response
 
-
 router = Router(
     prefix='/get',
 )
@@ -33,7 +32,5 @@ class MethodGetSchema(BaseModel):
 
 @router.get()
 async def route(schema: MethodGetSchema = Depends()):
-    result = await MethodService().get(
-        id_=schema.id,
-    )
+    result = await MethodService().get(id_=schema.id)
     return Response(**result)
