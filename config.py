@@ -29,5 +29,9 @@ MYSQL_USER = config_db['user']
 MYSQL_PASSWORD = config_db['password']
 MYSQL_NAME = config_db['name']
 
+config_settings = config['settings']
+
+WALLET_MAX_COUNT = int(config_settings['wallet_max_count'])
+
 VERSION = '0.1'
 PATH_TEXTS_PACKS = 'assets/texts_packs'
