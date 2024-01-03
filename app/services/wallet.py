@@ -47,6 +47,7 @@ class WalletService(BaseService):
                 'wallet_account_id': f'{wallet_account.id}'
             },
         )
+
         return {'wallet_id': wallet.id}
 
     @session_required()
@@ -57,6 +58,7 @@ class WalletService(BaseService):
     ):
         account = session.account
         wallet_account = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
+
         return {
             'wallet': {
                 'id': wallet_account.wallet.id,
@@ -85,6 +87,7 @@ class WalletService(BaseService):
                 for wallet_account in await WalletAccountRepository().get_list(account=account)
             ],
         }
+
         return requisites
 
     @session_required()
@@ -106,4 +109,31 @@ class WalletService(BaseService):
                 'wallet_account_id': wallet_account.id
             },
         )
+
+        return {}
+
+    @session_required()
+    async def update(
+            self,
+            session: Session,
+            id_: int,
+            name: str,
+    ) -> dict:
+        account = session.account
+        wallet_account = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
+        await WalletRepository().update(
+            wallet_account.wallet,
+            name=name,
+        )
+        await self.create_action(
+            model=wallet_account.wallet,
+            action='update',
+            parameters={
+                'updater': f'session_{session.id}',
+                'id': id_,
+                'wallet_account_id': wallet_account.id,
+                'name': name,
+            },
+        )
+
         return {}

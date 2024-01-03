@@ -15,21 +15,27 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
-from .get import router as router_get
-from .get_list import router as router_get_list
-from .update import router as router_update
+from pydantic import BaseModel, Field
+
+from app.services import WalletService
+from app.utils import Router, Response
 
 router = Router(
-    prefix='/wallets',
-    routes_included=[
-        router_create,
-        router_delete,
-        router_get,
-        router_get_list,
-        router_update,
-    ],
-    tags=['Wallets'],
+    prefix='/update',
 )
+
+
+class WalletUpdateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+    name: str = Field(min_length=1, max_length=1024)
+
+
+@router.post()
+async def route(schema: WalletUpdateSchema):
+    result = await WalletService().update(
+        token=schema.token,
+        id_=schema.id,
+        name=schema.name,
+    )
+    return Response(**result)
