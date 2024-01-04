@@ -24,3 +24,4 @@ name = db_name
 
 [settings]
 wallet_max_count = 1
+items_per_page = 10

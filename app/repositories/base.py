@@ -26,6 +26,10 @@ from app.utils import ApiException
 ModelType = TypeVar('ModelType', bound=Base)
 
 
+class DoesNotPermission(ApiException):
+    pass
+
+
 class ModelDoesNotExist(ApiException):
     pass
 

@@ -32,6 +32,7 @@ MYSQL_NAME = config_db['name']
 config_settings = config['settings']
 
 WALLET_MAX_COUNT = int(config_settings['wallet_max_count'])
+ITEMS_PER_PAGE = int(config_settings['items_per_page'])
 
 VERSION = '0.1'
 PATH_TEXTS_PACKS = 'assets/texts_packs'

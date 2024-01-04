@@ -17,6 +17,8 @@
 
 from app.db.models import WalletAccount, Session, WalletAccountRoles
 from app.repositories.account import AccountRepository
+from app.repositories.base import DoesNotPermission
+from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -32,7 +34,7 @@ class WalletAccountService(BaseService):
             wallet_id: int,
             account_id: int
     ) -> dict:
-        wallet = await WalletAccountRepository().get_by_id(id_=wallet_id)
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
         account = await AccountRepository().get_by_id(id_=account_id)
         role = WalletAccountRoles.CONFIDANT
         if account.id == session.account.id:
@@ -50,3 +52,26 @@ class WalletAccountService(BaseService):
         )
 
         return {'wallet_account_id': wallet_account.id}
+
+    @session_required()
+    async def delete(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        wallet_account = await WalletAccountRepository().get_by_id(id_=id_)
+        if wallet_account.account.id != account.id:
+            raise DoesNotPermission('You do not have sufficient rights to delete this WalletAccount')
+        await WalletAccountRepository().delete(wallet_account)
+        await self.create_action(
+            model=wallet_account,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id': id_,
+            },
+        )
+        print("h5")
+
+        return {}

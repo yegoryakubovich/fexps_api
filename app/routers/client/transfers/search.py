@@ -22,15 +22,25 @@ from app.services import TransferService
 from app.utils import Response, Router
 
 router = Router(
-    prefix='/list/get',
+    prefix='/search',
 )
 
 
-class TransferListGetSchema(BaseModel):
+class TransferSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    wallet_id: int = Field()
+    is_sender: bool = Field(default=True)
+    is_receiver: bool = Field(default=True)
+    page: int = Field(default=1)
 
 
 @router.get()
-async def route(schema: TransferListGetSchema = Depends()):
-    result = await TransferService().get_list(token=schema.token)
+async def route(schema: TransferSearchSchema = Depends()):
+    result = await TransferService().search(
+        token=schema.token,
+        wallet_id=schema.wallet_id,
+        is_sender=schema.is_sender,
+        is_receiver=schema.is_receiver,
+        page=schema.page,
+    )
     return Response(**result)

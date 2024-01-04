@@ -16,10 +16,11 @@
 
 
 from app.db.models import Wallet, Session, WalletAccountRoles
+from app.repositories.base import DoesNotPermission
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
-from app.services import WalletAccountService
 from app.services.base import BaseService
+from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
 from config import WALLET_MAX_COUNT
 
@@ -47,7 +48,11 @@ class WalletService(BaseService):
                 'wallet_id': wallet.id,
             },
         )
-        await WalletAccountService().create(session=session, wallet=wallet)
+        await WalletAccountService().create(
+            session=session,
+            wallet_id=wallet.id,
+            account_id=account.id,
+        )
 
         return {'wallet_id': wallet.id}
 
@@ -58,8 +63,8 @@ class WalletService(BaseService):
             id_: int,
     ):
         account = session.account
-        wallet_account = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
-
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
         return {
             'wallet': {
                 'id': wallet_account.wallet.id,
@@ -98,17 +103,22 @@ class WalletService(BaseService):
             id_: int,
     ) -> dict:
         account = session.account
-        wallet_account = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        if wallet_account.role != WalletAccountRoles.OWNER:
+            raise DoesNotPermission('You do not have sufficient rights to delete this wallet')
         await WalletRepository().delete(wallet_account.wallet)
-        await WalletAccountRepository().delete(wallet_account)
         await self.create_action(
-            model=wallet_account.wallet,
+            model=wallet,
             action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,
-                'wallet_account_id': wallet_account.id
             },
+        )
+        await WalletAccountService().delete(
+            session=session,
+            id_=wallet_account.id,
         )
 
         return {}
@@ -121,7 +131,8 @@ class WalletService(BaseService):
             name: str,
     ) -> dict:
         account = session.account
-        wallet_account = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
         await WalletRepository().update(
             wallet_account.wallet,
             name=name,

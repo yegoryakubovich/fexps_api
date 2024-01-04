@@ -15,15 +15,17 @@
 #
 
 
-from app.db.models import WalletAccount, Account, Wallet
-from .base import BaseRepository, DoesNotPermission
+from app.utils import Router
+from .create import router as router_create
+from .get import router as router_get
+from .search import router as router_search
 
-
-class WalletAccountRepository(BaseRepository[WalletAccount]):
-    model = WalletAccount
-
-    async def get_by_account_and_wallet(self, account: Account, wallet: Wallet) -> WalletAccount:
-        result = await self.get(account=account, wallet=wallet)
-        if not result:
-            raise DoesNotPermission(f'You do not have enough rights for this wallet')
-        return result
+router = Router(
+    prefix='/transfers',
+    routes_included=[
+        router_create,
+        router_get,
+        router_search,
+    ],
+    tags=['Transfers'],
+)

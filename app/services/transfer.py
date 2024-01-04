@@ -15,7 +15,8 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet
+from app.db.models import Transfer, Session, Wallet, WalletAccountRoles
+from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository, ValueMustBePositive
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
@@ -35,10 +36,13 @@ class TransferService(BaseService):
             value: int,
     ) -> dict:
         account = session.account
-        print("HELLO")
-        123
-        wallet_account_from = await WalletAccountRepository().get_by_account_and_id(account=account, id_=wallet_from_id)
-        wallet_from: Wallet = wallet_account_from.wallet
+        wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
+        if not await WalletAccountRepository().get(account=account,wallet=wallet_from):
+            raise DoesNotPermission('You do not have sufficient rights to this wallet')
+        await WalletAccountRepository().get_by_account_and_wallet(
+            account=account,
+            wallet=wallet_from
+        )
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
 
         if value <= 0:
@@ -81,7 +85,7 @@ class TransferService(BaseService):
             id_: int,
     ):
         account = session.account
-        transfer = await WalletAccountRepository().get_by_account_and_id(account=account, id_=id_)
+        transfer = await TransferRepository().get_by_id(id_=id_)
 
         return {
             'transfer': {
@@ -93,11 +97,22 @@ class TransferService(BaseService):
         }
 
     @session_required()
-    async def get_list(
+    async def search(
             self,
             session: Session,
+            wallet_id: int,
+            is_sender: bool,
+            is_receiver: bool,
+            page: int,
     ) -> dict:
         account = session.account
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        transfers_db = []
+        if is_sender:
+            transfers_db += await TransferRepository().search(wallet_from=wallet, page=page)
+        if is_receiver:
+            transfers_db += await TransferRepository().search(wallet_to=wallet, page=page)
         transfers = {
             'transfers': [
                 {
@@ -106,8 +121,9 @@ class TransferService(BaseService):
                     'wallet_to': transfer.wallet_to.id,
                     'value': transfer.value,
                 }
-                for transfer in await TransferRepository().get_list(account=account)
+                for transfer in transfers_db
             ],
+            'page': page
         }
 
         return transfers

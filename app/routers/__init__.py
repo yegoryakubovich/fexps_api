@@ -14,36 +14,13 @@
 # limitations under the License.
 #
 
-
 from .favicon import router as router_favicon
-from .accounts import router as router_accounts
-from .sessions import router as router_sessions
-from .languages import router as router_languages
-from .methods import router as router_methods
-from .requisite import router as router_requisite
-from .countries import router as router_countries
-from .currencies import router as router_currencies
-from .timezones import router as router_timezones
-from .contacts import router as router_contacts
-from .roles import router as router_roles
-from .texts import router as router_texts
-from .wallets import router as router_wallets
-from .transfers import router as router_transfers
+from .client import router as router_client
+from .admin import router as router_admin
 
 
 routers = [
     router_favicon,
-    router_accounts,
-    router_sessions,
-    router_languages,
-    router_methods,
-    router_requisite,
-    router_countries,
-    router_currencies,
-    router_timezones,
-    router_contacts,
-    router_roles,
-    router_texts,
-    router_wallets,
-    router_transfers,
+    router_admin,
+    router_client,
 ]

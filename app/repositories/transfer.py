@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import List
 
+from sqlalchemy import select
 
 from app.db.models import Transfer
+from config import ITEMS_PER_PAGE
 from .base import BaseRepository
 from ..utils import ApiException
 
@@ -30,3 +33,12 @@ class ValueMustBePositive(ApiException):
 
 class TransferRepository(BaseRepository[Transfer]):
     model = Transfer
+
+    async def search(self, page: int, **filters) -> List[Transfer]:
+        async with self._get_session() as session:
+            result = await session.execute(
+                select(self.model).filter_by(
+                    is_deleted=False, **filters
+                ).order_by(self.model.id.desc()).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
+            )
+            return result.scalars().all()
