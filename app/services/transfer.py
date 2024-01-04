@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Transfer, Session
+from app.db.models import Transfer, Session, Wallet
 from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository, ValueMustBePositive
 from app.repositories.wallet import WalletRepository
@@ -27,6 +27,21 @@ from config import ITEMS_PER_PAGE
 
 class TransferService(BaseService):
     model = Transfer
+
+    @staticmethod
+    async def transfer(
+            wallet_from: Wallet,
+            wallet_to: Wallet,
+            value: float,
+    ) -> Transfer:
+        transfer = await TransferRepository().create(
+            wallet_from=wallet_from,
+            wallet_to=wallet_to,
+            value=value
+        )
+        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
+        await WalletRepository().update(wallet_to, value=wallet_to.value + value)
+        return transfer
 
     @session_required()
     async def create(
@@ -51,32 +66,18 @@ class TransferService(BaseService):
         balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
         if value >= balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
-
-        transfer = await TransferRepository().create(
-            wallet_from=wallet_from,
-            wallet_to=wallet_to,
-            value=value
-        )
-        await WalletRepository().update(
-            wallet_from,
-            value=wallet_from.value - value
-        )
-        await WalletRepository().update(
-            wallet_to,
-            value=wallet_to.value + value
-        )
-
+        transfer = await self.transfer(wallet_from=wallet_from, wallet_to=wallet_to, value=value)
         await self.create_action(
             model=transfer,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
+                'id': transfer.id,
                 'wallet_from_id': wallet_from.id,
                 'wallet_to_id': wallet_to.id,
                 'value': value
             },
         )
-
         return {'transfer_id': transfer.id}
 
     @session_required()
@@ -85,9 +86,7 @@ class TransferService(BaseService):
             session: Session,
             id_: int,
     ):
-        account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
-
         return {
             'transfer': {
                 'id': transfer.id,
@@ -127,5 +126,4 @@ class TransferService(BaseService):
             'pages': transfers_db[2],
             'items_per_page': ITEMS_PER_PAGE,
         }
-
         return transfers
