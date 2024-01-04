@@ -18,11 +18,11 @@
 from app.db.models import Transfer, Session, Wallet
 from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository, ValueMustBePositive
-from app.repositories.wallet import WalletRepository
+from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from config import ITEMS_PER_PAGE
+from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
 
 
 class TransferService(BaseService):
@@ -34,6 +34,8 @@ class TransferService(BaseService):
             wallet_to: Wallet,
             value: float,
     ) -> Transfer:
+        if (wallet_to.value + value) > WALLET_MAX_VALUE:
+            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
         transfer = await TransferRepository().create(
             wallet_from=wallet_from,
             wallet_to=wallet_to,

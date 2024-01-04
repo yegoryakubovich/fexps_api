@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String
+from sqlalchemy import Column, BigInteger, Boolean, String, Float
 
 from app.db.base_class import Base
 
@@ -26,7 +26,7 @@ class Wallet(Base):
     id = Column(BigInteger, primary_key=True)
 
     name = Column(String(32), default='Wallet')
-    value = Column(BigInteger(), default=0)
-    value_banned = Column(BigInteger(), default=0)
-    value_can_minus = Column(BigInteger(), default=0)
+    value = Column(Float(), default=0)
+    value_banned = Column(Float(), default=0)
+    value_can_minus = Column(Float(), default=0)
     is_deleted = Column(Boolean, default=False)

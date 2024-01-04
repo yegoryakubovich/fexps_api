@@ -30,7 +30,7 @@ class TransferCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_from_id: int = Field()
     wallet_to_id: int = Field()
-    value: int = Field()
+    value: float = Field()
 
 
 @router.post()

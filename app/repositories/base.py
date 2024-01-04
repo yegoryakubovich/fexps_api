@@ -111,7 +111,7 @@ class BaseRepository(Generic[ModelType]):
         for key, value in obj_in_data.items():
             if not value:
                 continue
-            if type(value) in [str, int, bool, list, dict]:
+            if type(value) in [str, int, float, bool, list, dict]:
                 result[key] = value
                 continue
             result[f"{key}_id"] = value.id
