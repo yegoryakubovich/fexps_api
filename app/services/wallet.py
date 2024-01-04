@@ -15,9 +15,10 @@
 #
 
 
-from app.db.models import Wallet, Session
+from app.db.models import Wallet, Session, WalletAccountRoles
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
+from app.services import WalletAccountService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import WALLET_MAX_COUNT
@@ -33,20 +34,20 @@ class WalletService(BaseService):
             name: str,
     ) -> dict:
         account = session.account
-        if len(await WalletAccountRepository().get_list(account=account)) >= WALLET_MAX_COUNT:
+        wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
+        if len(wallet_account_list) >= WALLET_MAX_COUNT:
             raise WalletLimitReached("Wallet limit reached.")
         wallet = await WalletRepository().create(name=name)
-        wallet_account = await WalletAccountRepository().create(account=account, wallet=wallet)
         await self.create_action(
             model=wallet,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
-                'name': f'{name}',
-                'wallet_id': f'{wallet.id}',
-                'wallet_account_id': f'{wallet_account.id}'
+                'name': name,
+                'wallet_id': wallet.id,
             },
         )
+        await WalletAccountService().create(session=session, wallet=wallet)
 
         return {'wallet_id': wallet.id}
 
