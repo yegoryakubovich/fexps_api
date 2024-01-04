@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import List
 
-from sqlalchemy import select
 
-from app.db.models import Transfer
-from config import ITEMS_PER_PAGE
+from sqlalchemy.sql.operators import or_
+
+from app.db.models import Transfer, Wallet
 from .base import BaseRepository
 from ..utils import ApiException
 
@@ -34,11 +33,18 @@ class ValueMustBePositive(ApiException):
 class TransferRepository(BaseRepository[Transfer]):
     model = Transfer
 
-    async def search(self, page: int, **filters) -> List[Transfer]:
-        async with self._get_session() as session:
-            result = await session.execute(
-                select(self.model).filter_by(
-                    is_deleted=False, **filters
-                ).order_by(self.model.id.desc()).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
-            )
-            return result.scalars().all()
+    async def search_by_wallet(
+            self,
+            wallet: Wallet,
+            is_sender: bool,
+            is_receiver: bool,
+            page: int = 1,
+    ):
+        if is_sender and not is_receiver:
+            custom_where = self.model.wallet_from == wallet
+        elif is_receiver and not is_sender:
+            custom_where = self.model.wallet_to == wallet
+        else:
+            custom_where = or_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
+        result = await self.search(page=page, custom_where=custom_where)
+        return result

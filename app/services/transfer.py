@@ -15,13 +15,14 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet, WalletAccountRoles
+from app.db.models import Transfer, Session
 from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository, ValueMustBePositive
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from config import ITEMS_PER_PAGE
 
 
 class TransferService(BaseService):
@@ -33,11 +34,11 @@ class TransferService(BaseService):
             session: Session,
             wallet_from_id: int,
             wallet_to_id: int,
-            value: int,
+            value: float,
     ) -> dict:
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
-        if not await WalletAccountRepository().get(account=account,wallet=wallet_from):
+        if not await WalletAccountRepository().get(account=account, wallet=wallet_from):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
         await WalletAccountRepository().get_by_account_and_wallet(
             account=account,
@@ -48,7 +49,7 @@ class TransferService(BaseService):
         if value <= 0:
             raise ValueMustBePositive("The value must be positive")
         balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
-        if value > balance:
+        if value >= balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
 
         transfer = await TransferRepository().create(
@@ -108,11 +109,9 @@ class TransferService(BaseService):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
-        transfers_db = []
-        if is_sender:
-            transfers_db += await TransferRepository().search(wallet_from=wallet, page=page)
-        if is_receiver:
-            transfers_db += await TransferRepository().search(wallet_to=wallet, page=page)
+        transfers_db = await TransferRepository().search_by_wallet(
+            wallet=wallet, is_sender=is_sender, is_receiver=is_receiver, page=page
+        )
         transfers = {
             'transfers': [
                 {
@@ -121,9 +120,12 @@ class TransferService(BaseService):
                     'wallet_to': transfer.wallet_to.id,
                     'value': transfer.value,
                 }
-                for transfer in transfers_db
+                for transfer in transfers_db[0]
             ],
-            'page': page
+            'results': transfers_db[1],
+            'page': page,
+            'pages': transfers_db[2],
+            'items_per_page': ITEMS_PER_PAGE,
         }
 
         return transfers
