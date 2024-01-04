@@ -46,7 +46,8 @@ class RequisiteService(BaseService):
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
-                'method_id': f'{method.id}',
+                'id': requisite.id,
+                'method_id': method.id,
             },
         )
         return {'requisite_id': requisite.id}

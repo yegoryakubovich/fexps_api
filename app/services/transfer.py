@@ -66,9 +66,9 @@ class TransferService(BaseService):
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
-                'wallet_from_id': f'{wallet_from.id}',
-                'wallet_to_id': f'{wallet_to.id}',
-                'value': f'{value}'
+                'wallet_from_id': wallet_from.id,
+                'wallet_to_id': wallet_to.id,
+                'value': value
             },
         )
 

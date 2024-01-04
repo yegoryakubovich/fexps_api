@@ -42,7 +42,7 @@ class ContactService(BaseService):
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
-                'name_text_id': f'{name_text.id}',
+                'name_text_id': name_text.id,
             },
         )
         return {'contact_id': contact.id}

@@ -104,14 +104,13 @@ class AccountContactService(BaseService):
             account_contact,
             value=value,
         )
-        action_parameters = {
-            'updater': f'account_{account.id}',
-        }
 
         await self.create_action(
             model=account_contact,
             action='update',
-            parameters=action_parameters,
+            parameters={
+                'updater': f'session_{session.id}',
+            },
         )
 
         return {}
