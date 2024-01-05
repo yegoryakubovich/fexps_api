@@ -37,7 +37,7 @@ class WalletService(BaseService):
         account = session.account
         wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
         if len(wallet_account_list) >= WALLET_MAX_COUNT:
-            raise WalletLimitReached("Wallet limit reached.")
+            raise WalletLimitReached('Wallet limit reached.')
         wallet = await WalletRepository().create(name=name)
         await self.create_action(
             model=wallet,
