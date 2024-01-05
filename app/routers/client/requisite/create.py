@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Optional
 
+from _decimal import Decimal
 
 from pydantic import Field, field_validator
 
@@ -34,9 +36,9 @@ class RequisiteCreateSchema(BaseSchema):
     wallet_id: int = Field()
     requisite_data_id: int = Field()
     currency: str = Field(min_length=2, max_length=16)
-    currency_value: float = Field(default=None)
-    rate: float = Field(default=None)
-    total_value: float = Field(default=None)
+    currency_value: Decimal = Field(default=None, decimal_places=2)
+    rate: Decimal = Field(default=None, decimal_places=2)
+    total_value: Decimal = Field(default=None, decimal_places=2)
     value_min: float = Field()
     value_max: float = Field()
 

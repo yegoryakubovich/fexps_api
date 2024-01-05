@@ -15,9 +15,7 @@
 #
 
 
-from decimal import Decimal
-
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel
 
 from app.utils.exception import ApiException
 
@@ -28,14 +26,3 @@ class ValueMustBePositive(ApiException):
 
 class BaseSchema(BaseModel):
     pass
-
-
-class BaseValueSchema(BaseSchema):
-    value: Decimal = Field(decimal_places=2)
-
-    @field_validator('value')
-    @classmethod
-    def check_value(cls, value):
-        if value <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(value)

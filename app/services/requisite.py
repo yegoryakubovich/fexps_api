@@ -21,6 +21,7 @@ from app.repositories.currency import CurrencyRepository
 from app.repositories.requisite import RequisiteRepository, NotRequiredParams, MinimumTotalValueError
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
+from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -60,12 +61,15 @@ class RequisiteService(BaseService):
             value_min: float,
             value_max: float,
     ) -> dict:
+        account = session.account
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        if not await WalletAccountRepository().get(account=account, wallet=wallet):
+            raise DoesNotPermission('You do not have sufficient rights to this wallet')
         currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
             currency_value=currency_value,
             total_value=total_value,
             rate=rate
         )
-        wallet = await WalletRepository().get_by_id(id_=wallet_id)
         requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
         currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         requisite = await RequisiteRepository().create(
@@ -131,7 +135,10 @@ class RequisiteService(BaseService):
             id_: int,
             total_value: float,
     ) -> dict:
+        account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
+        if not await WalletAccountRepository().get(account=account, wallet=requisite.wallet):
+            raise DoesNotPermission('You do not have sufficient rights to this wallet')
         access_change_balance = requisite.total_value - requisite.value
 
         if total_value < access_change_balance:

@@ -22,7 +22,7 @@ from .response import Response, ResponseState
 from .router import Router
 from .use_schema import use_schema
 from .validation_error import validation_error
-from .base_schema import BaseSchema, BaseValueSchema
+from .base_schema import BaseSchema
 
 __all__ = [
     'ApiException',
@@ -34,5 +34,4 @@ __all__ = [
     'use_schema',
     'validation_error',
     'BaseSchema',
-    'BaseValueSchema',
 ]
