@@ -139,7 +139,9 @@ class RequisiteService(BaseService):
 
         await RequisiteRepository().update(
             requisite,
-            value=1,
+            value=total_value - (requisite.total_value - requisite.value),
+            total_value=total_value,
+            currency_value=round(total_value * requisite.rate, 2)
         )
 
         await self.create_action(

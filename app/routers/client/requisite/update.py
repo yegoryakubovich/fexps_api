@@ -15,11 +15,14 @@
 #
 
 
-from pydantic import Field
+from decimal import Decimal
+
+from pydantic import Field, field_validator
 
 from app.services import RequisiteService
 from app.utils import BaseSchema
 from app.utils import Router, Response
+from app.utils.base_schema import ValueMustBePositive
 
 
 router = Router(
@@ -30,7 +33,14 @@ router = Router(
 class RequisiteUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
-    total_value: float = Field()
+    total_value: Decimal = Field(decimal_places=2)
+
+    @field_validator('total_value')
+    @classmethod
+    def check_total_value(cls, total_value):
+        if total_value <= 0:
+            raise ValueMustBePositive('The value must be positive')
+        return float(total_value)
 
 
 @router.post()
