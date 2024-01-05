@@ -15,18 +15,24 @@
 #
 
 
-from app.db.models import Requisite
-from .base import BaseRepository
-from ..utils import ApiException
+from fastapi import Depends
+from pydantic import Field
+
+from app.services import RequisiteDataService
+from app.utils import BaseSchema
+from app.utils import Response, Router
 
 
-class NotRequiredParams(ApiException):
-    pass
+router = Router(
+    prefix='/list/get',
+)
 
 
-class MinimumTotalValueError(ApiException):
-    pass
+class RequisiteDataListGetSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
 
 
-class RequisiteRepository(BaseRepository[Requisite]):
-    model = Requisite
+@router.get()
+async def route(schema: RequisiteDataListGetSchema = Depends()):
+    result = await RequisiteDataService().get_list(token=schema.token)
+    return Response(**result)

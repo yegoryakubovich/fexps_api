@@ -15,23 +15,29 @@
 #
 
 
-from fastapi import Depends
 from pydantic import Field
 
-from app.services import RequisiteService
+from app.services.requisite_data import RequisiteDataService
 from app.utils import BaseSchema
-from app.utils import Response, Router
+from app.utils import Router, Response
+
 
 router = Router(
-    prefix='/list/get',
+    prefix='/create',
 )
 
 
-class RequisiteListGetSchema(BaseSchema):
+class RequisiteDataCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
+    method_id: int = Field()
+    fields: dict = Field()
 
 
-@router.get()
-async def route(schema: RequisiteListGetSchema = Depends()):
-    result = await RequisiteService().get_list(token=schema.token)
+@router.post()
+async def route(schema: RequisiteDataCreateSchema):
+    result = await RequisiteDataService().create(
+        token=schema.token,
+        method_id=schema.method_id,
+        fields=schema.fields,
+    )
     return Response(**result)

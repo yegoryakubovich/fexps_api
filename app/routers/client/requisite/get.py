@@ -18,10 +18,8 @@
 from fastapi import Depends
 from pydantic import Field
 
-from app.services import RequisiteService
-from app.utils import BaseSchema
-from app.utils import Router, Response
-
+from app.services.requisite import RequisiteService
+from app.utils import Router, Response, BaseSchema
 
 router = Router(
     prefix='/get',

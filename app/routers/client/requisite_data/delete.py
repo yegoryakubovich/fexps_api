@@ -17,7 +17,7 @@
 
 from pydantic import Field
 
-from app.services import RequisiteService
+from app.services import RequisiteDataService
 from app.utils import BaseSchema
 from app.utils import Router, Response
 
@@ -27,14 +27,14 @@ router = Router(
 )
 
 
-class RequisiteDeleteSchema(BaseSchema):
+class RequisiteDataDeleteSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
 
 @router.post()
-async def route(schema: RequisiteDeleteSchema):
-    result = await RequisiteService().delete(
+async def route(schema: RequisiteDataDeleteSchema):
+    result = await RequisiteDataService().delete(
         token=schema.token,
         id_=schema.id,
     )

@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from app.db.models import Session, Requisite
-from app.repositories.method import MethodRepository
-from app.repositories.requisite import RequisiteRepository
-from app.services import MethodService
+from app.repositories.base import DoesNotPermission
+from app.repositories.currency import CurrencyRepository
+from app.repositories.requisite import RequisiteRepository, NotRequiredParams, MinimumTotalValueError
+from app.repositories.requisite_data import RequisiteDataRepository
+from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -26,49 +28,75 @@ from app.utils.decorators import session_required
 class RequisiteService(BaseService):
     model = Requisite
 
+    @staticmethod
+    async def calc_value_params(
+            currency_value: Optional[float],
+            total_value: Optional[float],
+            rate: Optional[float],
+    ) -> tuple[float, float, float]:
+        if [currency_value, total_value, rate].count(None) > 1:
+            raise NotRequiredParams(
+                'Two of the following parameters must be filled in: currency_value, total_value, rate'
+            )
+        if currency_value and total_value:
+            rate = round(currency_value / total_value, 2)
+        elif currency_value and rate:
+            total_value = round(currency_value * rate, 2)
+        else:
+            currency_value = round(total_value * rate, 2)
+        return currency_value, total_value, rate
+
     @session_required()
     async def create(
             self,
             session: Session,
-            method_id: int,
-            fields: dict,
+            type_: int,
+            wallet_id: int,
+            requisite_data_id: int,
+            currency_id_str: str,
+            currency_value: float,
+            rate: float,
+            total_value: float,
+            value_min: float,
+            value_max: float,
     ) -> dict:
-        account = session.account
-        method = await MethodRepository().get_by_id(id_=method_id)
-        await MethodService().check_validation_scheme(method=method, fields=fields)
+        currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
+            currency_value=currency_value,
+            total_value=total_value,
+            rate=rate
+        )
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
+        currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         requisite = await RequisiteRepository().create(
-            account=account,
-            method=method,
-            fields=fields
+            type=type_,
+            wallet=wallet,
+            requisite_data=requisite_data,
+            currency=currency,
+            currency_value=currency_value_fix,
+            rate=rate_fix,
+            value=total_value_fix,
+            total_value=total_value_fix,
+            value_min=value_min,
+            value_max=value_max,
         )
         await self.create_action(
-            model=method,
+            model=requisite,
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'id': requisite.id,
-                'method_id': method.id,
+                'type': type_,
+                'wallet_id': wallet_id,
+                'requisite_data_id': requisite_data_id,
+                'currency': currency_id_str,
+                'currency_value': currency_value,
+                'total_value': total_value,
+                'value_min': value_min,
+                'value_max': value_max,
             },
         )
         return {'requisite_id': requisite.id}
-
-    @session_required()
-    async def get_list(
-            self,
-            session: Session,
-    ) -> dict:
-        account = session.account
-        requisites = {
-            'requisites': [
-                {
-                    'id': requisite.id,
-                    'method_id': requisite.method.id,
-                    'fields': requisite.fields,
-                }
-                for requisite in await RequisiteRepository().get_list(account=account)
-            ],
-        }
-        return requisites
 
     @session_required()
     async def get(
@@ -77,30 +105,50 @@ class RequisiteService(BaseService):
             id_: int,
     ):
         account = session.account
-        requisite = await RequisiteRepository().get_by_account_and_id(account=account, id_=id_)
+        requisite = await RequisiteRepository().get_by_id(id_=id_)
+        if requisite.requisite_data.account.id != account.id and requisite.wallet.account.id != account.id:
+            raise DoesNotPermission('You do not have sufficient rights to this wallet or requisite_data')
         return {
             'requisite': {
                 'id': requisite.id,
-                'method_id': requisite.method.id,
-                'fields': requisite.fields,
+                'type': requisite.type,
+                'wallet_id': requisite.wallet.id,
+                'requisite_data_id': requisite.requisite_data.id,
+                'currency': requisite.currency.id_str,
+                'currency_value': requisite.currency_value,
+                'rate': requisite.rate,
+                'value': requisite.value,
+                'total_value': requisite.total_value,
+                'value_min': requisite.value_min,
+                'value_max': requisite.value_max,
             }
         }
 
     @session_required()
-    async def delete(
+    async def update(
             self,
             session: Session,
             id_: int,
+            total_value: float,
     ) -> dict:
-        account = session.account
-        requisite = await RequisiteRepository().get_by_account_and_id(account=account, id_=id_)
-        await RequisiteRepository().delete(requisite)
+        requisite = await RequisiteRepository().get_by_id(id_=id_)
+        access_change_balance = requisite.total_value - requisite.value
+
+        if total_value < access_change_balance:
+            raise MinimumTotalValueError(f'Minimum value total_value = {access_change_balance}')
+
+        await RequisiteRepository().update(
+            requisite,
+            value=1,
+        )
+
         await self.create_action(
             model=requisite,
-            action='delete',
+            action='update',
             parameters={
-                'deleter': f'session_{session.id}',
-                'id': id_,
+                'updater': f'session_{session.id}',
+                'total_value': total_value,
             },
         )
+
         return {}

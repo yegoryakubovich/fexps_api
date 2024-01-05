@@ -40,6 +40,10 @@ class NoRequiredParameters(ApiException):
     pass
 
 
+class DataValidationError(ApiException):
+    pass
+
+
 class BaseRepository(Generic[ModelType]):
     model: Any
 

@@ -31,7 +31,8 @@ from .text_pack import TextPackService
 from .method import MethodService
 from .contact import ContactService
 from .account_contact import AccountContactService
-from .requisite import RequisiteService
+from .requisite_data import RequisiteDataService
 from .wallet import WalletService
 from .wallet_account import WalletAccountService
 from .transfer import TransferService
+from .requisite import RequisiteService

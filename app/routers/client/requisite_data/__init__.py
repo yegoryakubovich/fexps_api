@@ -15,18 +15,20 @@
 #
 
 
-from app.db.models import Requisite
-from .base import BaseRepository
-from ..utils import ApiException
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
+from .get import router as router_get
+from .get_list import router as router_get_list
 
 
-class NotRequiredParams(ApiException):
-    pass
-
-
-class MinimumTotalValueError(ApiException):
-    pass
-
-
-class RequisiteRepository(BaseRepository[Requisite]):
-    model = Requisite
+router = Router(
+    prefix='/requisite_data',
+    routes_included=[
+        router_create,
+        router_delete,
+        router_get,
+        router_get_list,
+    ],
+    tags=['RequisiteData'],
+)

@@ -28,15 +28,15 @@ from .role import Role
 from .text_translation import TextTranslation
 from .text_pack import TextPack
 from .method import Method
-from .requisite import Requisite
 from .contact import Contact
 from .transfer import Transfer
 
 from .country import Country
 from .role_permission import RolePermission
-from .requisite import Requisite
+from .requisite_data import RequisiteData
 
 from .account import Account
+from .requisite import Requisite, RequisiteTypes
 
 from .session import Session
 from .account_role import AccountRole

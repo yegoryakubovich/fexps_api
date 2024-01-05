@@ -15,18 +15,29 @@
 #
 
 
-from app.db.models import Requisite
-from .base import BaseRepository
-from ..utils import ApiException
+from pydantic import Field
+
+from app.services import RequisiteService
+from app.utils import BaseSchema
+from app.utils import Router, Response
 
 
-class NotRequiredParams(ApiException):
-    pass
+router = Router(
+    prefix='/update',
+)
 
 
-class MinimumTotalValueError(ApiException):
-    pass
+class RequisiteUpdateSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+    total_value: float = Field()
 
 
-class RequisiteRepository(BaseRepository[Requisite]):
-    model = Requisite
+@router.post()
+async def route(schema: RequisiteUpdateSchema):
+    result = await RequisiteService().update(
+        token=schema.token,
+        id_=schema.id,
+        total_value=schema.total_value,
+    )
+    return Response(**result)

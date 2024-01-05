@@ -23,6 +23,7 @@ from .currencies import router as router_currencies
 from .languages import router as router_languages
 from .methods import router as router_methods
 from .requisite import router as router_requisite
+from .requisite_data import router as router_requisite_data
 from .roles import router as router_roles
 from .sessions import router as router_sessions
 from .texts import router as router_texts
@@ -38,6 +39,7 @@ router = Router(
         router_languages,
         router_methods,
         router_requisite,
+        router_requisite_data,
         router_countries,
         router_currencies,
         router_timezones,

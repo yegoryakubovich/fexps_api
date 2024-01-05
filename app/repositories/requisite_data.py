@@ -15,18 +15,15 @@
 #
 
 
-from app.db.models import Requisite
-from .base import BaseRepository
-from ..utils import ApiException
+from app.db.models import RequisiteData, Account
+from .base import BaseRepository, ModelDoesNotExist
 
 
-class NotRequiredParams(ApiException):
-    pass
+class RequisiteDataRepository(BaseRepository[RequisiteData]):
+    model = RequisiteData
 
-
-class MinimumTotalValueError(ApiException):
-    pass
-
-
-class RequisiteRepository(BaseRepository[Requisite]):
-    model = Requisite
+    async def get_by_account_and_id(self, account: Account, id_: int) -> RequisiteData:
+        result = await self.get(account=account, id=id_)
+        if not result:
+            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
+        return result

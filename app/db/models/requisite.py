@@ -15,19 +15,36 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Float, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
+
+class RequisiteTypes:
+    INPUT = 'input'
+    OUTPUT = 'output'
+
+    choices = [INPUT, OUTPUT]
 
 
 class Requisite(Base):
     __tablename__ = 'requisites'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', uselist=False, lazy='selectin')
-    method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
-    method = relationship('Method', uselist=False, lazy='selectin')
-    fields = Column(JSON())
+    type = Column(String(length=8))
+    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
+    wallet = relationship('Wallet', uselist=False, lazy='selectin')
+    requisite_data_id = Column(BigInteger, ForeignKey('requisites_datas.id', ondelete='SET NULL'), nullable=True)
+    requisite_data = relationship('RequisiteData', uselist=False, lazy='selectin')
+    currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
+    currency = relationship('Currency', uselist=False, lazy='selectin')
+    currency_value = Column(Float(), default=0)
+    rate = Column(Float())
+    value = Column(Float())
+    total_value = Column(Float())
+    value_min = Column(Float(), default=1)
+    value_max = Column(Float(), default=100)
     is_deleted = Column(Boolean, default=False)
+
+# currency_value, rate, value - 2 из 3, следующий заполняется по формуле
