@@ -16,9 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import Field, BaseModel
+from pydantic import Field
+
 from app.services import ContactService
-from app.utils import Router, Response
+from app.utils import Router, Response, BaseSchema
 
 
 router = Router(
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class ContactGetSchema(BaseModel):
+class ContactGetSchema(BaseSchema):
     id: int = Field()
 
 

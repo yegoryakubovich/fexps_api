@@ -16,17 +16,19 @@
 
 
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import WalletService
+from app.utils import BaseSchema
 from app.utils import Response, Router
+
 
 router = Router(
     prefix='/list/get',
 )
 
 
-class WalletListGetSchema(BaseModel):
+class WalletListGetSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
 
 

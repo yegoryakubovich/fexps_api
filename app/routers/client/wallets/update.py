@@ -15,17 +15,19 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import WalletService
+from app.utils import BaseSchema
 from app.utils import Router, Response
+
 
 router = Router(
     prefix='/update',
 )
 
 
-class WalletUpdateSchema(BaseModel):
+class WalletUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
     name: str = Field(min_length=1, max_length=1024)

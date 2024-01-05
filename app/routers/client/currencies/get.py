@@ -16,8 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import Field, BaseModel
+from pydantic import Field
+
 from app.services import CurrencyService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +28,7 @@ router = Router(
 )
 
 
-class CurrencyGetSchema(BaseModel):
+class CurrencyGetSchema(BaseSchema):
     id_str: str = Field(min_length=2, max_length=32)
 
 

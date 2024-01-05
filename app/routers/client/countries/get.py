@@ -16,9 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import CountryService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +28,7 @@ router = Router(
 )
 
 
-class CountryGetSchema(BaseModel):
+class CountryGetSchema(BaseSchema):
     id_str: str = Field(min_length=2, max_length=16)
 
 

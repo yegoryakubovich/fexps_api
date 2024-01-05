@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import Field, BaseModel
+from pydantic import Field
 
 from app.services import MethodService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class MethodCreateSchema(BaseModel):
+class MethodCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     currency: str = Field(min_length=2, max_length=32)
     name: str = Field(min_length=1, max_length=1024)

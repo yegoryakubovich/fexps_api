@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import Field, BaseModel
+from pydantic import Field
 
 from app.services import CurrencyService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class CurrencyDeleteSchema(BaseModel):
+class CurrencyDeleteSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=32)
 

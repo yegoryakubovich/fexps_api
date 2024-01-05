@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import Field, BaseModel
+from pydantic import Field
 
 from app.services.requisite import RequisiteService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class RequisiteCreateSchema(BaseModel):
+class RequisiteCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     method_id: int = Field()
     fields: dict = Field()

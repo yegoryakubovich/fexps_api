@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import TextPackService
+from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class TextPackDeleteSchema(BaseModel):
+class TextPackDeleteSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 

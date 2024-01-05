@@ -17,7 +17,7 @@
 
 from app.db.models import Transfer, Session, Wallet
 from app.repositories.base import DoesNotPermission
-from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository, ValueMustBePositive
+from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
@@ -34,6 +34,9 @@ class TransferService(BaseService):
             wallet_to: Wallet,
             value: float,
     ) -> Transfer:
+        balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
+        if value >= balance:
+            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         if (wallet_to.value + value) > WALLET_MAX_VALUE:
             raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
         transfer = await TransferRepository().create(
@@ -51,7 +54,7 @@ class TransferService(BaseService):
             session: Session,
             wallet_from_id: int,
             wallet_to_id: int,
-            value: float,
+            value,
     ) -> dict:
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
@@ -63,11 +66,6 @@ class TransferService(BaseService):
         )
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
 
-        if value <= 0:
-            raise ValueMustBePositive("The value must be positive")
-        balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
-        if value >= balance:
-            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         transfer = await self.transfer(wallet_from=wallet_from, wallet_to=wallet_to, value=value)
         await self.create_action(
             model=transfer,

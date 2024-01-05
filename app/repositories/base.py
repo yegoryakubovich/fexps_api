@@ -13,12 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from math import ceil
 from typing import TypeVar, Generic, List, Optional, Any
 
-from sqlalchemy import select, BooleanClauseList
-from sqlalchemy.sql.elements import or_
-from sqlalchemy.sql.operators import and_
+from sqlalchemy import select
 
 from app.db.base_class import Base
 from app.db.session import SessionLocal
@@ -117,8 +117,10 @@ class BaseRepository(Generic[ModelType]):
             result[f"{key}_id"] = value.id
         return result
 
-    async def count(self, **filters):
-        return len(await self.get_list(**filters))
+    async def count(self, custom_select, **filters):
+        async with self._get_session() as session:
+            result = await session.execute(custom_select.filter_by(is_deleted=False, **filters))
+            return len(result.scalars().all())
 
     async def search(self, page: int, custom_where=None, **filters) -> tuple[List[ModelType], int, int]:
         if custom_where is None:
@@ -132,5 +134,5 @@ class BaseRepository(Generic[ModelType]):
                     is_deleted=False, **filters
                 ).order_by(self.model.id.desc()).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
             )
-            count = await self.count(**filters)
-            return result.scalars().all(), count, ceil(count/ITEMS_PER_PAGE)
+            count = await self.count(custom_select, **filters)
+            return result.scalars().all(), count, ceil(count / ITEMS_PER_PAGE)

@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import RoleService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class CreateRoleSchema(BaseModel):
+class CreateRoleSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=128)
     name_text_key: str = Field(min_length=2, max_length=128)

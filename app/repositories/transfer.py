@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy.sql.operators import or_
+from sqlalchemy.sql.operators import or_, and_
 
 from app.db.models import Transfer, Wallet
 from .base import BaseRepository
@@ -23,10 +23,6 @@ from ..utils import ApiException
 
 
 class NotEnoughFundsOnBalance(ApiException):
-    pass
-
-
-class ValueMustBePositive(ApiException):
     pass
 
 
@@ -40,11 +36,13 @@ class TransferRepository(BaseRepository[Transfer]):
             is_receiver: bool,
             page: int = 1,
     ):
-        if is_sender and not is_receiver:
+        if is_sender and is_receiver:
+            custom_where = or_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
+        elif is_sender and not is_receiver:
             custom_where = self.model.wallet_from == wallet
         elif is_receiver and not is_sender:
             custom_where = self.model.wallet_to == wallet
         else:
-            custom_where = or_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
+            custom_where = and_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
         result = await self.search(page=page, custom_where=custom_where)
         return result

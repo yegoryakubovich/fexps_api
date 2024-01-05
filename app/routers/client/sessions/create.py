@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import SessionService
+from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class SessionCreateSchema(BaseModel):
+class SessionCreateSchema(BaseSchema):
     username: str = Field(min_length=6, max_length=32)
     password: str = Field(min_length=6, max_length=128)
 

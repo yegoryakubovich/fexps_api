@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import TextService
+from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class TextCreateSchema(BaseModel):
+class TextCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=2, max_length=128)
     value_default: str = Field(min_length=1, max_length=1024)

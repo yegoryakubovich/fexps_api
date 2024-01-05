@@ -16,9 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import Field, BaseModel
+from pydantic import Field
 
 from app.services import RequisiteService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +28,7 @@ router = Router(
 )
 
 
-class RequisiteGetSchema(BaseModel):
+class RequisiteGetSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 

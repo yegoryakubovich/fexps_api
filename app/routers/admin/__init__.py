@@ -17,6 +17,7 @@
 
 from app.utils import Router
 
+
 router = Router(
     prefix='/admin',
     routes_included=[

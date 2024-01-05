@@ -16,7 +16,8 @@
 
 
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import  Field
+from app.utils import BaseSchema
 
 from app.services import AccountService
 from app.utils import Router, Response
@@ -27,7 +28,7 @@ router = Router(
 )
 
 
-class CheckAccountUsernameSchema(BaseModel):
+class CheckAccountUsernameSchema(BaseSchema):
     username: str = Field(min_length=6, max_length=32)
 
 

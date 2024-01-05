@@ -16,9 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import Field
 
-from app.services import TimezoneService, TransferService
+from app.services import TransferService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +28,7 @@ router = Router(
 )
 
 
-class TransferGetSchema(BaseModel):
+class TransferGetSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 

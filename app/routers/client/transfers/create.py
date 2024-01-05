@@ -15,22 +15,23 @@
 #
 
 
-from pydantic import BaseModel, Field
+from decimal import Decimal
+
+from pydantic import Field
 
 from app.services import TransferService
-from app.utils import Router, Response
-
+from app.utils import Router, Response, BaseValueSchema
 
 router = Router(
     prefix='/create',
 )
 
 
-class TransferCreateSchema(BaseModel):
+class TransferCreateSchema(BaseValueSchema):
     token: str = Field(min_length=32, max_length=64)
     wallet_from_id: int = Field()
     wallet_to_id: int = Field()
-    value: float = Field()
+    value: Decimal = Field(decimal_places=2)
 
 
 @router.post()

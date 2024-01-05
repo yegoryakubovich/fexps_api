@@ -15,7 +15,8 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import  Field
+from app.utils import BaseSchema
 
 from app.services import AccountContactService
 from app.utils import Response, Router
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class AccountContactUpdateSchema(BaseModel):
+class AccountContactUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
     value: str = Field(min_length=1, max_length=128)

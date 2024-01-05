@@ -15,9 +15,10 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
 from app.services import CountryService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -26,7 +27,7 @@ router = Router(
 )
 
 
-class CountryUpdateSchema(BaseModel):
+class CountryUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=16)
     language: str = Field(default=None, min_length=2, max_length=16)

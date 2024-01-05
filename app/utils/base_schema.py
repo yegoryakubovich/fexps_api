@@ -15,24 +15,27 @@
 #
 
 
-from . import client
-from . import crypto
-from .exception import ApiException
-from .response import Response, ResponseState
-from .router import Router
-from .use_schema import use_schema
-from .validation_error import validation_error
-from .base_schema import BaseSchema, BaseValueSchema
+from decimal import Decimal
 
-__all__ = [
-    'ApiException',
-    'Router',
-    'Response',
-    'ResponseState',
-    'crypto',
-    'client',
-    'use_schema',
-    'validation_error',
-    'BaseSchema',
-    'BaseValueSchema',
-]
+from pydantic import BaseModel, field_validator, Field
+
+from app.utils.exception import ApiException
+
+
+class ValueMustBePositive(ApiException):
+    pass
+
+
+class BaseSchema(BaseModel):
+    pass
+
+
+class BaseValueSchema(BaseSchema):
+    value: Decimal = Field(decimal_places=2)
+
+    @field_validator('value')
+    @classmethod
+    def check_value(cls, value):
+        if value <= 0:
+            raise ValueMustBePositive('The value must be positive')
+        return float(value)

@@ -16,7 +16,8 @@
 
 
 from fastapi import Depends
-from pydantic import BaseModel, Field
+from pydantic import  Field
+from app.utils import BaseSchema
 
 from app.services import AccountService
 from app.utils import Router
@@ -28,7 +29,7 @@ router = Router(
 )
 
 
-class SessionSchema(BaseModel):
+class SessionSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
 
 

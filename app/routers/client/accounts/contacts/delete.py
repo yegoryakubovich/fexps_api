@@ -15,7 +15,8 @@
 #
 
 
-from pydantic import BaseModel, Field
+from pydantic import  Field
+from app.utils import BaseSchema
 
 from app.services import AccountContactService
 from app.utils import Router, Response
@@ -25,7 +26,7 @@ router = Router(
 )
 
 
-class AccountContactDeleteSchema(BaseModel):
+class AccountContactDeleteSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
