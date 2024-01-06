@@ -46,5 +46,3 @@ class Requisite(Base):
     value_min = Column(Float(), default=1)
     value_max = Column(Float(), default=100)
     is_deleted = Column(Boolean, default=False)
-
-# currency_value, rate, value - 2 из 3, следующий заполняется по формуле

@@ -17,9 +17,8 @@
 
 from pydantic import Field
 
-from app.services import MethodService
-from app.utils import BaseSchema
-from app.utils import Router, Response
+from app.services import RequestService
+from app.utils import Router, Response, BaseSchema
 
 
 router = Router(
@@ -27,24 +26,13 @@ router = Router(
 )
 
 
-class MethodCreateSchema(BaseSchema):
+class RequestCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
-    currency: str = Field(min_length=2, max_length=32)
-    name: str = Field(min_length=1, max_length=1024)
-    fields: list[dict] = Field(
-        description='[{"key": "string", "type": "str/int", "name": "string", "optional": false}]'
-    )
-    confirmation_fields: list[dict] = Field(
-        description='[{"key": "string", "type": "str/int/image", "name": "string", "optional": false}]'
-    )
 
 
 @router.post()
-async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+async def route(schema: RequestCreateSchema):
+    result = await RequestService().create(
         token=schema.token,
-        currency_id_str=schema.currency,
-        name=schema.name,
-        fields=schema.fields,
     )
     return Response(**result)

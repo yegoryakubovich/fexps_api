@@ -37,6 +37,7 @@ from .requisite_data import RequisiteData
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes
+from .request import Request
 
 from .session import Session
 from .account_role import AccountRole

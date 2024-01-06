@@ -30,5 +30,6 @@ class Method(Base):
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', uselist=False, lazy='selectin')
     schema_fields = Column(JSON())
+    schema_input_fields = Column(JSON())
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
