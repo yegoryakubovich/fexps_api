@@ -21,6 +21,12 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
+class MethodFieldType:
+    str = 'str'
+    int = 'int'
+    image = 'image'
+
+
 class Method(Base):
     __tablename__ = 'methods'
 
@@ -30,6 +36,6 @@ class Method(Base):
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', uselist=False, lazy='selectin')
     schema_fields = Column(JSON())
-    schema_input_fields = Column(JSON())
+    schema_confirmation_fields = Column(JSON())
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

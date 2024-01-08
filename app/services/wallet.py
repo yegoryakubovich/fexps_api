@@ -22,11 +22,17 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
-from config import WALLET_MAX_COUNT
+from config import WALLET_MAX_COUNT, WALLET_MAX_VALUE
 
 
 class WalletService(BaseService):
     model = Wallet
+
+    @staticmethod
+    async def get_available_value(id_: int) -> float:  # FIXME
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        result = WALLET_MAX_VALUE - wallet.value
+        return result
 
     @session_required()
     async def create(

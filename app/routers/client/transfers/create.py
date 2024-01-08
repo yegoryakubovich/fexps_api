@@ -17,10 +17,11 @@
 
 from decimal import Decimal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.services import TransferService
 from app.utils import Router, Response, BaseSchema
+from app.utils.base_schema import ValueMustBePositive
 
 router = Router(
     prefix='/create',
@@ -32,6 +33,15 @@ class TransferCreateSchema(BaseSchema):
     wallet_from_id: int = Field()
     wallet_to_id: int = Field()
     value: Decimal = Field(decimal_places=2)
+
+    @field_validator('value')
+    @classmethod
+    def check_value(cls, value):
+        if value is None:
+            return
+        if value <= 0:
+            raise ValueMustBePositive('The value must be positive')
+        return float(value)
 
 
 @router.post()

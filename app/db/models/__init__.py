@@ -27,7 +27,7 @@ from .currency import Currency
 from .role import Role
 from .text_translation import TextTranslation
 from .text_pack import TextPack
-from .method import Method
+from .method import Method, MethodFieldType
 from .contact import Contact
 from .transfer import Transfer
 

@@ -20,6 +20,7 @@ from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
+from app.services import WalletService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
@@ -37,7 +38,9 @@ class TransferService(BaseService):
         balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
         if value >= balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
-        if (wallet_to.value + value) > WALLET_MAX_VALUE:
+        available_value = await WalletService().get_available_value(id_=wallet_to.id)
+        print(available_value)
+        if value > available_value:
             raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
         transfer = await TransferRepository().create(
             wallet_from=wallet_from,

@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Method, Session
+from app.db.models import Method, Session, MethodFieldType
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
@@ -33,29 +33,18 @@ class FieldsValidationError(ApiException):
     pass
 
 
-class MethodFieldType:
-    str = 'str'
-    int = 'int'
-
-
 class MethodService(BaseService):
     model = Method
-
-    @staticmethod
-    async def check_validation_fields(fields: list[dict]) -> None:
-        for i, field in enumerate(fields, start=1):
-            for key in ['key', 'type', 'name']:
-                if not field.get(key):
-                    raise FieldsMissingParams(f'fields.{i} missing parameter "{key}"')
-            if field.get('type') not in [MethodFieldType.str, MethodFieldType.int]:
-                raise FieldsValidationError(f'fields.{i}.type must contain {MethodFieldType.str}/{MethodFieldType.int}')
 
     @staticmethod
     async def check_validation_scheme(method: Method, fields: dict):
         for field in method.schema_fields:
             field_key = field.get('key')
             field_type = field.get('type')
+            field_optional = field.get('optional')
             field_result = fields.get(field_key)
+            if not field_result and not field_optional:
+                continue
             if not field_result:
                 raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
             if field_type == MethodFieldType.str and not isinstance(field_result, str):
@@ -70,14 +59,21 @@ class MethodService(BaseService):
             currency_id_str: str,
             name: str,
             fields: list[dict],
+            confirmation_fields: list[dict],
     ) -> dict:
-        await self.check_validation_fields(fields=fields)
         for field in fields:
             name_text = await TextRepository().create(
                 key=f'method_field_{await create_id_str()}',
                 value_default=field.get('name'),
             )
             field['name_text_key'] = name_text.key
+        for confirmation_field in confirmation_fields:
+            name_text = await TextRepository().create(
+                key=f'method_confirmation_field_{await create_id_str()}',
+                value_default=confirmation_field.get('name'),
+            )
+            confirmation_field['name_text_key'] = name_text.key
+
         currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         name_text = await TextRepository().create(
             key=f'method_{await create_id_str()}',
@@ -86,7 +82,8 @@ class MethodService(BaseService):
         method = await MethodRepository().create(
             currency=currency,
             name_text=name_text,
-            schema_fields=fields
+            schema_fields=fields,
+            schema_confirmation_fields=confirmation_fields
         )
         await self.create_action(
             model=method,
@@ -108,6 +105,7 @@ class MethodService(BaseService):
                     'currency_id_str': method.currency.id_str,
                     'name_text_key': method.name_text.key,
                     'schema_fields': method.schema_fields,
+                    'schema_input_fields': method.schema_confirmation_fields,
                     'is_active': method.is_active,
                 }
                 for method in await MethodRepository().get_list()
@@ -126,6 +124,7 @@ class MethodService(BaseService):
                 'currency_id_str': method.currency.id_str,
                 'name_text_key': method.name_text.key,
                 'schema_fields': method.schema_fields,
+                'schema_input_fields': method.schema_confirmation_fields,
                 'is_active': method.is_active,
             }
         }
