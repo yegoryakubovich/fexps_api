@@ -74,6 +74,7 @@ class RequestService(BaseService):
                 'wallet_id': wallet_id,
                 'input_method_id': input_method_id,
                 'input_value': input_value,
+                'value': value,
                 'output_method_id': output_method_id,
                 'output_requisite_data_id': output_requisite_data_id,
                 'output_value': output_value,

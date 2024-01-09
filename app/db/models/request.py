@@ -40,10 +40,11 @@ class Request(Base):
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     input_value = Column(Float(), nullable=True)
-    input_rate = Column(Float(), nullable=True)
 
     value = Column(Float(), nullable=True)
+    input_rate = Column(Float(), nullable=True)
     rate = Column(Float(), nullable=True)
+    output_rate = Column(Float(), nullable=True)
 
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     output_method = relationship('Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')
@@ -51,6 +52,5 @@ class Request(Base):
     output_requisite_data = relationship('RequisiteData', foreign_keys=output_requisite_data_id,
                                          uselist=False, lazy='selectin')
     output_value = Column(Float(), nullable=True)
-    output_rate = Column(Float(), nullable=True)
 
     is_deleted = Column(Boolean, default=False)

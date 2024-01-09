@@ -16,6 +16,7 @@
 from decimal import Decimal
 
 from pydantic import Field, field_validator, model_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequestTypes
 from app.repositories.base import DataValidationError
@@ -50,33 +51,38 @@ class RequestCreateSchema(BaseSchema):
         datas = {
             RequestTypes.INPUT: {
                 'variables': [self.input_method_id, self.input_value, self.value],
-                'names': ['input_method_id', 'input_value', 'value']
+                'variables_names': ['input_method_id'],
+                'optional': [self.input_value, self.value],
+                'optional_names': ['input_value', 'value'],
             },
             RequestTypes.OUTPUT: {
-                'variables': [self.output_requisite_data_id, self.output_method_id,
-                              self.output_value, self.value],
-                'names': ['output_requisite_data_id', 'output_method_id', 'output_value', 'value']
+                'variables': [self.output_requisite_data_id, self.output_method_id],
+                'variables_names': ['output_requisite_data_id', 'output_method_id'],
+                'optional': [self.output_value, self.value],
+                'optional_names': ['output_value', 'value'],
             },
             RequestTypes.ALL: {
-                'variables': [self.input_method_id, self.input_value,
-                              self.output_requisite_data_id,
-                              self.output_method_id, self.output_value],
-                'names': ['input_method_id', 'input_value', 'output_requisite_data_id',
-                          'output_method_id', 'output_value']
-            }
+                'variables': [self.input_method_id, self.output_requisite_data_id, self.output_method_id],
+                'variables_names': ['input_method_id', 'output_requisite_data_id', 'output_method_id'],
+                'optional': [self.input_value, self.output_value],
+                'optional_names': ['input_value', 'output_value'],
+            },
         }
         if None in datas[self.type]['variables']:
             raise DataValidationError(f'For {self.type}, only these parameters are taken into account: '
-                                      f'{", ".join(datas[self.type]["names"])}')
+                                      f'{", ".join(datas[self.type]["variables_names"])}')
+        if (len(datas[self.type]['optional']) - datas[self.type]['optional'].count(None)) != 1:
+            raise DataValidationError(f'The position must be one of: '
+                                      f'{"/".join(datas[self.type]["optional_names"])}')
         return self
 
     @field_validator('input_value', 'value', 'output_value')
     @classmethod
-    def check_values(cls, value):
+    def check_values(cls, value: Decimal, info: ValidationInfo):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The number {value} must be positive')
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
         return float(value)
 
 
