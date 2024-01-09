@@ -28,12 +28,12 @@ from .packs import router as router_packs
 router = Router(
     prefix='/texts',
     routes_included=[
-        router_get_list,
         router_create,
+        router_get_list,
         router_update,
         router_delete,
-        router_translations,
         router_packs,
+        router_translations,
     ],
     tags=['Texts'],
 )

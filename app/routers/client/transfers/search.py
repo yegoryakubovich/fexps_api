@@ -36,7 +36,7 @@ class TransferSearchSchema(BaseSchema):
     page: int = Field(default=1)
 
 
-@router.get()
+@router.post()
 async def route(schema: TransferSearchSchema = Depends()):
     result = await TransferService().search(
         token=schema.token,

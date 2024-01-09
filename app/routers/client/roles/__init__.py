@@ -15,14 +15,15 @@
 #
 
 
-from .create import router as router_create
 from app.utils import Router
-
+from .create import router as router_create
+from .get import router as router_get
 
 router = Router(
     prefix='/roles',
     routes_included=[
         router_create,
+        router_get,
     ],
     tags=['Roles'],
 )

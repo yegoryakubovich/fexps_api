@@ -24,8 +24,8 @@ from .delete import router as router_delete
 router = Router(
     prefix='/packs',
     routes_included=[
-        router_get,
         router_create,
+        router_get,
         router_delete,
     ],
 )

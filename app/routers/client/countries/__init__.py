@@ -27,10 +27,10 @@ router = Router(
     prefix='/countries',
     routes_included=[
         router_create,
-        router_update,
-        router_delete,
         router_get,
         router_get_list,
+        router_update,
+        router_delete,
     ],
     tags=['Countries'],
 )

@@ -26,9 +26,9 @@ router = Router(
     prefix='/currencies',
     routes_included=[
         router_create,
-        router_delete,
         router_get,
         router_get_list,
+        router_delete,
     ],
     tags=['Currencies'],
 )

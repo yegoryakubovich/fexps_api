@@ -24,9 +24,9 @@ from .get import router as router_get
 router = Router(
     prefix='/accounts',
     routes_included=[
-        router_get,
         router_create,
         router_check_username,
+        router_get,
         router_contacts,
     ],
     tags=['Accounts'],
