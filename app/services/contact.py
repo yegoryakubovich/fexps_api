@@ -45,6 +45,7 @@ class ContactService(BaseService):
                 'name_text_id': name_text.id,
             },
         )
+
         return {'contact_id': contact.id}
 
     @staticmethod
@@ -52,6 +53,7 @@ class ContactService(BaseService):
             id_: int,
     ):
         contact = await ContactRepository().get_by_id(id_=id_)
+
         return {
             'contact': {
                 'id': contact.id,
@@ -61,7 +63,8 @@ class ContactService(BaseService):
 
     @staticmethod
     async def get_list() -> dict:
-        contacts = {
+
+        return {
             'contacts': [
                 {
                     'id': contact.id,
@@ -70,7 +73,6 @@ class ContactService(BaseService):
                 for contact in await ContactRepository().get_list()
             ],
         }
-        return contacts
 
     @session_required()
     async def delete(
@@ -88,4 +90,5 @@ class ContactService(BaseService):
                 'id': id_,
             },
         )
+
         return {}

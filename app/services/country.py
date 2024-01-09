@@ -13,17 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from app.db.models import Country
 from app.repositories.country import CountryRepository
 from app.services.base import BaseService
 
 
 class CountryService(BaseService):
+    model = Country
+
     @staticmethod
     async def get_list() -> dict:
+
         # FIXME
-        countries = {
+        return {
             'countries': [
                 {
                     'id': country.id,
@@ -36,4 +38,3 @@ class CountryService(BaseService):
                 for country in await CountryRepository().get_list()
             ],
         }
-        return countries

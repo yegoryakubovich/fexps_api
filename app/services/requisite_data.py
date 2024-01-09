@@ -50,25 +50,8 @@ class RequisiteDataService(BaseService):
                 'method_id': method.id,
             },
         )
-        return {'requisite_id': requisite_data.id}
 
-    @session_required()
-    async def get_list(
-            self,
-            session: Session,
-    ) -> dict:
-        account = session.account
-        requisite_datas = {
-            'requisite_datas': [
-                {
-                    'id': requisite_data.id,
-                    'method_id': requisite_data.method.id,
-                    'fields': requisite_data.fields,
-                }
-                for requisite_data in await RequisiteDataRepository().get_list(account=account)
-            ],
-        }
-        return requisite_datas
+        return {'requisite_id': requisite_data.id}
 
     @session_required()
     async def get(
@@ -78,12 +61,31 @@ class RequisiteDataService(BaseService):
     ):
         account = session.account
         requisite_data = await RequisiteDataRepository().get_by_account_and_id(account=account, id_=id_)
+
         return {
             'requisite_data': {
                 'id': requisite_data.id,
                 'method_id': requisite_data.method.id,
                 'fields': requisite_data.fields,
             }
+        }
+
+    @session_required()
+    async def get_list(
+            self,
+            session: Session,
+    ) -> dict:
+        account = session.account
+
+        return {
+            'requisite_datas': [
+                {
+                    'id': requisite_data.id,
+                    'method_id': requisite_data.method.id,
+                    'fields': requisite_data.fields,
+                }
+                for requisite_data in await RequisiteDataRepository().get_list(account=account)
+            ],
         }
 
     @session_required()
@@ -103,4 +105,5 @@ class RequisiteDataService(BaseService):
                 'id': id_,
             },
         )
+
         return {}

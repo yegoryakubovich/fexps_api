@@ -103,6 +103,7 @@ class BaseRepository(Generic[ModelType]):
             return db_obj
 
     async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
+
         return await self.update(db_obj, is_deleted=True)
 
     @staticmethod

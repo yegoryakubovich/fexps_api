@@ -29,28 +29,6 @@ from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
 class TransferService(BaseService):
     model = Transfer
 
-    @staticmethod
-    async def transfer(
-            wallet_from: Wallet,
-            wallet_to: Wallet,
-            value: float,
-    ) -> Transfer:
-        balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
-        if value >= balance:
-            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
-        available_value = await WalletService().get_available_value(id_=wallet_to.id)
-        print(available_value)
-        if value > available_value:
-            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
-        transfer = await TransferRepository().create(
-            wallet_from=wallet_from,
-            wallet_to=wallet_to,
-            value=value
-        )
-        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
-        await WalletRepository().update(wallet_to, value=wallet_to.value + value)
-        return transfer
-
     @session_required()
     async def create(
             self,
@@ -81,6 +59,7 @@ class TransferService(BaseService):
                 'value': value
             },
         )
+
         return {'transfer_id': transfer.id}
 
     @session_required()
@@ -89,7 +68,17 @@ class TransferService(BaseService):
             session: Session,
             id_: int,
     ):
+        account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
+        perm_from = await WalletAccountRepository().get_by_account_and_wallet(
+            account=account, wallet=transfer.wallet_from
+        )
+        perm_to = await WalletAccountRepository().get_by_account_and_wallet(
+            account=account, wallet=transfer.wallet_to
+        )
+        if not perm_from and not perm_to:
+            raise DoesNotPermission(f'You do not have enough rights for this transfer')
+
         return {
             'transfer': {
                 'id': transfer.id,
@@ -114,7 +103,8 @@ class TransferService(BaseService):
         transfers_db = await TransferRepository().search_by_wallet(
             wallet=wallet, is_sender=is_sender, is_receiver=is_receiver, page=page
         )
-        transfers = {
+
+        return {
             'transfers': [
                 {
                     'id': transfer.id,
@@ -129,4 +119,25 @@ class TransferService(BaseService):
             'pages': transfers_db[2],
             'items_per_page': ITEMS_PER_PAGE,
         }
-        return transfers
+
+    @staticmethod
+    async def transfer(
+            wallet_from: Wallet,
+            wallet_to: Wallet,
+            value: float,
+    ) -> Transfer:
+        balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
+        if value >= balance:
+            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
+        available_value = await WalletService().get_available_value(id_=wallet_to.id)
+        if value > available_value:
+            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
+        transfer = await TransferRepository().create(
+            wallet_from=wallet_from,
+            wallet_to=wallet_to,
+            value=value
+        )
+        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
+        await WalletRepository().update(wallet_to, value=wallet_to.value + value)
+
+        return transfer

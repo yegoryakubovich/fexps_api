@@ -98,6 +98,7 @@ class AccountService(BaseService):
             },
             with_client=True,
         )
+
         return {'account_id': account.id}
 
     async def check_password(
@@ -106,6 +107,7 @@ class AccountService(BaseService):
             password: str,
     ):
         await self._is_correct_password(account=account, password=password)
+
         return True
 
     @staticmethod
@@ -114,6 +116,7 @@ class AccountService(BaseService):
     ):
         if await AccountRepository().is_exist(username=username):
             raise AccountUsernameExist(f'Account with username "{username}" already exist')
+
         return {}
 
     @session_required(return_account=True)
@@ -123,6 +126,7 @@ class AccountService(BaseService):
     ) -> dict:
         text_pack = await TextPackRepository().get_current(language=account.language)
         permissions = await AccountRoleService.get_permissions(account=account)
+
         return {
             'username': account.username,
             'firstname': account.firstname,

@@ -58,11 +58,10 @@ class TextPackService(BaseService):
             action='create',
             parameters={
                 'creator': f'session_{session.id}',
+                'language': language_id_str,
             },
         )
-        return {
-            'id': text_pack.id,
-        }
+        return {'text_pack_id': text_pack.id}
 
     @session_required()
     async def delete(self, session: Session, id_: int):

@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from app.db.models import Session
 from app.repositories.account import AccountRepository
 from app.repositories.session import SessionRepository
 from app.services.account import AccountService
@@ -23,6 +22,8 @@ from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 
 
 class SessionService(BaseService):
+    model = Session
+
     async def create(self, username: str, password: str) -> dict:
         account = await AccountRepository().get_by_username(username=username)
         await AccountService().check_password(account=account, password=password)

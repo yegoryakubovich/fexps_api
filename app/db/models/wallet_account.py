@@ -25,6 +25,8 @@ class WalletAccountRoles:
     OWNER = 'owner'
     CONFIDANT = 'confidant'
 
+    choices = [OWNER, CONFIDANT]
+
 
 class WalletAccount(Base):
     __tablename__ = 'wallets_accounts'

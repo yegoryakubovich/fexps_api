@@ -15,10 +15,18 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Float
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Float, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
+
+class RequestTypes:
+    INPUT = 'input'
+    OUTPUT = 'output'
+    ALL = 'all'
+
+    choices = [INPUT, OUTPUT, ALL]
 
 
 class Request(Base):
@@ -27,11 +35,14 @@ class Request(Base):
     id = Column(BigInteger, primary_key=True)
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
+    type = Column(String(length=8))
 
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     input_value = Column(Float(), nullable=True)
+    input_rate = Column(Float(), nullable=True)
 
+    value = Column(Float(), nullable=True)
     rate = Column(Float(), nullable=True)
 
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
@@ -40,5 +51,6 @@ class Request(Base):
     output_requisite_data = relationship('RequisiteData', foreign_keys=output_requisite_data_id,
                                          uselist=False, lazy='selectin')
     output_value = Column(Float(), nullable=True)
+    output_rate = Column(Float(), nullable=True)
 
     is_deleted = Column(Boolean, default=False)

@@ -23,6 +23,8 @@ from app.utils.decorators import session_required
 
 
 class TextService(BaseService):
+    model = Text
+
     @session_required(return_model=False)
     async def get_list(
             self,
@@ -45,9 +47,8 @@ class TextService(BaseService):
                     ],
                 }
             )
-        return {
-            'texts': texts_list,
-        }
+
+        return {'texts': texts_list}
 
     @session_required()
     async def create(

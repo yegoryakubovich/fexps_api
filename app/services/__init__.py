@@ -37,3 +37,15 @@ from .wallet_account import WalletAccountService
 from .transfer import TransferService
 from .requisite import RequisiteService
 from .request import RequestService
+
+
+"""
+create
+check
+get
+get list
+search
+update
+delete
+*other*
+"""

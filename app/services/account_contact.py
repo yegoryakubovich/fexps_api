@@ -51,7 +51,25 @@ class AccountContactService(BaseService):
                 'contact_id': f'{contact.id}',
             },
         )
+
         return {'account_contact_id': account_contact.id}
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int
+    ) -> dict:
+        account = session.account
+        account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
+        contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
+
+        return {
+            'id': account_contact.id,
+            'contact_id': contact.id,
+            'contact_name_key': contact.name_text.key,
+            'value': account_contact.value,
+        }
 
     @session_required()
     async def get_list(
@@ -71,25 +89,8 @@ class AccountContactService(BaseService):
                     'value': account_contact.value,
                 }
             )
-        return {
-            'account_contacts': account_contacts_list,
-        }
 
-    @session_required()
-    async def get(
-            self,
-            session: Session,
-            id_: int
-    ) -> dict:
-        account = session.account
-        account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
-        contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
-        return {
-            'id': account_contact.id,
-            'contact_id': contact.id,
-            'contact_name_key': contact.name_text.key,
-            'value': account_contact.value,
-        }
+        return {'account_contacts': account_contacts_list}
 
     @session_required()
     async def update(
@@ -132,4 +133,5 @@ class AccountContactService(BaseService):
                 'id': id_,
             },
         )
+
         return {}

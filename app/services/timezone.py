@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from app.db.models import Timezone
 from app.repositories.timezone import TimezoneRepository
 from app.services.base import BaseService
 
 
 class TimezoneService(BaseService):
+    model = Timezone
+
     @staticmethod
     async def get_list() -> dict:
-        timezones = {
+
+        return {
             'timezones': [
                 {
                     'id': timezone.id,
@@ -32,4 +34,3 @@ class TimezoneService(BaseService):
                 for timezone in await TimezoneRepository().get_list()
             ],
         }
-        return timezones

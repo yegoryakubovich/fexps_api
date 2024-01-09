@@ -25,5 +25,11 @@ class WalletAccountRepository(BaseRepository[WalletAccount]):
     async def get_by_account_and_wallet(self, account: Account, wallet: Wallet) -> WalletAccount:
         result = await self.get(account=account, wallet=wallet)
         if not result:
+            return
+        return result
+
+    async def check_permission(self, account: Account, wallet: Wallet) -> WalletAccount:
+        result = await self.get_by_account_and_wallet(account=account, wallet=wallet)
+        if not result:
             raise DoesNotPermission(f'You do not have enough rights for this wallet')
         return result

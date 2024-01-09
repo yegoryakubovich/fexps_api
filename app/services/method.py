@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Method, Session, MethodFieldType
+from app.db.models import Method, Session, MethodFieldTypes
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
@@ -35,22 +35,6 @@ class FieldsValidationError(ApiException):
 
 class MethodService(BaseService):
     model = Method
-
-    @staticmethod
-    async def check_validation_scheme(method: Method, fields: dict):
-        for field in method.schema_fields:
-            field_key = field.get('key')
-            field_type = field.get('type')
-            field_optional = field.get('optional')
-            field_result = fields.get(field_key)
-            if not field_result and not field_optional:
-                continue
-            if not field_result:
-                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
-            if field_type == MethodFieldType.str and not isinstance(field_result, str):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
-            if field_type == MethodFieldType.int and not isinstance(field_result, int):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
 
     @session_required()
     async def create(
@@ -94,11 +78,30 @@ class MethodService(BaseService):
                 'currency_id_str': currency.id_str
             },
         )
+
         return {'method_id': method.id}
 
     @staticmethod
+    async def get(
+            id_: int,
+    ):
+        method = await MethodRepository().get_by_id(id_=id_)
+
+        return {
+            'method': {
+                'id': method.id,
+                'currency_id_str': method.currency.id_str,
+                'name_text_key': method.name_text.key,
+                'schema_fields': method.schema_fields,
+                'schema_input_fields': method.schema_confirmation_fields,
+                'is_active': method.is_active,
+            }
+        }
+
+    @staticmethod
     async def get_list() -> dict:
-        methods = {
+
+        return {
             'methods': [
                 {
                     'id': method.id,
@@ -111,41 +114,6 @@ class MethodService(BaseService):
                 for method in await MethodRepository().get_list()
             ],
         }
-        return methods
-
-    @staticmethod
-    async def get(
-            id_: int,
-    ):
-        method = await MethodRepository().get_by_id(id_=id_)
-        return {
-            'method': {
-                'id': method.id,
-                'currency_id_str': method.currency.id_str,
-                'name_text_key': method.name_text.key,
-                'schema_fields': method.schema_fields,
-                'schema_input_fields': method.schema_confirmation_fields,
-                'is_active': method.is_active,
-            }
-        }
-
-    @session_required()
-    async def delete(
-            self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        method = await MethodRepository().get(id=id_)
-        await MethodRepository().delete(method)
-        await self.create_action(
-            model=method,
-            action='delete',
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id': id_,
-            },
-        )
-        return {}
 
     @session_required()
     async def update(
@@ -174,4 +142,40 @@ class MethodService(BaseService):
             action='update',
             parameters=action_parameters,
         )
+
         return {}
+
+    @session_required()
+    async def delete(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        method = await MethodRepository().get(id=id_)
+        await MethodRepository().delete(method)
+        await self.create_action(
+            model=method,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id': id_,
+            },
+        )
+
+        return {}
+
+    @staticmethod
+    async def check_validation_scheme(method: Method, fields: dict):
+        for field in method.schema_fields:
+            field_key = field.get('key')
+            field_type = field.get('type')
+            field_optional = field.get('optional')
+            field_result = fields.get(field_key)
+            if not field_result and not field_optional:
+                continue
+            if not field_result:
+                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
+            if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+            if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')

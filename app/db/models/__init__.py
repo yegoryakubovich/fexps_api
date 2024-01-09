@@ -27,7 +27,7 @@ from .currency import Currency
 from .role import Role
 from .text_translation import TextTranslation
 from .text_pack import TextPack
-from .method import Method, MethodFieldType
+from .method import Method, MethodFieldTypes
 from .contact import Contact
 from .transfer import Transfer
 
@@ -37,7 +37,7 @@ from .requisite_data import RequisiteData
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes
-from .request import Request
+from .request import Request, RequestTypes
 
 from .session import Session
 from .account_role import AccountRole

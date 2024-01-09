@@ -15,13 +15,15 @@
 #
 
 
-from app.db.models import Session
+from app.db.models import Session, Currency
 from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
 
 class CurrencyService(BaseService):
+    model = Currency
+
     @session_required()
     async def create(
             self,
@@ -43,6 +45,32 @@ class CurrencyService(BaseService):
 
         return {'id': currency.id}
 
+    @staticmethod
+    async def get(
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+
+        return {
+            'currency': {
+                'id': currency.id,
+                'id_str': currency.id_str,
+            }
+        }
+
+    @staticmethod
+    async def get_list() -> dict:
+
+        return {
+            'currencies': [
+                {
+                    'id': currency.id,
+                    'id_str': currency.id_str,
+                }
+                for currency in await CurrencyRepository().get_list()
+            ],
+        }
+
     @session_required()
     async def delete(
             self,
@@ -62,28 +90,3 @@ class CurrencyService(BaseService):
         )
 
         return {}
-
-    @staticmethod
-    async def get(
-            id_str: str,
-    ):
-        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
-        return {
-            'currency': {
-                'id': currency.id,
-                'id_str': currency.id_str,
-            }
-        }
-
-    @staticmethod
-    async def get_list() -> dict:
-        currencies = {
-            'currencies': [
-                {
-                    'id': currency.id,
-                    'id_str': currency.id_str,
-                }
-                for currency in await CurrencyRepository().get_list()
-            ],
-        }
-        return currencies

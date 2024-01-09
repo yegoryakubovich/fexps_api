@@ -13,16 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from app.db.models import Language
 from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
 
 
 class LanguageService(BaseService):
+    model = Language
+
     @staticmethod
     async def get_list() -> dict:
-        languages = {
+
+        return {
             'languages': [
                 {
                     'id': language.id,
@@ -32,5 +34,3 @@ class LanguageService(BaseService):
                 for language in await LanguageRepository().get_list()
             ],
         }
-        return languages
-

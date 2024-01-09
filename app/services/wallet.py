@@ -28,12 +28,6 @@ from config import WALLET_MAX_COUNT, WALLET_MAX_VALUE
 class WalletService(BaseService):
     model = Wallet
 
-    @staticmethod
-    async def get_available_value(id_: int) -> float:  # FIXME
-        wallet = await WalletRepository().get_by_id(id_=id_)
-        result = WALLET_MAX_VALUE - wallet.value
-        return result
-
     @session_required()
     async def create(
             self,
@@ -103,6 +97,33 @@ class WalletService(BaseService):
         return wallets
 
     @session_required()
+    async def update(
+            self,
+            session: Session,
+            id_: int,
+            name: str,
+    ) -> dict:
+        account = session.account
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        await WalletRepository().update(
+            wallet_account.wallet,
+            name=name,
+        )
+        await self.create_action(
+            model=wallet_account.wallet,
+            action='update',
+            parameters={
+                'updater': f'session_{session.id}',
+                'id': id_,
+                'wallet_account_id': wallet_account.id,
+                'name': name,
+            },
+        )
+
+        return {}
+
+    @session_required()
     async def delete(
             self,
             session: Session,
@@ -129,29 +150,8 @@ class WalletService(BaseService):
 
         return {}
 
-    @session_required()
-    async def update(
-            self,
-            session: Session,
-            id_: int,
-            name: str,
-    ) -> dict:
-        account = session.account
+    @staticmethod
+    async def get_available_value(id_: int) -> float:  # FIXME
         wallet = await WalletRepository().get_by_id(id_=id_)
-        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
-        await WalletRepository().update(
-            wallet_account.wallet,
-            name=name,
-        )
-        await self.create_action(
-            model=wallet_account.wallet,
-            action='update',
-            parameters={
-                'updater': f'session_{session.id}',
-                'id': id_,
-                'wallet_account_id': wallet_account.id,
-                'name': name,
-            },
-        )
-
-        return {}
+        result = WALLET_MAX_VALUE - wallet.value
+        return result

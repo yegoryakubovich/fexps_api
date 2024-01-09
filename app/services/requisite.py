@@ -31,24 +31,6 @@ from app.utils.decorators import session_required
 class RequisiteService(BaseService):
     model = Requisite
 
-    @staticmethod
-    async def calc_value_params(
-            currency_value: Optional[float],
-            total_value: Optional[float],
-            rate: Optional[float],
-    ) -> tuple[float, float, float]:
-        if [currency_value, total_value, rate].count(None) > 1:
-            raise NotRequiredParams(
-                'Two of the following parameters must be filled in: currency_value, total_value, rate'
-            )
-        if currency_value and total_value:
-            rate = round(currency_value / total_value, 2)
-        elif currency_value and rate:
-            total_value = round(currency_value * rate, 2)
-        else:
-            currency_value = round(total_value * rate, 2)
-        return currency_value, total_value, rate
-
     @session_required()
     async def create(
             self,
@@ -102,6 +84,7 @@ class RequisiteService(BaseService):
                 'value_max': value_max,
             },
         )
+
         return {'requisite_id': requisite.id}
 
     @session_required()
@@ -163,3 +146,21 @@ class RequisiteService(BaseService):
         )
 
         return {}
+
+    @staticmethod
+    async def calc_value_params(
+            currency_value: Optional[float],
+            total_value: Optional[float],
+            rate: Optional[float],
+    ) -> tuple[float, float, float]:
+        if [currency_value, total_value, rate].count(None) > 1:
+            raise NotRequiredParams('Two of the following parameters must be filled in: '
+                                    'currency_value, total_value, rate')
+        if currency_value and total_value:
+            rate = round(currency_value / total_value, 2)
+        elif currency_value and rate:
+            total_value = round(currency_value * rate, 2)
+        else:
+            currency_value = round(total_value * rate, 2)
+
+        return currency_value, total_value, rate

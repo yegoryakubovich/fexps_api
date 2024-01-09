@@ -17,7 +17,7 @@
 
 from pydantic import Field, field_validator
 
-from app.db.models import MethodFieldType
+from app.db.models import MethodFieldTypes
 from app.services import MethodService
 from app.services.method import FieldsMissingParams, FieldsValidationError
 from app.utils import BaseSchema
@@ -50,9 +50,9 @@ class MethodCreateSchema(BaseSchema):
                 raise FieldsValidationError(
                     f'fields.{i}.type must contain true/false'
                 )
-            if field.get('type') not in [MethodFieldType.str, MethodFieldType.int]:
+            if field.get('type') not in [MethodFieldTypes.STR, MethodFieldTypes.INT]:
                 raise FieldsValidationError(
-                    f'fields.{i}.type must contain {MethodFieldType.str}/{MethodFieldType.int}'
+                    f'fields.{i}.type must contain {MethodFieldTypes.STR}/{MethodFieldTypes.INT}'
                 )
         return fields
 
@@ -67,10 +67,10 @@ class MethodCreateSchema(BaseSchema):
                 raise FieldsValidationError(
                     f'fields.{i}.type must contain true/false'
                 )
-            if field.get('type') not in [MethodFieldType.str, MethodFieldType.int]:
+            if field.get('type') not in [MethodFieldTypes.STR, MethodFieldTypes.INT]:
                 raise FieldsValidationError(
                     f'confirmation_fields.{i}.type must contain '
-                    f'{MethodFieldType.str}/{MethodFieldType.int}/{MethodFieldType.image}'
+                    f'{MethodFieldTypes.STR}/{MethodFieldTypes.INT}/{MethodFieldTypes.IMAGE}'
                 )
         return confirmation_fields
 

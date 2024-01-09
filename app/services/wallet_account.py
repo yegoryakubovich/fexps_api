@@ -72,6 +72,5 @@ class WalletAccountService(BaseService):
                 'id': id_,
             },
         )
-        print("h5")
 
         return {}

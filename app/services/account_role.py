@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Account, Permission
+from app.db.models import Account, Permission, AccountRole
 from app.repositories.account_role import AccountRoleRepository
 from app.services.base import BaseService
 from app.utils import ApiException
@@ -26,6 +26,11 @@ class AccountMissingRole(ApiException):
 
 
 class AccountRoleService(BaseService):
+    model = AccountRole
+    
+    async def check_permission(self, account: Account, id_str: str):
+        if id_str not in await self.get_permissions(account=account):
+            raise AccountMissingRole(f'Account has no "{id_str}" permission')
 
     @staticmethod
     async def get_permissions(
@@ -35,8 +40,5 @@ class AccountRoleService(BaseService):
             account=account,
             only_id_str=True,
         )
-        return permissions
 
-    async def check_permission(self, account: Account, id_str: str):
-        if id_str not in await self.get_permissions(account=account):
-            raise AccountMissingRole(f'Account has no "{id_str}" permission')
+        return permissions

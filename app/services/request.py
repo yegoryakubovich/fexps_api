@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request
+from app.db.models import Session, Request, RequestTypes
 from app.repositories.base import DataValidationError
 from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
@@ -33,31 +33,34 @@ class RequestService(BaseService):
             self,
             session: Session,
             wallet_id: int,
-            rate: float,
-
-            output_method_id: int,
-            output_requisite_data_id: int,
-            output_value: float = None,
+            type_: str,
 
             input_method_id: int = None,
             input_value: float = None,
+
+            value: float = None,
+
+            output_requisite_data_id: int = None,
+            output_method_id: int = None,
+            output_value: float = None,
     ) -> dict:
-        if input_value and output_value:
-            raise DataValidationError('The position must be one of two (input_value or output_value)')
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method = None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
-        output_method = await MethodRepository().get_by_id(id_=output_method_id)
+        output_method = None
+        if output_method_id:
+            output_method = await MethodRepository().get_by_id(id_=output_method_id)
         output_requisite_data = None
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
 
         request = await RequestRepository().create(
             wallet=wallet,
+            type=type_,
             input_method=input_method,
             input_value=input_value,
-            rate=rate,
+            value=value,
             output_method=output_method,
             output_requisite_data=output_requisite_data,
             output_value=output_value,
@@ -71,10 +74,10 @@ class RequestService(BaseService):
                 'wallet_id': wallet_id,
                 'input_method_id': input_method_id,
                 'input_value': input_value,
-                'rate': rate,
                 'output_method_id': output_method_id,
                 'output_requisite_data_id': output_requisite_data_id,
                 'output_value': output_value,
             },
         )
+
         return {'request_id': request.id}

@@ -21,10 +21,14 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class MethodFieldType:
-    str = 'str'
-    int = 'int'
-    image = 'image'
+class MethodFieldTypes:
+    STR = 'str'
+    INT = 'int'
+    IMAGE = 'image'
+
+    choices = [STR, INT, IMAGE]
+    choices_field = [STR, INT]
+
 
 
 class Method(Base):

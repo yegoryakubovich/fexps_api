@@ -21,9 +21,7 @@ from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
-import app.repositories as repo
 from app.db.init_db import init_db
-from app.db.models import Account, Country, Timezone, Currency, Text
 from app.routers import routers
 from app.utils.client import init
 from app.utils.middleware import Middleware

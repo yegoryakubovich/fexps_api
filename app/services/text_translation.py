@@ -24,6 +24,8 @@ from app.utils.decorators import session_required
 
 
 class TextTranslationService(BaseService):
+    model = TextTranslation
+
     @session_required()
     async def create(
             self,
@@ -48,11 +50,10 @@ class TextTranslationService(BaseService):
                 'value': value,
             },
         )
+
         if return_model:
             return text_translation
-        return {
-            'translation_id': text_translation.id,
-        }
+        return {'translation_id': text_translation.id}
 
     @session_required()
     async def update(
