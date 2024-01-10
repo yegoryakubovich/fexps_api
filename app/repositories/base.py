@@ -96,14 +96,12 @@ class BaseRepository(Generic[ModelType]):
         async with self._get_session() as session:
             for field, value in obj_in_data.items():
                 setattr(db_obj, field, obj_in_data[field])
-
             session.add(db_obj)
             await session.commit()
             await session.refresh(db_obj)
             return db_obj
 
     async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
-
         return await self.update(db_obj, is_deleted=True)
 
     @staticmethod
@@ -114,8 +112,6 @@ class BaseRepository(Generic[ModelType]):
     def _convert_obj(obj_in_data: dict) -> dict:
         result = {}
         for key, value in obj_in_data.items():
-            if not value:
-                continue
             if type(value) in [str, int, float, bool, list, dict]:
                 result[key] = value
                 continue
