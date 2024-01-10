@@ -50,7 +50,7 @@ class RequestCreateSchema(BaseSchema):
             raise DataValidationError(f'The type parameter must contain: {"/".join(RequestTypes.choices)}')
         datas = {
             RequestTypes.INPUT: {
-                'variables': [self.input_method_id, self.input_value, self.value],
+                'variables': [self.input_method_id],
                 'variables_names': ['input_method_id'],
                 'optional': [self.input_value, self.value],
                 'optional_names': ['input_value', 'value'],

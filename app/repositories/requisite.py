@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from sqlalchemy import select
 
 from app.db.models import Requisite
 from .base import BaseRepository
@@ -30,3 +30,10 @@ class MinimumTotalValueError(ApiException):
 
 class RequisiteRepository(BaseRepository[Requisite]):
     model = Requisite
+
+    async def get_list_order_by_rate(self, **filters):
+        async with self._get_session() as session:
+            result = await session.execute(
+                select(self.model).order_by(self.model.rate.asc()).filter_by(is_deleted=False, **filters)
+            )
+            return result.scalars().all()

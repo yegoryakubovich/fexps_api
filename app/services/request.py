@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import Session, Request, RequestTypes
-from app.repositories.base import DataValidationError
+from app.db.models import Session, Request
 from app.repositories.method import MethodRepository
+from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
@@ -82,3 +82,19 @@ class RequestService(BaseService):
         )
 
         return {'request_id': request.id}
+
+    @staticmethod
+    async def get_need_value(
+            request: Request,
+            input_value: float = None,
+            value: float = None,
+    ) -> float:
+        if not input_value and not value:
+            return 0
+        result = input_value or value
+        for order in await OrderRepository().get_list(request=request):
+            if value:  # value
+                result -= order.value
+            else:  # currency value
+                result -= order.currency_value
+        return result

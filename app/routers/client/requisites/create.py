@@ -35,7 +35,6 @@ class RequisiteCreateSchema(BaseSchema):
     type: str = Field(min_length=1, max_length=8)
     wallet_id: int = Field()
     requisite_data_id: int = Field()
-    currency: str = Field(min_length=2, max_length=16)
     currency_value: Decimal = Field(default=None, decimal_places=2)
     rate: Decimal = Field(default=None, decimal_places=2)
     total_value: Decimal = Field(default=None, decimal_places=2)
@@ -84,7 +83,6 @@ async def route(schema: RequisiteCreateSchema):
         type_=schema.type,
         wallet_id=schema.wallet_id,
         requisite_data_id=schema.requisite_data_id,
-        currency_id_str=schema.currency,
         currency_value=schema.currency_value,
         rate=schema.rate,
         total_value=schema.total_value,

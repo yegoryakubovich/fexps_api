@@ -22,7 +22,10 @@ from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.db.init_db import init_db
+from app.repositories.request import RequestRepository
+from app.repositories.requisite import RequisiteRepository
 from app.routers import routers
+from app.utils import tasks
 from app.utils.client import init
 from app.utils.middleware import Middleware
 from app.utils.validation_error import validation_error
@@ -36,6 +39,9 @@ async def on_startup():
     except ConnectionRefusedError:
         logging.error('Failed to connect to database')
         exit(1)
+
+    request = await RequestRepository().get_by_id(id_=1)
+    await tasks.create_orders(request=request)
 
 
 app = FastAPI(
