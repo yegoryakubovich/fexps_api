@@ -38,7 +38,6 @@ class RequisiteService(BaseService):
             type_: int,
             wallet_id: int,
             requisite_data_id: int,
-            currency_id_str: str,
             currency_value: float,
             rate: float,
             total_value: float,
@@ -55,12 +54,11 @@ class RequisiteService(BaseService):
             rate=rate
         )
         requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
-        currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         requisite = await RequisiteRepository().create(
             type=type_,
             wallet=wallet,
             requisite_data=requisite_data,
-            currency=currency,
+            currency=requisite_data.method.currency,
             currency_value=currency_value_fix,
             rate=rate_fix,
             value=total_value_fix,
@@ -77,7 +75,6 @@ class RequisiteService(BaseService):
                 'type': type_,
                 'wallet_id': wallet_id,
                 'requisite_data_id': requisite_data_id,
-                'currency': currency_id_str,
                 'currency_value': currency_value,
                 'total_value': total_value,
                 'value_min': value_min,
@@ -159,7 +156,7 @@ class RequisiteService(BaseService):
         if currency_value and total_value:
             rate = round(currency_value / total_value, 2)
         elif currency_value and rate:
-            total_value = round(currency_value * rate, 2)
+            total_value = round(currency_value / rate, 2)
         else:
             currency_value = round(total_value * rate, 2)
 
