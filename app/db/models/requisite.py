@@ -40,6 +40,7 @@ class Requisite(Base):
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', uselist=False, lazy='selectin')
     currency_value = Column(Float(), default=0)
+    currency_total_value = Column(Float(), default=0)
     rate = Column(Float())
     value = Column(Float())
     total_value = Column(Float())
