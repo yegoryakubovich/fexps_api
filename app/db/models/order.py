@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Float, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Double, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -49,8 +49,8 @@ class Order(Base):
     request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     requisite_id = Column(BigInteger, ForeignKey('requisites.id', ondelete='SET NULL'), nullable=True)
     requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
-    currency_value = Column(Float(), default=0)
-    value = Column(Float())
-    rate = Column(Float())
+    currency_value = Column(Double(), default=0)
+    value = Column(Double())
+    rate = Column(Double())
 
     is_deleted = Column(Boolean, default=False)

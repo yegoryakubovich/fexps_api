@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from app.db.models import Session, Requisite
+from app.db.models import Session, Requisite, RequisiteTypes
 from app.repositories.base import DoesNotPermission
 from app.repositories.currency import CurrencyRepository
 from app.repositories.requisite import RequisiteRepository, NotRequiredParams, MinimumTotalValueError
@@ -25,6 +25,7 @@ from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
+from app.utils.custom_calc import round_ceil, round_floor
 from app.utils.decorators import session_required
 
 
@@ -49,10 +50,12 @@ class RequisiteService(BaseService):
         if not await WalletAccountRepository().get(account=account, wallet=wallet):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
         currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
+            type_=type_,
             currency_value=currency_value,
             total_value=total_value,
             rate=rate
         )
+
         requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
         requisite = await RequisiteRepository().create(
             type=type_,
@@ -60,6 +63,7 @@ class RequisiteService(BaseService):
             requisite_data=requisite_data,
             currency=requisite_data.method.currency,
             currency_value=currency_value_fix,
+            currency_total_value=currency_value_fix,
             rate=rate_fix,
             value=total_value_fix,
             total_value=total_value_fix,
@@ -76,7 +80,11 @@ class RequisiteService(BaseService):
                 'wallet_id': wallet_id,
                 'requisite_data_id': requisite_data_id,
                 'currency_value': currency_value,
+                'currency_value_fix': currency_value_fix,
+                'rate': rate,
+                'rate_fix': rate_fix,
                 'total_value': total_value,
+                'total_value_fix': total_value_fix,
                 'value_min': value_min,
                 'value_max': value_max,
             },
@@ -146,6 +154,7 @@ class RequisiteService(BaseService):
 
     @staticmethod
     async def calc_value_params(
+            type_: RequisiteTypes,
             currency_value: Optional[float],
             total_value: Optional[float],
             rate: Optional[float],
@@ -154,10 +163,18 @@ class RequisiteService(BaseService):
             raise NotRequiredParams('Two of the following parameters must be filled in: '
                                     'currency_value, total_value, rate')
         if currency_value and total_value:
-            rate = round(currency_value / total_value, 2)
+            if type_ == RequisiteTypes.INPUT:
+                rate = round_ceil(currency_value / total_value)
+            else:
+                rate = round_floor(currency_value / total_value)
         elif currency_value and rate:
-            total_value = round(currency_value / rate, 2)
+            if type_ == RequisiteTypes.INPUT:
+                total_value = round_floor(currency_value / rate)
+            else:
+                total_value = round_ceil(currency_value / rate)
         else:
-            currency_value = round(total_value * rate, 2)
-
+            if type_ == RequisiteTypes.INPUT:
+                currency_value = round_ceil(total_value * rate)
+            else:
+                currency_value = round_floor(total_value * rate)
         return currency_value, total_value, rate

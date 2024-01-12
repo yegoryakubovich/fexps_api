@@ -59,6 +59,8 @@ class MethodCreateSchema(BaseSchema):
     @field_validator('confirmation_fields')
     @classmethod
     def confirmation_fields_valid(cls, confirmation_fields):
+        if isinstance(confirmation_fields, str):
+            raise FieldsMissingParams(f'confirmation_fields missing')
         for i, field in enumerate(confirmation_fields, start=1):
             for key in ['key', 'type', 'name', 'optional']:
                 if field.get(key) is None:

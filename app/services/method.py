@@ -45,12 +45,16 @@ class MethodService(BaseService):
             fields: list[dict],
             confirmation_fields: list[dict],
     ) -> dict:
+        if isinstance(fields, str):
+            raise FieldsMissingParams(f'fields missing')
         for field in fields:
             name_text = await TextRepository().create(
                 key=f'method_field_{await create_id_str()}',
                 value_default=field.get('name'),
             )
             field['name_text_key'] = name_text.key
+        if isinstance(confirmation_fields, str):
+            raise FieldsMissingParams(f'confirmation_fields missing')
         for confirmation_field in confirmation_fields:
             name_text = await TextRepository().create(
                 key=f'method_confirmation_field_{await create_id_str()}',
@@ -171,7 +175,7 @@ class MethodService(BaseService):
             field_type = field.get('type')
             field_optional = field.get('optional')
             field_result = fields.get(field_key)
-            if not field_result and not field_optional:
+            if not field_result and field_optional:
                 continue
             if not field_result:
                 raise FieldsMissingParams(f'fields missing parameter "{field_key}"')

@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import List
+
 from sqlalchemy import select
 
 from app.db.models import Requisite
@@ -31,9 +33,16 @@ class MinimumTotalValueError(ApiException):
 class RequisiteRepository(BaseRepository[Requisite]):
     model = Requisite
 
-    async def get_list_order_by_rate(self, **filters):
+    async def get_list_input_by_rate(self, **filters) -> List[Requisite]:
         async with self._get_session() as session:
             result = await session.execute(
                 select(self.model).order_by(self.model.rate.asc()).filter_by(is_deleted=False, **filters)
+            )
+            return result.scalars().all()
+
+    async def get_list_output_by_rate(self, **filters) -> List[Requisite]:
+        async with self._get_session() as session:
+            result = await session.execute(
+                select(self.model).order_by(self.model.rate.desc()).filter_by(is_deleted=False, **filters)
             )
             return result.scalars().all()

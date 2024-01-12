@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from decimal import Decimal
 from math import ceil
+from types import NoneType
 from typing import TypeVar, Generic, List, Optional, Any
 
 from sqlalchemy import select
@@ -112,7 +112,7 @@ class BaseRepository(Generic[ModelType]):
     def _convert_obj(obj_in_data: dict) -> dict:
         result = {}
         for key, value in obj_in_data.items():
-            if type(value) in [str, int, float, bool, list, dict]:
+            if type(value) in [str, int, float, bool, list, dict, NoneType, Decimal]:
                 result[key] = value
                 continue
             result[f"{key}_id"] = value.id

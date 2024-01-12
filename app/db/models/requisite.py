@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Float, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Double, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -39,11 +39,11 @@ class Requisite(Base):
     requisite_data = relationship('RequisiteData', uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', uselist=False, lazy='selectin')
-    currency_value = Column(Float(), default=0)
-    currency_total_value = Column(Float(), default=0)
-    rate = Column(Float())
-    value = Column(Float())
-    total_value = Column(Float())
-    value_min = Column(Float(), default=1)
-    value_max = Column(Float(), default=100)
+    currency_value = Column(Double(), default=0)
+    currency_total_value = Column(Double(), default=0)
+    rate = Column(Double())
+    value = Column(Double(), nullable=True)
+    total_value = Column(Double(), nullable=True)
+    value_min = Column(Double(), default=1)
+    value_max = Column(Double(), default=100)
     is_deleted = Column(Boolean, default=False)

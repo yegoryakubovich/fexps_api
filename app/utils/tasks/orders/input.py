@@ -1,65 +1,86 @@
-from typing import List
-
-from app.db.models import Request, RequisiteTypes, Requisite, OrderTypes
-from app.db.models.order import OrderStates
-from app.repositories.order import OrderRepository
+from app.db.models import Currency, RequisiteTypes
 from app.repositories.requisite import RequisiteRepository
-from app.services import RequestService
+from app.utils.custom_calc import minus, round_floor, round_ceil
 
 
-async def create_orders_input(request: Request) -> None:
-    input_requisites: List[Requisite] = await RequisiteRepository().get_list_order_by_rate(
-        type=RequisiteTypes.INPUT, currency=request.input_method.currency
-    )
-    for input_requisite in input_requisites:
-        if request.value:
-            need_value = await RequestService().get_need_value(request=request, value=request.value)
-            if not need_value:
-                continue
-
-            if input_requisite.value >= need_value:
-                suitable_value = need_value
-            else:
-                suitable_value = input_requisite.value
-            if not suitable_value:
-                continue
-            input_requisite_value = input_requisite.value - suitable_value
-            input_requisite_currency_value = input_requisite_value * input_requisite.rate
-            await RequisiteRepository().update(
-                input_requisite,
-                currency_value=input_requisite_currency_value, value=input_requisite_value
-            )
-            await OrderRepository().create(
-                request=request,
-                requisite=input_requisite,
-                type=OrderTypes.INPUT,
-                state=OrderStates.RESERVE,
-                currency_value=suitable_value * input_requisite.rate,
-                value=suitable_value,
-                rate=input_requisite.rate
-            )
+async def calc_input_currency2value(
+        currency: Currency,
+        currency_value: float,
+) -> dict:
+    selected_requisites = []
+    for requisite in await RequisiteRepository().get_list_input_by_rate(
+            type=RequisiteTypes.INPUT, currency=currency,
+    ):
+        if 0 in [currency_value, requisite.currency_value]:
+            continue
+        if requisite.currency_value >= currency_value:
+            suitable_currency_value = currency_value
         else:
-            need_value = await RequestService().get_need_value(request=request, input_value=request.input_value)
-            if not need_value:
-                continue
-            if input_requisite.currency_value >= need_value:
-                suitable_value = need_value
-            else:
-                suitable_value = input_requisite.currency_value
-            if not suitable_value:
-                continue
-            input_requisite_currency_value = input_requisite.currency_value - suitable_value
-            input_requisite_value = input_requisite_currency_value / input_requisite.rate
-            await RequisiteRepository().update(
-                input_requisite,
-                currency_value=input_requisite_currency_value, value=input_requisite_value
-            )
-            await OrderRepository().create(
-                request=request,
-                requisite=input_requisite,
-                type=OrderTypes.INPUT,
-                state=OrderStates.RESERVE,
-                currency_value=suitable_value,
-                value=suitable_value / input_requisite.rate,
-                rate=input_requisite.rate
-            )
+            suitable_currency_value = requisite.currency_value
+        suitable_value = round_floor(number=suitable_currency_value / requisite.rate)
+        selected_requisites.append({
+            'requisite_id': requisite.id,
+            'currency_value': suitable_currency_value,
+            'value': suitable_value,
+            'rate': requisite.rate,
+        })
+        currency_value = minus(currency_value, suitable_currency_value)
+    currency_value_fix = 0
+    value_fix = 0
+    for select_requisite in selected_requisites:
+        currency_value_fix += select_requisite.get('currency_value')
+        value_fix += select_requisite.get('value')
+    rate_fix = round_ceil(currency_value_fix / value_fix)
+    return {
+        'selected_requisites': selected_requisites,
+        'currency_value': currency_value_fix,
+        'value': value_fix,
+        'rate_fix': rate_fix,
+    }
+
+
+async def calc_input_value2currency(
+        currency: Currency,
+        value: float,
+) -> dict:
+    selected_requisites = []
+    for requisite in await RequisiteRepository().get_list_input_by_rate(
+            type=RequisiteTypes.INPUT, currency=currency,
+    ):
+        if 0 in [value, requisite.value]:
+            continue
+        if requisite.value >= value:
+            suitable_value = value
+        else:
+            suitable_value = requisite.value
+        suitable_currency_value = round_ceil(suitable_value * requisite.rate)
+        selected_requisites.append({
+            'requisite_id': requisite.id,
+            'currency_value': suitable_currency_value,
+            'value': suitable_value,
+            'rate': requisite.rate,
+        })
+        value = minus(value, suitable_value)
+    currency_value_fix = 0
+    value_fix = 0
+    for select_requisite in selected_requisites:
+        currency_value_fix += select_requisite.get('currency_value')
+        value_fix += select_requisite.get('value')
+    rate_fix = round_ceil(currency_value_fix / value_fix)
+    return {
+        'selected_requisites': selected_requisites,
+        'currency_value': currency_value_fix,
+        'value': value_fix,
+        'rate_fix': rate_fix,
+    }
+
+
+async def calc_input(
+        currency: Currency,
+        value: float = None,
+        currency_value: float = None,
+) -> dict:
+    if currency_value:
+        return await calc_input_currency2value(currency=currency, currency_value=currency_value)
+    elif value:
+        return await calc_input_value2currency(currency=currency, value=value)

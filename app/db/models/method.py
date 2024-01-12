@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON, Integer
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -41,5 +41,6 @@ class Method(Base):
     name_text = relationship('Text', uselist=False, lazy='selectin')
     schema_fields = Column(JSON())
     schema_confirmation_fields = Column(JSON())
+    decimal = Column(Integer, default=2)
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

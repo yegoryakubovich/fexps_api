@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, String, Boolean
+from sqlalchemy import Column, BigInteger, String, Boolean, Integer
 
 from app.db.base_class import Base
 
@@ -24,5 +24,6 @@ class Currency(Base):
     __tablename__ = 'currencies'
 
     id = Column(BigInteger, primary_key=True)
-    id_str = Column(String(16))
+    id_str = Column(String(length=16))
+    decimal = Column(Integer, default=2)
     is_deleted = Column(Boolean, default=False)
