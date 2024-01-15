@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from decimal import Decimal
+
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
@@ -36,13 +36,13 @@ class RequestCreateSchema(BaseSchema):
     type: str = Field(min_length=1, max_length=8)
 
     input_method_id: int = Field(default=None)
-    input_value: Decimal = Field(default=None, decimal_places=2)
+    input_value: int = Field(default=None)
 
-    value: Decimal = Field(default=None, decimal_places=2)
+    value: int = Field(default=None)
 
     output_method_id: int = Field(default=None)
     output_requisite_data_id: int = Field(default=None)
-    output_value: Decimal = Field(default=None, decimal_places=2)
+    output_value: int = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':
@@ -78,12 +78,12 @@ class RequestCreateSchema(BaseSchema):
 
     @field_validator('input_value', 'value', 'output_value')
     @classmethod
-    def check_values(cls, value: Decimal, info: ValidationInfo):
+    def check_values(cls, value: int, info: ValidationInfo):
         if value is None:
             return
         if value <= 0:
             raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
-        return float(value)
+        return value
 
 
 @router.post()
@@ -92,11 +92,11 @@ async def route(schema: RequestCreateSchema):
         token=schema.token,
         wallet_id=schema.wallet_id,
         type_=schema.type,
-        input_method_id=schema.input_method_id or None,
-        input_value=schema.input_value or None,
-        value=schema.value or None,
-        output_method_id=schema.output_method_id or None,
-        output_requisite_data_id=schema.output_requisite_data_id or None,
-        output_value=schema.output_value or None,
+        input_method_id=schema.input_method_id,
+        input_value=schema.input_value,
+        value=schema.value,
+        output_method_id=schema.output_method_id,
+        output_requisite_data_id=schema.output_requisite_data_id,
+        output_value=schema.output_value,
     )
     return Response(**result)

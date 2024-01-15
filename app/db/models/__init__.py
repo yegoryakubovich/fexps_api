@@ -34,6 +34,7 @@ from .transfer import Transfer
 from .country import Country
 from .role_permission import RolePermission
 from .requisite_data import RequisiteData
+from .transfer_system import TransferSystem, TransferSystemTypes
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes

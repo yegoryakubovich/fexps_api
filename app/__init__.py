@@ -22,16 +22,17 @@ from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.db.init_db import init_db
+from app.db.models import Transfer
 from app.repositories.currency import CurrencyRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
+from app.repositories.transfer import TransferRepository
 from app.routers import routers
+from app.services import ActionService
 from app.utils import tasks
+from app.utils.calcs.orders import calc_all
 from app.utils.client import init
 from app.utils.middleware import Middleware
-from app.utils.tasks.orders import calc_all
-from app.utils.tasks.orders.input import calc_input
-from app.utils.tasks.orders.output import calc_output
 from app.utils.validation_error import validation_error
 from config import VERSION
 
@@ -44,13 +45,6 @@ async def on_startup():
         logging.error('Failed to connect to database')
         exit(1)
 
-    # request = await RequestRepository().get_by_id(id_=1)
-    # await tasks.create_orders(request=request)
-    currency_rub = await CurrencyRepository().get_by_id_str("rub")
-    currency_usd = await CurrencyRepository().get_by_id_str("usd")
-    print(
-        await calc_all(currency_input=currency_rub, currency_output=currency_usd, currency_value_input=50000)
-    )
 
 app = FastAPI(
     title='Finance Express API',

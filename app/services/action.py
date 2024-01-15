@@ -17,10 +17,16 @@
 
 import logging
 
+from inflection import underscore
+
+from app.db.base_class import Base
+from app.db.models import Action
 from app.repositories.action import ActionRepository
 
 
 class ActionService:
+    model = Action
+
     @staticmethod
     async def create(
             model: str,
@@ -43,3 +49,16 @@ class ActionService:
             msg=f'ACTION: {action.model.upper()}.{action.model_id}.{action.action.upper()}. '
                 f'PARAMS: \n{params_str}',
         )
+
+    @staticmethod
+    async def get_action(
+            model: Base,
+            action: str,
+    ) -> Action:
+        result = await ActionRepository().get(
+            model=underscore(model.__class__.__name__),
+            model_id=model.id,
+            action=action
+        )
+
+        return result

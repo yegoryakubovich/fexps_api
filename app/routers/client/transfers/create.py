@@ -15,9 +15,8 @@
 #
 
 
-from decimal import Decimal
-
 from pydantic import Field, field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from app.services import TransferService
 from app.utils import Router, Response, BaseSchema
@@ -32,16 +31,16 @@ class TransferCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     wallet_from_id: int = Field()
     wallet_to_id: int = Field()
-    value: Decimal = Field(decimal_places=2)
+    value: int = Field()
 
     @field_validator('value')
     @classmethod
-    def check_value(cls, value):
+    def check_values(cls, value: int, info: ValidationInfo):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(value)
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+        return value
 
 
 @router.post()

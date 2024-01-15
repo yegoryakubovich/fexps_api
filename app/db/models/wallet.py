@@ -26,7 +26,7 @@ class Wallet(Base):
     id = Column(BigInteger, primary_key=True)
 
     name = Column(String(32), default='Wallet')
-    value = Column(Double(), default=0)
-    value_banned = Column(Double(), default=0)
-    value_can_minus = Column(Double(), default=0)
+    value = Column(BigInteger, default=0)
+    value_banned = Column(BigInteger, default=0)
+    value_can_minus = Column(BigInteger, default=0)
     is_deleted = Column(Boolean, default=False)

@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Optional
 
-from _decimal import Decimal
+
+from decimal import Decimal
 
 from pydantic import Field, field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequisiteTypes
 from app.repositories.base import DataValidationError
@@ -35,45 +36,38 @@ class RequisiteCreateSchema(BaseSchema):
     type: str = Field(min_length=1, max_length=8)
     wallet_id: int = Field()
     requisite_data_id: int = Field()
-    currency_value: Decimal = Field(default=None, decimal_places=2)
-    rate: Decimal = Field(default=None, decimal_places=2)
-    total_value: Decimal = Field(default=None, decimal_places=2)
-    value_min: float = Field()
-    value_max: float = Field()
+    total_currency_value: int = Field(default=None)
+    total_currency_value_min: int = Field(default=None)
+    total_currency_value_max: int = Field(default=None)
+    rate: Decimal = Field(default=None, decimal_places=3)
+    total_value: int = Field(default=None)
+    total_value_min: int = Field(default=None)
+    total_value_max: int = Field(default=None)
 
-    @field_validator('type')
+    @field_validator('total_currency_value', 'total_value')
     @classmethod
-    def type_select(cls, type_):
-        if type_ not in RequisiteTypes.choices:
-            raise DataValidationError(f'The type parameter must contain: {"/".join(RequisiteTypes.choices)}')
-        return type_
-
-    @field_validator('currency_value')
-    @classmethod
-    def check_currency_value(cls, currency_value):
-        if currency_value is None:
+    def requisite_check_int(cls, value: int, info: ValidationInfo):
+        if value is None:
             return
-        if currency_value <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(currency_value)
+        if value <= 0:
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+        return value
 
     @field_validator('rate')
     @classmethod
-    def check_rate(cls, rate):
-        if rate is None:
+    def requisite_check_decimal(cls, value: Decimal, info: ValidationInfo):
+        if value is None:
             return
-        if rate <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(rate)
+        if value <= 0:
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+        return float(value)
 
-    @field_validator('total_value')
+    @field_validator('type')
     @classmethod
-    def check_total_value(cls, total_value):
-        if total_value is None:
-            return
-        if total_value <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(total_value)
+    def type_select(cls, type_, info: ValidationInfo):
+        if type_ not in RequisiteTypes.choices:
+            raise DataValidationError(f'The "{info.field_name}" must contain: {"/".join(RequisiteTypes.choices)}')
+        return type_
 
 
 @router.post()
@@ -83,10 +77,12 @@ async def route(schema: RequisiteCreateSchema):
         type_=schema.type,
         wallet_id=schema.wallet_id,
         requisite_data_id=schema.requisite_data_id,
-        currency_value=schema.currency_value,
+        total_currency_value=schema.total_currency_value,
+        total_currency_value_min=schema.total_currency_value_min,
+        total_currency_value_max=schema.total_currency_value_max,
         rate=schema.rate,
         total_value=schema.total_value,
-        value_min=schema.value_min,
-        value_max=schema.value_max,
+        total_value_min=schema.total_value_min,
+        total_value_max=schema.total_value_max,
     )
     return Response(**result)

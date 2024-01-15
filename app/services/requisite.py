@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import math
 from typing import Optional
 
 from app.db.models import Session, Requisite, RequisiteTypes
@@ -39,19 +38,21 @@ class RequisiteService(BaseService):
             type_: int,
             wallet_id: int,
             requisite_data_id: int,
-            currency_value: float,
+            total_currency_value: int,
+            total_currency_value_min: int,
+            total_currency_value_max: int,
             rate: float,
-            total_value: float,
-            value_min: float,
-            value_max: float,
+            total_value: int,
+            total_value_min: int,
+            total_value_max: int,
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
-        currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
+        total_currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
             type_=type_,
-            currency_value=currency_value,
+            total_currency_value=total_currency_value,
             total_value=total_value,
             rate=rate
         )
@@ -62,13 +63,15 @@ class RequisiteService(BaseService):
             wallet=wallet,
             requisite_data=requisite_data,
             currency=requisite_data.method.currency,
-            currency_value=currency_value_fix,
-            currency_total_value=currency_value_fix,
+            currency_value=total_currency_value_fix,
+            total_currency_value=total_currency_value_fix,
+            total_currency_value_min=total_currency_value_min,
+            total_currency_value_max=total_currency_value_max,
             rate=rate_fix,
             value=total_value_fix,
             total_value=total_value_fix,
-            value_min=value_min,
-            value_max=value_max,
+            total_value_min=total_value_min,
+            total_value_max=total_value_max,
         )
         await self.create_action(
             model=requisite,
@@ -79,14 +82,16 @@ class RequisiteService(BaseService):
                 'type': type_,
                 'wallet_id': wallet_id,
                 'requisite_data_id': requisite_data_id,
-                'currency_value': currency_value,
-                'currency_value_fix': currency_value_fix,
+                'total_currency_value': total_currency_value,
+                'total_currency_value_fix': total_currency_value_fix,
+                'total_currency_value_min': total_currency_value_min,
+                'total_currency_value_max': total_currency_value_max,
                 'rate': rate,
                 'rate_fix': rate_fix,
                 'total_value': total_value,
                 'total_value_fix': total_value_fix,
-                'value_min': value_min,
-                'value_max': value_max,
+                'total_value_min': total_value_min,
+                'total_value_max': total_value_max,
             },
         )
 
@@ -155,26 +160,26 @@ class RequisiteService(BaseService):
     @staticmethod
     async def calc_value_params(
             type_: RequisiteTypes,
-            currency_value: Optional[float],
+            total_currency_value: Optional[float],
             total_value: Optional[float],
             rate: Optional[float],
     ) -> tuple[float, float, float]:
-        if [currency_value, total_value, rate].count(None) > 1:
+        if [total_currency_value, total_value, rate].count(None) > 1:
             raise NotRequiredParams('Two of the following parameters must be filled in: '
                                     'currency_value, total_value, rate')
-        if currency_value and total_value:
+        if total_currency_value and total_value:
             if type_ == RequisiteTypes.INPUT:
-                rate = round_ceil(currency_value / total_value)
+                rate = round_ceil(total_currency_value / total_value)
             else:
-                rate = round_floor(currency_value / total_value)
-        elif currency_value and rate:
+                rate = round_floor(total_currency_value / total_value)
+        elif total_currency_value and rate:
             if type_ == RequisiteTypes.INPUT:
-                total_value = round_floor(currency_value / rate)
+                total_value = math.floor(total_currency_value / rate)
             else:
-                total_value = round_ceil(currency_value / rate)
+                total_value = math.ceil(total_currency_value / rate)
         else:
             if type_ == RequisiteTypes.INPUT:
-                currency_value = round_ceil(total_value * rate)
+                total_currency_value = math.ceil(total_value * rate)
             else:
-                currency_value = round_floor(total_value * rate)
-        return currency_value, total_value, rate
+                total_currency_value = math.floor(total_value * rate)
+        return total_currency_value, total_value, rate

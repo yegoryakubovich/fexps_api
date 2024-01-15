@@ -15,20 +15,25 @@
 #
 
 
-from sqlalchemy import Column, Boolean, ForeignKey, BigInteger, Double
+from sqlalchemy import Column, Boolean, ForeignKey, BigInteger, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class Transfer(Base):
-    __tablename__ = 'transfers'
+class TransferSystemTypes:
+    income = 'income'
+    expense = 'expense'
+    salary = 'salary'
+
+
+class TransferSystem(Base):
+    __tablename__ = 'transfers_systems'
 
     id = Column(BigInteger, primary_key=True)
 
-    wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
-    wallet_from = relationship('Wallet', foreign_keys=wallet_from_id, uselist=False, lazy='selectin')
-    wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
-    wallet_to = relationship('Wallet', foreign_keys=wallet_to_id, uselist=False, lazy='selectin')
-    value = Column(BigInteger, default=0)
+    transfer_id = Column(BigInteger, ForeignKey('transfers.id', ondelete='SET NULL'), nullable=True)
+    transfer = relationship('Transfer', foreign_keys=transfer_id, uselist=False, lazy='selectin')
+    type = Column(String(length=16))
+    description = Column(String(length=128))
     is_deleted = Column(Boolean, default=False)

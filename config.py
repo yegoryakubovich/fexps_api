@@ -32,7 +32,7 @@ MYSQL_NAME = config_db['name']
 config_settings = config['settings']
 
 WALLET_MAX_COUNT = int(config_settings['wallet_max_count'])
-WALLET_MAX_VALUE = float(config_settings['wallet_max_value'])
+WALLET_MAX_VALUE = int(config_settings['wallet_max_value'])
 ITEMS_PER_PAGE = int(config_settings['items_per_page'])
 
 VERSION = '0.1'

@@ -18,6 +18,7 @@
 from decimal import Decimal
 
 from pydantic import Field, field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from app.services import RequisiteService
 from app.utils import BaseSchema
@@ -33,14 +34,16 @@ router = Router(
 class RequisiteUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
-    total_value: Decimal = Field(decimal_places=2)
+    total_value: int = Field()
 
     @field_validator('total_value')
     @classmethod
-    def check_total_value(cls, total_value):
-        if total_value <= 0:
-            raise ValueMustBePositive('The value must be positive')
-        return float(total_value)
+    def requisite_check_values(cls, value: int, info: ValidationInfo):
+        if value is None:
+            return
+        if value <= 0:
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+        return value
 
 
 @router.post()

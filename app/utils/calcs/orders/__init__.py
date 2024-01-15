@@ -1,7 +1,7 @@
 from app.db.models import Request, Currency
 from app.utils.custom_calc import round_ceil
-from app.utils.tasks.orders.input import calc_input_value2currency, calc_input_currency2value
-from app.utils.tasks.orders.output import calc_output_value2currency, calc_output_currency2value
+from .input import calc_input_value2currency, calc_input_currency2value
+from .output import calc_output_value2currency, calc_output_currency2value
 
 
 async def create_orders(request: Request):
@@ -20,7 +20,7 @@ async def calc_all(
         currency_output: Currency,
         currency_value_input: float = None,
         currency_value_output: float = None,
-) -> float:
+) -> dict:
     if currency_value_input:
         calc_input = await calc_input_currency2value(currency=currency_input, currency_value=currency_value_input)
         print(calc_input)

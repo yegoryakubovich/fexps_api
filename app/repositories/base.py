@@ -21,6 +21,7 @@ from typing import TypeVar, Generic, List, Optional, Any
 from sqlalchemy import select
 
 from app.db.base_class import Base
+from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
 from app.utils import ApiException
 from config import ITEMS_PER_PAGE
@@ -66,10 +67,10 @@ class BaseRepository(Generic[ModelType]):
             return db_obj
 
     async def get_list(self, **filters) -> List[ModelType]:
+        if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
+            filters['is_deleted'] = False
         async with self._get_session() as session:
-            result = await session.execute(
-                select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
-            )
+            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().all()
 
     async def get_by_id(self, id_: int) -> Optional[ModelType]:
@@ -85,10 +86,10 @@ class BaseRepository(Generic[ModelType]):
         return result
 
     async def get(self, **filters) -> Optional[ModelType]:
+        if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
+            filters['is_deleted'] = False
         async with self._get_session() as session:
-            result = await session.execute(
-                select(self.model).order_by(self.model.id.desc()).filter_by(is_deleted=False, **filters)
-            )
+            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().first()
 
     async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
@@ -120,7 +121,9 @@ class BaseRepository(Generic[ModelType]):
 
     async def count(self, custom_select, **filters):
         async with self._get_session() as session:
-            result = await session.execute(custom_select.filter_by(is_deleted=False, **filters))
+            if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
+                filters['is_deleted'] = False
+            result = await session.execute(custom_select.filter_by(**filters))
             return len(result.scalars().all())
 
     async def search(self, page: int, custom_where=None, **filters) -> tuple[List[ModelType], int, int]:
@@ -130,10 +133,12 @@ class BaseRepository(Generic[ModelType]):
             custom_select = select(self.model).where(custom_where)
 
         async with self._get_session() as session:
+            if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
+                filters['is_deleted'] = False
             result = await session.execute(
-                custom_select.filter_by(
-                    is_deleted=False, **filters
-                ).order_by(self.model.id.desc()).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
+                custom_select.filter_by(**filters).order_by(
+                    self.model.id.desc()
+                ).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
             )
             count = await self.count(custom_select, **filters)
             return result.scalars().all(), count, ceil(count / ITEMS_PER_PAGE)

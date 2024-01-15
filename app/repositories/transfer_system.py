@@ -15,27 +15,14 @@
 #
 
 
-from pydantic import Field
-
-from app.services import WalletService
-from app.utils import BaseSchema
-from app.utils import Router, Response
+from app.db.models import TransferSystem
+from .base import BaseRepository
+from ..utils import ApiException
 
 
-router = Router(
-    prefix='/create',
-)
+class NotEnoughFundsOnBalance(ApiException):
+    pass
 
 
-class WalletCreateSchema(BaseSchema):
-    token: str = Field(min_length=32, max_length=64)
-    name: str = Field(min_length=1, max_length=1024, default='Wallet')
-
-
-@router.post()
-async def route(schema: WalletCreateSchema):
-    result = await WalletService().create(
-        token=schema.token,
-        name=schema.name,
-    )
-    return Response(**result)
+class TransferSystemRepository(BaseRepository[TransferSystem]):
+    model = TransferSystem

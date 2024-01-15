@@ -15,8 +15,6 @@
 #
 
 
-from decimal import Decimal
-
 from app.db.models import Session, Request, OrderTypes
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
@@ -36,15 +34,12 @@ class RequestService(BaseService):
             session: Session,
             wallet_id: int,
             type_: str,
-
-            input_method_id: int = None,
-            input_value: float = None,
-
-            value: float = None,
-
-            output_requisite_data_id: int = None,
-            output_method_id: int = None,
-            output_value: float = None,
+            input_method_id: int,
+            input_value: float,
+            value: float,
+            output_requisite_data_id: int,
+            output_method_id: int,
+            output_value: float,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method = None
@@ -89,15 +84,15 @@ class RequestService(BaseService):
     async def get_need_value(
             request: Request,
             type_: OrderTypes,
-            currency_value: float = None,
-            value: float = None,
-    ) -> Decimal:
+            currency_value: int = None,
+            value: int = None,
+    ) -> int:
         if not value and not currency_value:
-            return Decimal(0)
-        result = Decimal(value or currency_value)
+            return 0
+        result = value or currency_value
         for order in await OrderRepository().get_list(request=request, type=type_):
             if value:  # value
-                result -= Decimal(order.value)
+                result -= order.value
             else:  # currency value
-                result -= Decimal(order.currency_value)
+                result -= order.currency_value
         return result

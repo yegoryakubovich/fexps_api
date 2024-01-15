@@ -35,7 +35,7 @@ class TransferService(BaseService):
             session: Session,
             wallet_from_id: int,
             wallet_to_id: int,
-            value,
+            value: int,
     ) -> dict:
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
