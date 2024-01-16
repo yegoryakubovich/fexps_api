@@ -38,7 +38,6 @@ class RequestService(BaseService):
             input_value: float,
             value: float,
             output_requisite_data_id: int,
-            output_method_id: int,
             output_value: float,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
@@ -46,11 +45,10 @@ class RequestService(BaseService):
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
         output_method = None
-        if output_method_id:
-            output_method = await MethodRepository().get_by_id(id_=output_method_id)
         output_requisite_data = None
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
+            output_method = output_requisite_data.method
 
         request = await RequestRepository().create(
             wallet=wallet,
@@ -72,7 +70,6 @@ class RequestService(BaseService):
                 'input_method_id': input_method_id,
                 'input_value': input_value,
                 'value': value,
-                'output_method_id': output_method_id,
                 'output_requisite_data_id': output_requisite_data_id,
                 'output_value': output_value,
             },

@@ -40,11 +40,11 @@ class Request(Base):
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
 
     input_value = Column(BigInteger, nullable=True)
-    input_rate = Column(BigInteger, nullable=True)
+    input_rate = Column(Double, nullable=True)
     value = Column(BigInteger, nullable=True)
-    rate = Column(BigInteger, nullable=True)
+    rate = Column(Double, nullable=True)
     output_value = Column(BigInteger, nullable=True)
-    output_rate = Column(BigInteger, nullable=True)
+    output_rate = Column(Double, nullable=True)
 
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     output_method = relationship('Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')

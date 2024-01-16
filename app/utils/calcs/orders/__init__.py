@@ -29,9 +29,7 @@ async def calc_all(
 ) -> dict:
     if currency_value_input:
         calc_input = await calc_input_currency2value(currency=currency_input, currency_value=currency_value_input)
-        print(calc_input)
         calc_output = await calc_output_value2currency(currency=currency_output, value=calc_input['value'])
-        print(calc_output)
         rate_fix = round_ceil(calc_input['currency_value'] / calc_output['currency_value'])
         return {
             'calc_input': calc_input,
@@ -42,9 +40,7 @@ async def calc_all(
         }
     elif currency_value_output:
         calc_output = await calc_output_currency2value(currency=currency_output, currency_value=currency_value_output)
-        print(calc_output)
         calc_input = await calc_input_value2currency(currency=currency_input, value=calc_output['value'])
-        print(calc_input)
         rate_fix = round_ceil(calc_input['currency_value'] / calc_output['currency_value'])
         return {
             'calc_output': calc_input,

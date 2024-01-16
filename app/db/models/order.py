@@ -49,8 +49,8 @@ class Order(Base):
     request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     requisite_id = Column(BigInteger, ForeignKey('requisites.id', ondelete='SET NULL'), nullable=True)
     requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
-    currency_value = Column(Double(), default=0)
-    value = Column(Double())
+    currency_value = Column(BigInteger())
+    value = Column(BigInteger())
     rate = Column(Double())
 
     is_deleted = Column(Boolean, default=False)

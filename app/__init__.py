@@ -33,6 +33,7 @@ from app.utils import tasks
 from app.utils.calcs.orders import calc_all
 from app.utils.client import init
 from app.utils.middleware import Middleware
+from app.utils.tasks.orders import create_orders
 from app.utils.validation_error import validation_error
 from config import VERSION
 
@@ -45,7 +46,8 @@ async def on_startup():
         logging.error('Failed to connect to database')
         exit(1)
 
-
+    request = await RequestRepository().get_by_id(id_=7)
+    print(await create_orders(request=request))
 
 
 app = FastAPI(

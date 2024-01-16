@@ -40,7 +40,6 @@ class RequestCreateSchema(BaseSchema):
 
     value: int = Field(default=None)
 
-    output_method_id: int = Field(default=None)
     output_requisite_data_id: int = Field(default=None)
     output_value: int = Field(default=None)
 
@@ -56,14 +55,14 @@ class RequestCreateSchema(BaseSchema):
                 'optional_names': ['input_value', 'value'],
             },
             RequestTypes.OUTPUT: {
-                'variables': [self.output_requisite_data_id, self.output_method_id],
-                'variables_names': ['output_requisite_data_id', 'output_method_id'],
+                'variables': [self.output_requisite_data_id],
+                'variables_names': ['output_requisite_data_id'],
                 'optional': [self.output_value, self.value],
                 'optional_names': ['output_value', 'value'],
             },
             RequestTypes.ALL: {
-                'variables': [self.input_method_id, self.output_requisite_data_id, self.output_method_id],
-                'variables_names': ['input_method_id', 'output_requisite_data_id', 'output_method_id'],
+                'variables': [self.input_method_id, self.output_requisite_data_id],
+                'variables_names': ['input_method_id', 'output_requisite_data_id'],
                 'optional': [self.input_value, self.output_value],
                 'optional_names': ['input_value', 'output_value'],
             },
@@ -95,7 +94,6 @@ async def route(schema: RequestCreateSchema):
         input_method_id=schema.input_method_id,
         input_value=schema.input_value,
         value=schema.value,
-        output_method_id=schema.output_method_id,
         output_requisite_data_id=schema.output_requisite_data_id,
         output_value=schema.output_value,
     )
