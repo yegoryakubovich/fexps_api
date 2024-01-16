@@ -46,6 +46,8 @@ async def on_startup():
         exit(1)
 
 
+
+
 app = FastAPI(
     title='Finance Express API',
     version=VERSION,

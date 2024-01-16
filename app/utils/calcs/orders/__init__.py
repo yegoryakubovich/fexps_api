@@ -1,18 +1,24 @@
-from app.db.models import Request, Currency
+#
+# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
+from app.db.models import Currency
 from app.utils.custom_calc import round_ceil
 from .input import calc_input_value2currency, calc_input_currency2value
 from .output import calc_output_value2currency, calc_output_currency2value
-
-
-async def create_orders(request: Request):
-    pass
-    # if request.type == RequestTypes.INPUT:
-    #     asyncio.create_task(create_orders_input(request=request), name=f"CREATE_ORDER_INPUT_{request.id}")
-    # elif request.type == RequestTypes.OUTPUT:
-    #     asyncio.create_task(create_orders_output(request=request), name=f"CREATE_ORDER_OUTPUT_{request.id}")
-    # elif request.type == RequestTypes.ALL:
-    #     asyncio.create_task(create_orders_input(request=request), name=f"CREATE_ORDER_ALL_INPUT_{request.id}")
-    #     asyncio.create_task(create_orders_output(request=request), name=f"CREATE_ORDER_ALL_OUTPUT_{request.id}")
 
 
 async def calc_all(
