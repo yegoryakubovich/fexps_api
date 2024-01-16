@@ -19,7 +19,7 @@ import math
 
 from app.db.models import Currency, RequisiteTypes
 from app.repositories.requisite import RequisiteRepository
-from app.utils.custom_calc import minus, round_floor, round_ceil, plus
+from app.utils.custom_calc import round_floor
 
 
 async def calc_output_currency2value(
