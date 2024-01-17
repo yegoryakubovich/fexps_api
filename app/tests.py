@@ -1,5 +1,8 @@
-from decimal import Decimal
-a = 25000.00
-b = 16909.10
+import numpy
 
-print(round(a - b, 2))
+x_start, x_stop = 3, 5
+y_start, y_stop = 1, 999999
+
+
+a = (x_start <= y_stop) and (x_stop >= y_start)
+print(a)

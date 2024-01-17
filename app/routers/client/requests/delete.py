@@ -15,16 +15,26 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
+from pydantic import Field
 
+from app.services import RequestService
+from app.utils import Router, Response, BaseSchema
 
 router = Router(
-    prefix='/requests',
-    routes_included=[
-        router_create,
-        router_delete,
-    ],
-    tags=['Requests'],
+    prefix='/delete',
+
 )
+
+
+class RequestDeleteSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.post()
+async def route(schema: RequestDeleteSchema):
+    result = await RequestService().delete(
+        token=schema.token,
+        id_=schema.id,
+    )
+    return Response(**result)

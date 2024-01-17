@@ -37,6 +37,12 @@ async def on_startup():
         logging.error('Failed to connect to database')
         exit(1)
 
+    # from app.repositories.request import RequestRepository
+    # from app.utils.tasks.orders import create_orders
+    #
+    # request = await RequestRepository().get_by_id(1)
+    # await create_orders(request)
+
 
 app = FastAPI(
     title='Finance Express API',
