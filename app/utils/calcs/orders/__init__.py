@@ -15,8 +15,9 @@
 #
 
 
+import math
+
 from app.db.models import Currency
-from app.utils.custom_calc import round_ceil
 from .input import calc_input_value2currency, calc_input_currency2value
 from .output import calc_output_value2currency, calc_output_currency2value
 
@@ -30,7 +31,7 @@ async def calc_all(
     if currency_value_input:
         calc_input = await calc_input_currency2value(currency=currency_input, currency_value=currency_value_input)
         calc_output = await calc_output_value2currency(currency=currency_output, value=calc_input['value'])
-        rate_fix = round_ceil(calc_input['currency_value'] / calc_output['currency_value'])
+        rate_fix = math.ceil(calc_input['currency_value'] / calc_output['currency_value'] * 100)
         return {
             'calc_input': calc_input,
             'calc_output': calc_output,
@@ -41,7 +42,7 @@ async def calc_all(
     elif currency_value_output:
         calc_output = await calc_output_currency2value(currency=currency_output, currency_value=currency_value_output)
         calc_input = await calc_input_value2currency(currency=currency_input, value=calc_output['value'])
-        rate_fix = round_ceil(calc_input['currency_value'] / calc_output['currency_value'])
+        rate_fix = math.ceil(calc_input['currency_value'] / calc_output['currency_value'] * 100)
         return {
             'calc_output': calc_input,
             'calc_input': calc_output,

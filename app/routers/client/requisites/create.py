@@ -15,9 +15,7 @@
 #
 
 
-from decimal import Decimal
-
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequisiteTypes
@@ -39,12 +37,12 @@ class RequisiteCreateSchema(BaseSchema):
     total_currency_value: int = Field(default=None)
     total_currency_value_min: int = Field(default=None)
     total_currency_value_max: int = Field(default=None)
-    rate: Decimal = Field(default=None, decimal_places=3)
+    rate: int = Field(default=None)
     total_value: int = Field(default=None)
     total_value_min: int = Field(default=None)
     total_value_max: int = Field(default=None)
 
-    @field_validator('total_currency_value', 'total_value')
+    @field_validator('total_currency_value', 'rate', 'total_value')
     @classmethod
     def requisite_check_int(cls, value: int, info: ValidationInfo):
         if value is None:
@@ -53,21 +51,21 @@ class RequisiteCreateSchema(BaseSchema):
             raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
         return value
 
-    @field_validator('rate')
-    @classmethod
-    def requisite_check_decimal(cls, value: Decimal, info: ValidationInfo):
-        if value is None:
-            return
-        if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
-        return float(value)
-
     @field_validator('type')
     @classmethod
     def type_select(cls, type_, info: ValidationInfo):
         if type_ not in RequisiteTypes.choices:
             raise DataValidationError(f'The "{info.field_name}" must contain: {"/".join(RequisiteTypes.choices)}')
         return type_
+
+    @model_validator(mode='after')
+    def check_type(self) -> 'RequisiteCreateSchema':
+        optional = [self.total_currency_value, self.total_value, self.rate]
+        optional_names = ['total_currency_value', 'total_value', 'rate']
+
+        if (len(optional) - optional.count(None)) != 2:
+            raise DataValidationError(f'The position must be two of: {"/".join(optional_names)}')
+        return self
 
 
 @router.post()

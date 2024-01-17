@@ -23,7 +23,6 @@ from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
-from app.utils.custom_calc import round_ceil, round_floor
 from app.utils.decorators import session_required
 
 
@@ -40,7 +39,7 @@ class RequisiteService(BaseService):
             total_currency_value: int,
             total_currency_value_min: int,
             total_currency_value_max: int,
-            rate: float,
+            rate: int,
             total_value: int,
             total_value_min: int,
             total_value_max: int,
@@ -127,7 +126,7 @@ class RequisiteService(BaseService):
             self,
             session: Session,
             id_: int,
-            total_value: float,
+            total_value: int,
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
@@ -138,11 +137,16 @@ class RequisiteService(BaseService):
         if total_value < access_change_balance:
             raise MinimumTotalValueError(f'Minimum value total_value = {access_change_balance}')
 
+        new_value = round(total_value - (requisite.total_value - requisite.value))
+        new_currency_value = round(new_value * requisite.rate / 100)
+        new_total_value = total_value
+        new_currency_total_value = round(new_total_value * requisite.rate / 100)
         await RequisiteRepository().update(
             requisite,
-            value=total_value - (requisite.total_value - requisite.value),
-            total_value=total_value,
-            currency_value=round(total_value * requisite.rate, 2)
+            value=new_value,
+            total_value=new_total_value,
+            currency_value=new_currency_value,
+            total_currency_value=new_currency_total_value,
         )
 
         await self.create_action(
@@ -151,6 +155,10 @@ class RequisiteService(BaseService):
             parameters={
                 'updater': f'session_{session.id}',
                 'total_value': total_value,
+                'new_value': new_value,
+                'new_currency_value': new_currency_value,
+                'new_total_value': new_total_value,
+                'new_currency_total_value': new_currency_total_value,
             },
         )
 
@@ -159,26 +167,23 @@ class RequisiteService(BaseService):
     @staticmethod
     async def calc_value_params(
             type_: RequisiteTypes,
-            total_currency_value: Optional[float],
-            total_value: Optional[float],
-            rate: Optional[float],
-    ) -> tuple[float, float, float]:
-        if [total_currency_value, total_value, rate].count(None) > 1:
-            raise NotRequiredParams('Two of the following parameters must be filled in: '
-                                    'currency_value, total_value, rate')
+            total_currency_value: Optional[int],
+            total_value: Optional[int],
+            rate: Optional[int],
+    ) -> tuple[int, int, int]:
         if total_currency_value and total_value:
             if type_ == RequisiteTypes.INPUT:
-                rate = round_ceil(total_currency_value / total_value)
+                rate = math.ceil(total_currency_value / total_value * 100)
             else:
-                rate = round_floor(total_currency_value / total_value)
+                rate = math.floor(total_currency_value / total_value * 100)
         elif total_currency_value and rate:
             if type_ == RequisiteTypes.INPUT:
-                total_value = math.floor(total_currency_value / rate)
+                total_value = math.floor(total_currency_value / rate * 100)
             else:
-                total_value = math.ceil(total_currency_value / rate)
+                total_value = math.ceil(total_currency_value / rate * 100)
         else:
             if type_ == RequisiteTypes.INPUT:
-                total_currency_value = math.ceil(total_value * rate)
+                total_currency_value = math.ceil(total_value * rate / 100)
             else:
-                total_currency_value = math.floor(total_value * rate)
+                total_currency_value = math.floor(total_value * rate / 100)
         return total_currency_value, total_value, rate

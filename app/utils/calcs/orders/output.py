@@ -19,7 +19,6 @@ import math
 
 from app.db.models import Currency, RequisiteTypes
 from app.repositories.requisite import RequisiteRepository
-from app.utils.custom_calc import round_floor
 
 
 async def calc_output_currency2value(
@@ -36,7 +35,7 @@ async def calc_output_currency2value(
             suitable_currency_value = currency_value
         else:
             suitable_currency_value = requisite.currency_value
-        suitable_value = math.ceil(suitable_currency_value / requisite.rate)
+        suitable_value = math.ceil(suitable_currency_value / requisite.rate * 100)
         selected_requisites.append({
             'requisite_id': requisite.id,
             'currency_value': suitable_currency_value,
@@ -49,7 +48,7 @@ async def calc_output_currency2value(
     for select_requisite in selected_requisites:
         currency_value_fix = round(currency_value_fix + select_requisite.get('currency_value'))
         value_fix = round(value_fix + select_requisite.get('value'))
-    rate_fix = round_floor(currency_value_fix / value_fix)
+    rate_fix = math.floor(currency_value_fix / value_fix * 100)
     return {
         'selected_requisites': selected_requisites,
         'currency_value': currency_value_fix,
@@ -72,7 +71,7 @@ async def calc_output_value2currency(
             suitable_value = value
         else:
             suitable_value = requisite.value
-        suitable_currency_value = math.floor(suitable_value * requisite.rate)
+        suitable_currency_value = math.floor(suitable_value * requisite.rate / 100)
         selected_requisites.append({
             'requisite_id': requisite.id,
             'currency_value': suitable_currency_value,
@@ -85,7 +84,7 @@ async def calc_output_value2currency(
     for select_requisite in selected_requisites:
         currency_value_fix = round(currency_value_fix + select_requisite.get('currency_value'))
         value_fix = round(value_fix + select_requisite.get('value'))
-    rate_fix = round_floor(currency_value_fix / value_fix)
+    rate_fix = math.floor(currency_value_fix / value_fix * 100)
     return {
         'selected_requisites': selected_requisites,
         'currency_value': currency_value_fix,

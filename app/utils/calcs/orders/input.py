@@ -19,12 +19,11 @@ import math
 
 from app.db.models import Currency, RequisiteTypes
 from app.repositories.requisite import RequisiteRepository
-from app.utils.custom_calc import round_ceil
 
 
 async def calc_input_currency2value(
         currency: Currency,
-        currency_value: float,
+        currency_value: int,
 ) -> dict:
     selected_requisites = []
     for requisite in await RequisiteRepository().get_list_input_by_rate(
@@ -36,7 +35,7 @@ async def calc_input_currency2value(
             suitable_currency_value = currency_value
         else:
             suitable_currency_value = requisite.currency_value
-        suitable_value = math.floor(suitable_currency_value / requisite.rate)
+        suitable_value = math.floor(suitable_currency_value / requisite.rate * 100)
         selected_requisites.append({
             'requisite_id': requisite.id,
             'currency_value': suitable_currency_value,
@@ -49,7 +48,7 @@ async def calc_input_currency2value(
     for select_requisite in selected_requisites:
         currency_value_fix += select_requisite.get('currency_value')
         value_fix += select_requisite.get('value')
-    rate_fix = round_ceil(currency_value_fix / value_fix)
+    rate_fix = math.ceil(currency_value_fix / value_fix * 100)
     return {
         'selected_requisites': selected_requisites,
         'currency_value': currency_value_fix,
@@ -60,7 +59,7 @@ async def calc_input_currency2value(
 
 async def calc_input_value2currency(
         currency: Currency,
-        value: float,
+        value: int,
 ) -> dict:
     selected_requisites = []
     for requisite in await RequisiteRepository().get_list_input_by_rate(
@@ -72,7 +71,7 @@ async def calc_input_value2currency(
             suitable_value = value
         else:
             suitable_value = requisite.value
-        suitable_currency_value = math.ceil(suitable_value * requisite.rate)
+        suitable_currency_value = math.ceil(suitable_value * requisite.rate / 100)
         selected_requisites.append({
             'requisite_id': requisite.id,
             'currency_value': suitable_currency_value,
@@ -85,7 +84,7 @@ async def calc_input_value2currency(
     for select_requisite in selected_requisites:
         currency_value_fix += select_requisite.get('currency_value')
         value_fix += select_requisite.get('value')
-    rate_fix = round_ceil(currency_value_fix / value_fix)
+    rate_fix = math.ceil(currency_value_fix / value_fix * 100)
     return {
         'selected_requisites': selected_requisites,
         'currency_value': currency_value_fix,
@@ -96,8 +95,8 @@ async def calc_input_value2currency(
 
 async def calc_input(
         currency: Currency,
-        value: float = None,
-        currency_value: float = None,
+        value: int = None,
+        currency_value: int = None,
 ) -> dict:
     if currency_value:
         return await calc_input_currency2value(currency=currency, currency_value=currency_value)

@@ -15,10 +15,11 @@
 #
 import asyncio
 
-from app import RequisiteRepository, RequestRepository
 from app.db.models import Request, RequestTypes, OrderTypes
 from app.db.models.order import OrderStates
 from app.repositories.order import OrderRepository
+from app.repositories.request import RequestRepository
+from app.repositories.requisite import RequisiteRepository
 from app.utils.calcs.orders import calc_all
 from app.utils.calcs.orders.input import calc_input
 from app.utils.calcs.orders.output import calc_output
