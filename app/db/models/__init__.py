@@ -15,7 +15,7 @@
 #
 
 
-from .action import Action
+from .action import Action, Actions
 from .text import Text
 from .timezone import Timezone
 from .language import Language

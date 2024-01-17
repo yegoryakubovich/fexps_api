@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Currency
+from app.db.models import Session, Currency, Actions
 from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -36,7 +36,7 @@ class CurrencyService(BaseService):
 
         await self.create_action(
             model=currency,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -82,7 +82,7 @@ class CurrencyService(BaseService):
 
         await self.create_action(
             model=currency,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

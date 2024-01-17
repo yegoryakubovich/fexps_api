@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Role, Session
+from app.db.models import Role, Session, Actions
 from app.repositories.role import RoleRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
@@ -44,7 +44,7 @@ class RoleService(BaseService):
         role = await RoleRepository().create(name_text=name_text)
         await self.create_action(
             model=role,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,

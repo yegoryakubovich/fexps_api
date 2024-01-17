@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import WalletAccount, Session, WalletAccountRoles
+from app.db.models import WalletAccount, Session, WalletAccountRoles, Actions
 from app.repositories.account import AccountRepository
 from app.repositories.base import DoesNotPermission
 from app.repositories.wallet import WalletRepository
@@ -42,7 +42,7 @@ class WalletAccountService(BaseService):
         wallet_account = await WalletAccountRepository().create(wallet=wallet, account=account, role=role)
         await self.create_action(
             model=wallet_account,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'wallet_id': wallet.id,
@@ -66,7 +66,7 @@ class WalletAccountService(BaseService):
         await WalletAccountRepository().delete(wallet_account)
         await self.create_action(
             model=wallet_account,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

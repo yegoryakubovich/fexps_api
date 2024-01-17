@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from app.db.models import Session
 from app.repositories.account import AccountRepository
 from app.repositories.session import SessionRepository
@@ -37,7 +39,7 @@ class SessionService(BaseService):
         session = await SessionRepository().create(account=account, token_hash=token_hash, token_salt=token_salt)
         await self.create_action(
             model=session,
-            action='create',
+            action=Actions.CREATE,
             with_client=True,
         )
 

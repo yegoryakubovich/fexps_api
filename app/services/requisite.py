@@ -16,9 +16,8 @@
 import math
 from typing import Optional
 
-from app.db.models import Session, Requisite, RequisiteTypes
+from app.db.models import Session, Requisite, RequisiteTypes, Actions
 from app.repositories.base import DoesNotPermission
-from app.repositories.currency import CurrencyRepository
 from app.repositories.requisite import RequisiteRepository, NotRequiredParams, MinimumTotalValueError
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
@@ -75,7 +74,7 @@ class RequisiteService(BaseService):
         )
         await self.create_action(
             model=requisite,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id': requisite.id,
@@ -148,7 +147,7 @@ class RequisiteService(BaseService):
 
         await self.create_action(
             model=requisite,
-            action='update',
+            action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
                 'total_value': total_value,

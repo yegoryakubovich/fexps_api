@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Account
+from app.db.models import Account, Actions
 from app.repositories.account import AccountRepository
 from app.repositories.country import CountryRepository
 from app.repositories.currency import CurrencyRepository
@@ -85,7 +85,7 @@ class AccountService(BaseService):
         # Create action
         await self.create_action(
             model=account,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'username': username,
                 'firstname': firstname,

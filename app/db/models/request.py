@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Double, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey,  String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -29,6 +29,17 @@ class RequestTypes:
     choices = [INPUT, OUTPUT, ALL]
 
 
+class OrderStates:
+    INPUT_RESERVATION = 'input_reservation'
+    INPUT_PAYMENT = 'input_payment'
+    OUTPUT_RESERVATION = 'output_reservation'
+    OUTPUT_PAYMENT = 'output_payment'
+    COMPLETED = 'completed'
+    CANCELED = 'canceled'
+
+    choices = [INPUT_RESERVATION, INPUT_PAYMENT, OUTPUT_RESERVATION, OUTPUT_PAYMENT, COMPLETED, CANCELED]
+
+
 class Request(Base):
     __tablename__ = 'requests'
 
@@ -36,15 +47,16 @@ class Request(Base):
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     type = Column(String(length=8))
+    state = Column(String(length=32))
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
 
     input_value = Column(BigInteger, nullable=True)
-    input_rate = Column(Double, nullable=True)
+    input_rate = Column(BigInteger, nullable=True)
     value = Column(BigInteger, nullable=True)
-    rate = Column(Double, nullable=True)
+    rate = Column(BigInteger, nullable=True)
     output_value = Column(BigInteger, nullable=True)
-    output_rate = Column(Double, nullable=True)
+    output_rate = Column(BigInteger, nullable=True)
 
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     output_method = relationship('Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')

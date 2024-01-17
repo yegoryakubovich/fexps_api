@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Contact
+from app.db.models import Session, Contact, Actions
 from app.repositories.contact import ContactRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
@@ -39,7 +39,7 @@ class ContactService(BaseService):
         contact = await ContactRepository().create(name_text=name_text)
         await self.create_action(
             model=contact,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'name_text_id': name_text.id,
@@ -84,7 +84,7 @@ class ContactService(BaseService):
         await ContactRepository().delete(contact)
         await self.create_action(
             model=contact,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

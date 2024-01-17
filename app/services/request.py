@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes
+from app.db.models import Session, Request, OrderTypes, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -62,7 +62,7 @@ class RequestService(BaseService):
         )
         await self.create_action(
             model=request,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id': request.id,

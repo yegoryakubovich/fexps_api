@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String, Double
+from sqlalchemy import Column, BigInteger, Boolean, String
 
 from app.db.base_class import Base
 

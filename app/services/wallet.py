@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Wallet, Session, WalletAccountRoles
+from app.db.models import Wallet, Session, WalletAccountRoles, Actions
 from app.repositories.base import DoesNotPermission
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
@@ -41,7 +41,7 @@ class WalletService(BaseService):
         wallet = await WalletRepository().create(name=name)
         await self.create_action(
             model=wallet,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'name': name,
@@ -112,7 +112,7 @@ class WalletService(BaseService):
         )
         await self.create_action(
             model=wallet_account.wallet,
-            action='update',
+            action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
                 'id': id_,
@@ -137,7 +137,7 @@ class WalletService(BaseService):
         await WalletRepository().delete(wallet_account.wallet)
         await self.create_action(
             model=wallet,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

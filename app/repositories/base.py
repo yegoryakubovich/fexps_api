@@ -66,11 +66,15 @@ class BaseRepository(Generic[ModelType]):
 
             return db_obj
 
-    async def get_list(self, **filters) -> List[ModelType]:
+    async def get_list(self, custom_where=None, **filters) -> List[ModelType]:
         if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
             filters['is_deleted'] = False
+        if custom_where is None:
+            custom_select = select(self.model)
+        else:
+            custom_select = select(self.model).where(custom_where)
         async with self._get_session() as session:
-            result = await session.execute(select(self.model).order_by(self.model.id.desc()).filter_by(**filters))
+            result = await session.execute(custom_select.order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().all()
 
     async def get_by_id(self, id_: int) -> Optional[ModelType]:

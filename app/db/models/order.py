@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Double, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey,  String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -51,6 +51,6 @@ class Order(Base):
     requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
     currency_value = Column(BigInteger())
     value = Column(BigInteger())
-    rate = Column(Double())
+    rate = Column(BigInteger)
 
     is_deleted = Column(Boolean, default=False)

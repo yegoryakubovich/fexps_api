@@ -20,7 +20,7 @@ import logging
 from inflection import underscore
 
 from app.db.base_class import Base
-from app.db.models import Action
+from app.db.models import Action, Actions
 from app.repositories.action import ActionRepository
 
 
@@ -53,7 +53,7 @@ class ActionService:
     @staticmethod
     async def get_action(
             model: Base,
-            action: str,
+            action: Actions,
     ) -> Action:
         result = await ActionRepository().get(
             model=underscore(model.__class__.__name__),

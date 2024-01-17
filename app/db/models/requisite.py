@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String, Double
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -43,7 +43,7 @@ class Requisite(Base):
     total_currency_value = Column(BigInteger)
     total_currency_value_min = Column(BigInteger, nullable=True)
     total_currency_value_max = Column(BigInteger, nullable=True)
-    rate = Column(Double)
+    rate = Column(BigInteger)
     value = Column(BigInteger)
     total_value = Column(BigInteger)
     total_value_min = Column(BigInteger, nullable=True)

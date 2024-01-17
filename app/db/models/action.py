@@ -16,10 +16,17 @@
 
 
 from datetime import datetime
+from enum import Enum
 
 from sqlalchemy import Column, BigInteger, String, DateTime
 
 from app.db.base_class import Base
+
+
+class Actions:
+    CREATE = 'create'
+    UPDATE = 'update'
+    DELETE = 'delete'
 
 
 class Action(Base):

@@ -22,9 +22,13 @@ from app.db.base_class import Base
 
 
 class TransferSystemTypes:
-    income = 'income'
-    expense = 'expense'
+    input = 'input'
+    output = 'output'
+
+
+class TransferSystemReasons:
     salary = 'salary'
+    difference_rate = 'difference_rate'
 
 
 class TransferSystem(Base):
@@ -35,5 +39,6 @@ class TransferSystem(Base):
     transfer_id = Column(BigInteger, ForeignKey('transfers.id', ondelete='SET NULL'), nullable=True)
     transfer = relationship('Transfer', foreign_keys=transfer_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))
+    reason = Column(String(length=32))
     description = Column(String(length=128))
     is_deleted = Column(Boolean, default=False)

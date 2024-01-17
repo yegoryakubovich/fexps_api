@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, RequisiteData
+from app.db.models import Session, RequisiteData, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.services import MethodService
@@ -43,7 +43,7 @@ class RequisiteDataService(BaseService):
         )
         await self.create_action(
             model=method,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id': requisite_data.id,
@@ -99,7 +99,7 @@ class RequisiteDataService(BaseService):
         await RequisiteDataRepository().delete(requisite_data)
         await self.create_action(
             model=requisite_data,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

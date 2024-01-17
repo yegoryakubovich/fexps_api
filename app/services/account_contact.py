@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import AccountContact, Session
+from app.db.models import AccountContact, Session, Actions
 from app.repositories.account_contact import AccountContactRepository
 from app.repositories.contact import ContactRepository
 from app.services.base import BaseService
@@ -44,7 +44,7 @@ class AccountContactService(BaseService):
         account_contact = await AccountContactRepository().create(account=account, contact=contact, value=value)
         await self.create_action(
             model=contact,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id': f'{account_contact.id}',
@@ -108,7 +108,7 @@ class AccountContactService(BaseService):
 
         await self.create_action(
             model=account_contact,
-            action='update',
+            action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
             },
@@ -127,7 +127,7 @@ class AccountContactService(BaseService):
         await AccountContactRepository().delete(account_contact)
         await self.create_action(
             model=account_contact,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

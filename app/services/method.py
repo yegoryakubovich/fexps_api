@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Method, Session, MethodFieldTypes
+from app.db.models import Method, Session, MethodFieldTypes, Actions
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
@@ -75,7 +75,7 @@ class MethodService(BaseService):
         )
         await self.create_action(
             model=method,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'name_text_id': name_text.id,
@@ -143,7 +143,7 @@ class MethodService(BaseService):
             action_parameters['schema_fields'] = schema_fields
         await self.create_action(
             model=text,
-            action='update',
+            action=Actions.UPDATE,
             parameters=action_parameters,
         )
 
@@ -159,7 +159,7 @@ class MethodService(BaseService):
         await MethodRepository().delete(method)
         await self.create_action(
             model=method,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id': id_,

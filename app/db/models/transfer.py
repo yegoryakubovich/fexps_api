@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, Boolean, ForeignKey, BigInteger, Double
+from sqlalchemy import Column, Boolean, ForeignKey, BigInteger
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -30,5 +30,7 @@ class Transfer(Base):
     wallet_from = relationship('Wallet', foreign_keys=wallet_from_id, uselist=False, lazy='selectin')
     wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet_to = relationship('Wallet', foreign_keys=wallet_to_id, uselist=False, lazy='selectin')
+    order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
+    order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     value = Column(BigInteger, default=0)
     is_deleted = Column(Boolean, default=False)

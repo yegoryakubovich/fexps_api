@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet
+from app.db.models import Transfer, Session, Wallet, Actions
 from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository
 from app.repositories.wallet import WalletRepository, WalletLimitReached
@@ -50,7 +50,7 @@ class TransferService(BaseService):
         transfer = await self.transfer(wallet_from=wallet_from, wallet_to=wallet_to, value=value)
         await self.create_action(
             model=transfer,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id': transfer.id,

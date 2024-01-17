@@ -26,4 +26,5 @@ class Currency(Base):
     id = Column(BigInteger, primary_key=True)
     id_str = Column(String(length=16))
     decimal = Column(Integer, default=2)
+    div = Column(Integer, default=2)
     is_deleted = Column(Boolean, default=False)
