@@ -20,6 +20,7 @@ from .text import Text
 from .timezone import Timezone
 from .language import Language
 from .wallet import Wallet
+from .commission import Commission
 
 from .action_parameter import ActionParameter
 from .permission import Permission

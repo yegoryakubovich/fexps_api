@@ -15,13 +15,18 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
+from app.db.models import Commission
+from .base import BaseRepository
+from ..utils import ApiException
 
 
-router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-    ],
-)
+class IntervalAlreadyTaken(ApiException):
+    pass
+
+
+class IntervalValidationError(ApiException):
+    pass
+
+
+class CommissionRepository(BaseRepository[Commission]):
+    model = Commission

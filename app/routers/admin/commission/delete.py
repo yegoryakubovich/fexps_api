@@ -15,13 +15,27 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
+from pydantic import Field
+
+from app.services import CommissionService
+from app.utils import BaseSchema
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-    ],
+    prefix='/delete',
 )
+
+
+class CommissionDeleteSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.post()
+async def route(schema: CommissionDeleteSchema):
+    result = await CommissionService().delete(
+        token=schema.token,
+        id_=schema.id,
+    )
+    return Response(**result)

@@ -37,6 +37,7 @@ from .wallet_account import WalletAccountService
 from .transfer import TransferService
 from .requisite import RequisiteService
 from .request import RequestService
+from .commission import CommissionService
 
 
 """

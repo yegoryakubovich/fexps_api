@@ -15,13 +15,18 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
+from sqlalchemy import Column, BigInteger, Boolean
+
+from app.db.base_class import Base
 
 
-router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-    ],
-)
+class Commission(Base):
+    __tablename__ = 'commissions'
+
+    id = Column(BigInteger, primary_key=True)
+    value_from = Column(BigInteger)
+    value_to = Column(BigInteger)
+    value = Column(BigInteger, nullable=True)
+    percent = Column(BigInteger, nullable=True)
+
+    is_deleted = Column(Boolean, default=False)
