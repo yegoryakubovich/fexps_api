@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import asyncio
 
 from app.db.models import Request, RequestTypes, OrderTypes
@@ -20,83 +22,75 @@ from app.db.models.order import OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
-from app.utils.calcs.orders import calc_all
-from app.utils.calcs.orders.input import calc_input
-from app.utils.calcs.orders.output import calc_output
+from app.utils.calculations.orders import calc_all
+from app.utils.calculations.orders.input import calc_input
+from app.utils.calculations.orders.output import calc_output
+from app.utils.schemes.calculations.orders import CalcRequisiteScheme
 
 
 async def reserve_order(
         request: Request,
-        calc_requisite: dict,
+        calc_requisite: CalcRequisiteScheme,
         order_type: OrderTypes,
 ) -> None:
-    requisite = await RequisiteRepository().get_by_id(id_=calc_requisite['requisite_id'])
-    requisite_currency_value = round(requisite.currency_value - calc_requisite['currency_value'])
-    requisite_value = round(requisite.value - calc_requisite['value'])
+    requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
+    requisite_currency_value = round(requisite.currency_value - calc_requisite.currency_value)
+    requisite_value = round(requisite.value - calc_requisite.value)
     await RequisiteRepository().update(
-        requisite,
-        currency_value=requisite_currency_value,
-        value=requisite_value,
+        requisite, currency_value=requisite_currency_value, value=requisite_value,
     )
     await OrderRepository().create(
-        type=order_type,
-        state=OrderStates.RESERVE,
-        request=request,
-        requisite=requisite,
-        currency_value=calc_requisite['currency_value'],
-        value=calc_requisite['value'],
-        rate=calc_requisite['rate'],
+        type=order_type, state=OrderStates.RESERVE,
+        request=request, requisite=requisite,
+        currency_value=calc_requisite.currency_value, value=calc_requisite.value, rate=calc_requisite.rate,
     )
 
 
-async def create_orders_input(request: Request):
+async def create_orders_input(request: Request) -> None:
     currency = request.input_method.currency
-    calc_requisites = await calc_input(currency=currency, currency_value=request.input_value, value=request.value)
-    for calc_requisite in calc_requisites['selected_requisites']:
+    input_calc = await calc_input(currency=currency, currency_value=request.input_value, value=request.value)
+    for calc_requisite in input_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.INPUT)
     await RequestRepository().update(
         request,
-        input_value=calc_requisites['currency_value'],
-        input_rate=calc_requisites['rate_fix'],
-        value=calc_requisites['value'],
-        rate=calc_requisites['rate_fix'],
+        input_value=input_calc.currency_value,
+        input_rate=input_calc.rate,
+        value=input_calc.value,
+        rate=input_calc.rate,
     )
 
 
 async def create_orders_output(request: Request):
     currency = request.output_method.currency
-    calc_requisites = await calc_output(currency=currency, currency_value=request.output_value, value=request.value)
-    for calc_requisite in calc_requisites['selected_requisites']:
+    output_calc = await calc_output(currency=currency, currency_value=request.output_value, value=request.value)
+    for calc_requisite in output_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.OUTPUT)
     await RequestRepository().update(
         request,
-        input_value=calc_requisites['currency_value'],
-        input_rate=calc_requisites['rate_fix'],
-        value=calc_requisites['value'],
-        rate=calc_requisites['rate_fix'],
+        input_value=output_calc.currency_value,
+        input_rate=output_calc.rate,
+        value=output_calc.value,
+        rate=output_calc.rate,
     )
 
 
 async def create_orders_all(request: Request):
     currency_input = request.input_method.currency
     currency_output = request.output_method.currency
+
     calc_requisites = await calc_all(
-        currency_input=currency_input,
-        currency_output=currency_output,
-        currency_value_input=request.input_value,
-        currency_value_output=request.output_value
+        currency_input=currency_input, currency_value_input=request.input_value,
+        currency_output=currency_output, currency_value_output=request.output_value,
     )
-    for calc_requisite_input in calc_requisites['calc_input']['selected_requisites']:
+    for calc_requisite_input in calc_requisites.input_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite_input, order_type=OrderTypes.INPUT)
-    for calc_requisite_output in calc_requisites['calc_output']['selected_requisites']:
+    for calc_requisite_output in calc_requisites.output_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite_output, order_type=OrderTypes.OUTPUT)
     await RequestRepository().update(
         request,
-        input_value=calc_requisites['currency_value_input'],
-        input_rate=calc_requisites['calc_input']['rate_fix'],
-        output_value=calc_requisites['currency_value_output'],
-        output_rate=calc_requisites['calc_output']['rate_fix'],
-        rate=calc_requisites['rate'],
+        input_value=calc_requisites.input_currency_value, input_rate=calc_requisites.input_calc.rate,
+        output_value=calc_requisites.output_currency_value, output_rate=calc_requisites.output_calc.rate,
+        rate=calc_requisites.rate,
     )
 
 
