@@ -15,15 +15,9 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
-from .commission_wallet import router as router_commission_wallet
+from app.db.models import CommissionWallet
+from .base import BaseRepository
 
 
-router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-        router_commission_wallet,
-    ],
-)
+class CommissionWalletRepository(BaseRepository[CommissionWallet]):
+    model = CommissionWallet

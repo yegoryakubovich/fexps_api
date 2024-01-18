@@ -31,6 +31,7 @@ from .text_pack import TextPack
 from .method import Method, MethodFieldTypes
 from .contact import Contact
 from .transfer import Transfer
+from .commission_wallet import CommissionWallet
 
 from .country import Country
 from .role_permission import RolePermission

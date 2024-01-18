@@ -15,15 +15,27 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
-from .commission_wallet import router as router_commission_wallet
+from pydantic import Field
+
+from app.services import CommissionWalletService
+from app.utils import BaseSchema
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-        router_commission_wallet,
-    ],
+    prefix='/delete',
 )
+
+
+class CommissionWalletDeleteSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.post()
+async def route(schema: CommissionWalletDeleteSchema):
+    result = await CommissionWalletService().delete(
+        token=schema.token,
+        id_=schema.id,
+    )
+    return Response(**result)

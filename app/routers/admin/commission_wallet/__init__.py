@@ -16,14 +16,17 @@
 
 
 from app.utils import Router
-from .commission import router as router_commission
-from .commission_wallet import router as router_commission_wallet
+from .create import router as router_create
+from .delete import router as router_delete
+from .get_list import router as router_get_list
 
 
 router = Router(
-    prefix='/admin',
+    prefix='/commissions_wallets',
     routes_included=[
-        router_commission,
-        router_commission_wallet,
+        router_create,
+        router_get_list,
+        router_delete,
     ],
+    tags=['CommissionWallet'],
 )

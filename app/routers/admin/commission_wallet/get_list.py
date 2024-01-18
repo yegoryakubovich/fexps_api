@@ -15,15 +15,16 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
-from .commission_wallet import router as router_commission_wallet
+from app.services import CommissionWalletService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-        router_commission_wallet,
-    ],
+    prefix='/list/get',
 )
+
+
+@router.get()
+async def route():
+    result = await CommissionWalletService().get_list()
+    return Response(**result)

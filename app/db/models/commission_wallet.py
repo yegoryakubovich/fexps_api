@@ -15,15 +15,19 @@
 #
 
 
-from app.utils import Router
-from .commission import router as router_commission
-from .commission_wallet import router as router_commission_wallet
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
+
+from app.db.base_class import Base
 
 
-router = Router(
-    prefix='/admin',
-    routes_included=[
-        router_commission,
-        router_commission_wallet,
-    ],
-)
+class CommissionWallet(Base):
+    __tablename__ = 'commissions_wallets'
+
+    id = Column(BigInteger, primary_key=True)
+    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
+    wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
+    value = Column(BigInteger, nullable=True)
+    percent = Column(BigInteger, nullable=True)
+
+    is_deleted = Column(Boolean, default=False)

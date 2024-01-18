@@ -15,12 +15,10 @@
 #
 
 
-from pydantic import Field, model_validator, field_validator
-from pydantic_core.core_schema import ValidationInfo
+from pydantic import Field, model_validator
 
 from app.repositories.base import DataValidationError
-from app.repositories.commission import IntervalValidationError
-from app.services import CommissionService
+from app.services import CommissionWalletService
 from app.utils import BaseSchema
 from app.utils import Router, Response
 
@@ -30,39 +28,26 @@ router = Router(
 )
 
 
-class CommissionCreateSchema(BaseSchema):
+class CommissionWalletCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
-    value_from: int = Field()
-    value_to: int = Field()
+    wallet_id: int = Field()
     percent: int = Field(default=None)
     value: int = Field(default=None)
 
     @model_validator(mode='after')
-    def check_type(self) -> 'CommissionCreateSchema':
-        if (self.value_from >= self.value_to) and (self.value_to != 0):
-            raise IntervalValidationError(f'The field value_to must be greater than value_from')
-
+    def check_type(self) -> 'CommissionWalletCreateSchema':
         optional = [self.percent, self.value]
         optional_names = ['percent', 'value']
-
         if (len(optional) - optional.count(None)) != 1:
             raise DataValidationError(f'The position must be one of: {"/".join(optional_names)}')
         return self
 
-    @field_validator('value_from', 'value_to')
-    @classmethod
-    def check_value_interval(cls, value: int, info: ValidationInfo):
-        if value < 0:
-            raise IntervalValidationError(f'The field "{info.field_name}" must be positive')
-        return value
-
 
 @router.post()
-async def route(schema: CommissionCreateSchema):
-    result = await CommissionService().create(
+async def route(schema: CommissionWalletCreateSchema):
+    result = await CommissionWalletService().create(
         token=schema.token,
-        value_from=schema.value_from,
-        value_to=schema.value_to,
+        wallet_id=schema.wallet_id,
         percent=schema.percent,
         value=schema.value,
     )
