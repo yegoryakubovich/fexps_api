@@ -15,19 +15,9 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
-from sqlalchemy.orm import relationship
-
-from app.db.base_class import Base
+from app.db.models import CommissionPackValue
+from .base import BaseRepository
 
 
-class CommissionWallet(Base):
-    __tablename__ = 'commissions_wallets'
-
-    id = Column(BigInteger, primary_key=True)
-    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
-    wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
-    value = Column(BigInteger, nullable=True)
-    percent = Column(BigInteger, nullable=True)
-
-    is_deleted = Column(Boolean, default=False)
+class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
+    model = CommissionPackValue

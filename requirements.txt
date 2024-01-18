@@ -1,8 +1,9 @@
-fastapi
+fastapi==0.108.0
 uvicorn==0.25.0
 pytz
 inflection
-starlette==0.34.0
-pydantic==2.5.3
+starlette
+pydantic
 sqlalchemy==2.0.24
 aiomysql
+celery[redis]

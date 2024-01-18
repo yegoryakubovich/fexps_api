@@ -17,6 +17,7 @@
 
 config.ini
 
+/data
 /.idea
 *__pycache__
 /assets/articles/*

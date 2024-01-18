@@ -15,7 +15,7 @@
 #
 
 from app.db.models import Session, Commission, Actions
-from app.repositories.commission import CommissionRepository, IntervalAlreadyTaken
+from app.repositories.commission_pack import CommissionRepository, IntervalAlreadyTaken
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import WALLET_MAX_VALUE

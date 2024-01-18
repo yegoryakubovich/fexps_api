@@ -19,7 +19,7 @@ from pydantic import Field, model_validator, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.repositories.base import DataValidationError
-from app.repositories.commission import IntervalValidationError
+from app.repositories.commission_pack import IntervalValidationError
 from app.services import CommissionService
 from app.utils import BaseSchema
 from app.utils import Router, Response

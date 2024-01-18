@@ -23,6 +23,7 @@ password = password
 name = db_name
 
 [settings]
+debug = 0
 wallet_max_count = 1
 wallet_max_value = 1_000_000_00
 items_per_page = 10

@@ -15,18 +15,12 @@
 #
 
 
-from app.db.models import Commission
-from .base import BaseRepository
-from ..utils import ApiException
+FROM python:3.11-slim
 
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-class IntervalAlreadyTaken(ApiException):
-    pass
+COPY . /app
+WORKDIR /app
 
-
-class IntervalValidationError(ApiException):
-    pass
-
-
-class CommissionRepository(BaseRepository[Commission]):
-    model = Commission
+ENTRYPOINT celery -A app.tasks worker -l info

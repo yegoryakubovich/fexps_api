@@ -15,10 +15,15 @@
 #
 
 from app.db.models import Session, CommissionWallet, Actions
-from app.repositories.commission_wallet import CommissionWalletRepository
+from app.repositories.commission_pack_value import CommissionWalletRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
+from app.utils import ApiException
 from app.utils.decorators import session_required
+
+
+class CommissionWalletAlreadyExists(ApiException):
+    pass
 
 
 class CommissionWalletService(BaseService):
@@ -33,6 +38,8 @@ class CommissionWalletService(BaseService):
             value: int,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        if await CommissionWalletRepository().get(wallet=wallet):
+            raise CommissionWalletAlreadyExists(f'Wallet "{wallet.id}" already exists')
         commission_wallet = await CommissionWalletRepository().create(
             wallet=wallet,
             percent=percent,

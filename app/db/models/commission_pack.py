@@ -15,18 +15,16 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class Commission(Base):
-    __tablename__ = 'commissions'
+class CommissionPack(Base):
+    __tablename__ = 'commissions_packs'
 
     id = Column(BigInteger, primary_key=True)
-    value_from = Column(BigInteger)
-    value_to = Column(BigInteger)
-    value = Column(BigInteger, nullable=True)
-    percent = Column(BigInteger, nullable=True)
-
+    name_text_id = Column(BigInteger, ForeignKey('texts.id'))
+    name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

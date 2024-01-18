@@ -1,5 +1,5 @@
 #
-# (c) 2023, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+# (c) 2024, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import CommissionWallet
-from .base import BaseRepository
+from celery.app import Celery
 
 
-class CommissionWalletRepository(BaseRepository[CommissionWallet]):
-    model = CommissionWallet
+redis_url = 'redis://redis:6379/0'
+app = Celery(__name__, broker=redis_url, backend=redis_url)
+print(1)

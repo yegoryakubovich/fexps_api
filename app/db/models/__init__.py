@@ -19,8 +19,7 @@ from .action import Action, Actions
 from .text import Text
 from .timezone import Timezone
 from .language import Language
-from .wallet import Wallet
-from .commission import Commission
+from .commission_pack import CommissionPack
 
 from .action_parameter import ActionParameter
 from .permission import Permission
@@ -30,17 +29,18 @@ from .text_translation import TextTranslation
 from .text_pack import TextPack
 from .method import Method, MethodFieldTypes
 from .contact import Contact
-from .transfer import Transfer
-from .commission_wallet import CommissionWallet
+from .commission_pack_value import CommissionPackValue
+from .wallet import Wallet
 
 from .country import Country
 from .role_permission import RolePermission
 from .requisite_data import RequisiteData
-from .transfer_system import TransferSystem, TransferSystemTypes
+from .transfer import Transfer
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes
 from .request import Request, RequestTypes
+from .transfer_system import TransferSystem, TransferSystemTypes
 
 from .session import Session
 from .account_role import AccountRole
