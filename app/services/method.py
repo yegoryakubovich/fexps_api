@@ -78,8 +78,8 @@ class MethodService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'name_text_id': name_text.id,
-                'currency_id_str': currency.id_str
+                'name_text': name_text.key,
+                'currency': currency.id_str
             },
         )
 
