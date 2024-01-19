@@ -15,7 +15,7 @@
 #
 
 
-from app.services import CommissionWalletService
+from app.services import CommissionPackService
 from app.utils import Router, Response
 
 
@@ -26,5 +26,5 @@ router = Router(
 
 @router.get()
 async def route():
-    result = await CommissionWalletService().get_list()
+    result = await CommissionPackService().get_list()
     return Response(**result)

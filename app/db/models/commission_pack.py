@@ -27,4 +27,5 @@ class CommissionPack(Base):
     id = Column(BigInteger, primary_key=True)
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
+    default_pack = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

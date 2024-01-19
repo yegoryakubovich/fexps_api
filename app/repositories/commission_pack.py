@@ -20,18 +20,6 @@ from .base import BaseRepository
 from ..utils import ApiException
 
 
-class IntervalAlreadyTaken(ApiException):
-    pass
-
-
-class IntervalValidationError(ApiException):
-    pass
-
-
-class IntervalNotFoundError(ApiException):
-    pass
-
-
 class CommissionPackRepository(BaseRepository[CommissionPack]):
     model = CommissionPack
 

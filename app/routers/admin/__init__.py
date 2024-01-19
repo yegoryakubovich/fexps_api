@@ -16,12 +16,11 @@
 
 
 from app.utils import Router
-
+from .commission_pack import router as router_commission_pack
 
 router = Router(
     prefix='/admin',
     routes_included=[
-        # router_commission,
-        # router_commission_wallet,
+        router_commission_pack,
     ],
 )

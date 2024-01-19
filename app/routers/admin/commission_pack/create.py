@@ -15,16 +15,28 @@
 #
 
 
-from app.services import CommissionService
+from pydantic import Field
+
+from app.services import CommissionPackService
+from app.utils import BaseSchema
 from app.utils import Router, Response
 
-
 router = Router(
-    prefix='/list/get',
+    prefix='/create',
 )
 
 
-@router.get()
-async def route():
-    result = await CommissionService().get_list()
+class CommissionPackCreateSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    name: str = Field(min_length=1, max_length=1024)
+    default_pack: bool = Field(default=False)
+
+
+@router.post()
+async def route(schema: CommissionPackCreateSchema):
+    result = await CommissionPackService().create(
+        token=schema.token,
+        name=schema.name,
+        default_pack=schema.default_pack,
+    )
     return Response(**result)

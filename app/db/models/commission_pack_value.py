@@ -25,8 +25,8 @@ class CommissionPackValue(Base):
     __tablename__ = 'commissions_packs_values'
 
     id = Column(BigInteger, primary_key=True)
-    commission_pack_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True, unique=True)
-    commission_pack = relationship('Wallet', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
+    commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
+    commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
     value_from = Column(BigInteger)
     value_to = Column(BigInteger)
     value = Column(BigInteger, nullable=True)

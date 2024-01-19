@@ -15,8 +15,9 @@
 #
 
 
-from app.db.models import Wallet, Session, WalletAccountRoles, Actions
+from app.db.models import Wallet, Session, WalletAccountRoles, Actions, CommissionPack
 from app.repositories.base import DoesNotPermission
+from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
@@ -38,7 +39,9 @@ class WalletService(BaseService):
         wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
         if len(wallet_account_list) >= WALLET_MAX_COUNT:
             raise WalletLimitReached('Wallet limit reached.')
-        wallet = await WalletRepository().create(name=name)
+        commission_pack = await CommissionPackRepository().get(default_pack=True)
+        print(commission_pack)
+        wallet = await WalletRepository().create(name=name, commission_pack=commission_pack)
         await self.create_action(
             model=wallet,
             action=Actions.CREATE,
@@ -46,6 +49,7 @@ class WalletService(BaseService):
                 'creator': f'session_{session.id}',
                 'name': name,
                 'wallet_id': wallet.id,
+                'commission_pack_id': commission_pack.id if commission_pack else None,
             },
         )
         await WalletAccountService().create(

@@ -38,6 +38,8 @@ from .transfer import TransferService
 from .requisite import RequisiteService
 from .request import RequestService
 from .order import OrderService
+from .commission_pack import CommissionPackService
+from .commission_pack_value import CommissionPackValueService
 
 
 """

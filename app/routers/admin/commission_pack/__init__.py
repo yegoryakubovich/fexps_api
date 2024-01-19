@@ -15,27 +15,20 @@
 #
 
 
-from pydantic import Field
-
-from app.services import CommissionService
-from app.utils import BaseSchema
-from app.utils import Router, Response
+from app.utils import Router
+from .create import router as router_create
+from .create_interval import router as router_create_interval
+from .delete import router as router_delete
+from .get_list import router as router_get_list
 
 
 router = Router(
-    prefix='/delete',
+    prefix='/commissions_packs',
+    routes_included=[
+        router_create,
+        router_create_interval,
+        router_get_list,
+        router_delete,
+    ],
+    tags=['CommissionPack'],
 )
-
-
-class CommissionDeleteSchema(BaseSchema):
-    token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
-
-
-@router.post()
-async def route(schema: CommissionDeleteSchema):
-    result = await CommissionService().delete(
-        token=schema.token,
-        id_=schema.id,
-    )
-    return Response(**result)

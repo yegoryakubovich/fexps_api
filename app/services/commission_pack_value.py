@@ -14,38 +14,56 @@
 # limitations under the License.
 #
 
-from app.db.models import Session, Commission, Actions
-from app.repositories.commission_pack import CommissionRepository, IntervalAlreadyTaken
+from app.db.models import CommissionPackValue, CommissionPack, Session, Actions
+from app.repositories.commission_pack import CommissionPackRepository
+from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.services.base import BaseService
+from app.utils import ApiException
 from app.utils.decorators import session_required
 from config import WALLET_MAX_VALUE
 
 
-class CommissionService(BaseService):
-    model = Commission
+class IntervalAlreadyTaken(ApiException):
+    pass
+
+
+class IntervalValidationError(ApiException):
+    pass
+
+
+class IntervalNotFoundError(ApiException):
+    pass
+
+
+class CommissionPackValueService(BaseService):
+    model = CommissionPackValue
 
     @session_required()
     async def create(
             self,
             session: Session,
+            commission_pack_id: int,
             value_from: int,
             value_to: int,
             percent: int,
             value: int,
     ) -> dict:
-        await self.check_interval(value_from=value_from, value_to=value_to)
-        commission = await CommissionRepository().create(
+        commission_pack = await CommissionPackRepository().get_by_id(id_=commission_pack_id)
+        await self.check_interval(commission_pack=commission_pack, value_from=value_from, value_to=value_to)
+        commission_pack_value = await CommissionPackValueRepository().create(
+            commission_pack=commission_pack,
             value_from=value_from,
             value_to=value_to,
             percent=percent,
             value=value,
         )
         await self.create_action(
-            model=commission,
+            model=commission_pack_value,
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': commission.id,
+                'id': commission_pack_value.id,
+                'commission_pack_id': commission_pack_id,
                 'value_from': value_from,
                 'value_to': value_to,
                 'percent': percent,
@@ -53,22 +71,7 @@ class CommissionService(BaseService):
             },
         )
 
-        return {'commission_id': commission.id}
-
-    @staticmethod
-    async def get_list() -> dict:
-        return {
-            'commissions': [
-                {
-                    'id': commission.id,
-                    'value_from': commission.value_from,
-                    'value_to': commission.value_to,
-                    'percent': commission.percent,
-                    'value': commission.value,
-                }
-                for commission in await CommissionRepository().get_list()
-            ],
-        }
+        return {'commission_pack_value_id': commission_pack_value.id}
 
     @session_required()
     async def delete(
@@ -76,10 +79,10 @@ class CommissionService(BaseService):
             session: Session,
             id_: int,
     ) -> dict:
-        commission = await CommissionRepository().get(id=id_)
-        await CommissionRepository().delete(commission)
+        commission_pack_value = await CommissionPackValueRepository().get(id=id_)
+        await CommissionPackValueRepository().delete(commission_pack_value)
         await self.create_action(
-            model=commission,
+            model=commission_pack_value,
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
@@ -90,11 +93,11 @@ class CommissionService(BaseService):
         return {}
 
     @staticmethod
-    async def check_interval(value_from: int, value_to: int):
+    async def check_interval(commission_pack: CommissionPack, value_from: int, value_to: int):
         new_start = value_from
         new_stop = value_to if value_to != 0 else WALLET_MAX_VALUE
-        for commission in await CommissionRepository().get_list():
-            commission_start = commission.value_from
-            commission_stop = commission.value_to if commission.value_to != 0 else WALLET_MAX_VALUE
-            if (new_start <= commission_stop) and (new_stop >= commission_start):
+        for pack_value in await CommissionPackValueRepository().get_list(commission_pack=commission_pack):
+            pack_value_start = pack_value.value_from
+            pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else WALLET_MAX_VALUE
+            if (new_start <= pack_value_stop) and (new_stop >= pack_value_start):
                 raise IntervalAlreadyTaken('This interval already taken')
