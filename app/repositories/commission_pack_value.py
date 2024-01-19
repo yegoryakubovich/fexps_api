@@ -13,11 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from operator import and_
 
-
-from app.db.models import CommissionPackValue
+from app.db.models import CommissionPackValue, CommissionPack
 from .base import BaseRepository
 
 
 class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
     model = CommissionPackValue
+
+    async def get_by_value(self, commission_pack: CommissionPack, value: int):
+        custom_where = and_(self.model.value_from <= value, value <= self.model.value_to)
+        result = await self.get(custom_where=custom_where)
+        if not result:
+            custom_where = and_(self.model.value_from <= value, self.model.value_to == 0)
+            result = await self.get(custom_where=custom_where, commission_pack=commission_pack)
+        return result

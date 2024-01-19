@@ -18,9 +18,10 @@
 import math
 from typing import List
 
-from app.repositories.commission_pack import CommissionRepository, IntervalNotFoundError
-from app.repositories.commission_pack_value import CommissionWalletRepository
+from app.db.models import CommissionPackValue
+from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.repositories.wallet import WalletRepository
+from app.services.commission_pack_value import IntervalNotFoundError
 from app.utils.schemes.calculations.orders import CalcRequisiteScheme
 
 
@@ -39,23 +40,21 @@ def get_results_by_calc_requisites(
     return currency_value_result, value_result, rate_result
 
 
-def get_commission_by_percent(value: int, commission_percent: int) -> int:
-    return round(value * commission_percent / 10000)
+def get_commission_value(value: int, commission_pack_value: CommissionPackValue) -> int:
+    result = 0
+    if commission_pack_value.percent:
+        result += round(value * commission_pack_value.percent / 10000)
+    if commission_pack_value.value:
+        result += commission_pack_value.value
+    return result
 
 
 async def get_commission(wallet_id: int, value: int) -> int:
     wallet = await WalletRepository().get_by_id(id_=wallet_id)
-    commission_wallet = await CommissionWalletRepository().get(wallet=wallet)
-    if commission_wallet:
-        if commission_wallet.percent:
-            return get_commission_by_percent(value=value, commission_percent=commission_wallet.percent)
-        elif commission_wallet.value:
-            return commission_wallet.value
-
-    commission = await CommissionRepository().get_by_value(value=value)
-    if not commission:
+    commission_pack_value = await CommissionPackValueRepository().get_by_value(
+        commission_pack=wallet.commission_pack,
+        value=value,
+    )
+    if not commission_pack_value:
         raise IntervalNotFoundError(f'By value == "{value}" not found suitable interval')
-    if commission.percent:
-        return get_commission_by_percent(value=value, commission_percent=commission.percent)
-    elif commission.value:
-        return commission.value
+    return get_commission_value(value=value, commission_pack_value=commission_pack_value)

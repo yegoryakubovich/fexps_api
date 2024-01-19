@@ -13,20 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from sqlalchemy.sql.operators import and_
 
 from app.db.models import CommissionPack
 from .base import BaseRepository
-from ..utils import ApiException
 
 
 class CommissionPackRepository(BaseRepository[CommissionPack]):
     model = CommissionPack
-
-    async def get_by_value(self, value: int):
-        custom_where = and_(self.model.value_from <= value, value <= self.model.value_to)
-        result = await self.get(custom_where=custom_where)
-        if not result:
-            custom_where = and_(self.model.value_from <= value, self.model.value_to == 0)
-            result = await self.get(custom_where=custom_where)
-        return result
