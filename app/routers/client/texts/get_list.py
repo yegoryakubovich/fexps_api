@@ -36,6 +36,6 @@ class TextListGetSchema(BaseSchema):
 async def route(schema: TextListGetSchema = Depends()):
     result = await TextService().get_list(
         token=schema.token,
-
+    )
 
     return Response(**result)
