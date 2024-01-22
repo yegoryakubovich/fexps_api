@@ -15,14 +15,14 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions
+from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.services.order import OrderService
 from app.services.base import BaseService
+from app.services.order import OrderService
 from app.utils.decorators import session_required
 
 
@@ -116,3 +116,30 @@ class RequestService(BaseService):
             else:  # currency value
                 result -= order.currency_value
         return result
+
+    @staticmethod
+    async def check_all_orders(request: Request) -> None:
+        if request.type in [RequestTypes.INPUT, RequestTypes.ALL]:
+            input_orders = await OrderRepository().get_list(request=request, type=OrderTypes.INPUT)
+            input_compete_count, input_wait_count, input_count = 0, 0, 0
+            for input_order in input_orders:
+                if input_order.type in [OrderStates.CANCELED]:
+                    continue
+                elif input_order.type in [OrderStates.RESERVE, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                    input_wait_count += 1
+                elif input_order.type in [OrderStates.COMPLETED]:
+                    input_compete_count += 1
+                input_count += 1
+
+        if request.type in [RequestTypes.OUTPUT, RequestTypes.ALL]:
+            output_orders = await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT)
+            output_compete_count, output_wait_count, output_count = 0, 0, 0
+            for output_order in output_orders:
+                if output_order.type in [OrderStates.CANCELED]:
+                    continue
+                elif output_order.type in [OrderStates.RESERVE, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                    output_wait_count += 1
+                elif output_order.type in [OrderStates.COMPLETED]:
+                    output_compete_count += 1
+                output_count += 1
+

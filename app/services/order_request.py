@@ -32,13 +32,19 @@ class OrderRequestService(BaseService):
             order_id: int,
             type_: str,
             canceled_reason: str,
+            value: int,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=order_id)
+        await self.check_have_order_request(order=order)
         data = {}
         if type_ == OrderRequestTypes.CANCEL:
             if not canceled_reason:
                 raise OrderRequestValidationError('Parameter "canceled_reason" not found')
             data['canceled_reason'] = canceled_reason
+        elif type_ == OrderRequestTypes.UPDATE_VALUE:
+            if not value:
+                raise OrderRequestValidationError('Parameter "value" not found')
+            data['value'] = value
 
         order_request = await OrderRequestRepository().create(
             order=order,
@@ -54,6 +60,7 @@ class OrderRequestService(BaseService):
                 'order_id': order_id,
                 'type_': type_,
                 'canceled_reason': canceled_reason,
+                'value': value,
             },
         )
 

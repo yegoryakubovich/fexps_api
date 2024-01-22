@@ -15,13 +15,14 @@
 #
 
 
-from pydantic import Field, model_validator
+from pydantic import Field, model_validator, field_validator
+from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import OrderRequestTypes
 from app.repositories.base import DataValidationError
 from app.services import OrderRequestService
 from app.utils import Router, Response, BaseSchema
-
+from app.utils.base_schema import ValueMustBePositive
 
 router = Router(
     prefix='/create',
@@ -33,6 +34,7 @@ class OrderRequestCreateSchema(BaseSchema):
     order_id: int = Field()
     type: str = Field(min_length=1, max_length=16)
     canceled_reason: str = Field(default=None, min_length=1, max_length=512)
+    value: int = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':
@@ -50,6 +52,15 @@ class OrderRequestCreateSchema(BaseSchema):
 
         return self
 
+    @field_validator('value')
+    @classmethod
+    def check_values(cls, value: int, info: ValidationInfo):
+        if value is None:
+            return
+        if value <= 0:
+            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+        return value
+
 
 @router.post()
 async def route(schema: OrderRequestCreateSchema):
@@ -58,6 +69,7 @@ async def route(schema: OrderRequestCreateSchema):
         order_id=schema.order_id,
         type_=schema.type,
         canceled_reason=schema.canceled_reason,
+        value=schema.value,
     )
 
     return Response(**result)
