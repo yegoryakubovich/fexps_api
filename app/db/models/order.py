@@ -30,22 +30,12 @@ class OrderTypes:
 
 class OrderStates:  # token, order_id
     RESERVE = 'reserve'
-    PAYMENT = 'payment'  # None
-    CONFIRMATION = 'confirmation'  # schema_confirmation_fields
+    PAYMENT = 'payment'
+    CONFIRMATION = 'confirmation'
     COMPLETED = 'completed'  # None (Проверка всех ордеров, запуск RequestService finish)
-    CANCELED = 'canceled'  # reason(default=None) ()
+    CANCELED = 'canceled'
 
     choices = [RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
-
-
-"""
-
-orders/state/confirmation/update
-
-schema_confirmation_fields
-если открыт or_request нельзя update state
-
-"""
 
 
 class Order(Base):
