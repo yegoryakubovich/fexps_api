@@ -15,31 +15,36 @@
 #
 
 
+from .account import AccountService, WrongPassword
+from .account_contact import AccountContactService
 from .account_role import AccountRoleService
 from .action import ActionService
-from .account import AccountService, WrongPassword
-from .role import RoleService
-from .session import SessionService
-from .country import CountryService
-from .language import LanguageService
-from .session_get_by_token import SessionGetByTokenService
-from .text_translation import TextTranslationService
-from .timezone import TimezoneService
-from .currency import CurrencyService
-from .text import TextService
-from .text_pack import TextPackService
-from .method import MethodService
-from .contact import ContactService
-from .account_contact import AccountContactService
-from .requisite_data import RequisiteDataService
-from .wallet import WalletService
-from .wallet_account import WalletAccountService
-from .transfer import TransferService
-from .requisite import RequisiteService
-from .request import RequestService
-from .order import OrderService
 from .commission_pack import CommissionPackService
 from .commission_pack_value import CommissionPackValueService
+from .contact import ContactService
+from .country import CountryService
+from .currency import CurrencyService
+from .language import LanguageService
+from .method import MethodService
+from .order import OrderService
+from .order_states_canceled import OrderStatesCanceledService
+from .order_states_completed import OrderStatesCompletedService
+from .order_states_confirmation import OrderStatesConfirmationService
+from .order_states_payment import OrderStatesPaymentService
+from .order_states_reserve import OrderStatesReserveService
+from .request import RequestService
+from .requisite import RequisiteService
+from .requisite_data import RequisiteDataService
+from .role import RoleService
+from .session import SessionService
+from .session_get_by_token import SessionGetByTokenService
+from .text import TextService
+from .text_pack import TextPackService
+from .text_translation import TextTranslationService
+from .timezone import TimezoneService
+from .transfer import TransferService
+from .wallet import WalletService
+from .wallet_account import WalletAccountService
 
 
 """

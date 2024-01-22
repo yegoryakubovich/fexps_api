@@ -22,6 +22,7 @@ from .countries import router as router_countries
 from .currencies import router as router_currencies
 from .languages import router as router_languages
 from .methods import router as router_methods
+from .orders import router as router_orders
 from .requests import router as router_requests
 from .requisites import router as router_requisites
 from .requisites_datas import router as router_requisites_datas
@@ -32,7 +33,6 @@ from .timezones import router as router_timezones
 from .transfers import router as router_transfers
 from .wallets import router as router_wallets
 
-
 router = Router(
     routes_included=[
         router_accounts,
@@ -41,6 +41,7 @@ router = Router(
         router_currencies,
         router_languages,
         router_methods,
+        router_orders,
         router_requests,
         router_requisites,
         router_requisites_datas,
