@@ -16,7 +16,9 @@
 
 
 from app.db.models import Order, Session
+from app.repositories.order import OrderRepository
 from app.services.base import BaseService
+from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
 
 
@@ -27,5 +29,7 @@ class OrderStatesConfirmationService(BaseService):
     async def update(
             self,
             session: Session,
+            order_id: int,
     ) -> dict:
-        pass
+        order = await OrderRepository().get_by_id(id_=order_id)
+        await OrderRequestService().check_have_order_request(order=order)

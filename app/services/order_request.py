@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates
+from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order
 from app.repositories.order import OrderRepository, OrderRequestValidationError
-from app.repositories.order_request import OrderRequestRepository
+from app.repositories.order_request import OrderRequestRepository, OrderRequestFound
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
@@ -101,3 +101,9 @@ class OrderRequestService(BaseService):
         )
 
         return {}
+
+    @staticmethod
+    async def check_have_order_request(order: Order) -> None:
+        order_request = await OrderRequestRepository().get(order=order, state=OrderRequestStates.WAIT)
+        if order_request:
+            raise OrderRequestFound(f'Found order_request.{order_request.id} in status "{OrderRequestStates.WAIT}"')

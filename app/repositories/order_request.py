@@ -17,6 +17,11 @@
 
 from app.db.models import OrderRequest
 from .base import BaseRepository
+from ..utils import ApiException
+
+
+class OrderRequestFound(ApiException):
+    pass
 
 
 class OrderRequestRepository(BaseRepository[OrderRequest]):
