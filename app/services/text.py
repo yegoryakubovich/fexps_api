@@ -25,6 +25,30 @@ from app.utils.decorators import session_required
 class TextService(BaseService):
     model = Text
 
+    @session_required()
+    async def create(
+            self,
+            session: Session,
+            key: str,
+            value_default: str,
+            return_model: bool = False,
+    ) -> dict | Text:
+        if await TextRepository().get(key=key):
+            raise TextExist(f'Text with key "{key}" already exist')
+        text = await TextRepository().create(key=key, value_default=value_default)
+        await self.create_action(
+            model=text,
+            action=Actions.CREATE,
+            parameters={
+                'creator': f'session_{session.id}',
+                'key': key,
+                'value_default': value_default,
+            },
+        )
+        if return_model:
+            return text
+        return {'id': text.id}
+
     @session_required(return_model=False)
     async def get_list(
             self,
@@ -49,30 +73,6 @@ class TextService(BaseService):
             )
 
         return {'texts': texts_list}
-
-    @session_required()
-    async def create(
-            self,
-            session: Session,
-            key: str,
-            value_default: str,
-            return_model: bool = False,
-    ) -> dict | Text:
-        if await TextRepository().get(key=key):
-            raise TextExist(f'Text with key "{key}" already exist')
-        text = await TextRepository().create(key=key, value_default=value_default)
-        await self.create_action(
-            model=text,
-            action=Actions.CREATE,
-            parameters={
-                'creator': f'session_{session.id}',
-                'key': key,
-                'value_default': value_default,
-            },
-        )
-        if return_model:
-            return text
-        return {'id': text.id}
 
     @session_required()
     async def update(
