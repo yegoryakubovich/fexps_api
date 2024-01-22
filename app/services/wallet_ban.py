@@ -15,42 +15,47 @@
 #
 
 
-from app.db.models import WalletAccount, Session, WalletAccountRoles, Actions
-from app.repositories.account import AccountRepository
-from app.repositories.base import DoesNotPermission
-from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_account import WalletAccountRepository
+from app.db.models import Session, Actions, WalletBan
+from app.repositories.wallet import WalletRepository, WalletLimitReached
+from app.repositories.wallet_ban import WalletBanRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
 
-class WalletAccountService(BaseService):
-    model = WalletAccount
+class WalletBanService(BaseService):
+    model = WalletBan
 
     @session_required()
     async def create(
             self,
             session: Session,
             wallet_id: int,
+            value: int,
+            reason: str,
     ) -> dict:
-        account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        role = WalletAccountRoles.CONFIDANT
-        if account.id == session.account.id:
-            role = WalletAccountRoles.OWNER
-        wallet_account = await WalletAccountRepository().create(wallet=wallet, account=account, role=role)
+        if (wallet.value_banned + value) > wallet.value:
+            raise WalletLimitReached(
+                f'The limit has been reached. Available value {wallet.value - wallet.value_banned}'
+            )
+        await WalletRepository().update(wallet, value_banned=wallet.value_banned + value)
+        wallet_ban = await WalletBanRepository().create(
+            wallet=wallet,
+            value=value,
+            reason=reason
+        )
         await self.create_action(
-            model=wallet_account,
+            model=wallet_ban,
             action=Actions.CREATE,
             parameters={
-                'creator': f'session_{session.id}',
-                'wallet_id': wallet.id,
-                'account_id': account.id,
-                'role': role,
+                'deleter': f'session_{session.id}',
+                'wallet_id': wallet_id,
+                'value': value,
+                'reason': reason,
             },
         )
 
-        return {'wallet_account_id': wallet_account.id}
+        return {'wallet_ban_id': wallet_ban.id}
 
     @session_required()
     async def delete(
@@ -58,13 +63,12 @@ class WalletAccountService(BaseService):
             session: Session,
             id_: int,
     ) -> dict:
-        account = session.account
-        wallet_account = await WalletAccountRepository().get_by_id(id_=id_)
-        if wallet_account.account.id != account.id:
-            raise DoesNotPermission('You do not have sufficient rights to delete this WalletAccount')
-        await WalletAccountRepository().delete(wallet_account)
+        wallet_ban = await WalletBanRepository().get_by_id(id_=id_)
+        wallet = wallet_ban.wallet
+        await WalletRepository().update(wallet, value_banned=wallet.value_banned - wallet_ban.value)
+        await WalletBanRepository().delete(wallet_ban)
         await self.create_action(
-            model=wallet_account,
+            model=wallet_ban,
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',

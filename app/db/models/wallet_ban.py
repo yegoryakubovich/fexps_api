@@ -21,31 +21,20 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class OrderRequestTypes:
-    UPDATE_VALUE = 'update_value'
-    CANCEL = 'cancel'
+class WalletBanReasons:
+    BY_ADMIN = 'by_admin'
+    BY_ORDER = 'by_order'
 
-    choices = [UPDATE_VALUE, CANCEL]
-
-
-class OrderRequestStates:  # FIXME
-    WAIT = 'wait'
-    COMPLETED = 'competed'
-    CANCELED = 'canceled'
-
-    choices = [WAIT, COMPLETED, CANCELED]
+    choices = [BY_ADMIN, BY_ORDER]
 
 
-class OrderRequest(Base):
-    __tablename__ = 'orders_requests'
+class WalletBan(Base):
+    __tablename__ = 'wallets_bans'
 
     id = Column(BigInteger, primary_key=True)
-    order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
-    order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
-    type = Column(String(length=16))
-    state = Column(String(length=16))
 
-    data = Column()
-
-    canceled_reason = Column(String(length=128), nullable=True)
+    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
+    wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
+    value = Column(BigInteger, default=0)
+    reason = Column(String(length=16))
     is_deleted = Column(Boolean, default=False)

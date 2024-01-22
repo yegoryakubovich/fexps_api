@@ -17,18 +17,12 @@
 
 from app.utils import Router
 from .create import router as router_create
-from .create_interval import router as router_create_interval
 from .delete import router as router_delete
-from .get_list import router as router_get_list
-
 
 router = Router(
-    prefix='/commissions/packs',
+    prefix='/bans',
     routes_included=[
         router_create,
-        router_create_interval,
-        router_get_list,
         router_delete,
     ],
-    tags=['CommissionPack'],
 )

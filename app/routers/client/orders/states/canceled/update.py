@@ -21,7 +21,6 @@ from app.services import OrderStatesCanceledService
 from app.utils import BaseSchema
 from app.utils import Response, Router
 
-
 router = Router(
     prefix='/update',
 )
@@ -29,6 +28,7 @@ router = Router(
 
 class OrderStatesCanceledUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
+    order_id: int = Field()
 
 
 @router.post()

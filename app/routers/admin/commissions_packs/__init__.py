@@ -15,26 +15,20 @@
 #
 
 
-from pydantic import Field
-
-from app.services import OrderStatesReserveService
-from app.utils import BaseSchema
-from app.utils import Response, Router
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
+from .get_list import router as router_get_list
+from .values import router as router_values
 
 
 router = Router(
-    prefix='/update',
+    prefix='/commissions/packs',
+    routes_included=[
+        router_values,
+        router_create,
+        router_get_list,
+        router_delete,
+    ],
+    tags=['AdminCommissionPack'],
 )
-
-
-class OrderStatesReserveUpdateSchema(BaseSchema):
-    token: str = Field(min_length=32, max_length=64)
-    order_id: int = Field()
-
-
-@router.post()
-async def route(schema: OrderStatesReserveUpdateSchema):
-    result = await OrderStatesReserveService().update(
-        token=schema.token,
-    )
-    return Response(**result)

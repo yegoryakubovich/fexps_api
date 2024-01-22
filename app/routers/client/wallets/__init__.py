@@ -22,6 +22,7 @@ from .get import router as router_get
 from .get_list import router as router_get_list
 from .update import router as router_update
 
+
 router = Router(
     prefix='/wallets',
     routes_included=[

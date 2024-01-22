@@ -55,39 +55,26 @@ class CommissionPackService(BaseService):
 
         return {'commission_pack_id': commission_pack.id}
 
-    @session_required()
-    async def create_interval(
-            self,
-            session: Session,
-            id_: int,
-            value_from: int,
-            value_to: int,
-            percent: int,
-            value: int,
-    ) -> dict:
-        result = await CommissionPackValueService().create(
-            session=session,
-            commission_pack_id=id_,
-            value_from=value_from,
-            value_to=value_to,
-            percent=percent,
-            value=value,
-        )
-
-        return result
-
     @staticmethod
     async def get_list() -> dict:
-        return {
-            'commissions_packs': [
-                {
-                    'id': commission_pack.id,
-                    'name_text': commission_pack.name_text.key,
-                    'default_pack': commission_pack.is_default,
-                }
-                for commission_pack in await CommissionPackRepository().get_list()
-            ],
-        }
+        commissions_packs = []
+        for commission_pack in await CommissionPackRepository().get_list():
+            commission_pack_values = []
+            for commission_pack_value in await CommissionPackValueRepository().get_list(
+                    commission_pack=commission_pack
+            ):
+                commission_pack_values.append({
+                    'value_from': commission_pack_value.value_from, 'value_to': commission_pack_value.value_to,
+                    'percent': commission_pack_value.percent, 'value': commission_pack_value.value,
+                })
+            commissions_packs.append({
+                'id': commission_pack.id,
+                'name_text': commission_pack.name_text.key,
+                'values': commission_pack_values,
+                'is_default': commission_pack.is_default,
+            })
+
+        return {'commissions_packs': commissions_packs}
 
     @session_required()
     async def delete(

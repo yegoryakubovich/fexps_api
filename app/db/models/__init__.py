@@ -39,11 +39,14 @@ from .transfer import Transfer
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes
-from .request import Request, RequestTypes
+from .request import Request, RequestTypes, RequestStates
 from .transfer_system import TransferSystem, TransferSystemTypes
 
 from .session import Session
 from .account_role import AccountRole
 from .account_contact import AccountContact
 from .wallet_account import WalletAccount, WalletAccountRoles
-from .order import Order, OrderTypes
+from .wallet_ban import WalletBan, WalletBanReasons
+from .order import Order, OrderTypes, OrderStates
+
+from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates

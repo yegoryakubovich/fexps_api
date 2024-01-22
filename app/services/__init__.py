@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+# create-check-get-get list-search-update-delete-*other*
+
 
 from .account import AccountService, WrongPassword
 from .account_contact import AccountContactService
@@ -27,11 +29,12 @@ from .currency import CurrencyService
 from .language import LanguageService
 from .method import MethodService
 from .order import OrderService
-from .order_states_canceled import OrderStatesCanceledService
-from .order_states_completed import OrderStatesCompletedService
-from .order_states_confirmation import OrderStatesConfirmationService
-from .order_states_payment import OrderStatesPaymentService
-from .order_states_reserve import OrderStatesReserveService
+from .order_request import OrderRequestService
+from .order_state_canceled import OrderStatesCanceledService
+from .order_state_completed import OrderStatesCompletedService
+from .order_state_confirmation import OrderStatesConfirmationService
+from .order_state_payment import OrderStatesPaymentService
+from .order_state_reserve import OrderStatesReserveService
 from .request import RequestService
 from .requisite import RequisiteService
 from .requisite_data import RequisiteDataService
@@ -45,15 +48,4 @@ from .timezone import TimezoneService
 from .transfer import TransferService
 from .wallet import WalletService
 from .wallet_account import WalletAccountService
-
-
-"""
-create
-check
-get
-get list
-search
-update
-delete
-*other*
-"""
+from .wallet_ban import WalletBanService

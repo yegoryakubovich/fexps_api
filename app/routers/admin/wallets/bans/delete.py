@@ -17,24 +17,24 @@
 
 from pydantic import Field
 
-from app.services import OrderStatesReserveService
+from app.services import WalletBanService
 from app.utils import BaseSchema
-from app.utils import Response, Router
-
+from app.utils import Router, Response
 
 router = Router(
-    prefix='/update',
+    prefix='/delete',
 )
 
 
-class OrderStatesReserveUpdateSchema(BaseSchema):
+class WalletBanDeleteSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
-    order_id: int = Field()
+    id: int = Field()
 
 
 @router.post()
-async def route(schema: OrderStatesReserveUpdateSchema):
-    result = await OrderStatesReserveService().update(
+async def route(schema: WalletBanDeleteSchema):
+    result = await WalletBanService().delete(
         token=schema.token,
+        id_=schema.id,
     )
     return Response(**result)

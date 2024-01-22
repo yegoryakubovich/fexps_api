@@ -15,26 +15,14 @@
 #
 
 
-from pydantic import Field
-
-from app.services import OrderStatesReserveService
-from app.utils import BaseSchema
-from app.utils import Response, Router
+from app.utils import Router
+from .bans import router as router_bans
 
 
 router = Router(
-    prefix='/update',
+    prefix='/commissions/packs',
+    routes_included=[
+        router_bans,
+    ],
+    tags=['AdminWallet'],
 )
-
-
-class OrderStatesReserveUpdateSchema(BaseSchema):
-    token: str = Field(min_length=32, max_length=64)
-    order_id: int = Field()
-
-
-@router.post()
-async def route(schema: OrderStatesReserveUpdateSchema):
-    result = await OrderStatesReserveService().update(
-        token=schema.token,
-    )
-    return Response(**result)

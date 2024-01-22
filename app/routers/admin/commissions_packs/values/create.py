@@ -19,35 +19,35 @@ from pydantic import Field, model_validator, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.repositories.base import DataValidationError
-from app.services import CommissionPackService
+from app.services import CommissionPackValueService
 from app.services.commission_pack_value import IntervalValidationError
 from app.utils import BaseSchema
 from app.utils import Router, Response
 
-
 router = Router(
-    prefix='/create_interval',
+    prefix='/create',
 )
 
 
-class CommissionPackCreateIntervalSchema(BaseSchema):
+class CommissionPackValueCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    commission_pack_id: int = Field()
     value_from: int = Field()
     value_to: int = Field()
     percent: int = Field(default=None)
     value: int = Field(default=None)
 
     @model_validator(mode='after')
-    def check_type(self) -> 'CommissionPackCreateIntervalSchema':
+    def check_type(self) -> 'CommissionPackValueCreateSchema':
         if (self.value_from >= self.value_to) and (self.value_to != 0):
             raise IntervalValidationError(f'The field value_to must be greater than value_from')
 
         optional = [self.percent, self.value]
         optional_names = ['percent', 'value']
 
-        if (len(optional) - optional.count(None)) != 1:
-            raise DataValidationError(f'The position must be one of: {"/".join(optional_names)}')
+        if (len(optional) - optional.count(None)) < 1:
+            raise DataValidationError(f'There must be at least one position: {"/".join(optional_names)}')
+
         return self
 
     @field_validator('value_from', 'value_to')
@@ -59,10 +59,10 @@ class CommissionPackCreateIntervalSchema(BaseSchema):
 
 
 @router.post()
-async def route(schema: CommissionPackCreateIntervalSchema):
-    result = await CommissionPackService().create_interval(
+async def route(schema: CommissionPackValueCreateSchema):
+    result = await CommissionPackValueService().create(
         token=schema.token,
-        id_=schema.id,
+        commission_pack_id=schema.commission_pack_id,
         value_from=schema.value_from,
         value_to=schema.value_to,
         percent=schema.percent,

@@ -29,6 +29,7 @@ router = Router(
 
 class OrderStatesReserveUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
+    order_id: int = Field()
 
 
 @router.post()

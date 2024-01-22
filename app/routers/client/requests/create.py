@@ -49,27 +49,27 @@ class RequestCreateSchema(BaseSchema):
             raise DataValidationError(f'The type parameter must contain: {"/".join(RequestTypes.choices)}')
         datas = {
             RequestTypes.INPUT: {
-                'variables': [self.input_method_id],
-                'variables_names': ['input_method_id'],
+                'required': [self.input_method_id],
+                'required_names': ['input_method_id'],
                 'optional': [self.input_value, self.value],
                 'optional_names': ['input_value', 'value'],
             },
             RequestTypes.OUTPUT: {
-                'variables': [self.output_requisite_data_id],
-                'variables_names': ['output_requisite_data_id'],
+                'required': [self.output_requisite_data_id],
+                'required_names': ['output_requisite_data_id'],
                 'optional': [self.output_value, self.value],
                 'optional_names': ['output_value', 'value'],
             },
             RequestTypes.ALL: {
-                'variables': [self.input_method_id, self.output_requisite_data_id],
-                'variables_names': ['input_method_id', 'output_requisite_data_id'],
+                'required': [self.input_method_id, self.output_requisite_data_id],
+                'required_names': ['input_method_id', 'output_requisite_data_id'],
                 'optional': [self.input_value, self.output_value],
                 'optional_names': ['input_value', 'output_value'],
             },
         }
-        if None in datas[self.type]['variables']:
+        if None in datas[self.type]['required']:
             raise DataValidationError(f'For {self.type}, only these parameters are taken into account: '
-                                      f'{", ".join(datas[self.type]["variables_names"])}')
+                                      f'{", ".join(datas[self.type]["required_names"])}')
         if (len(datas[self.type]['optional']) - datas[self.type]['optional'].count(None)) != 1:
             raise DataValidationError(f'The position must be one of: '
                                       f'{"/".join(datas[self.type]["optional_names"])}')
