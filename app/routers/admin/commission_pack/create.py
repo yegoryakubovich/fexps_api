@@ -29,7 +29,7 @@ router = Router(
 class CommissionPackCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     name: str = Field(min_length=1, max_length=1024)
-    default_pack: bool = Field(default=False)
+    is_default: bool = Field(default=False)
 
 
 @router.post()
@@ -37,6 +37,6 @@ async def route(schema: CommissionPackCreateSchema):
     result = await CommissionPackService().create(
         token=schema.token,
         name=schema.name,
-        default_pack=schema.default_pack,
+        is_default=schema.is_default,
     )
     return Response(**result)

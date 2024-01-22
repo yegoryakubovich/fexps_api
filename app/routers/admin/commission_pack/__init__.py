@@ -23,7 +23,7 @@ from .get_list import router as router_get_list
 
 
 router = Router(
-    prefix='/commissions_packs',
+    prefix='/commissions/packs',
     routes_included=[
         router_create,
         router_create_interval,

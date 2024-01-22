@@ -39,7 +39,7 @@ class WalletService(BaseService):
         wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
         if len(wallet_account_list) >= WALLET_MAX_COUNT:
             raise WalletLimitReached('Wallet limit reached.')
-        commission_pack = await CommissionPackRepository().get(default_pack=True)
+        commission_pack = await CommissionPackRepository().get(is_default=True)
         print(commission_pack)
         wallet = await WalletRepository().create(name=name, commission_pack=commission_pack)
         await self.create_action(

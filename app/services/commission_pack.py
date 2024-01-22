@@ -32,7 +32,7 @@ class CommissionPackService(BaseService):
             self,
             session: Session,
             name: str,
-            default_pack: bool,
+            is_default: bool,
     ) -> dict:
         name_text = await TextRepository().create(
             key=f'method_{await create_id_str()}',
@@ -40,7 +40,7 @@ class CommissionPackService(BaseService):
         )
         commission_pack = await CommissionPackRepository().create(
             name_text=name_text,
-            default_pack=default_pack,
+            is_default=is_default,
         )
         await self.create_action(
             model=commission_pack,
@@ -49,7 +49,7 @@ class CommissionPackService(BaseService):
                 'creator': f'session_{session.id}',
                 'id': commission_pack.id,
                 'name_text': name_text.key,
-                'default_pack': default_pack,
+                'is_default': is_default,
             },
         )
 
@@ -83,7 +83,7 @@ class CommissionPackService(BaseService):
                 {
                     'id': commission_pack.id,
                     'name_text': commission_pack.name_text.key,
-                    'default_pack': commission_pack.default_pack,
+                    'default_pack': commission_pack.is_default,
                 }
                 for commission_pack in await CommissionPackRepository().get_list()
             ],
