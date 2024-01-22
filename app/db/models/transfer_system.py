@@ -28,6 +28,7 @@ class TransferSystemTypes:
 
 class TransferSystemReasons:
     salary = 'salary'
+    commission = 'commission'
     difference_rate = 'difference_rate'
 
 
