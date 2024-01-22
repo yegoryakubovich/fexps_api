@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Order, Session
+from app.db.models import Order, Session, Actions, OrderStates
 from app.repositories.order import OrderRepository
 from app.services.base import BaseService
 from app.services.order_request import OrderRequestService
@@ -29,7 +29,20 @@ class OrderStatesPaymentService(BaseService):
     async def update(
             self,
             session: Session,
-            order_id: int,
+            id_: int,
     ) -> dict:
-        order = await OrderRepository().get_by_id(id_=order_id)
+        order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
+
+        await OrderRepository().update(order, state=OrderStates.PAYMENT)
+        await self.create_action(
+            model=order,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': OrderStates.PAYMENT,
+            },
+        )
+
+        return {}
+
