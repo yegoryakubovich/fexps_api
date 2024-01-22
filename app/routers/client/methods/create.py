@@ -86,4 +86,5 @@ async def route(schema: MethodCreateSchema):
         fields=schema.fields,
         confirmation_fields=schema.confirmation_fields,
     )
+
     return Response(**result)

@@ -44,4 +44,5 @@ async def route(schema: CountryUpdateSchema):
         timezone=schema.timezone,
         currency=schema.currency,
     )
+
     return Response(**result)

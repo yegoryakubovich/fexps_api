@@ -40,4 +40,5 @@ async def route(schema: CreateRoleSchema):
         id_str=schema.id_str,
         name_text_key=schema.name_text_key,
     )
+
     return Response(**result)

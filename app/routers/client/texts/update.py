@@ -42,4 +42,5 @@ async def route(schema: TextUpdateSchema):
         value_default=schema.value_default or None,
         new_key=schema.new_key or None,
     )
+
     return Response(**result)

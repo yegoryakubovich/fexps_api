@@ -83,4 +83,5 @@ async def route(schema: RequisiteCreateSchema):
         total_value_min=schema.total_value_min,
         total_value_max=schema.total_value_max,
     )
+
     return Response(**result)

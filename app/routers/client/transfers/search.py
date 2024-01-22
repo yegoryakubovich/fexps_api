@@ -45,4 +45,5 @@ async def route(schema: TransferSearchSchema = Depends()):
         is_receiver=schema.is_receiver,
         page=schema.page,
     )
+
     return Response(**result)

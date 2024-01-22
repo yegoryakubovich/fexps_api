@@ -38,4 +38,5 @@ async def route(schema: LanguageDeleteSchema):
         token=schema.token,
         id_str=schema.id_str,
     )
+
     return Response(**result)

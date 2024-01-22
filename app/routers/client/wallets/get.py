@@ -39,4 +39,5 @@ async def route(schema: WalletGetSchema = Depends()):
         token=schema.token,
         id_=schema.id,
     )
+
     return Response(**result)

@@ -29,7 +29,7 @@ class RequestTypes:
     choices = [INPUT, OUTPUT, ALL]
 
 
-class OrderStates:
+class RequestStates:
     INPUT_RESERVATION = 'input_reservation'
     INPUT_PAYMENT = 'input_payment'
     OUTPUT_RESERVATION = 'output_reservation'

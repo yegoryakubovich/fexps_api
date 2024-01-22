@@ -16,12 +16,13 @@
 
 
 from app.utils import Router
+from .requests import router as router_requests
 from .states import router as router_states
-
 
 router = Router(
     prefix='/orders',
     routes_included=[
+        router_requests,
         router_states,
     ],
     tags=['Orders'],

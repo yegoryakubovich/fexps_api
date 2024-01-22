@@ -37,4 +37,5 @@ async def route(schema: RequisiteGetSchema = Depends()):
         token=schema.token,
         id_=schema.id,
     )
+
     return Response(**result)

@@ -37,4 +37,5 @@ async def route(schema: WalletBanDeleteSchema):
         token=schema.token,
         id_=schema.id,
     )
+
     return Response(**result)

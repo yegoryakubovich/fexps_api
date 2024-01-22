@@ -38,4 +38,5 @@ async def route(schema: ContactDeleteSchema):
         token=schema.token,
         id_=schema.id,
     )
+
     return Response(**result)

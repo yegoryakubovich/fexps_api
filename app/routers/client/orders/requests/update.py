@@ -15,17 +15,29 @@
 #
 
 
-from app.services import CountryService
-from app.utils import Router, Response
+from pydantic import Field
 
+from app.services import OrderRequestService
+from app.utils import BaseSchema
+from app.utils import Response, Router
 
 router = Router(
-    prefix='/list/get',
+    prefix='/update',
 )
 
 
-@router.get()
-async def route():
-    result = await CountryService().get_list()
+class OrderRequestUpdateSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+    is_result: bool = Field(default=False)
+
+
+@router.post()
+async def route(schema: OrderRequestUpdateSchema):
+    result = await OrderRequestService().update(
+        token=schema.token,
+        id_=schema.id,
+        is_result=schema.is_result,
+    )
 
     return Response(**result)

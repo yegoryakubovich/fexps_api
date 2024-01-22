@@ -34,4 +34,5 @@ class ContactGetSchema(BaseSchema):
 @router.get()
 async def route(schema: ContactGetSchema = Depends()):
     result = await ContactService().get(id_=schema.id)
+
     return Response(**result)

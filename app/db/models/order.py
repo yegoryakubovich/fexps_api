@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey,  String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String, JSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -28,14 +28,24 @@ class OrderTypes:
     choices = [INPUT, OUTPUT]
 
 
-class OrderStates:
+class OrderStates:  # token, order_id
     RESERVE = 'reserve'
-    PAYMENT = 'payment'
-    CONFIRMATION = 'confirmation'
-    COMPLETED = 'completed'
-    CANCELED = 'canceled'
+    PAYMENT = 'payment'  # None
+    CONFIRMATION = 'confirmation'  # schema_confirmation_fields
+    COMPLETED = 'completed'  # None (Проверка всех ордеров, запуск RequestService finish)
+    CANCELED = 'canceled'  # reason(default=None) ()
 
     choices = [RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
+
+
+"""
+
+orders/state/confirmation/update
+
+schema_confirmation_fields
+если открыт or_request нельзя update state
+
+"""
 
 
 class Order(Base):
@@ -44,6 +54,7 @@ class Order(Base):
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
     state = Column(String(length=8))
+    canceled_reason = Column(String(length=128), nullable=True)
 
     request_id = Column(BigInteger, ForeignKey('requests.id', ondelete='SET NULL'), nullable=True)
     request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
@@ -52,5 +63,8 @@ class Order(Base):
     currency_value = Column(BigInteger())
     value = Column(BigInteger())
     rate = Column(BigInteger)
+
+    requisite_fields = Column(JSON())
+    confirmation_fields = Column(JSON(), nullable=True)
 
     is_deleted = Column(Boolean, default=False)

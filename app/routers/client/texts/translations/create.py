@@ -42,4 +42,5 @@ async def route(schema: TextTranslationCreateSchema):
         language=schema.language,
         value=schema.value,
     )
+
     return Response(**result)

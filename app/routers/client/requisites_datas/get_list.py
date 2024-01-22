@@ -35,4 +35,5 @@ class RequisiteDataListGetSchema(BaseSchema):
 @router.get()
 async def route(schema: RequisiteDataListGetSchema = Depends()):
     result = await RequisiteDataService().get_list(token=schema.token)
+
     return Response(**result)

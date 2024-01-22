@@ -51,4 +51,5 @@ async def route(schema: TransferCreateSchema):
         wallet_to_id=schema.wallet_to_id,
         value=schema.value,
     )
+
     return Response(**result)

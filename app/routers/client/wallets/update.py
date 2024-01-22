@@ -40,4 +40,5 @@ async def route(schema: WalletUpdateSchema):
         id_=schema.id,
         name=schema.name,
     )
+
     return Response(**result)

@@ -39,4 +39,5 @@ async def route(schema: CommissionPackCreateSchema):
         name=schema.name,
         is_default=schema.is_default,
     )
+
     return Response(**result)

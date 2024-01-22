@@ -20,6 +20,7 @@ from pydantic import Field
 from app.services import RequestService
 from app.utils import Router, Response, BaseSchema
 
+
 router = Router(
     prefix='/delete',
 
@@ -37,4 +38,5 @@ async def route(schema: RequestDeleteSchema):
         token=schema.token,
         id_=schema.id,
     )
+
     return Response(**result)

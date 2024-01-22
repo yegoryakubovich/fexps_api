@@ -48,6 +48,8 @@ class OrderRequestCreateSchema(BaseSchema):
                     f'{", ".join(required_names)}'
                 )
 
+        return self
+
 
 @router.post()
 async def route(schema: OrderRequestCreateSchema):
@@ -57,4 +59,5 @@ async def route(schema: OrderRequestCreateSchema):
         type_=schema.type,
         canceled_reason=schema.canceled_reason,
     )
+
     return Response(**result)

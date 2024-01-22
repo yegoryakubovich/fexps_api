@@ -35,4 +35,5 @@ class CountryGetSchema(BaseSchema):
 @router.get()
 async def route(schema: CountryGetSchema = Depends()):
     result = await CountryService().get(id_str=schema.id_str)
+
     return Response(**result)

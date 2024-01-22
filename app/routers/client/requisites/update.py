@@ -53,4 +53,5 @@ async def route(schema: RequisiteUpdateSchema):
         id_=schema.id,
         total_value=schema.total_value,
     )
+
     return Response(**result)

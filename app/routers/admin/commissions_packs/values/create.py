@@ -68,4 +68,5 @@ async def route(schema: CommissionPackValueCreateSchema):
         percent=schema.percent,
         value=schema.value,
     )
+
     return Response(**result)

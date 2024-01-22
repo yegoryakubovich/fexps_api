@@ -36,4 +36,5 @@ async def route(schema: OrderStatesCanceledUpdateSchema):
     result = await OrderStatesCanceledService().update(
         token=schema.token,
     )
+
     return Response(**result)

@@ -38,4 +38,5 @@ async def route(schema: SessionCreateSchema):
         username=schema.username,
         password=schema.password,
     )
+
     return Response(**result)

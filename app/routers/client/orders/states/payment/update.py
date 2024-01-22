@@ -37,4 +37,5 @@ async def route(schema: OrderStatesReserveUpdateSchema):
     result = await OrderStatesReserveService().update(
         token=schema.token,
     )
+
     return Response(**result)

@@ -61,4 +61,5 @@ async def route(schema: WalletBanCreateSchema):
         value=schema.value,
         reason=schema.reason,
     )
+
     return Response(**result)

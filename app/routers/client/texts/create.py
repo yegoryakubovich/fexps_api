@@ -40,4 +40,5 @@ async def route(schema: TextCreateSchema):
         key=schema.key,
         value_default=schema.value_default,
     )
+
     return Response(**result)

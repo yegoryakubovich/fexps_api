@@ -37,4 +37,5 @@ async def route(schema: AccountContactListGetSchema = Depends()):
     result = await AccountContactService().get_list(
         token=schema.token,
     )
+
     return Response(**result)

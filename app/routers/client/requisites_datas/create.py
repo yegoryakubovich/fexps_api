@@ -40,4 +40,5 @@ async def route(schema: RequisiteDataCreateSchema):
         method_id=schema.method_id,
         fields=schema.fields,
     )
+
     return Response(**result)

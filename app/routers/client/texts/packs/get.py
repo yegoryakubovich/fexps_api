@@ -35,4 +35,5 @@ class TextPackGetSchema(BaseSchema):
 @router.get()
 async def route(schema: TextPackGetSchema = Depends()):
     result = await TextPackService.get(language_id_str=schema.language)
+
     return Response(**result)

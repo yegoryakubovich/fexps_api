@@ -40,4 +40,5 @@ async def route(schema: LanguageCreateSchema):
         id_str=schema.id_str,
         name=schema.name,
     )
+
     return Response(**result)

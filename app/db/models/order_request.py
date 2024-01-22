@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String, JSON
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -44,8 +44,5 @@ class OrderRequest(Base):
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))
     state = Column(String(length=16))
-
-    data = Column()
-
-    canceled_reason = Column(String(length=128), nullable=True)
+    data = Column(JSON())
     is_deleted = Column(Boolean, default=False)

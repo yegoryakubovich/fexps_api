@@ -38,4 +38,5 @@ async def route(schema: WalletCreateSchema):
         token=schema.token,
         name=schema.name,
     )
+
     return Response(**result)

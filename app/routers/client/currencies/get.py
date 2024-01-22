@@ -35,4 +35,5 @@ class CurrencyGetSchema(BaseSchema):
 @router.get()
 async def route(schema: CurrencyGetSchema = Depends()):
     result = await CurrencyService().get(id_str=schema.id_str)
+
     return Response(**result)

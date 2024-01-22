@@ -15,17 +15,28 @@
 #
 
 
-from app.services import CountryService
-from app.utils import Router, Response
+from pydantic import Field
+
+from app.services import OrderRequestService
+from app.utils import Router, Response, BaseSchema
 
 
 router = Router(
-    prefix='/list/get',
+    prefix='/delete',
+
 )
 
 
-@router.get()
-async def route():
-    result = await CountryService().get_list()
+class OrderRequestDeleteSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.post()
+async def route(schema: OrderRequestDeleteSchema):
+    result = await OrderRequestService().delete(
+        token=schema.token,
+        id_=schema.id,
+    )
 
     return Response(**result)

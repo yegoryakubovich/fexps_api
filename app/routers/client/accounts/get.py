@@ -36,4 +36,5 @@ class SessionSchema(BaseSchema):
 @router.get()
 async def route(schema: SessionSchema = Depends()):
     result = await AccountService().get(token=schema.token)
+
     return Response(**result)

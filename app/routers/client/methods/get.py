@@ -35,4 +35,5 @@ class MethodGetSchema(BaseSchema):
 @router.get()
 async def route(schema: MethodGetSchema = Depends()):
     result = await MethodService().get(id_=schema.id)
+
     return Response(**result)

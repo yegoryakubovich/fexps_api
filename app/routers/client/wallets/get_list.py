@@ -35,4 +35,5 @@ class WalletListGetSchema(BaseSchema):
 @router.get()
 async def route(schema: WalletListGetSchema = Depends()):
     result = await WalletService().get_list(token=schema.token)
+
     return Response(**result)

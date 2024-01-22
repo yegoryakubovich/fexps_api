@@ -35,4 +35,5 @@ class LanguageGetSchema(BaseSchema):
 @router.get()
 async def route(schema: LanguageGetSchema = Depends()):
     result = await LanguageService().get(id_str=schema.id_str)
+
     return Response(**result)

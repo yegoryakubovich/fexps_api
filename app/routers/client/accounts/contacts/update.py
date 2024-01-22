@@ -40,4 +40,5 @@ async def route(schema: AccountContactUpdateSchema):
         id_=schema.id,
         value=schema.value,
     )
+
     return Response(**result)

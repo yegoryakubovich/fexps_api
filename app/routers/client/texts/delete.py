@@ -38,4 +38,5 @@ async def route(schema: TextDeleteSchema):
         token=schema.token,
         key=schema.key,
     )
+
     return Response(**result)

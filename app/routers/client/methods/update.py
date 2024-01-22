@@ -42,4 +42,5 @@ async def route(schema: MethodUpdateSchema):
         currency_id_str=schema.currency_id_str or None,
         schema_fields=schema.schema_fields or None,
     )
+
     return Response(**result)

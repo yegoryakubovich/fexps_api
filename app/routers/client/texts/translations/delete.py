@@ -40,4 +40,5 @@ async def route(schema: TextTranslationDeleteSchema):
         text_key=schema.text_key,
         language=schema.language,
     )
+
     return Response(**result)

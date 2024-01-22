@@ -54,4 +54,5 @@ async def route(schema: CreateAccountSchema):
         timezone_id_str=schema.timezone,
         currency_id_str=schema.currency,
     )
+
     return Response(**result)

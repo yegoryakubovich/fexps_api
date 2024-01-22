@@ -39,4 +39,5 @@ async def route(schema: AccountContactCreateSchema):
         contact_id=schema.contact_id,
         value=schema.value,
     )
+
     return Response(**result)

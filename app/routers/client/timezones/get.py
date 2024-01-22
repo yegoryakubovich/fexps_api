@@ -35,4 +35,5 @@ class TimezoneGetSchema(BaseSchema):
 @router.get()
 async def route(schema: TimezoneGetSchema = Depends()):
     result = await TimezoneService().get(id_str=schema.id_str)
+
     return Response(**result)

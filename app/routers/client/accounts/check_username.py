@@ -35,4 +35,5 @@ class CheckAccountUsernameSchema(BaseSchema):
 @router.get()
 async def route(schema: CheckAccountUsernameSchema = Depends()):
     result = await AccountService().check_username(username=schema.username)
+
     return Response(**result)
