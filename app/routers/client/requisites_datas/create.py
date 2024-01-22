@@ -17,7 +17,7 @@
 
 from pydantic import Field
 
-from app.services.requisite_data import RequisiteDataService
+from app.services import RequisiteDataService
 from app.utils import BaseSchema
 from app.utils import Router, Response
 
