@@ -22,7 +22,7 @@ from app.repositories.currency import CurrencyRepository
 from app.repositories.language import LanguageRepository
 from app.repositories.text_pack import TextPackRepository
 from app.repositories.timezone import TimezoneRepository
-from app.services import AccountRoleService
+from app.services.account_role import AccountRoleService
 from app.services.base import BaseService
 from app.utils import ApiException
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt

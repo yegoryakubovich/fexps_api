@@ -20,8 +20,8 @@ from app.repositories.base import DoesNotPermission
 from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository
 from app.repositories.wallet import WalletRepository, WalletLimitReached
 from app.repositories.wallet_account import WalletAccountRepository
-from app.services import WalletService
 from app.services.base import BaseService
+from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
 
