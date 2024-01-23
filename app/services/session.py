@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session
+from app.db.models import Session, Actions
 from app.repositories.account import AccountRepository
 from app.repositories.session import SessionRepository
 from app.services.account import AccountService

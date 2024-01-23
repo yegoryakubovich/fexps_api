@@ -47,6 +47,6 @@ from .account_role import AccountRole
 from .account_contact import AccountContact
 from .wallet_account import WalletAccount, WalletAccountRoles
 from .wallet_ban import WalletBan, WalletBanReasons
-from .order import Order, OrderTypes, OrderStates
 
+from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
 from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates

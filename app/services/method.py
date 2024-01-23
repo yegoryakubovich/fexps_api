@@ -20,17 +20,9 @@ from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
-from app.utils import ApiException
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-
-
-class FieldsMissingParams(ApiException):
-    pass
-
-
-class FieldsValidationError(ApiException):
-    pass
+from app.utils.exaptions.method import FieldsMissingParams, FieldsValidationError
 
 
 class MethodService(BaseService):

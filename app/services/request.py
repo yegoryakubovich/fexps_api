@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates
+from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates, RequestStates
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -53,6 +53,7 @@ class RequestService(BaseService):
 
         request = await RequestRepository().create(
             wallet=wallet,
+            state=RequestStates.INPUT_RESERVATION,
             type=type_,
             input_method=input_method,
             input_value=input_value,

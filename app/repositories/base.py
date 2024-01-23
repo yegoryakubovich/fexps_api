@@ -62,8 +62,8 @@ class BaseRepository(Generic[ModelType]):
             result = await session.execute(custom_select.order_by(self.model.id.desc()).filter_by(**filters))
             return result.scalars().all()
 
-    async def get_by_id(self, id_: int) -> Optional[ModelType]:
-        result = await self.get(id=id_)
+    async def get_by_id(self, id_: int, **filters) -> Optional[ModelType]:
+        result = await self.get(id=id_, **filters)
         if not result:
             raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
         return result

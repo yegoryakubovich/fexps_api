@@ -127,7 +127,7 @@ class TransferService(BaseService):
         balance = wallet_from.value - wallet_from.value_can_minus
         if value >= balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
-        available_value = await WalletService().get_available_value(id_=wallet_to.id)
+        available_value = await WalletService().get_available_value(wallet=wallet_to)
         if value > available_value:
             raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
         transfer = await TransferRepository().create(

@@ -55,7 +55,6 @@ class WalletService(BaseService):
         await WalletAccountService().create(
             session=session,
             wallet_id=wallet.id,
-            account_id=account.id,
         )
 
         return {'wallet_id': wallet.id}
@@ -155,10 +154,8 @@ class WalletService(BaseService):
         return {}
 
     @staticmethod
-    async def get_available_value(id_: int) -> float:  # FIXME
-        wallet = await WalletRepository().get_by_id(id_=id_)
-        result = WALLET_MAX_VALUE - wallet.value
-        return result
+    async def get_available_value(wallet: Wallet) -> float:  # FIXME
+        return WALLET_MAX_VALUE - wallet.value
 
     @staticmethod
     async def get_free_value(wallet: Wallet):

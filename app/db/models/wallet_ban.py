@@ -24,8 +24,9 @@ from app.db.base_class import Base
 class WalletBanReasons:
     BY_ADMIN = 'by_admin'
     BY_ORDER = 'by_order'
+    BY_REQUISITE = 'by_requisite'
 
-    choices = [BY_ADMIN, BY_ORDER]
+    choices = [BY_ADMIN, BY_ORDER, BY_REQUISITE]
 
 
 class WalletBan(Base):

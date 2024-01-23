@@ -15,13 +15,14 @@
 #
 
 
-from app.db.models import Session, Actions, WalletBan
+from app.db.models import Session, Actions, WalletBan, Wallet
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_ban import WalletBanRepository
-from app.services import WalletService
 from app.services.base import BaseService
+from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exaptions.wallet import NotEnoughFundsOnBalance
+from app.utils.exaptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
+from config import WALLET_MAX_VALUE
 
 
 class WalletBanService(BaseService):
@@ -36,19 +37,7 @@ class WalletBanService(BaseService):
             reason: str,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        wallet_free_balance = await WalletService().get_free_value(wallet=wallet)
-        if wallet_free_balance < value:
-            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
-        await WalletRepository().update(
-            wallet,
-            value=wallet.value - value,
-            value_banned=wallet.value_banned + value
-        )
-        wallet_ban = await WalletBanRepository().create(
-            wallet=wallet,
-            value=value,
-            reason=reason
-        )
+        wallet_ban = await self.create_related(wallet=wallet, value=value, reason=reason)
         await self.create_action(
             model=wallet_ban,
             action=Actions.CREATE,
@@ -62,6 +51,24 @@ class WalletBanService(BaseService):
 
         return {'wallet_ban_id': wallet_ban.id}
 
+    @staticmethod
+    async def create_related(
+            wallet: Wallet,
+            value: int,
+            reason: str,
+    ) -> WalletBan:
+        wallet_free_balance = await WalletService().get_free_value(wallet=wallet)
+        if wallet_free_balance < value:
+            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
+
+        await WalletRepository().update(
+            wallet,
+            value=wallet.value - value,
+            value_banned=wallet.value_banned + value,
+        )
+        wallet_ban = await WalletBanRepository().create(wallet=wallet, value=value, reason=reason)
+        return wallet_ban
+
     @session_required()
     async def delete(
             self,
@@ -69,8 +76,7 @@ class WalletBanService(BaseService):
             id_: int,
     ) -> dict:
         wallet_ban = await WalletBanRepository().get_by_id(id_=id_)
-        wallet = wallet_ban.wallet
-        await WalletRepository().update(wallet, value_banned=wallet.value_banned - wallet_ban.value)
+        await self.delete_related(wallet_ban=wallet_ban)
         await WalletBanRepository().delete(wallet_ban)
         await self.create_action(
             model=wallet_ban,
@@ -82,3 +88,15 @@ class WalletBanService(BaseService):
         )
 
         return {}
+
+    @staticmethod
+    async def delete_related(wallet_ban: WalletBan) -> None:
+        wallet_available_balance = await WalletService().get_available_value(wallet=wallet_ban.wallet)
+        if wallet_available_balance < wallet_ban.value:
+            raise WalletLimitReached(f"Wallet limit reached. Max wallet value {WALLET_MAX_VALUE}")
+
+        await WalletRepository().update(
+            wallet_ban.wallet,
+            value=wallet_ban.wallet.value + wallet_ban.value,
+            value_banned=wallet_ban.wallet.value_banned - wallet_ban.value
+        )

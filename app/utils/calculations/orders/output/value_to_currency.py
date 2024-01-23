@@ -31,7 +31,7 @@ async def calc_output_value_to_currency(
 ) -> 'CalcOrderScheme':
     calc_requisites: List[CalcRequisiteScheme] = []
     for requisite in await RequisiteRepository().get_list_output_by_rate(
-            type=RequisiteTypes.OUTPUT, currency=currency,
+            type=RequisiteTypes.INPUT, currency=currency,
     ):
         if check_zero(value, requisite.currency_value):
             continue

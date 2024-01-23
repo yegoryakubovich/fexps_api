@@ -33,12 +33,16 @@ class Requisite(Base):
 
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
+
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     requisite_data_id = Column(BigInteger, ForeignKey('requisites_datas.id', ondelete='SET NULL'), nullable=True)
     requisite_data = relationship('RequisiteData', uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', uselist=False, lazy='selectin')
+    wallet_ban_id = Column(BigInteger, ForeignKey('wallets_bans.id', ondelete='SET NULL'), nullable=True)
+    wallet_ban = relationship('WalletBan', foreign_keys=wallet_ban_id, uselist=False, lazy='selectin')
+
     currency_value = Column(BigInteger)
     total_currency_value = Column(BigInteger)
     total_currency_value_min = Column(BigInteger, nullable=True)
@@ -48,4 +52,5 @@ class Requisite(Base):
     total_value = Column(BigInteger)
     total_value_min = Column(BigInteger, nullable=True)
     total_value_max = Column(BigInteger, nullable=True)
+
     is_deleted = Column(Boolean, default=False)

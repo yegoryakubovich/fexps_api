@@ -16,12 +16,13 @@
 import math
 from typing import Optional
 
-from app.db.models import Session, Requisite, RequisiteTypes, Actions
+from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
+from app.services.wallet_ban import WalletBanService
 from app.utils.decorators import session_required
 from app.utils.exaptions.main import DoesNotPermission
 from app.utils.exaptions.requisite import MinimumTotalValueError
@@ -49,26 +50,34 @@ class RequisiteService(BaseService):
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
-        total_currency_value_fix, total_value_fix, rate_fix = await self.calc_value_params(
+        total_currency_value_result, total_value_result, rate_result = await self.calc_value_params(
             type_=type_,
             total_currency_value=total_currency_value,
             total_value=total_value,
             rate=rate
         )
-
         requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
+        wallet_ban = None
+        if type_ == RequisiteTypes.OUTPUT:
+            wallet_ban = await WalletBanService().create_related(
+                wallet=wallet,
+                value=total_value_result,
+                reason=WalletBanReasons.BY_REQUISITE,
+            )
+
         requisite = await RequisiteRepository().create(
             type=type_,
             wallet=wallet,
             requisite_data=requisite_data,
             currency=requisite_data.method.currency,
-            currency_value=total_currency_value_fix,
-            total_currency_value=total_currency_value_fix,
+            wallet_ban=wallet_ban,
+            currency_value=total_currency_value_result,
+            total_currency_value=total_currency_value_result,
             total_currency_value_min=total_currency_value_min,
             total_currency_value_max=total_currency_value_max,
-            rate=rate_fix,
-            value=total_value_fix,
-            total_value=total_value_fix,
+            rate=rate_result,
+            value=total_value_result,
+            total_value=total_value_result,
             total_value_min=total_value_min,
             total_value_max=total_value_max,
         )
@@ -82,13 +91,13 @@ class RequisiteService(BaseService):
                 'wallet_id': wallet_id,
                 'requisite_data_id': requisite_data_id,
                 'total_currency_value': total_currency_value,
-                'total_currency_value_fix': total_currency_value_fix,
+                'total_currency_value_result': total_currency_value_result,
                 'total_currency_value_min': total_currency_value_min,
                 'total_currency_value_max': total_currency_value_max,
                 'rate': rate,
-                'rate_fix': rate_fix,
+                'rate_result': rate_result,
                 'total_value': total_value,
-                'total_value_fix': total_value_fix,
+                'total_value_result': total_value_result,
                 'total_value_min': total_value_min,
                 'total_value_max': total_value_max,
             },

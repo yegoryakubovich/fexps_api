@@ -15,7 +15,8 @@
 #
 
 
-from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order
+from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
+    OrderCanceledReasons
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.services.base import BaseService
@@ -33,17 +34,12 @@ class OrderRequestService(BaseService):
             session: Session,
             order_id: int,
             type_: str,
-            canceled_reason: str,
             value: int,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=order_id)
         await self.check_have_order_request(order=order)
         data = {}
-        if type_ == OrderRequestTypes.CANCEL:
-            if not canceled_reason:
-                raise OrderRequestValidationError('Parameter "canceled_reason" not found')
-            data['canceled_reason'] = canceled_reason
-        elif type_ == OrderRequestTypes.UPDATE_VALUE:
+        if type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
                 raise OrderRequestValidationError('Parameter "value" not found')
             data['value'] = value
@@ -74,7 +70,7 @@ class OrderRequestService(BaseService):
             id_: int,
             state: str
     ) -> dict:
-        order_request = await OrderRequestRepository().get_by_id(id_=id_)
+        order_request = await OrderRequestRepository().get_by_id(id_=id_, state=OrderRequestStates.WAIT)
         if order_request.type == OrderRequestTypes.CANCEL:
             await self.update_type_cancel(order_request=order_request, state=state)
         elif order_request.type == OrderRequestTypes.UPDATE_VALUE:
@@ -96,7 +92,12 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def update_type_cancel(order_request: OrderRequest, state: str):
         if state == OrderRequestStates.COMPLETED:
-            await OrderService().delete_related(order=order_request.order)
+            await OrderService().canceled_related(order=order_request.order)
+            await OrderRepository().update(
+                order_request.order,
+                state=OrderStates.CANCELED,
+                canceled_reason=OrderCanceledReasons.TWO_SIDED,
+            )
         elif state == OrderRequestStates.CANCELED:
             pass
 

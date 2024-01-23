@@ -40,7 +40,7 @@ async def on_startup():
     # from app.repositories.request import RequestRepository
     # from app.utils.tasks.orders import create_orders
     #
-    # request = await RequestRepository().get_by_id(2)
+    # request = await RequestRepository().get_by_id(1)
     # await create_orders(request)
 
 

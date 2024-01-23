@@ -50,10 +50,9 @@ class MethodCreateSchema(BaseSchema):
                 raise FieldsValidationError(
                     f'fields.{i}.type must contain true/false'
                 )
-            if field.get('type') not in [MethodFieldTypes.STR, MethodFieldTypes.INT]:
-                raise FieldsValidationError(
-                    f'fields.{i}.type must contain {MethodFieldTypes.STR}/{MethodFieldTypes.INT}'
-                )
+            if field.get('type') not in MethodFieldTypes.choices_field:
+                raise FieldsValidationError(f'fields.{i}.type must contain {"/".join(MethodFieldTypes.choices_field)}')
+
         return fields
 
     @field_validator('confirmation_fields')
@@ -69,11 +68,11 @@ class MethodCreateSchema(BaseSchema):
                 raise FieldsValidationError(
                     f'fields.{i}.type must contain true/false'
                 )
-            if field.get('type') not in [MethodFieldTypes.STR, MethodFieldTypes.INT]:
+            if field.get('type') not in MethodFieldTypes.choices:
                 raise FieldsValidationError(
-                    f'confirmation_fields.{i}.type must contain '
-                    f'{MethodFieldTypes.STR}/{MethodFieldTypes.INT}/{MethodFieldTypes.IMAGE}'
+                    f'confirmation_fields.{i}.type must contain: {"/".join(MethodFieldTypes.choices)}'
                 )
+
         return confirmation_fields
 
 

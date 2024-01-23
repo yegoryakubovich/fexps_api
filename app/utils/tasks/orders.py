@@ -18,8 +18,6 @@
 import asyncio
 
 from app.db.models import Request, RequestTypes, OrderTypes
-from app.db.models.order import OrderStates
-from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
@@ -36,14 +34,12 @@ async def reserve_order(
 ) -> None:
     requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
     await OrderService().create_related(
+        order_type=order_type,
+        request=request,
         requisite=requisite,
         currency_value=calc_requisite.currency_value,
         value=calc_requisite.value,
-    )
-    await OrderRepository().create(
-        type=order_type, state=OrderStates.RESERVE,
-        request=request, requisite=requisite,
-        currency_value=calc_requisite.currency_value, value=calc_requisite.value, rate=calc_requisite.rate,
+        rate=calc_requisite.rate,
     )
 
 
