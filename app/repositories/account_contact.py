@@ -19,11 +19,8 @@ from typing import Optional
 
 from app.db.models import AccountContact, Account
 from .base import BaseRepository
-from ..utils import ApiException
-
-
-class AccountContactNotFound(ApiException):
-    pass
+from app.utils import ApiException
+from app.utils.exaptions.account import AccountContactNotFound
 
 
 class AccountContactRepository(BaseRepository[AccountContact]):

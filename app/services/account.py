@@ -24,21 +24,9 @@ from app.repositories.text_pack import TextPackRepository
 from app.repositories.timezone import TimezoneRepository
 from app.services.account_role import AccountRoleService
 from app.services.base import BaseService
-from app.utils import ApiException
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
-
-
-class WrongPassword(ApiException):
-    pass
-
-
-class AccountUsernameExist(ApiException):
-    pass
-
-
-class AccountMissingRole(ApiException):
-    pass
+from app.utils.exaptions.account import AccountUsernameExist, WrongPassword
 
 
 class AccountService(BaseService):

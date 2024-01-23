@@ -16,12 +16,11 @@
 
 
 from app.db.models import WalletAccount, Session, WalletAccountRoles, Actions
-from app.repositories.account import AccountRepository
-from app.repositories.base import DoesNotPermission
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exaptions.main import DoesNotPermission
 
 
 class WalletAccountService(BaseService):

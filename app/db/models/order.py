@@ -38,6 +38,10 @@ class OrderStates:  # token, order_id
     choices = [RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
 
 
+class OrderCanceledOrder:  # FIXME
+    pass
+
+
 class Order(Base):
     __tablename__ = 'orders'
 

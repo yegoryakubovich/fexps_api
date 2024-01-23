@@ -16,8 +16,9 @@
 
 
 from app.db.models import Method
-from .base import BaseRepository, NoRequiredParameters
+from .base import BaseRepository
 from .currency import CurrencyRepository
+from app.utils.exaptions.main import NoRequiredParameters
 
 
 class MethodRepository(BaseRepository[Method]):

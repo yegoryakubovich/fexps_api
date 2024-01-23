@@ -16,20 +16,15 @@
 
 
 from app.db.models import WalletAccount, Account, Wallet
-from .base import BaseRepository, DoesNotPermission
+from .base import BaseRepository
+from app.utils.exaptions.main import DoesNotPermission
 
 
 class WalletAccountRepository(BaseRepository[WalletAccount]):
     model = WalletAccount
 
-    async def get_by_account_and_wallet(self, account: Account, wallet: Wallet) -> WalletAccount:
-        result = await self.get(account=account, wallet=wallet)
-        if not result:
-            return
-        return result
-
     async def check_permission(self, account: Account, wallet: Wallet) -> WalletAccount:
-        result = await self.get_by_account_and_wallet(account=account, wallet=wallet)
+        result = await self.get(account=account, wallet=wallet)
         if not result:
             raise DoesNotPermission(f'You do not have enough rights for this wallet')
         return result

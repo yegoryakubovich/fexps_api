@@ -25,26 +25,10 @@ from sqlalchemy import select
 from app.db.base_class import Base
 from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
-from app.utils import ApiException
+from app.utils.exaptions.main import ModelDoesNotExist
 from config import ITEMS_PER_PAGE
 
 ModelType = TypeVar('ModelType', bound=Base)
-
-
-class DoesNotPermission(ApiException):
-    pass
-
-
-class ModelDoesNotExist(ApiException):
-    pass
-
-
-class NoRequiredParameters(ApiException):
-    pass
-
-
-class DataValidationError(ApiException):
-    pass
 
 
 class BaseRepository(Generic[ModelType]):

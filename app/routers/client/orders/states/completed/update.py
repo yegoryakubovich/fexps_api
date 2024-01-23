@@ -17,7 +17,7 @@
 
 from pydantic import Field
 
-from app.services import OrderStatesReserveService
+from app.services import OrderStatesCompletedService
 from app.utils import BaseSchema
 from app.utils import Response, Router
 
@@ -27,14 +27,14 @@ router = Router(
 )
 
 
-class OrderStatesReserveUpdateSchema(BaseSchema):
+class OrderStatesCompletedUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
 
 
 @router.post()
-async def route(schema: OrderStatesReserveUpdateSchema):
-    result = await OrderStatesReserveService().update(
+async def route(schema: OrderStatesCompletedUpdateSchema):
+    result = await OrderStatesCompletedService().update(
         token=schema.token,
     )
 

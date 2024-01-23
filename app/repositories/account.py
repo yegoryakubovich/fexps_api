@@ -18,12 +18,8 @@
 from typing import Optional
 
 from app.db.models import Account
+from app.utils.exaptions.account import AccountWithUsernameDoeNotExist
 from .base import BaseRepository
-from ..utils import ApiException
-
-
-class AccountWithUsernameDoeNotExist(ApiException):
-    pass
 
 
 class AccountRepository(BaseRepository[Account]):

@@ -17,13 +17,14 @@ import math
 from typing import Optional
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions
-from app.repositories.base import DoesNotPermission
-from app.repositories.requisite import RequisiteRepository, NotRequiredParams, MinimumTotalValueError
+from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exaptions.main import DoesNotPermission
+from app.utils.exaptions.requisite import MinimumTotalValueError
 
 
 class RequisiteService(BaseService):

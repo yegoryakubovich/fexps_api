@@ -16,13 +16,14 @@
 
 
 from app.db.models import Transfer, Session, Wallet, Actions
-from app.repositories.base import DoesNotPermission
-from app.repositories.transfer import NotEnoughFundsOnBalance, TransferRepository
-from app.repositories.wallet import WalletRepository, WalletLimitReached
+from app.repositories.transfer import TransferRepository
+from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
+from app.utils.exaptions.main import DoesNotPermission
+from app.utils.exaptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
 from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
 
 
@@ -41,10 +42,7 @@ class TransferService(BaseService):
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet_from):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
-        await WalletAccountRepository().get_by_account_and_wallet(
-            account=account,
-            wallet=wallet_from
-        )
+        await WalletAccountRepository().check_permission(account=account, wallet=wallet_from)
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
 
         transfer = await self.transfer(wallet_from=wallet_from, wallet_to=wallet_to, value=value)
@@ -70,10 +68,10 @@ class TransferService(BaseService):
     ):
         account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
-        perm_from = await WalletAccountRepository().get_by_account_and_wallet(
+        perm_from = await WalletAccountRepository().get(
             account=account, wallet=transfer.wallet_from
         )
-        perm_to = await WalletAccountRepository().get_by_account_and_wallet(
+        perm_to = await WalletAccountRepository().get(
             account=account, wallet=transfer.wallet_to
         )
         if not perm_from and not perm_to:
@@ -99,7 +97,7 @@ class TransferService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        await WalletAccountRepository().get(account=account, wallet=wallet)
         transfers_db = await TransferRepository().search_by_wallet(
             wallet=wallet, is_sender=is_sender, is_receiver=is_receiver, page=page
         )
@@ -126,7 +124,7 @@ class TransferService(BaseService):
             wallet_to: Wallet,
             value: float,
     ) -> Transfer:
-        balance = wallet_from.value - wallet_from.value_banned - wallet_from.value_can_minus
+        balance = wallet_from.value - wallet_from.value_can_minus
         if value >= balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         available_value = await WalletService().get_available_value(id_=wallet_to.id)
@@ -135,7 +133,7 @@ class TransferService(BaseService):
         transfer = await TransferRepository().create(
             wallet_from=wallet_from,
             wallet_to=wallet_to,
-            value=value
+            value=value,
         )
         await WalletRepository().update(wallet_from, value=wallet_from.value - value)
         await WalletRepository().update(wallet_to, value=wallet_to.value + value)

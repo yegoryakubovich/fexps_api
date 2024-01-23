@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Order, Actions
+from app.db.models import Session, Order, Actions, Requisite
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
@@ -31,13 +31,8 @@ class OrderService(BaseService):
             session: Session,
             id_: int,
     ) -> dict:
-        account = session.account
         order = await OrderRepository().get_by_id(id_=id_)
-        await RequisiteRepository().update(
-            order.requisite,
-            currency_value=order.requisite.currency_value + order.currency_value,
-            value=order.requisite.value + order.value,
-        )
+        await self.delete_related(order=order)
         await OrderRepository().delete(order)
         await self.create_action(
             model=order,
@@ -49,3 +44,23 @@ class OrderService(BaseService):
         )
 
         return {}
+
+    @staticmethod
+    async def create_related(
+            requisite: Requisite,
+            currency_value: int,
+            value: int,
+    ) -> None:
+        await RequisiteRepository().update(
+            requisite,
+            currency_value=round(requisite.currency_value - currency_value),
+            value=round(requisite.value - value),
+        )
+
+    @staticmethod
+    async def delete_related(order: Order) -> None:
+        await RequisiteRepository().update(
+            order.requisite,
+            currency_value=round(order.requisite.currency_value + order.currency_value),
+            value=round(order.requisite.value + order.value),
+        )

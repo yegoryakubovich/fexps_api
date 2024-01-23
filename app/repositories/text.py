@@ -16,17 +16,11 @@
 
 
 from app.db.models import Text, Language
-from .base import BaseRepository, NoRequiredParameters
+from .base import BaseRepository
 from .text_translation import TextTranslationRepository
-from ..utils import ApiException
-
-
-class TextDoesNotExist(ApiException):
-    pass
-
-
-class TextExist(ApiException):
-    pass
+from app.utils import ApiException
+from app.utils.exaptions.main import NoRequiredParameters
+from app.utils.exaptions.text import TextDoesNotExist, TextExist
 
 
 class TextRepository(BaseRepository[Text]):

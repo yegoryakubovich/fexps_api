@@ -17,11 +17,6 @@
 
 from app.db.models import Wallet
 from .base import BaseRepository
-from ..utils import ApiException
-
-
-class WalletLimitReached(ApiException):
-    pass
 
 
 class WalletRepository(BaseRepository[Wallet]):

@@ -19,10 +19,10 @@ from pydantic import Field, model_validator, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import OrderRequestTypes
-from app.repositories.base import DataValidationError
 from app.services import OrderRequestService
 from app.utils import Router, Response, BaseSchema
 from app.utils.base_schema import ValueMustBePositive
+from app.utils.exaptions.main import DataValidationError
 
 router = Router(
     prefix='/create',
@@ -33,23 +33,12 @@ class OrderRequestCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
     type: str = Field(min_length=1, max_length=16)
-    canceled_reason: str = Field(default=None, min_length=1, max_length=512)
     value: int = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':
         if self.type not in OrderRequestTypes.choices:
             raise DataValidationError(f'The type parameter must contain: {"/".join(OrderRequestTypes.choices)}')
-
-        if self.type == OrderRequestTypes.CANCEL:
-            required = [self.canceled_reason]
-            required_names = ['canceled_reason']
-            if None in required:
-                raise DataValidationError(
-                    f'For {self.type}, only these parameters are taken into account: '
-                    f'{", ".join(required_names)}'
-                )
-
         return self
 
     @field_validator('value')
@@ -68,7 +57,6 @@ async def route(schema: OrderRequestCreateSchema):
         token=schema.token,
         order_id=schema.order_id,
         type_=schema.type,
-        canceled_reason=schema.canceled_reason,
         value=schema.value,
     )
 

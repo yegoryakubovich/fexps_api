@@ -19,15 +19,7 @@ from typing import Optional, List
 
 from app.db.models import TextTranslation, Text, Language
 from .base import BaseRepository
-from ..utils import ApiException
-
-
-class TextTranslationDoesNotExist(ApiException):
-    pass
-
-
-class TextTranslationExist(ApiException):
-    pass
+from app.utils.exaptions.text import TextTranslationDoesNotExist
 
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):

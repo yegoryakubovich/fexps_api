@@ -15,11 +15,13 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
+from app.db.models import OrderRequestStates
 from app.services import OrderRequestService
 from app.utils import BaseSchema
 from app.utils import Response, Router
+from app.utils.exaptions.main import DataValidationError
 
 router = Router(
     prefix='/update',
@@ -29,7 +31,13 @@ router = Router(
 class OrderRequestUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
-    is_result: bool = Field(default=False)
+    state: str = Field()
+
+    @model_validator(mode='after')
+    def check_type(self) -> 'OrderRequestUpdateSchema':
+        if self.state not in OrderRequestStates.choices_update:
+            raise DataValidationError(f'The type parameter must contain: {"/".join(OrderRequestStates.choices_update)}')
+        return self
 
 
 @router.post()
@@ -37,7 +45,7 @@ async def route(schema: OrderRequestUpdateSchema):
     result = await OrderRequestService().update(
         token=schema.token,
         id_=schema.id,
-        is_result=schema.is_result,
+        state=schema.state,
     )
 
     return Response(**result)

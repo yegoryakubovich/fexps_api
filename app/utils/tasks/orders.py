@@ -22,6 +22,7 @@ from app.db.models.order import OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
+from app.services import OrderService
 from app.utils.calculations.orders import calc_all
 from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
@@ -34,10 +35,10 @@ async def reserve_order(
         order_type: OrderTypes,
 ) -> None:
     requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
-    requisite_currency_value = round(requisite.currency_value - calc_requisite.currency_value)
-    requisite_value = round(requisite.value - calc_requisite.value)
-    await RequisiteRepository().update(
-        requisite, currency_value=requisite_currency_value, value=requisite_value,
+    await OrderService().create_related(
+        requisite=requisite,
+        currency_value=calc_requisite.currency_value,
+        value=calc_requisite.value,
     )
     await OrderRepository().create(
         type=order_type, state=OrderStates.RESERVE,

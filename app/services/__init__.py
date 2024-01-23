@@ -34,7 +34,6 @@ from .order_state_canceled import OrderStatesCanceledService
 from .order_state_completed import OrderStatesCompletedService
 from .order_state_confirmation import OrderStatesConfirmationService
 from .order_state_payment import OrderStatesPaymentService
-from .order_state_reserve import OrderStatesReserveService
 from .request import RequestService
 from .requisite import RequisiteService
 from .requisite_data import RequisiteDataService

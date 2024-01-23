@@ -28,12 +28,13 @@ class OrderRequestTypes:
     choices = [UPDATE_VALUE, CANCEL]
 
 
-class OrderRequestStates:  # FIXME
+class OrderRequestStates:
     WAIT = 'wait'
     COMPLETED = 'competed'
     CANCELED = 'canceled'
 
     choices = [WAIT, COMPLETED, CANCELED]
+    choices_update = [COMPLETED, CANCELED]
 
 
 class OrderRequest(Base):

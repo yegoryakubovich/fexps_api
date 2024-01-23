@@ -17,6 +17,7 @@
 
 from app.db.models import Order, Session, Actions, OrderStates
 from app.repositories.order import OrderRepository
+from app.services import OrderService
 from app.services.base import BaseService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
@@ -35,6 +36,7 @@ class OrderStatesCanceledService(BaseService):
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
 
+        await OrderService().delete_related(order=order)
         await OrderRepository().update(order, state=OrderStates.CANCELED)
         await self.create_action(
             model=order,

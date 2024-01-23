@@ -19,7 +19,7 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import WalletBanReasons
-from app.repositories.base import DataValidationError
+from app.utils.exaptions.main import DataValidationError
 from app.services import WalletBanService
 from app.utils import Router, Response, BaseSchema
 from app.utils.base_schema import ValueMustBePositive

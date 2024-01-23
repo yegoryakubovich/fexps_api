@@ -16,10 +16,12 @@
 
 
 from app.db.models import Session, Actions, WalletBan
-from app.repositories.wallet import WalletRepository, WalletLimitReached
+from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_ban import WalletBanRepository
+from app.services import WalletService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exaptions.wallet import NotEnoughFundsOnBalance
 
 
 class WalletBanService(BaseService):
@@ -34,11 +36,14 @@ class WalletBanService(BaseService):
             reason: str,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        if (wallet.value_banned + value) > wallet.value:
-            raise WalletLimitReached(
-                f'The limit has been reached. Available value {wallet.value - wallet.value_banned}'
-            )
-        await WalletRepository().update(wallet, value_banned=wallet.value_banned + value)
+        wallet_free_balance = await WalletService().get_free_value(wallet=wallet)
+        if wallet_free_balance < value:
+            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
+        await WalletRepository().update(
+            wallet,
+            value=wallet.value - value,
+            value_banned=wallet.value_banned + value
+        )
         wallet_ban = await WalletBanRepository().create(
             wallet=wallet,
             value=value,

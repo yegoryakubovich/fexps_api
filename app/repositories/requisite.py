@@ -21,15 +21,6 @@ from sqlalchemy import select
 
 from app.db.models import Requisite
 from .base import BaseRepository
-from ..utils import ApiException
-
-
-class NotRequiredParams(ApiException):
-    pass
-
-
-class MinimumTotalValueError(ApiException):
-    pass
 
 
 class RequisiteRepository(BaseRepository[Requisite]):

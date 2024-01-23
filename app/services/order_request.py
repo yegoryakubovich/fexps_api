@@ -16,10 +16,12 @@
 
 
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order
-from app.repositories.order import OrderRepository, OrderRequestValidationError
-from app.repositories.order_request import OrderRequestRepository, OrderRequestFound
+from app.repositories.order import OrderRepository
+from app.repositories.order_request import OrderRequestRepository
 from app.services.base import BaseService
+from app.services.order import OrderService
 from app.utils.decorators import session_required
+from app.utils.exaptions.order import OrderRequestValidationError, OrderRequestFound
 
 
 class OrderRequestService(BaseService):
@@ -59,7 +61,6 @@ class OrderRequestService(BaseService):
                 'creator': f'session_{session.id}',
                 'order_id': order_id,
                 'type_': type_,
-                'canceled_reason': canceled_reason,
                 'value': value,
             },
         )
@@ -71,24 +72,40 @@ class OrderRequestService(BaseService):
             self,
             session: Session,
             id_: int,
-            is_result: bool
+            state: str
     ) -> dict:
         order_request = await OrderRequestRepository().get_by_id(id_=id_)
-        if is_result:
-            await OrderRequestRepository().update(order_request, state=OrderRequestStates.COMPLETED)
-        else:
-            await OrderRequestRepository().update(order_request, state=OrderRequestStates.CANCELED)
+        if order_request.type == OrderRequestTypes.CANCEL:
+            await self.update_type_cancel(order_request=order_request, state=state)
+        elif order_request.type == OrderRequestTypes.UPDATE_VALUE:
+            await self.update_type_update_value(order_request=order_request, state=state)
+
+        await OrderRequestRepository().update(order_request, state=state)
         await self.create_action(
             model=order_request,
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
                 'id': id_,
-                'is_result': is_result,
+                'state': state,
             },
         )
 
         return {}
+
+    @staticmethod
+    async def update_type_cancel(order_request: OrderRequest, state: str):
+        if state == OrderRequestStates.COMPLETED:
+            await OrderService().delete_related(order=order_request.order)
+        elif state == OrderRequestStates.CANCELED:
+            pass
+
+    @staticmethod
+    async def update_type_update_value(order_request: OrderRequest, state: str):
+        if state == OrderRequestStates.COMPLETED:
+            pass
+        elif state == OrderRequestStates.CANCELED:
+            pass
 
     @session_required()
     async def delete(

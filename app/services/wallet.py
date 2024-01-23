@@ -15,14 +15,15 @@
 #
 
 
-from app.db.models import Wallet, Session, WalletAccountRoles, Actions, CommissionPack
-from app.repositories.base import DoesNotPermission
+from app.db.models import Wallet, Session, WalletAccountRoles, Actions
 from app.repositories.commission_pack import CommissionPackRepository
-from app.repositories.wallet import WalletRepository, WalletLimitReached
+from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
+from app.utils.exaptions.main import DoesNotPermission
+from app.utils.exaptions.wallet import WalletLimitReached
 from config import WALLET_MAX_COUNT, WALLET_MAX_VALUE
 
 
@@ -40,7 +41,6 @@ class WalletService(BaseService):
         if len(wallet_account_list) >= WALLET_MAX_COUNT:
             raise WalletLimitReached('Wallet limit reached.')
         commission_pack = await CommissionPackRepository().get(is_default=True)
-        print(commission_pack)
         wallet = await WalletRepository().create(name=name, commission_pack=commission_pack)
         await self.create_action(
             model=wallet,
@@ -68,7 +68,7 @@ class WalletService(BaseService):
     ):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
-        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
         return {
             'wallet': {
                 'id': wallet_account.wallet.id,
@@ -109,7 +109,7 @@ class WalletService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
-        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
         await WalletRepository().update(
             wallet_account.wallet,
             name=name,
@@ -135,7 +135,7 @@ class WalletService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
-        wallet_account = await WalletAccountRepository().get_by_account_and_wallet(account=account, wallet=wallet)
+        wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
         if wallet_account.role != WalletAccountRoles.OWNER:
             raise DoesNotPermission('You do not have sufficient rights to delete this wallet')
         await WalletRepository().delete(wallet_account.wallet)
@@ -159,3 +159,7 @@ class WalletService(BaseService):
         wallet = await WalletRepository().get_by_id(id_=id_)
         result = WALLET_MAX_VALUE - wallet.value
         return result
+
+    @staticmethod
+    async def get_free_value(wallet: Wallet):
+        return wallet.value - wallet.value_can_minus

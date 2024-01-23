@@ -17,11 +17,8 @@
 
 from app.db.models import TransferSystem
 from .base import BaseRepository
-from ..utils import ApiException
+from app.utils import ApiException
 
-
-class NotEnoughFundsOnBalance(ApiException):
-    pass
 
 
 class TransferSystemRepository(BaseRepository[TransferSystem]):

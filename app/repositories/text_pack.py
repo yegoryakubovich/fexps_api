@@ -23,11 +23,7 @@ from config import PATH_TEXTS_PACKS
 from .base import BaseRepository
 from .language import LanguageRepository
 from .text import TextRepository
-from ..utils import ApiException
-
-
-class TextPackDoesNotExist(ApiException):
-    pass
+from app.utils.exaptions.text import TextPackDoesNotExist
 
 
 class TextPackRepository(BaseRepository[TextPack]):

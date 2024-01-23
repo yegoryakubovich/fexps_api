@@ -18,11 +18,12 @@
 from pydantic import Field, model_validator, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
-from app.repositories.base import DataValidationError
 from app.services import CommissionPackValueService
 from app.services.commission_pack_value import IntervalValidationError
 from app.utils import BaseSchema
 from app.utils import Router, Response
+from app.utils.exaptions.main import DataValidationError
+
 
 router = Router(
     prefix='/create',

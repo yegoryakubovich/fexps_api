@@ -18,9 +18,10 @@
 from app.db.models import Language, Session, Text, TextTranslation, Actions
 from app.repositories.language import LanguageRepository
 from app.repositories.text import TextRepository
-from app.repositories.text_translation import TextTranslationExist, TextTranslationRepository
+from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exaptions.text import TextTranslationExist
 
 
 class TextTranslationService(BaseService):
