@@ -15,17 +15,27 @@
 #
 
 
-from app.utils import Router
-from .get import router as router_get
-from .requests import router as router_requests
-from .states import router as router_states
+from fastapi import Depends
+from pydantic import Field
+
+from app.services.order import OrderService
+from app.utils import Router, Response, BaseSchema
 
 router = Router(
-    prefix='/orders',
-    routes_included=[
-        router_requests,
-        router_states,
-        router_get,
-    ],
-    tags=['Orders'],
+    prefix='/get',
 )
+
+
+class OrderGetSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    id: int = Field()
+
+
+@router.get()
+async def route(schema: OrderGetSchema = Depends()):
+    result = await OrderService().get(
+        token=schema.token,
+        id_=schema.id,
+    )
+
+    return Response(**result)

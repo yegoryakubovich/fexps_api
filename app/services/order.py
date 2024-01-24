@@ -21,6 +21,7 @@ from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.decorators import session_required
+from app.utils.exaptions.main import DoesNotPermission
 
 
 class OrderService(BaseService):
@@ -60,6 +61,32 @@ class OrderService(BaseService):
         )
 
         return order
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        account = session.account
+        order = await OrderRepository().get_by_id(id_=id_)
+
+        return {
+            'requisite': {
+                'id': order.id,
+                'type': order.type,
+                'state': order.state,
+                'canceled_reason': order.canceled_reason,
+                'request_id': order.request_id,
+                'requisite_id': order.requisite_id,
+                'wallet_ban_id': order.wallet_ban_id,
+                'currency_value': order.currency_value,
+                'value': order.value,
+                'rate': order.rate,
+                'requisite_fields': order.requisite_fields,
+                'confirmation_fields': order.confirmation_fields,
+            }
+        }
 
     @session_required()
     async def delete(
