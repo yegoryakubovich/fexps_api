@@ -48,12 +48,8 @@ async def calc_input_currency_to_value(
         ))
         currency_value = round(currency_value - suitable_currency_value)
     currency_value_result, value_result, rate_result = get_results_by_calc_requisites(
-        calc_requisites=calc_requisites,
-        type_='input',
+        calc_requisites=calc_requisites, type_='input',
     )
     return CalcOrderScheme(
-        calc_requisites=calc_requisites,
-        currency_value=currency_value_result,
-        value=value_result,
-        rate=rate_result,
+        calc_requisites=calc_requisites, currency_value=currency_value_result, value=value_result, rate=rate_result,
     )

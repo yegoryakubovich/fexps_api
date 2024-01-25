@@ -57,9 +57,8 @@ class RequisiteService(BaseService):
             rate=rate
         )
         requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
-        wallet_ban = None
         if type_ == RequisiteTypes.OUTPUT:
-            wallet_ban = await WalletBanService().create_related(
+            await WalletBanService().create_related(
                 wallet=wallet,
                 value=total_value_result,
                 reason=WalletBanReasons.BY_REQUISITE,
@@ -70,7 +69,6 @@ class RequisiteService(BaseService):
             wallet=wallet,
             requisite_data=requisite_data,
             currency=requisite_data.method.currency,
-            wallet_ban=wallet_ban,
             currency_value=total_currency_value_result,
             total_currency_value=total_currency_value_result,
             total_currency_value_min=total_currency_value_min,
@@ -182,17 +180,17 @@ class RequisiteService(BaseService):
             rate: Optional[int],
     ) -> tuple[int, int, int]:
         if total_currency_value and total_value:
-            if type_ == RequisiteTypes.INPUT:
+            if type_ == RequisiteTypes.OUTPUT:
                 rate = math.ceil(total_currency_value / total_value * 100)
             else:
                 rate = math.floor(total_currency_value / total_value * 100)
         elif total_currency_value and rate:
-            if type_ == RequisiteTypes.INPUT:
+            if type_ == RequisiteTypes.OUTPUT:
                 total_value = math.floor(total_currency_value / rate * 100)
             else:
                 total_value = math.ceil(total_currency_value / rate * 100)
         else:
-            if type_ == RequisiteTypes.INPUT:
+            if type_ == RequisiteTypes.OUTPUT:
                 total_currency_value = math.ceil(total_value * rate / 100)
             else:
                 total_currency_value = math.floor(total_value * rate / 100)

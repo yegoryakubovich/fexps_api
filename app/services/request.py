@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates, RequestStates
+from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates, RequestStates, Order
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -120,27 +120,48 @@ class RequestService(BaseService):
 
     @staticmethod
     async def check_all_orders(request: Request) -> None:
-        if request.type in [RequestTypes.INPUT, RequestTypes.ALL]:
-            input_orders = await OrderRepository().get_list(request=request, type=OrderTypes.INPUT)
-            input_compete_count, input_wait_count, input_count = 0, 0, 0
-            for input_order in input_orders:
-                if input_order.type in [OrderStates.CANCELED]:
-                    continue
-                elif input_order.type in [OrderStates.RESERVE, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
-                    input_wait_count += 1
-                elif input_order.type in [OrderStates.COMPLETED]:
-                    input_compete_count += 1
-                input_count += 1
-
-        if request.type in [RequestTypes.OUTPUT, RequestTypes.ALL]:
-            output_orders = await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT)
-            output_compete_count, output_wait_count, output_count = 0, 0, 0
-            for output_order in output_orders:
-                if output_order.type in [OrderStates.CANCELED]:
-                    continue
-                elif output_order.type in [OrderStates.RESERVE, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
-                    output_wait_count += 1
-                elif output_order.type in [OrderStates.COMPLETED]:
-                    output_compete_count += 1
-                output_count += 1
-
+        actual_state = None
+        # if request.type in [RequestTypes.INPUT, RequestTypes.ALL]:
+        #     input_orders = await OrderRepository().get_list(request=request, type=OrderTypes.INPUT)
+        #     if not input_orders:
+        #         return
+        #     input_reserve_states = [RequestStates.INPUT_RESERVATION]
+        #     input_payment_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT]
+        #     input_confirmation_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT]
+        #     input_compete_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT,
+        #                             RequestStates.INPUT_COMPLETED]
+        #     for input_order in input_orders:
+        #         if input_order.state == OrderStates.CANCELED:
+        #             continue
+        #         elif input_order.state == OrderStates.RESERVE and actual_state not in input_reserve_states:
+        #             actual_state = RequestStates.INPUT_RESERVATION
+        #         elif input_order.state == OrderStates.PAYMENT and actual_state not in input_payment_states:
+        #             actual_state = RequestStates.INPUT_PAYMENT
+        #         elif input_order.state == OrderStates.CONFIRMATION and actual_state not in input_confirmation_states:
+        #             actual_state = RequestStates.INPUT_PAYMENT
+        #         elif input_order.state == OrderStates.COMPLETED and actual_state not in input_compete_states:
+        #             actual_state = RequestStates.COMPLETED
+        # if actual_state != RequestStates.COMPLETED:
+        #     if request.state != actual_state:
+        #         await RequestRepository().update(request, state=actual_state)
+        #     return
+        # if request.type in [RequestTypes.OUTPUT, RequestTypes.ALL]:
+        #     output_orders = await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT)
+        #     output_reserve_states = [RequestStates.OUTPUT_RESERVATION]
+        #     output_payment_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT]
+        #     output_confirmation_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT]
+        #     output_compete_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT,
+        #                              RequestStates.OUTPUT_COMPLETED]
+        #     for output_order in output_orders:
+        #         if output_order.state == OrderStates.CANCELED:
+        #             continue
+        #         elif output_order.state == OrderStates.RESERVE and actual_state not in output_reserve_states:
+        #             actual_state = RequestStates.INPUT_RESERVATION
+        #         elif output_order.state == OrderStates.PAYMENT and actual_state not in output_payment_states:
+        #             actual_state = RequestStates.INPUT_PAYMENT
+        #         elif output_order.state == OrderStates.CONFIRMATION and actual_state not in output_confirmation_states:
+        #             actual_state = RequestStates.INPUT_PAYMENT
+        #         elif output_order.state == OrderStates.COMPLETED and actual_state not in output_compete_states:
+        #             actual_state = RequestStates.COMPLETED
+        # if request.state != actual_state:
+        #     await RequestRepository().update(request, state=actual_state)

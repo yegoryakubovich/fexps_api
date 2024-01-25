@@ -40,8 +40,6 @@ class Requisite(Base):
     requisite_data = relationship('RequisiteData', uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', uselist=False, lazy='selectin')
-    wallet_ban_id = Column(BigInteger, ForeignKey('wallets_bans.id', ondelete='SET NULL'), nullable=True)
-    wallet_ban = relationship('WalletBan', foreign_keys=wallet_ban_id, uselist=False, lazy='selectin')
 
     currency_value = Column(BigInteger)
     total_currency_value = Column(BigInteger)

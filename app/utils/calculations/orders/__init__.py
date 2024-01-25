@@ -18,10 +18,9 @@
 import math
 
 from app.db.models import Currency
+from app.utils.schemes.calculations.orders import CalcAllOrderScheme
 from .input import calc_input_value_to_currency, calc_input_currency_to_value
-from .output.currency_to_value import calc_output_currency_to_value
-from .output.value_to_currency import calc_output_value_to_currency
-from ...schemes.calculations.orders import CalcAllOrderScheme
+from .output import calc_output_currency_to_value, calc_output_value_to_currency
 
 
 async def calc_all(
@@ -31,8 +30,12 @@ async def calc_all(
         currency_value_output: float = None,
 ) -> 'CalcAllOrderScheme':
     if currency_value_input:
-        input_calc = await calc_input_currency_to_value(currency=currency_input, currency_value=currency_value_input)
-        output_calc = await calc_output_value_to_currency(currency=currency_output, value=input_calc.value)
+        input_calc = await calc_input_currency_to_value(
+            currency=currency_input, currency_value=currency_value_input,
+        )
+        output_calc = await calc_output_value_to_currency(
+            currency=currency_output, value=input_calc.value,
+        )
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,
@@ -40,8 +43,12 @@ async def calc_all(
             rate=rate_result,
         )
     elif currency_value_output:
-        output_calc = await calc_output_currency_to_value(currency=currency_output, currency_value=currency_value_output)
-        input_calc = await calc_input_value_to_currency(currency=currency_input, value=output_calc.value)
+        output_calc = await calc_output_currency_to_value(
+            currency=currency_output, currency_value=currency_value_output,
+        )
+        input_calc = await calc_input_value_to_currency(
+            currency=currency_input, value=output_calc.value,
+        )
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,

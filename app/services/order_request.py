@@ -92,7 +92,7 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def update_type_cancel(order_request: OrderRequest, state: str):
         if state == OrderRequestStates.COMPLETED:
-            await OrderService().canceled_related(order=order_request.order)
+            await OrderService().cancel_related(order=order_request.order)
             await OrderRepository().update(
                 order_request.order,
                 state=OrderStates.CANCELED,

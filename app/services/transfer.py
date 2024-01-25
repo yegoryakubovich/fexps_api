@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet, Actions
+from app.db.models import Transfer, Session, Wallet, Actions, TransferTypes
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
@@ -44,8 +44,12 @@ class TransferService(BaseService):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
         await WalletAccountRepository().check_permission(account=account, wallet=wallet_from)
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
-
-        transfer = await self.transfer(wallet_from=wallet_from, wallet_to=wallet_to, value=value)
+        transfer = await self.transfer(
+            type_=TransferTypes.PAYMENT,
+            wallet_from=wallet_from,
+            wallet_to=wallet_to,
+            value=value
+        )
         await self.create_action(
             model=transfer,
             action=Actions.CREATE,
@@ -120,6 +124,7 @@ class TransferService(BaseService):
 
     @staticmethod
     async def transfer(
+            type_: str,
             wallet_from: Wallet,
             wallet_to: Wallet,
             value: float,
@@ -131,6 +136,7 @@ class TransferService(BaseService):
         if value > available_value:
             raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
         transfer = await TransferRepository().create(
+            type=type_,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
             value=value,

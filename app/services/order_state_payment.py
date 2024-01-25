@@ -19,6 +19,7 @@ from app.db.models import Order, Session, Actions, OrderStates
 from app.repositories.order import OrderRepository
 from app.services.base import BaseService
 from app.services.order_request import OrderRequestService
+from app.services.request import RequestService
 from app.utils.decorators import session_required
 
 
@@ -43,6 +44,6 @@ class OrderStatesPaymentService(BaseService):
                 'state': OrderStates.PAYMENT,
             },
         )
+        await RequestService().check_all_orders(request=order.request)
 
         return {}
-

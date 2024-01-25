@@ -37,8 +37,8 @@ class OrderStatesConfirmationUpdateSchema(BaseSchema):
 async def route(schema: OrderStatesConfirmationUpdateSchema):
     result = await OrderStatesConfirmationService().update(
         token=schema.token,
+        id_=schema.order_id,
         confirmation_fields=schema.confirmation_fields,
-
     )
 
     return Response(**result)

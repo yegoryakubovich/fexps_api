@@ -35,7 +35,7 @@ from .wallet import Wallet
 from .country import Country
 from .role_permission import RolePermission
 from .requisite_data import RequisiteData
-from .transfer import Transfer
+from .transfer import Transfer, TransferTypes
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes

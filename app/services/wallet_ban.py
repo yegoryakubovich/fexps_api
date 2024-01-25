@@ -94,9 +94,10 @@ class WalletBanService(BaseService):
         wallet_available_balance = await WalletService().get_available_value(wallet=wallet_ban.wallet)
         if wallet_available_balance < wallet_ban.value:
             raise WalletLimitReached(f"Wallet limit reached. Max wallet value {WALLET_MAX_VALUE}")
+        wallet = wallet_ban.wallet
 
         await WalletRepository().update(
-            wallet_ban.wallet,
-            value=wallet_ban.wallet.value + wallet_ban.value,
-            value_banned=wallet_ban.wallet.value_banned - wallet_ban.value
+            wallet,
+            value=wallet.value + wallet_ban.value,
+            value_banned=wallet.value_banned - wallet_ban.value
         )

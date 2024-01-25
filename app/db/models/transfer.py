@@ -15,10 +15,17 @@
 #
 
 
-from sqlalchemy import Column, Boolean, ForeignKey, BigInteger
+from sqlalchemy import Column, Boolean, ForeignKey, BigInteger, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
+
+class TransferTypes:
+    IN_ORDER = 'in_order'
+    PAYMENT = 'payment'
+
+    choices = [IN_ORDER, PAYMENT]
 
 
 class Transfer(Base):
@@ -26,6 +33,7 @@ class Transfer(Base):
 
     id = Column(BigInteger, primary_key=True)
 
+    type = Column(String(length=16))
     wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet_from = relationship('Wallet', foreign_keys=wallet_from_id, uselist=False, lazy='selectin')
     wallet_to_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)

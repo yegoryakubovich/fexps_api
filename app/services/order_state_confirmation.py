@@ -18,7 +18,9 @@
 from app.db.models import Order, Session, OrderStates, Actions
 from app.repositories.order import OrderRepository
 from app.services.base import BaseService
+from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
+from app.services.request import RequestService
 from app.utils.decorators import session_required
 
 
@@ -34,8 +36,15 @@ class OrderStatesConfirmationService(BaseService):
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
+        await MethodService().check_confirmation_field(
+            method=order.requisite.requisite_data.method, fields=confirmation_fields,
+        )
 
-        await OrderRepository().update(order, state=OrderStates.CONFIRMATION)
+        await OrderRepository().update(
+            order,
+            confirmation_fields=confirmation_fields,
+            state=OrderStates.CONFIRMATION,
+        )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -45,6 +54,6 @@ class OrderStatesConfirmationService(BaseService):
                 'confirmation_fields': confirmation_fields,
             },
         )
+        await RequestService().check_all_orders(request=order.request)
 
         return {}
-

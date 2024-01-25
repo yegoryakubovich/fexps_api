@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey,  String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -30,14 +30,15 @@ class RequestTypes:
 
 
 class RequestStates:
+    WAITING = 'waiting'
     INPUT_RESERVATION = 'input_reservation'
-    INPUT_PAYMENT = 'input_payment'
+    INPUT = 'input'
     OUTPUT_RESERVATION = 'output_reservation'
-    OUTPUT_PAYMENT = 'output_payment'
+    OUTPUT = 'output'
     COMPLETED = 'completed'
     CANCELED = 'canceled'
 
-    choices = [INPUT_RESERVATION, INPUT_PAYMENT, OUTPUT_RESERVATION, OUTPUT_PAYMENT, COMPLETED, CANCELED]
+    choices = [INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT, COMPLETED, CANCELED]
 
 
 class Request(Base):

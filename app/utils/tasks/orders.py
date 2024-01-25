@@ -25,6 +25,7 @@ from app.utils.calculations.orders import calc_all
 from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
 from app.utils.schemes.calculations.orders import CalcRequisiteScheme
+from app.utils.tasks.utils.hard import get_need_values_by_request
 
 
 async def reserve_order(
@@ -45,7 +46,8 @@ async def reserve_order(
 
 async def create_orders_input(request: Request) -> None:
     currency = request.input_method.currency
-    input_calc = await calc_input(currency=currency, currency_value=request.input_value, value=request.value)
+    need_input_value, need_value = await get_need_values_by_request(request=request, order_type=OrderTypes.INPUT)
+    input_calc = await calc_input(currency=currency, currency_value=need_input_value, value=need_value)
     for calc_requisite in input_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.INPUT)
     await RequestRepository().update(
@@ -59,7 +61,8 @@ async def create_orders_input(request: Request) -> None:
 
 async def create_orders_output(request: Request):
     currency = request.output_method.currency
-    output_calc = await calc_output(currency=currency, currency_value=request.output_value, value=request.value)
+    need_output_value, need_value = await get_need_values_by_request(request=request, order_type=OrderTypes.OUTPUT)
+    output_calc = await calc_output(currency=currency, currency_value=need_output_value, value=need_value)
     for calc_requisite in output_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.OUTPUT)
     await RequestRepository().update(
@@ -97,4 +100,4 @@ async def create_orders(request: Request):
     elif request.type == RequestTypes.OUTPUT:
         asyncio.create_task(create_orders_output(request=request), name=f'CREATE_ORDER_OUTPUT_{request.id}')
     elif request.type == RequestTypes.ALL:
-        asyncio.create_task(create_orders_all(request=request), name=f'CREATE_ORDER_ALL_{request.id}')
+        asyncio.create_task(create_orders_input(request=request), name=f'CREATE_ORDER_INPUT_{request.id}')  # FIXME

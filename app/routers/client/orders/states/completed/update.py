@@ -36,6 +36,7 @@ class OrderStatesCompletedUpdateSchema(BaseSchema):
 async def route(schema: OrderStatesCompletedUpdateSchema):
     result = await OrderStatesCompletedService().update(
         token=schema.token,
+        id_=schema.order_id,
     )
 
     return Response(**result)

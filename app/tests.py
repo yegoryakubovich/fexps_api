@@ -1,8 +1,16 @@
-import numpy
-
-x_start, x_stop = 3, 5
-y_start, y_stop = 1, 999999
-
-
-a = (x_start <= y_stop) and (x_stop >= y_start)
-print(a)
+x = [
+    {
+        "key": "transaction_number",
+        "name": "Number transaction",
+        "type": "int",
+        "optional": False,
+        "name_text_key": "method_confirmation_field_ad516aa5bc4737da"
+    },
+    {
+        "key": "photo",
+        "name": "Photo transaction",
+        "type": "image",
+        "optional": True,
+        "name_text_key": "method_confirmation_field_c18d9fbc3020659a"
+    }
+]

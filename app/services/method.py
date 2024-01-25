@@ -175,3 +175,22 @@ class MethodService(BaseService):
                 raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
             if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
                 raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+
+    @staticmethod
+    async def check_confirmation_field(method: Method, fields: dict):
+        print(fields)
+        for field in method.schema_confirmation_fields:
+            field_key = field.get('key')
+            field_type = field.get('type')
+            field_optional = field.get('optional')
+            field_result = fields.get(field_key)
+            if not field_result and field_optional:
+                continue
+            if not field_result:
+                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
+            if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+            if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
+                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+            if field_type == MethodFieldTypes.IMAGE: # FIXME
+                raise FieldsValidationError(f'fields.{field_key} IMAGE FIXME')

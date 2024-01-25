@@ -15,13 +15,14 @@
 #
 
 
-from app.db.models import Session, Order, Actions, Requisite, OrderTypes, Request, WalletBanReasons, OrderStates
+from app.db.models import Session, Order, Actions, Requisite, OrderTypes, Request, WalletBanReasons, OrderStates, \
+    TransferTypes
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
+from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
 from app.utils.decorators import session_required
-from app.utils.exaptions.main import DoesNotPermission
 
 
 class OrderService(BaseService):
@@ -36,12 +37,9 @@ class OrderService(BaseService):
             value: int,
             rate: int,
     ) -> Order:
-        wallet_ban = None
         if order_type == OrderTypes.OUTPUT:
-            wallet_ban = await WalletBanService().create_related(
-                wallet=request.wallet,
-                value=value,
-                reason=WalletBanReasons.BY_ORDER,
+            await WalletBanService().create_related(
+                wallet=request.wallet, value=value, reason=WalletBanReasons.BY_ORDER,
             )
 
         await RequisiteRepository().update(
@@ -54,10 +52,10 @@ class OrderService(BaseService):
             state=OrderStates.RESERVE,
             request=request,
             requisite=requisite,
-            wallet_ban=wallet_ban,
             currency_value=currency_value,
             value=value,
             rate=rate,
+            requisite_fields=requisite.requisite_data.fields,
         )
 
         return order
@@ -108,13 +106,49 @@ class OrderService(BaseService):
         return {}
 
     async def delete_related(self, order: Order) -> None:
-        await self.canceled_related(order=order)
+        await self.cancel_related(order=order)
         await OrderRepository().delete(order)
 
     @staticmethod
-    async def canceled_related(order: Order) -> None:
-        if order.wallet_ban:
-            await WalletBanService().delete_related(wallet_ban=order.wallet_ban)
+    async def cancel_related(order: Order) -> None:
+        if order.type == OrderTypes.INPUT:
+            await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
+        await RequisiteRepository().update(
+            order.requisite,
+            currency_value=round(order.requisite.currency_value + order.currency_value),
+            value=round(order.requisite.value + order.value),
+        )
+
+    @staticmethod
+    async def compete_related(order: Order) -> None:
+        if order.type == OrderTypes.INPUT:
+            await WalletBanService().create_related(
+                wallet=order.requisite.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
+            await TransferService().transfer(
+                type_=TransferTypes.IN_ORDER,
+                wallet_from=order.requisite.wallet,
+                wallet_to=order.request.wallet,
+                value=order.value,
+            )
+        elif order.type == OrderTypes.OUTPUT:  # FIXME (check)
+            await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
+            await TransferService().transfer(
+                type_=TransferTypes.IN_ORDER,
+                wallet_from=order.request.wallet,
+                wallet_to=order.requisite.wallet,
+                value=order.value,
+            )
         await RequisiteRepository().update(
             order.requisite,
             currency_value=round(order.requisite.currency_value + order.currency_value),

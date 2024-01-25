@@ -34,12 +34,9 @@ class RequestCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     type: str = Field(min_length=1, max_length=8)
-
     input_method_id: int = Field(default=None)
     input_value: int = Field(default=None)
-
     value: int = Field(default=None)
-
     output_requisite_data_id: int = Field(default=None)
     output_value: int = Field(default=None)
 

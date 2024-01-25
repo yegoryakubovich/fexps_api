@@ -18,7 +18,9 @@
 from app.db.models import Order, Session, OrderStates, Actions
 from app.repositories.order import OrderRepository
 from app.services.base import BaseService
+from app.services.order import OrderService
 from app.services.order_request import OrderRequestService
+from app.services.request import RequestService
 from app.utils.decorators import session_required
 
 
@@ -33,6 +35,7 @@ class OrderStatesCompletedService(BaseService):
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
+        await OrderService().compete_related(order=order)
 
         await OrderRepository().update(order, state=OrderStates.COMPLETED)
         await self.create_action(
@@ -43,5 +46,6 @@ class OrderStatesCompletedService(BaseService):
                 'state': OrderStates.COMPLETED,
             },
         )
+        await RequestService().check_all_orders(request=order.request)
 
         return {}

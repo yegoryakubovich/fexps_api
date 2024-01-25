@@ -51,15 +51,13 @@ class Order(Base):
 
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
-    state = Column(String(length=8))
+    state = Column(String(length=16))
     canceled_reason = Column(String(length=16), nullable=True)
 
     request_id = Column(BigInteger, ForeignKey('requests.id', ondelete='SET NULL'), nullable=True)
     request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     requisite_id = Column(BigInteger, ForeignKey('requisites.id', ondelete='SET NULL'), nullable=True)
     requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
-    wallet_ban_id = Column(BigInteger, ForeignKey('wallets_bans.id', ondelete='SET NULL'), nullable=True)
-    wallet_ban = relationship('WalletBan', foreign_keys=wallet_ban_id, uselist=False, lazy='selectin')
 
     currency_value = Column(BigInteger())
     value = Column(BigInteger())
