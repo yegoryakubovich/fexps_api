@@ -18,21 +18,6 @@
 version: '3.7'
 
 services:
-#  db:
-#    image: mysql
-#    restart: on-failure
-#    environment:
-#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-#      MYSQL_DATABASE: ${MYSQL_DATABASE}
-#    ports:
-#      - "3306:3306"
-#    volumes:
-#      - ./data/mysql/:/var/lib/mysql
-  redis:
-    image: redis
-    restart: on-failure
-    volumes:
-      - ./data/redis:/data
   api:
     container_name: api
     build:
@@ -42,8 +27,6 @@ services:
       MAX_WORKERS: 2
     ports:
       - "8000:80"
-#    depends_on:
-#      - db
   celery:
     container_name: celery
     build:
