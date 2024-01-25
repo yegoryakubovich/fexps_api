@@ -34,5 +34,4 @@ services:
     command: sh -c "sleep 10 && celery -A webapp worker -l info"
     depends_on:
       - api
-      - redis
 
