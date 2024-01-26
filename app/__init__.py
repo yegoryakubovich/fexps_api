@@ -37,11 +37,15 @@ async def on_startup():
         logging.error('Failed to connect to database')
         exit(1)
 
-    from app.repositories.request import RequestRepository
-    from app.utils.tasks.orders import create_orders
-
-    request = await RequestRepository().get_by_id(1)
-    await create_orders(request)
+    # from app.repositories.request import RequestRepository
+    # from app.services import RequestService
+    # from app.utils.tasks.orders import crete_orders
+    #
+    # request = await RequestRepository().get_by_id(4)
+    # await create_orders(request)
+    # await RequestService().check_all_orders(request=await RequestRepository().get_by_id(5))
+    # text = await TextRepository().get_by_key('key_test')
+    # await ContactRepository().create(name_text=text)
 
 
 app = FastAPI(

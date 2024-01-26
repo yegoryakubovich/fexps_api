@@ -17,8 +17,8 @@
 
 import asyncio
 
-from app.db.models import Request, RequestTypes, OrderTypes
-from app.repositories.request import RequestRepository
+from app.db.models import Request, RequestTypes, OrderTypes, OrderStates
+from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
 from app.utils.calculations.orders import calc_all
@@ -26,6 +26,24 @@ from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
 from app.utils.schemes.calculations.orders import CalcRequisiteScheme
 from app.utils.tasks.utils.hard import get_need_values_by_request
+
+
+async def waiting_order(
+        request: Request,
+        calc_requisite: CalcRequisiteScheme,
+        order_type: OrderTypes,
+) -> None:
+    requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
+    await OrderRepository().create(
+        type=order_type,
+        state=OrderStates.RESERVE,
+        request=request,
+        requisite=requisite,
+        currency_value=calc_requisite.currency_value,
+        value=calc_requisite.value,
+        rate=calc_requisite.rate,
+        requisite_fields=requisite.requisite_data.fields,
+    )
 
 
 async def reserve_order(
@@ -36,6 +54,7 @@ async def reserve_order(
     requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
     await OrderService().create_related(
         order_type=order_type,
+        order_state=OrderStates.RESERVE,
         request=request,
         requisite=requisite,
         currency_value=calc_requisite.currency_value,
@@ -50,7 +69,7 @@ async def create_orders_input(request: Request) -> None:
     input_calc = await calc_input(currency=currency, currency_value=need_input_value, value=need_value)
     for calc_requisite in input_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.INPUT)
-    await RequestRepository().update(
+    await OrderRepository().update(
         request,
         input_value=input_calc.currency_value,
         input_rate=input_calc.rate,
@@ -65,7 +84,7 @@ async def create_orders_output(request: Request):
     output_calc = await calc_output(currency=currency, currency_value=need_output_value, value=need_value)
     for calc_requisite in output_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite, order_type=OrderTypes.OUTPUT)
-    await RequestRepository().update(
+    await OrderRepository().update(
         request,
         input_value=output_calc.currency_value,
         input_rate=output_calc.rate,
@@ -77,7 +96,6 @@ async def create_orders_output(request: Request):
 async def create_orders_all(request: Request):
     currency_input = request.input_method.currency
     currency_output = request.output_method.currency
-
     calc_requisites = await calc_all(
         currency_input=currency_input, currency_value_input=request.input_value,
         currency_output=currency_output, currency_value_output=request.output_value,
@@ -86,7 +104,7 @@ async def create_orders_all(request: Request):
         await reserve_order(request=request, calc_requisite=calc_requisite_input, order_type=OrderTypes.INPUT)
     for calc_requisite_output in calc_requisites.output_calc.calc_requisites:
         await reserve_order(request=request, calc_requisite=calc_requisite_output, order_type=OrderTypes.OUTPUT)
-    await RequestRepository().update(
+    await OrderRepository().update(
         request,
         input_value=calc_requisites.input_currency_value, input_rate=calc_requisites.input_calc.rate,
         output_value=calc_requisites.output_currency_value, output_rate=calc_requisites.output_calc.rate,

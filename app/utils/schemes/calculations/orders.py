@@ -21,5 +21,7 @@ class CalcAllOrderScheme(BaseModel):
     input_calc: CalcOrderScheme
     output_calc: CalcOrderScheme
     input_currency_value: int
+    input_value: int
     output_currency_value: int
+    output_value: int
     rate: int

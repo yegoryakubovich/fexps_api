@@ -16,16 +16,12 @@
 
 
 from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
-from .states import router as router_states
+from .input_reservation import router as router_input_reservation
+
 
 router = Router(
-    prefix='/requests',
+    prefix='/states',
     routes_included=[
-        router_states,
-        router_create,
-        router_delete,
+        router_input_reservation,
     ],
-    tags=['Requests'],
 )

@@ -33,6 +33,8 @@ def get_results_by_calc_requisites(
     for calc_requisite in calc_requisites:
         currency_value_result = round(currency_value_result + calc_requisite.currency_value)
         value_result = round(value_result + calc_requisite.value)
+    print(f'currency_value_result={currency_value_result}')
+    print(f'value_result={value_result}')
     if type_ == 'input':
         rate_result = math.ceil(currency_value_result / value_result * 100)
     else:

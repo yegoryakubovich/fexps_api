@@ -17,6 +17,7 @@ import math
 from typing import Optional
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons
+from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
@@ -37,14 +38,15 @@ class RequisiteService(BaseService):
             session: Session,
             type_: int,
             wallet_id: int,
-            requisite_data_id: int,
+            output_requisite_data_id: int,
+            input_method_id: int,
             total_currency_value: int,
-            total_currency_value_min: int,
-            total_currency_value_max: int,
+            currency_value_min: int,
+            currency_value_max: int,
             rate: int,
             total_value: int,
-            total_value_min: int,
-            total_value_max: int,
+            value_min: int,
+            value_max: int,
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
@@ -56,7 +58,16 @@ class RequisiteService(BaseService):
             total_value=total_value,
             rate=rate
         )
-        requisite_data = await RequisiteDataRepository().get_by_id(id_=requisite_data_id)
+        currency = None
+        output_requisite_data = None
+        if output_requisite_data_id:
+            output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
+            currency = output_requisite_data.method.currency
+        input_method = None
+        if input_method_id:
+            input_method = await MethodRepository().get_by_id(id_=input_method_id)
+            currency = input_method.currency
+
         if type_ == RequisiteTypes.OUTPUT:
             await WalletBanService().create_related(
                 wallet=wallet,
@@ -67,17 +78,18 @@ class RequisiteService(BaseService):
         requisite = await RequisiteRepository().create(
             type=type_,
             wallet=wallet,
-            requisite_data=requisite_data,
-            currency=requisite_data.method.currency,
+            output_requisite_data=output_requisite_data,
+            input_method=input_method,
+            currency=currency,
             currency_value=total_currency_value_result,
             total_currency_value=total_currency_value_result,
-            total_currency_value_min=total_currency_value_min,
-            total_currency_value_max=total_currency_value_max,
+            currency_value_min=currency_value_min,
+            currency_value_max=currency_value_max,
             rate=rate_result,
             value=total_value_result,
             total_value=total_value_result,
-            total_value_min=total_value_min,
-            total_value_max=total_value_max,
+            value_min=value_min,
+            value_max=value_max,
         )
         await self.create_action(
             model=requisite,
@@ -87,17 +99,19 @@ class RequisiteService(BaseService):
                 'id': requisite.id,
                 'type': type_,
                 'wallet_id': wallet_id,
-                'requisite_data_id': requisite_data_id,
+                'output_requisite_data_id': output_requisite_data_id,
+                'input_method_id': input_method_id,
+                'currency': currency.id_str,
                 'total_currency_value': total_currency_value,
                 'total_currency_value_result': total_currency_value_result,
-                'total_currency_value_min': total_currency_value_min,
-                'total_currency_value_max': total_currency_value_max,
+                'currency_value_min': currency_value_min,
+                'currency_value_max': currency_value_max,
                 'rate': rate,
                 'rate_result': rate_result,
                 'total_value': total_value,
                 'total_value_result': total_value_result,
-                'total_value_min': total_value_min,
-                'total_value_max': total_value_max,
+                'value_min': value_min,
+                'value_max': value_max,
             },
         )
 

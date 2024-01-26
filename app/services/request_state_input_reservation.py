@@ -15,39 +15,32 @@
 #
 
 
-from app.db.models import Order, Session, Actions, OrderStates
-from app.repositories.order import OrderRepository
+from app.db.models import Session, Request, Actions, RequestStates
+from app.repositories.request import RequestRepository
+from app.services import RequestService
 from app.services.base import BaseService
-from app.services.order import OrderService
-from app.services.order_request import OrderRequestService
-from app.services.request import RequestService
 from app.utils.decorators import session_required
 
 
-class OrderStatesCanceledService(BaseService):
-    model = Order
+class RequestStatesInputReservationService(BaseService):
+    model = Request
 
     @session_required()
     async def update(
             self,
             session: Session,
             id_: int,
-            reason: str,
     ) -> dict:
-        order = await OrderRepository().get_by_id(id_=id_)
-        await OrderRequestService().check_have_order_request(order=order)
-
-        await OrderService().cancel_related(order=order)
-        await OrderRepository().update(order, state=OrderStates.CANCELED)
+        request = await RequestRepository().get_by_id(id_=id_)
+        await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
         await self.create_action(
-            model=order,
+            model=request,
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
-                'state': OrderStates.CANCELED,
-                'reason': reason,
+                'state': RequestStates.INPUT_RESERVATION,
             },
         )
-        await RequestService().check_all_orders(request=order.request)
+        await RequestService().check_all_orders(request=request)
 
         return {}

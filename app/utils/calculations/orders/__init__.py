@@ -26,12 +26,12 @@ from .output import calc_output_currency_to_value, calc_output_value_to_currency
 async def calc_all(
         currency_input: Currency,
         currency_output: Currency,
-        currency_value_input: float = None,
-        currency_value_output: float = None,
+        input_currency_value: int = None,
+        output_currency_value: int = None,
 ) -> 'CalcAllOrderScheme':
-    if currency_value_input:
+    if input_currency_value:
         input_calc = await calc_input_currency_to_value(
-            currency=currency_input, currency_value=currency_value_input,
+            currency=currency_input, currency_value=input_currency_value,
         )
         output_calc = await calc_output_value_to_currency(
             currency=currency_output, value=input_calc.value,
@@ -39,12 +39,13 @@ async def calc_all(
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,
-            input_currency_value=input_calc.currency_value, output_currency_value=output_calc.currency_value,
+            input_currency_value=input_calc.currency_value, input_value=input_calc.value,
+            output_currency_value=output_calc.currency_value, output_value=output_calc.value,
             rate=rate_result,
         )
-    elif currency_value_output:
+    elif output_currency_value:
         output_calc = await calc_output_currency_to_value(
-            currency=currency_output, currency_value=currency_value_output,
+            currency=currency_output, currency_value=output_currency_value,
         )
         input_calc = await calc_input_value_to_currency(
             currency=currency_input, value=output_calc.value,
@@ -52,6 +53,7 @@ async def calc_all(
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,
-            input_currency_value=input_calc.currency_value, output_currency_value=output_calc.currency_value,
+            input_currency_value=input_calc.currency_value, input_value=input_calc.value,
+            output_currency_value=output_calc.currency_value, output_value=output_calc.value,
             rate=rate_result,
         )

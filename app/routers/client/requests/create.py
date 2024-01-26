@@ -35,9 +35,10 @@ class RequestCreateSchema(BaseSchema):
     wallet_id: int = Field()
     type: str = Field(min_length=1, max_length=8)
     input_method_id: int = Field(default=None)
+    input_currency_value: int = Field(default=None)
     input_value: int = Field(default=None)
-    value: int = Field(default=None)
     output_requisite_data_id: int = Field(default=None)
+    output_currency_value: int = Field(default=None)
     output_value: int = Field(default=None)
 
     @model_validator(mode='after')
@@ -48,20 +49,20 @@ class RequestCreateSchema(BaseSchema):
             RequestTypes.INPUT: {
                 'required': [self.input_method_id],
                 'required_names': ['input_method_id'],
-                'optional': [self.input_value, self.value],
-                'optional_names': ['input_value', 'value'],
+                'optional': [self.input_currency_value, self.input_value],
+                'optional_names': ['input_currency_value', 'input_value'],
             },
             RequestTypes.OUTPUT: {
                 'required': [self.output_requisite_data_id],
                 'required_names': ['output_requisite_data_id'],
-                'optional': [self.output_value, self.value],
-                'optional_names': ['output_value', 'value'],
+                'optional': [self.output_currency_value, self.output_value],
+                'optional_names': ['output_currency_value', 'output_value'],
             },
             RequestTypes.ALL: {
                 'required': [self.input_method_id, self.output_requisite_data_id],
                 'required_names': ['input_method_id', 'output_requisite_data_id'],
-                'optional': [self.input_value, self.output_value],
-                'optional_names': ['input_value', 'output_value'],
+                'optional': [self.input_currency_value, self.output_currency_value],
+                'optional_names': ['input_currency_value', 'output_currency_value'],
             },
         }
         if None in datas[self.type]['required']:
@@ -72,7 +73,7 @@ class RequestCreateSchema(BaseSchema):
                                       f'{"/".join(datas[self.type]["optional_names"])}')
         return self
 
-    @field_validator('input_value', 'value', 'output_value')
+    @field_validator('input_currency_value', 'input_value', 'output_currency_value', 'output_value')
     @classmethod
     def check_values(cls, value: int, info: ValidationInfo):
         if value is None:
@@ -89,9 +90,10 @@ async def route(schema: RequestCreateSchema):
         wallet_id=schema.wallet_id,
         type_=schema.type,
         input_method_id=schema.input_method_id,
+        input_currency_value=schema.input_currency_value,
         input_value=schema.input_value,
-        value=schema.value,
         output_requisite_data_id=schema.output_requisite_data_id,
+        output_currency_value=schema.output_currency_value,
         output_value=schema.output_value,
     )
 

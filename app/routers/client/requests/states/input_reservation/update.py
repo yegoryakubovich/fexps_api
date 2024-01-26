@@ -15,17 +15,27 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
-from .states import router as router_states
+from pydantic import Field
+
+from app.services import RequestStatesInputReservationService
+from app.utils import BaseSchema
+from app.utils import Response, Router
 
 router = Router(
-    prefix='/requests',
-    routes_included=[
-        router_states,
-        router_create,
-        router_delete,
-    ],
-    tags=['Requests'],
+    prefix='/update',
 )
+
+
+class RequestStatesInputReservationUpdateSchema(BaseSchema):
+    token: str = Field(min_length=32, max_length=64)
+    request_id: int = Field()
+
+
+@router.post()
+async def route(schema: RequestStatesInputReservationUpdateSchema):
+    result = await RequestStatesInputReservationService().update(
+        token=schema.token,
+        id_=schema.request_id,
+    )
+
+    return Response(**result)

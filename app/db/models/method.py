@@ -30,15 +30,14 @@ class MethodFieldTypes:
     choices_field = [STR, INT]
 
 
-
 class Method(Base):
     __tablename__ = 'methods'
 
     id = Column(BigInteger, primary_key=True)
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
-    currency = relationship('Currency', uselist=False, lazy='selectin')
+    currency = relationship('Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
-    name_text = relationship('Text', uselist=False, lazy='selectin')
+    name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
     schema_fields = Column(JSON())
     schema_confirmation_fields = Column(JSON())
     decimal = Column(Integer, default=2)

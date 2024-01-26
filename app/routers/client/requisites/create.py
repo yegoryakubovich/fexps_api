@@ -33,14 +33,15 @@ class RequisiteCreateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     type: str = Field(min_length=1, max_length=8)
     wallet_id: int = Field()
-    requisite_data_id: int = Field()
+    output_requisite_data_id: int = Field(default=None)
+    input_method_id: int = Field(default=None)
     total_currency_value: int = Field(default=None)
-    total_currency_value_min: int = Field(default=None)
-    total_currency_value_max: int = Field(default=None)
+    currency_value_min: int = Field(default=None)
+    currency_value_max: int = Field(default=None)
     rate: int = Field(default=None)
     total_value: int = Field(default=None)
-    total_value_min: int = Field(default=None)
-    total_value_max: int = Field(default=None)
+    value_min: int = Field(default=None)
+    value_max: int = Field(default=None)
 
     @field_validator('total_currency_value', 'rate', 'total_value')
     @classmethod
@@ -51,20 +52,29 @@ class RequisiteCreateSchema(BaseSchema):
             raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
         return value
 
-    @field_validator('type')
-    @classmethod
-    def type_select(cls, type_, info: ValidationInfo):
-        if type_ not in RequisiteTypes.choices:
-            raise DataValidationError(f'The "{info.field_name}" must contain: {"/".join(RequisiteTypes.choices)}')
-        return type_
-
     @model_validator(mode='after')
     def check_type(self) -> 'RequisiteCreateSchema':
-        optional = [self.total_currency_value, self.total_value, self.rate]
-        optional_names = ['total_currency_value', 'total_value', 'rate']
+        if self.type not in RequisiteTypes.choices:
+            raise DataValidationError(f'The "type" must contain: {"/".join(RequisiteTypes.choices)}')
 
-        if (len(optional) - optional.count(None)) != 2:
-            raise DataValidationError(f'The position must be two of: {"/".join(optional_names)}')
+        datas = {
+            RequisiteTypes.INPUT: {
+                'required': [self.input_method_id],
+                'required_names': ['input_method_id'],
+            },
+            RequisiteTypes.OUTPUT: {
+                'required': [self.output_requisite_data_id],
+                'required_names': ['output_requisite_data_id'],
+            },
+        }
+        if None in datas[self.type]['required']:
+            raise DataValidationError(f'For {self.type}, only these parameters are taken into account: '
+                                      f'{", ".join(datas[self.type]["required_names"])}')
+
+        value_optional = [self.total_currency_value, self.total_value, self.rate]
+        value_optional_names = ['total_currency_value', 'total_value', 'rate']
+        if (len(value_optional) - value_optional.count(None)) != 2:
+            raise DataValidationError(f'The position must be two of: {"/".join(value_optional_names)}')
         return self
 
 
@@ -74,14 +84,15 @@ async def route(schema: RequisiteCreateSchema):
         token=schema.token,
         type_=schema.type,
         wallet_id=schema.wallet_id,
-        requisite_data_id=schema.requisite_data_id,
+        output_requisite_data_id=schema.output_requisite_data_id,
+        input_method_id=schema.input_method_id,
         total_currency_value=schema.total_currency_value,
-        total_currency_value_min=schema.total_currency_value_min,
-        total_currency_value_max=schema.total_currency_value_max,
+        currency_value_min=schema.currency_value_min,
+        currency_value_max=schema.currency_value_max,
         rate=schema.rate,
         total_value=schema.total_value,
-        total_value_min=schema.total_value_min,
-        total_value_max=schema.total_value_max,
+        value_min=schema.value_min,
+        value_max=schema.value_max,
     )
 
     return Response(**result)

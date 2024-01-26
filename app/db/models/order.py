@@ -29,6 +29,7 @@ class OrderTypes:
 
 
 class OrderStates:  # token, order_id
+    WAITING = 'waiting'
     RESERVE = 'reserve'
     PAYMENT = 'payment'
     CONFIRMATION = 'confirmation'

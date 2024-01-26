@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestTypes, OrderStates, RequestStates, Order
+from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, Requisite, OrderStates, RequestTypes
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -23,7 +23,11 @@ from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
+from app.utils.calculations.orders import calc_all
+from app.utils.calculations.orders.input import calc_input
+from app.utils.calculations.orders.output import calc_output
 from app.utils.decorators import session_required
+from app.utils.tasks.utils.hard import get_need_values_output, get_need_values_input
 
 
 class RequestService(BaseService):
@@ -36,10 +40,11 @@ class RequestService(BaseService):
             wallet_id: int,
             type_: str,
             input_method_id: int,
-            input_value: float,
-            value: float,
+            input_currency_value: int,
+            input_value: int,
+            output_currency_value: int,
+            output_value: int,
             output_requisite_data_id: int,
-            output_value: float,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method = None
@@ -50,17 +55,17 @@ class RequestService(BaseService):
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
-
         request = await RequestRepository().create(
             wallet=wallet,
-            state=RequestStates.INPUT_RESERVATION,
+            state=RequestStates.WAITING,
             type=type_,
-            input_method=input_method,
+            input_currency_value=input_currency_value,
             input_value=input_value,
-            value=value,
+            input_method=input_method,
+            output_currency_value=output_currency_value,
+            output_value=output_value,
             output_method=output_method,
             output_requisite_data=output_requisite_data,
-            output_value=output_value,
         )
         await self.create_action(
             model=request,
@@ -69,15 +74,78 @@ class RequestService(BaseService):
                 'creator': f'session_{session.id}',
                 'id': request.id,
                 'wallet_id': wallet_id,
-                'input_method_id': input_method_id,
+                'input_currency_value': input_currency_value,
                 'input_value': input_value,
-                'value': value,
-                'output_requisite_data_id': output_requisite_data_id,
+                'input_method': input_method,
+                'output_currency_value': output_currency_value,
                 'output_value': output_value,
+                'output_method': output_method,
+                'output_requisite_data': output_requisite_data,
             },
         )
+        await self.create_relation(request=request)
 
         return {'request_id': request.id}
+
+    @staticmethod
+    async def create_relation_input(request: Request) -> None:
+        currency = request.input_method.currency
+        print(RequestTypes.INPUT)
+        need_input_value, need_value = await get_need_values_input(
+            request=request, order_type=OrderTypes.INPUT,
+        )
+        input_calc = await calc_input(currency=currency, currency_value=need_input_value, value=need_value)
+        for calc_requisite in input_calc.calc_requisites:
+            await OrderService().reserve_order(
+                request=request, calc_requisite=calc_requisite, order_type=OrderTypes.INPUT,
+            )
+
+    @staticmethod
+    async def create_relation_output(request: Request) -> None:
+        currency = request.output_method.currency
+        print(RequestTypes.OUTPUT)
+        need_output_value, need_value = await get_need_values_output(
+            request=request, order_type=OrderTypes.OUTPUT,
+        )
+        output_calc = await calc_output(currency=currency, currency_value=need_output_value, value=need_value)
+        for calc_requisite in output_calc.calc_requisites:
+            await OrderService().waited_order(
+                request=request, calc_requisite=calc_requisite, order_type=OrderTypes.OUTPUT,
+            )
+
+    @staticmethod
+    async def create_relation_all(request: Request) -> None:
+        print(RequestTypes.ALL)
+        input_currency = request.input_method.currency
+        output_currency = request.output_method.currency
+        calc_requisites = await calc_all(
+            currency_input=input_currency, input_currency_value=request.input_currency_value,
+            currency_output=output_currency, output_currency_value=request.output_currency_value,
+        )
+        for calc_requisite_input in calc_requisites.input_calc.calc_requisites:
+            await OrderService().reserve_order(
+                request=request, calc_requisite=calc_requisite_input, order_type=OrderTypes.INPUT,
+            )
+        for calc_requisite_output in calc_requisites.output_calc.calc_requisites:
+            await OrderService().waited_order(
+                request=request, calc_requisite=calc_requisite_output, order_type=OrderTypes.OUTPUT,
+            )
+        await OrderRepository().update(
+            request,
+            input_currency_value=calc_requisites.input_currency_value,
+            input_value=calc_requisites.input_value, input_rate=calc_requisites.input_calc.rate,
+            output_currency_value=calc_requisites.output_currency_value,
+            output_value=calc_requisites.output_value, output_rate=calc_requisites.output_calc.rate,
+            rate=calc_requisites.rate,
+        )
+
+    async def create_relation(self, request: Request) -> None:
+        if request.type == RequestTypes.INPUT:
+            await self.create_relation_input(request=request)
+        elif request.type == RequestTypes.OUTPUT:
+            await self.create_relation_output(request=request)
+        elif request.type == RequestTypes.ALL:
+            await self.create_relation_all(request=request)
 
     @session_required()
     async def delete(
@@ -119,49 +187,72 @@ class RequestService(BaseService):
         return result
 
     @staticmethod
-    async def check_all_orders(request: Request) -> None:
-        actual_state = None
-        # if request.type in [RequestTypes.INPUT, RequestTypes.ALL]:
-        #     input_orders = await OrderRepository().get_list(request=request, type=OrderTypes.INPUT)
-        #     if not input_orders:
-        #         return
-        #     input_reserve_states = [RequestStates.INPUT_RESERVATION]
-        #     input_payment_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT]
-        #     input_confirmation_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT]
-        #     input_compete_states = [RequestStates.INPUT_RESERVATION, RequestStates.INPUT_PAYMENT,
-        #                             RequestStates.INPUT_COMPLETED]
-        #     for input_order in input_orders:
-        #         if input_order.state == OrderStates.CANCELED:
-        #             continue
-        #         elif input_order.state == OrderStates.RESERVE and actual_state not in input_reserve_states:
-        #             actual_state = RequestStates.INPUT_RESERVATION
-        #         elif input_order.state == OrderStates.PAYMENT and actual_state not in input_payment_states:
-        #             actual_state = RequestStates.INPUT_PAYMENT
-        #         elif input_order.state == OrderStates.CONFIRMATION and actual_state not in input_confirmation_states:
-        #             actual_state = RequestStates.INPUT_PAYMENT
-        #         elif input_order.state == OrderStates.COMPLETED and actual_state not in input_compete_states:
-        #             actual_state = RequestStates.COMPLETED
-        # if actual_state != RequestStates.COMPLETED:
-        #     if request.state != actual_state:
-        #         await RequestRepository().update(request, state=actual_state)
-        #     return
-        # if request.type in [RequestTypes.OUTPUT, RequestTypes.ALL]:
-        #     output_orders = await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT)
-        #     output_reserve_states = [RequestStates.OUTPUT_RESERVATION]
-        #     output_payment_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT]
-        #     output_confirmation_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT]
-        #     output_compete_states = [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT_PAYMENT,
-        #                              RequestStates.OUTPUT_COMPLETED]
-        #     for output_order in output_orders:
-        #         if output_order.state == OrderStates.CANCELED:
-        #             continue
-        #         elif output_order.state == OrderStates.RESERVE and actual_state not in output_reserve_states:
-        #             actual_state = RequestStates.INPUT_RESERVATION
-        #         elif output_order.state == OrderStates.PAYMENT and actual_state not in output_payment_states:
-        #             actual_state = RequestStates.INPUT_PAYMENT
-        #         elif output_order.state == OrderStates.CONFIRMATION and actual_state not in output_confirmation_states:
-        #             actual_state = RequestStates.INPUT_PAYMENT
-        #         elif output_order.state == OrderStates.COMPLETED and actual_state not in output_compete_states:
-        #             actual_state = RequestStates.COMPLETED
-        # if request.state != actual_state:
-        #     await RequestRepository().update(request, state=actual_state)
+    async def state_waiting(request: Request) -> None:
+        pass
+
+    @staticmethod
+    async def state_input_reservation(request: Request) -> None:
+        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
+        if not need_input_value and not need_value:
+            await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
+            return
+
+        # FIXME (IF ORDER CANCELED, FOUND NEW ORDERS)
+
+    @staticmethod
+    async def state_input(request: Request) -> None:
+        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
+        if need_input_value or need_value:
+            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
+            return
+        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.RESERVE):
+            return  # Found payment reserve
+        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
+            return  # Found payment orders
+        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
+            return  # Found confirmation orders
+
+        await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Started next state
+
+    @staticmethod
+    async def state_output_reservation(request: Request) -> None:
+        need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
+        if not need_output_value and not need_value:
+            await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
+            return
+        for wait_order in await OrderRepository().get_list(
+                request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING,
+        ):
+            await OrderService().order_banned_value(
+                wallet=wait_order.request.wallet, value=wait_order.value,
+            )
+            await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+
+    @staticmethod
+    async def state_output(request: Request) -> None:
+        need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
+        if need_output_value or need_value:
+            await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Back to previous state
+            return
+        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.RESERVE):
+            return  # Found payment reserve
+        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
+            return  # Found payment orders
+        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION):
+            return  # Found confirmation orders
+
+        await RequestRepository().update(request, state=RequestStates.COMPLETED)  # Started next state
+
+    async def check_all_orders(self, request: Request) -> None:
+        print(f'1 request.state = {request.state}')
+        if request.state == RequestStates.WAITING:
+            await self.state_waiting(request=request)
+        if request.state == RequestStates.INPUT_RESERVATION:
+            await self.state_input_reservation(request=request)
+        if request.state == RequestStates.INPUT:
+            await self.state_input(request=request)
+        if request.state == RequestStates.OUTPUT_RESERVATION:
+            await self.state_output_reservation(request=request)
+        if request.state == RequestStates.OUTPUT:
+            await self.state_output(request=request)
+        print(f'2 request.state = {request.state}')

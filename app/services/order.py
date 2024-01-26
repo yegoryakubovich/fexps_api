@@ -15,50 +15,80 @@
 #
 
 
-from app.db.models import Session, Order, Actions, Requisite, OrderTypes, Request, WalletBanReasons, OrderStates, \
-    TransferTypes
+from app.db.models import Session, Order, Actions, Requisite, OrderTypes, Request, WalletBanReasons, TransferTypes, \
+    OrderStates, Wallet
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
 from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
 from app.utils.decorators import session_required
+from app.utils.schemes.calculations.orders import CalcRequisiteScheme
 
 
 class OrderService(BaseService):
     model = Order
 
     @staticmethod
+    async def order_banned_value(
+            wallet: Wallet,
+            value: int,
+    ) -> None:
+        await WalletBanService().create_related(
+            wallet=wallet, value=value, reason=WalletBanReasons.BY_ORDER,
+        )
+
+    async def reserve_order(
+            self,
+            request: Request,
+            calc_requisite: CalcRequisiteScheme,
+            order_type: OrderTypes,
+    ) -> None:
+        await self.waited_order(
+            request=request, calc_requisite=calc_requisite, order_type=order_type, order_state=OrderStates.RESERVE,
+        )
+
+    @staticmethod
+    async def waited_order(
+            request: Request,
+            calc_requisite: CalcRequisiteScheme,
+            order_type: OrderTypes,
+            order_state: str = OrderStates.WAITING,
+    ) -> None:
+        requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
+        await RequisiteRepository().update(
+            requisite,
+            currency_value=round(requisite.currency_value - calc_requisite.currency_value),
+            value=round(requisite.value - calc_requisite.value),
+        )
+        await OrderRepository().create(
+            type=order_type,
+            state=order_state,
+            request=request,
+            requisite=requisite,
+            currency_value=calc_requisite.currency_value,
+            value=calc_requisite.value,
+            rate=calc_requisite.rate,
+            requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
+        )
+
+    @staticmethod  # FIXME (REMOVE)
     async def create_related(
             order_type: str,
             request: Request,
             requisite: Requisite,
             currency_value: int,
             value: int,
-            rate: int,
     ) -> Order:
         if order_type == OrderTypes.OUTPUT:
             await WalletBanService().create_related(
                 wallet=request.wallet, value=value, reason=WalletBanReasons.BY_ORDER,
             )
-
         await RequisiteRepository().update(
             requisite,
             currency_value=round(requisite.currency_value - currency_value),
             value=round(requisite.value - value),
         )
-        order = await OrderRepository().create(
-            type=order_type,
-            state=OrderStates.RESERVE,
-            request=request,
-            requisite=requisite,
-            currency_value=currency_value,
-            value=value,
-            rate=rate,
-            requisite_fields=requisite.requisite_data.fields,
-        )
-
-        return order
 
     @session_required()
     async def get(
