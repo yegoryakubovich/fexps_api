@@ -18,14 +18,15 @@
 import math
 from typing import List
 
-from app.db.models import Currency, RequisiteTypes
+from app.db.models import Currency, RequisiteTypes, Request
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.orders.utils.hard import get_results_by_calc_requisites
-from app.utils.calculations.orders.utils.simples import check_zero
+from app.utils.calculations.orders.utils.simples import check_zero, get_div_values
 from app.utils.schemes.calculations.orders import CalcOrderScheme, CalcRequisiteScheme
 
 
 async def calc_output_currency_to_value(
+        request: Request,
         currency: Currency,
         currency_value: float,
 ) -> 'CalcOrderScheme':
@@ -39,15 +40,20 @@ async def calc_output_currency_to_value(
             suitable_currency_value = currency_value
         else:
             suitable_currency_value = requisite.currency_value
-        suitable_value = math.ceil(suitable_currency_value / requisite.rate * 100)
+        suitable_currency_value, suitable_value = get_div_values(
+            currency_value=suitable_currency_value, rate=requisite.rate, div=currency.div,
+        )
         calc_requisites.append(CalcRequisiteScheme(
             requisite_id=requisite.id, currency_value=suitable_currency_value,
             value=suitable_value, rate=requisite.rate,
         ))
         currency_value = round(currency_value - suitable_currency_value)
-    currency_value_result, value_result, rate_result = get_results_by_calc_requisites(
-        calc_requisites=calc_requisites, type_='output',
+    currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
+        request=request, calc_requisites=calc_requisites, type_='output',
     )
     return CalcOrderScheme(
-        calc_requisites=calc_requisites, currency_value=currency_value_result, value=value_result, rate=rate_result,
+        calc_requisites=calc_requisites,
+        currency_value=currency_value_result, commission_value=commission_value_result,
+        div_value=round(currency_value / rate_result * 100),
+        value=value_result, rate=rate_result,
     )

@@ -18,14 +18,15 @@
 import math
 from typing import List
 
-from app.db.models import Currency, RequisiteTypes
+from app.db.models import Currency, RequisiteTypes, Request
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.orders.utils.hard import get_results_by_calc_requisites
-from app.utils.calculations.orders.utils.simples import check_zero
+from app.utils.calculations.orders.utils.simples import check_zero, get_div_values
 from app.utils.schemes.calculations.orders import CalcOrderScheme, CalcRequisiteScheme
 
 
 async def calc_input_value_to_currency(
+        request: Request,
         currency: Currency,
         value: int,
 ) -> 'CalcOrderScheme':
@@ -39,15 +40,20 @@ async def calc_input_value_to_currency(
             suitable_value = value
         else:
             suitable_value = requisite.value
-        suitable_currency_value = math.ceil(suitable_value * requisite.rate / 100)
+        suitable_currency_value, suitable_value = get_div_values(
+            value=suitable_value, rate=requisite.rate, div=currency.div,
+        )
         calc_requisites.append(CalcRequisiteScheme(
             requisite_id=requisite.id, currency_value=suitable_currency_value,
             value=suitable_value, rate=requisite.rate,
         ))
         value = round(value - suitable_value)
-    currency_value_result, value_result, rate_result = get_results_by_calc_requisites(
-        calc_requisites=calc_requisites, type_='output',
+    currency_value_result, value_result, rate_result, commission_value_result = await  get_results_by_calc_requisites(
+        request=request, calc_requisites=calc_requisites, type_='input',
     )
     return CalcOrderScheme(
-        calc_requisites=calc_requisites, currency_value=currency_value_result, value=value_result, rate=rate_result,
+        calc_requisites=calc_requisites,
+        currency_value=currency_value_result, commission_value=commission_value_result,
+        div_value=value,
+        value=value_result, rate=rate_result,
     )

@@ -49,7 +49,6 @@ class Request(Base):
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     type = Column(String(length=8))
     state = Column(String(length=32))
-    commission_value = Column(BigInteger, nullable=True)
     rate_confirmed = Column(Boolean, default=False)
 
     input_currency_value = Column(BigInteger, nullable=True)
@@ -58,6 +57,8 @@ class Request(Base):
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
 
+    commission_value = Column(BigInteger, nullable=True)
+    div_value = Column(BigInteger, nullable=True)
     rate = Column(BigInteger, nullable=True)
 
     output_currency_value = Column(BigInteger, nullable=True)

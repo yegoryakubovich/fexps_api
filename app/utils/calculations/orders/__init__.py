@@ -17,13 +17,14 @@
 
 import math
 
-from app.db.models import Currency
+from app.db.models import Currency, Request
 from app.utils.schemes.calculations.orders import CalcAllOrderScheme
 from .input import calc_input_value_to_currency, calc_input_currency_to_value
 from .output import calc_output_currency_to_value, calc_output_value_to_currency
 
 
 async def calc_all(
+        request: Request,
         currency_input: Currency,
         currency_output: Currency,
         input_currency_value: int = None,
@@ -31,29 +32,33 @@ async def calc_all(
 ) -> 'CalcAllOrderScheme':
     if input_currency_value:
         input_calc = await calc_input_currency_to_value(
-            currency=currency_input, currency_value=input_currency_value,
+            request=request, currency=currency_input, currency_value=input_currency_value,
         )
         output_calc = await calc_output_value_to_currency(
-            currency=currency_output, value=input_calc.value,
+            request=request, currency=currency_output, value=input_calc.value,
         )
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,
             input_currency_value=input_calc.currency_value, input_value=input_calc.value,
             output_currency_value=output_calc.currency_value, output_value=output_calc.value,
+            commission_value=round(input_calc.commission_value+output_calc.commission_value),
+            div_value=round(input_calc.div_value + output_calc.div_value),
             rate=rate_result,
         )
     elif output_currency_value:
         output_calc = await calc_output_currency_to_value(
-            currency=currency_output, currency_value=output_currency_value,
+            request=request, currency=currency_output, currency_value=output_currency_value,
         )
         input_calc = await calc_input_value_to_currency(
-            currency=currency_input, value=output_calc.value,
+            request=request, currency=currency_input, value=output_calc.value,
         )
         rate_result = math.ceil(input_calc.currency_value / output_calc.currency_value * 100)
         return CalcAllOrderScheme(
             input_calc=input_calc, output_calc=output_calc,
             input_currency_value=input_calc.currency_value, input_value=input_calc.value,
             output_currency_value=output_calc.currency_value, output_value=output_calc.value,
+            commission_value=round(input_calc.commission_value + output_calc.commission_value),
+            div_value=round(input_calc.div_value + output_calc.div_value),
             rate=rate_result,
         )

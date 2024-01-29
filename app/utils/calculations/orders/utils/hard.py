@@ -37,6 +37,7 @@ async def get_need_values_input(request: Request, order_type: str) -> tuple[Opti
             result_currency_value = round(result_currency_value - order.currency_value)
         if request.input_value:
             result_value = round(result_value - order.value)
+    result_value += request.commission_value
     print(f'result_currency_value: {request.input_currency_value} -> {result_currency_value}')
     print(f'result_value: {request.input_value} -> {result_value}')
     return result_currency_value, result_value
@@ -51,32 +52,35 @@ async def get_need_values_output(request: Request, order_type: str) -> tuple[Opt
             result_currency_value = round(result_currency_value - order.currency_value)
         if request.output_value:
             result_value = round(result_value - order.value)
+    result_value += request.commission_value
     print(f'result_currency_value: {request.output_currency_value} -> {result_currency_value}')
     print(f'result_value: {request.output_value} -> {result_value}')
     return result_currency_value, result_value
 
 
-def get_results_by_calc_requisites(
+async def get_results_by_calc_requisites(
+        request: Request,
         calc_requisites: List[CalcRequisiteScheme],
         type_: str,
-) -> tuple[int, int, int]:
-    currency_value_result, value_result = 0, 0
+) -> tuple[int, int, int, int]:
+    currency_value_result, value_result, commission_value_result = 0, 0, 0
     for calc_requisite in calc_requisites:
         currency_value_result = round(currency_value_result + calc_requisite.currency_value)
         value_result = round(value_result + calc_requisite.value)
-    print(f'currency_value_result={currency_value_result}')
-    print(f'value_result={value_result}')
+
     if type_ == 'input':
+        commission_value_result = await get_commission(wallet_id=request.wallet_id, value=value_result)
+        value_result = round(value_result - commission_value_result)
         rate_result = math.ceil(currency_value_result / value_result * 100)
     else:
         rate_result = math.floor(currency_value_result / value_result * 100)
-    return currency_value_result, value_result, rate_result
+    return currency_value_result, value_result, rate_result, commission_value_result
 
 
 def get_commission_value(value: int, commission_pack_value: CommissionPackValue) -> int:
     result = 0
     if commission_pack_value.percent:
-        result += round(value * commission_pack_value.percent / 10000)
+        result += math.ceil(value * commission_pack_value.percent / 100_00)
     if commission_pack_value.value:
         result += commission_pack_value.value
     return result

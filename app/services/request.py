@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, Requisite, OrderStates, RequestTypes
+from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, OrderStates, RequestTypes
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -23,6 +23,7 @@ from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
+from app.services.transfer_system import TransferSystemService
 from app.utils.calculations.orders import calc_all
 from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
@@ -94,11 +95,22 @@ class RequestService(BaseService):
         need_input_value, need_value = await get_need_values_input(
             request=request, order_type=OrderTypes.INPUT,
         )
-        input_calc = await calc_input(currency=currency, currency_value=need_input_value, value=need_value)
+        input_calc = await calc_input(
+            request=request, currency=currency, currency_value=need_input_value, value=need_value,
+        )
         for calc_requisite in input_calc.calc_requisites:
             await OrderService().reserve_order(
                 request=request, calc_requisite=calc_requisite, order_type=OrderTypes.INPUT,
             )
+        await OrderRepository().update(
+            request,
+            input_currency_value=input_calc.currency_value,
+            input_value=input_calc.value,
+            input_rate=input_calc.rate,
+            commission_value=input_calc.commission_value,
+            div_value=input_calc.div_value,
+            rate=input_calc.rate,
+        )
 
     @staticmethod
     async def create_relation_output(request: Request) -> None:
@@ -107,11 +119,22 @@ class RequestService(BaseService):
         need_output_value, need_value = await get_need_values_output(
             request=request, order_type=OrderTypes.OUTPUT,
         )
-        output_calc = await calc_output(currency=currency, currency_value=need_output_value, value=need_value)
+        output_calc = await calc_output(
+            request=request, currency=currency, currency_value=need_output_value, value=need_value
+        )
         for calc_requisite in output_calc.calc_requisites:
             await OrderService().waited_order(
                 request=request, calc_requisite=calc_requisite, order_type=OrderTypes.OUTPUT,
             )
+        await OrderRepository().update(
+            request,
+            commission_value=output_calc.commission_value,
+            div_value=output_calc.div_value,
+            rate=output_calc.rate,
+            output_currency_value=output_calc.currency_value,
+            output_value=output_calc.value,
+            output_rate=output_calc.rate,
+        )
 
     @staticmethod
     async def create_relation_all(request: Request) -> None:
@@ -119,6 +142,7 @@ class RequestService(BaseService):
         input_currency = request.input_method.currency
         output_currency = request.output_method.currency
         calc_requisites = await calc_all(
+            request=request,
             currency_input=input_currency, input_currency_value=request.input_currency_value,
             currency_output=output_currency, output_currency_value=request.output_currency_value,
         )
@@ -133,10 +157,14 @@ class RequestService(BaseService):
         await OrderRepository().update(
             request,
             input_currency_value=calc_requisites.input_currency_value,
-            input_value=calc_requisites.input_value, input_rate=calc_requisites.input_calc.rate,
-            output_currency_value=calc_requisites.output_currency_value,
-            output_value=calc_requisites.output_value, output_rate=calc_requisites.output_calc.rate,
+            input_value=calc_requisites.input_value,
+            input_rate=calc_requisites.input_calc.rate,
+            commission_value=calc_requisites.commission_value,
+            div_value=calc_requisites.div_value,
             rate=calc_requisites.rate,
+            output_currency_value=calc_requisites.output_currency_value,
+            output_value=calc_requisites.output_value,
+            output_rate=calc_requisites.output_calc.rate,
         )
 
     async def create_relation(self, request: Request) -> None:
@@ -212,6 +240,7 @@ class RequestService(BaseService):
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
             return  # Found confirmation orders
 
+        await TransferSystemService().payment_commission(request=request)
         await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Started next state
 
     @staticmethod

@@ -15,18 +15,19 @@
 #
 
 
-from app.db.models import Currency
+from app.db.models import Currency, Request
 from app.utils.schemes.calculations.orders import CalcOrderScheme
 from .currency_to_value import calc_output_currency_to_value
 from .value_to_currency import calc_output_value_to_currency
 
 
 async def calc_output(
+        request: Request,
         currency: Currency,
         value: float = None,
         currency_value: float = None,
 ) -> 'CalcOrderScheme':
     if currency_value:
-        return await calc_output_currency_to_value(currency=currency, currency_value=currency_value)
+        return await calc_output_currency_to_value(request=request, currency=currency, currency_value=currency_value)
     elif value:
-        return await calc_output_value_to_currency(currency=currency, value=value)
+        return await calc_output_value_to_currency(request=request, currency=currency, value=value)

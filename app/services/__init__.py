@@ -46,6 +46,7 @@ from .text_pack import TextPackService
 from .text_translation import TextTranslationService
 from .timezone import TimezoneService
 from .transfer import TransferService
+from .transfer_system import TransferSystemService
 from .wallet import WalletService
 from .wallet_account import WalletAccountService
 from .wallet_ban import WalletBanService

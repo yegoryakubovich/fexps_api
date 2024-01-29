@@ -13,9 +13,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import math
 
 
 def check_zero(*args) -> bool:
     if 0 in args:
         return True
     return False
+
+
+def get_div_by_currency_value(currency_value: int, div: int, rate: int) -> tuple[int, int]:
+    currency_value = round(currency_value // div * div)
+    value = math.floor(currency_value / rate * 100)
+    return currency_value, value
+
+
+def get_div_by_value(value: int, div: int, rate: int) -> tuple[int, int]:
+    currency_value = round(value * rate / 100)
+    currency_value = round(currency_value // div * div)
+    value = math.floor(currency_value / rate * 100)
+    return currency_value, value
+
+
+def get_div_values(rate: int, div:int, currency_value: int = None, value: int = None) -> tuple[int, int]:
+    if currency_value:
+        return get_div_by_currency_value(currency_value=currency_value, div=div, rate=rate)
+    if value:
+        return get_div_by_value(value=value, div=div, rate=rate)
+
+
+# print(get_div(currency_value=26583, rate=99, div=100))
+# print(get_div(value=26852, rate=99, div=100))

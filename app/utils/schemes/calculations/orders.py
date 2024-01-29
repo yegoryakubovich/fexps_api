@@ -13,6 +13,8 @@ class CalcRequisiteScheme(BaseModel):
 class CalcOrderScheme(BaseModel):
     calc_requisites: List[CalcRequisiteScheme]
     currency_value: int
+    commission_value: int = 0
+    div_value: int = 0
     value: int
     rate: int
 
@@ -24,4 +26,6 @@ class CalcAllOrderScheme(BaseModel):
     input_value: int
     output_currency_value: int
     output_value: int
+    commission_value: int
+    div_value: int
     rate: int
