@@ -26,8 +26,8 @@ from app.services.order import OrderService
 from app.utils.calculations.orders import calc_all
 from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
+from app.utils.calculations.orders.utils.hard import get_need_values_input, get_need_values_output
 from app.utils.decorators import session_required
-from app.utils.tasks.utils.hard import get_need_values_output, get_need_values_input
 
 
 class RequestService(BaseService):
