@@ -130,7 +130,7 @@ class TransferService(BaseService):
             value: float,
     ) -> Transfer:
         balance = wallet_from.value - wallet_from.value_can_minus
-        if value >= balance:
+        if value > balance:
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         available_value = await WalletService().get_available_value(wallet=wallet_to)
         if value > available_value:

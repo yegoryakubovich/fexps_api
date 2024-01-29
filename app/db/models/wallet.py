@@ -32,4 +32,5 @@ class Wallet(Base):
     value = Column(BigInteger, default=0)
     value_banned = Column(BigInteger, default=0)
     value_can_minus = Column(BigInteger, default=0)
+    is_system = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

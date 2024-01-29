@@ -8,6 +8,10 @@ class WalletLimitReached(ApiException):
 class NotEnoughFundsOnBalance(ApiException):
     pass
 
+
+class SystemWalletNotFound(ApiException):
+    pass
+
 #
 # class WalletLimitReached(ApiException):
 #     code = 3001

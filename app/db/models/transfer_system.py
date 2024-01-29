@@ -22,14 +22,15 @@ from app.db.base_class import Base
 
 
 class TransferSystemTypes:
-    input = 'input'
-    output = 'output'
+    INPUT = 'input'
+    OUTPUT = 'output'
 
 
 class TransferSystemReasons:
-    salary = 'salary'
-    commission = 'commission'
-    difference_rate = 'difference_rate'
+    SALARY = 'salary'
+    COMMISSION = 'commission'
+    DIV = 'div'
+    DIFFERENCE_RATE = 'difference_rate'
 
 
 class TransferSystem(Base):
