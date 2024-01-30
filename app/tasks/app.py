@@ -14,10 +14,24 @@
 # limitations under the License.
 #
 
-
 from celery.app import Celery
 
+from config import settings
 
-redis_url = 'redis://redis:6379/0'
-app = Celery(__name__, broker=redis_url, backend=redis_url)
-print(1)
+redis_url = f'redis://{settings.redis_host}:{settings.redis_port}'
+celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
+
+celery_app.autodiscover_tasks(['app.tasks.schedule'])
+celery_app.conf.beat_schedule = {
+    'schedule': {
+        'task': 'app.tasks.schedule.orders.check_new_orders',
+        'schedule': 10.0
+    }
+}
+
+
+@celery_app.task
+async def test_task():
+    print(1)
+    with open('app/tasks/start.txt', 'w') as f:
+        f.write('start')
