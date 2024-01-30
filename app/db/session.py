@@ -19,7 +19,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from config import MYSQL_NAME, MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_PORT
+from config import settings
+
+MYSQL_USER = settings.mysql_user
+MYSQL_PASSWORD = settings.mysql_password
+MYSQL_HOST = settings.mysql_host
+MYSQL_PORT = settings.mysql_port
+MYSQL_NAME = settings.mysql_name
 
 ASYNC_URI = f'mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_NAME}?charset=utf8mb4'
 

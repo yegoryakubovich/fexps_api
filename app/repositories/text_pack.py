@@ -19,7 +19,7 @@ from json import dumps
 from typing import Optional
 
 from app.db.models import TextPack, Language
-from config import PATH_TEXTS_PACKS
+from config import settings
 from .base import BaseRepository
 from .language import LanguageRepository
 from .text import TextRepository
@@ -36,7 +36,7 @@ class TextPackRepository(BaseRepository[TextPack]):
             key = text.key
             json[key] = value
         text_pack = await self.create(language=language)
-        with open(f'{PATH_TEXTS_PACKS}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
+        with open(f'{settings.path_texts_packs}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
             md_file.write(dumps(json, ensure_ascii=False))
         return text_pack
 

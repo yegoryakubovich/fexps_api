@@ -26,7 +26,7 @@ from app.routers import routers
 from app.utils.client import init
 from app.utils.middleware import Middleware
 from app.utils.validation_error import validation_error
-from config import VERSION
+from config import settings
 
 
 async def on_startup():
@@ -43,7 +43,7 @@ async def on_startup():
 
 app = FastAPI(
     title='Finance Express API',
-    version=VERSION,
+    version=settings.version,
     contact={
         'name': 'Yegor Yakubovich',
         'url': 'https://yegoryakubovich.com',

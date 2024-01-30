@@ -21,7 +21,7 @@ from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.services.base import BaseService
 from app.utils import ApiException
 from app.utils.decorators import session_required
-from config import WALLET_MAX_VALUE
+from config import settings
 
 
 class IntervalAlreadyTaken(ApiException):
@@ -96,9 +96,9 @@ class CommissionPackValueService(BaseService):
     @staticmethod
     async def check_interval(commission_pack: CommissionPack, value_from: int, value_to: int):
         new_start = value_from
-        new_stop = value_to if value_to != 0 else WALLET_MAX_VALUE
+        new_stop = value_to if value_to != 0 else settings.wallet_max_value
         for pack_value in await CommissionPackValueRepository().get_list(commission_pack=commission_pack):
             pack_value_start = pack_value.value_from
-            pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else WALLET_MAX_VALUE
+            pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else settings.wallet_max_value
             if (new_start <= pack_value_stop) and (new_stop >= pack_value_start):
                 raise IntervalAlreadyTaken('This interval already taken')

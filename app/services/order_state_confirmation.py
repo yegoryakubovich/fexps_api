@@ -27,7 +27,7 @@ from app.utils.decorators import session_required
 class OrderStatesConfirmationService(BaseService):
     model = Order
 
-    @session_required()
+    @session_required()  # Получатель может вернуть в payment
     async def update(
             self,
             session: Session,

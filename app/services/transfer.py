@@ -24,7 +24,7 @@ from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 from app.utils.exaptions.main import DoesNotPermission
 from app.utils.exaptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
-from config import ITEMS_PER_PAGE, WALLET_MAX_VALUE
+from config import settings
 
 
 class TransferService(BaseService):
@@ -119,7 +119,7 @@ class TransferService(BaseService):
             'results': transfers_db[1],
             'page': page,
             'pages': transfers_db[2],
-            'items_per_page': ITEMS_PER_PAGE,
+            'items_per_page': settings.items_per_page,
         }
 
     @staticmethod
@@ -134,7 +134,7 @@ class TransferService(BaseService):
             raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         available_value = await WalletService().get_available_value(wallet=wallet_to)
         if value > available_value:
-            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {WALLET_MAX_VALUE}")
+            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {settings.wallet_max_value}")
         transfer = await TransferRepository().create(
             type=type_,
             wallet_from=wallet_from,

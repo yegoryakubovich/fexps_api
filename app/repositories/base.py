@@ -26,7 +26,7 @@ from app.db.base_class import Base
 from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
 from app.utils.exaptions.main import ModelDoesNotExist
-from config import ITEMS_PER_PAGE
+from config import settings
 
 ModelType = TypeVar('ModelType', bound=Base)
 
@@ -125,12 +125,13 @@ class BaseRepository(Generic[ModelType]):
             custom_select = select(self.model).where(custom_where)
 
         async with self._get_session() as session:
+            items_per_page = settings.items_per_page
             if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
                 filters['is_deleted'] = False
             result = await session.execute(
                 custom_select.filter_by(**filters).order_by(
                     self.model.id.desc()
-                ).limit(ITEMS_PER_PAGE).offset(ITEMS_PER_PAGE * (page - 1))
+                ).limit(items_per_page).offset(items_per_page * (page - 1))
             )
             count = await self.count(custom_select, **filters)
-            return result.scalars().all(), count, ceil(count / ITEMS_PER_PAGE)
+            return result.scalars().all(), count, ceil(count / items_per_page)

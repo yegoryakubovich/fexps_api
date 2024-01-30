@@ -15,28 +15,31 @@
 #
 
 
-from configparser import ConfigParser
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-config = ConfigParser()
-config.read('config.ini')
+class Settings(BaseSettings):
+    app_port: int
 
-"""SETTINGS"""
-config_settings = config['settings']
+    mysql_host: str
+    mysql_port: int
+    mysql_user: str
+    mysql_password: str
+    mysql_name: str
 
-DEBUG = int(config_settings['debug'])
-WALLET_MAX_COUNT = int(config_settings['wallet_max_count'])
-WALLET_MAX_VALUE = int(config_settings['wallet_max_value'])
-ITEMS_PER_PAGE = int(config_settings['items_per_page'])
+    debug: int
+    wallet_max_count: int
+    wallet_max_value: int
 
-"""DATABASE"""
-config_db = config['db']
+    root_token: str
 
-MYSQL_HOST = 'db' if DEBUG == 0 else config_db['host']
-MYSQL_PORT = int(config_db['port'])
-MYSQL_USER = config_db['user']
-MYSQL_PASSWORD = config_db['password']
-MYSQL_NAME = config_db['name']
+    version: int = 1
+    path_articles: str = 'assets/articles'
+    path_texts_packs: str = 'assets/texts_packs'
+    path_images: str = 'assets/images'
+    items_per_page: int = 10
 
-VERSION = '0.1'
-PATH_TEXTS_PACKS = 'assets/texts_packs'
+    model_config = SettingsConfigDict(env_file='.env')
+
+
+settings = Settings()

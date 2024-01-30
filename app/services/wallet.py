@@ -24,7 +24,7 @@ from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
 from app.utils.exaptions.main import DoesNotPermission
 from app.utils.exaptions.wallet import WalletLimitReached
-from config import WALLET_MAX_COUNT, WALLET_MAX_VALUE
+from config import settings
 
 
 class WalletService(BaseService):
@@ -38,7 +38,7 @@ class WalletService(BaseService):
     ) -> dict:
         account = session.account
         wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
-        if len(wallet_account_list) >= WALLET_MAX_COUNT:
+        if len(wallet_account_list) >= settings.wallet_max_count:
             raise WalletLimitReached('Wallet limit reached.')
         commission_pack = await CommissionPackRepository().get(is_default=True)
         wallet = await WalletRepository().create(name=name, commission_pack=commission_pack)
@@ -155,7 +155,7 @@ class WalletService(BaseService):
 
     @staticmethod
     async def get_available_value(wallet: Wallet) -> float:  # FIXME
-        return WALLET_MAX_VALUE - wallet.value
+        return settings.wallet_max_value - wallet.value
 
     @staticmethod
     async def get_free_value(wallet: Wallet):
