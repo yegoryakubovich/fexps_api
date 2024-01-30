@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     root_token: str
 
-    version: int = 1
+    version: str = '0.1'
     path_articles: str = 'assets/articles'
     path_texts_packs: str = 'assets/texts_packs'
     path_images: str = 'assets/images'
