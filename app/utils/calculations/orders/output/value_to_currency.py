@@ -34,12 +34,18 @@ async def calc_output_value_to_currency(
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT, currency=currency,
     ):
-        if check_zero(value, requisite.currency_value):
+        needed_value = value
+        if check_zero(needed_value, requisite.currency_value):
             continue
-        if round(value * requisite.rate) < currency.div:
+        if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума
             continue
-        if requisite.value >= value:
-            suitable_value = value
+        if requisite.value_max and needed_value > requisite.value_max:  # Больше максимума
+            needed_value = requisite.currency_value_max
+
+        if round(needed_value * requisite.rate) < currency.div:
+            continue
+        if requisite.value >= needed_value:
+            suitable_value = needed_value
         else:
             suitable_value = requisite.value
         suitable_currency_value, suitable_value = get_div_values(

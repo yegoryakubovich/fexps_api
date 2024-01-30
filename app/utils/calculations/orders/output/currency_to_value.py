@@ -15,7 +15,6 @@
 #
 
 
-import math
 from typing import List
 
 from app.db.models import Currency, RequisiteTypes, Request
@@ -34,20 +33,33 @@ async def calc_output_currency_to_value(
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT, currency=currency,
     ):
-        if check_zero(currency_value, requisite.currency_value):
+        needed_currency_value = currency_value
+        if check_zero(needed_currency_value, requisite.currency_value):
             continue
-        if requisite.currency_value >= currency_value:
-            suitable_currency_value = currency_value
+        if requisite.currency_value_min and needed_currency_value < requisite.currency_value_min:  # Меньше минимума
+            continue
+        if requisite.currency_value_max and needed_currency_value > requisite.currency_value_max:  # Больше максимума
+            needed_currency_value = requisite.currency_value_max
+
+        if requisite.currency_value >= needed_currency_value:
+            suitable_currency_value = needed_currency_value
         else:
             suitable_currency_value = requisite.currency_value
         suitable_currency_value, suitable_value = get_div_values(
             currency_value=suitable_currency_value, rate=requisite.rate, div=currency.div,
         )
+        if not suitable_currency_value or not suitable_value:
+            continue
+
         calc_requisites.append(CalcRequisiteScheme(
             requisite_id=requisite.id, currency_value=suitable_currency_value,
             value=suitable_value, rate=requisite.rate,
         ))
         currency_value = round(currency_value - suitable_currency_value)
+    if not calc_requisites:
+        print(f'Founded requisites: {len(calc_requisites)}. STOPPED')
+        raise
+
     currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
         request=request, calc_requisites=calc_requisites, type_='output',
     )

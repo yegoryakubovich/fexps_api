@@ -34,20 +34,35 @@ async def calc_input_value_to_currency(
     for requisite in await RequisiteRepository().get_list_input_by_rate(
             type=RequisiteTypes.OUTPUT, currency=currency,
     ):
-        if check_zero(value, requisite.currency_value):
+        needed_value = value
+        if check_zero(needed_value, requisite.currency_value):
             continue
-        if requisite.value >= value:
-            suitable_value = value
+        if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума
+            continue
+        if requisite.value_max and needed_value > requisite.value_max:  # Больше максимума
+            needed_value = requisite.currency_value_max
+
+        if round(needed_value * requisite.rate) < currency.div:
+            continue
+        if requisite.value >= needed_value:
+            suitable_value = needed_value
         else:
             suitable_value = requisite.value
         suitable_currency_value, suitable_value = get_div_values(
             value=suitable_value, rate=requisite.rate, div=currency.div,
         )
+        if not suitable_currency_value or not suitable_value:
+            continue
+
         calc_requisites.append(CalcRequisiteScheme(
             requisite_id=requisite.id, currency_value=suitable_currency_value,
             value=suitable_value, rate=requisite.rate,
         ))
         value = round(value - suitable_value)
+    if not calc_requisites:
+        print(f'Founded requisites: {len(calc_requisites)}. STOPPED')
+        raise
+
     currency_value_result, value_result, rate_result, commission_value_result = await  get_results_by_calc_requisites(
         request=request, calc_requisites=calc_requisites, type_='input',
     )
