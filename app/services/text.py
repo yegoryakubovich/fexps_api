@@ -25,7 +25,7 @@ from app.utils.decorators import session_required
 class TextService(BaseService):
     model = Text
 
-    @session_required()
+    @session_required(permissions=['texts'])
     async def create(
             self,
             session: Session,
@@ -49,7 +49,7 @@ class TextService(BaseService):
             return text
         return {'id': text.id}
 
-    @session_required(return_model=False)
+    @session_required(return_model=False, permissions=['texts'])
     async def get_list(
             self,
     ) -> dict:
@@ -74,7 +74,7 @@ class TextService(BaseService):
 
         return {'texts': texts_list}
 
-    @session_required()
+    @session_required(permissions=['texts'])
     async def update(
             self,
             session: Session,
@@ -104,7 +104,7 @@ class TextService(BaseService):
         )
         return {}
 
-    @session_required()
+    @session_required(permissions=['texts'])
     async def delete(
             self,
             session: Session,

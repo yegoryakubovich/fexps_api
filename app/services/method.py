@@ -28,7 +28,7 @@ from app.utils.exaptions.method import FieldsMissingParams, FieldsValidationErro
 class MethodService(BaseService):
     model = Method
 
-    @session_required()
+    @session_required(permissions=['methods'])
     async def create(
             self,
             session: Session,
@@ -111,7 +111,7 @@ class MethodService(BaseService):
             ],
         }
 
-    @session_required()
+    @session_required(permissions=['methods'])
     async def update(
             self,
             session: Session,
@@ -141,7 +141,7 @@ class MethodService(BaseService):
 
         return {}
 
-    @session_required()
+    @session_required(permissions=['methods'])
     async def delete(
             self,
             session: Session,
@@ -178,7 +178,6 @@ class MethodService(BaseService):
 
     @staticmethod
     async def check_confirmation_field(method: Method, fields: dict):
-        print(fields)
         for field in method.schema_confirmation_fields:
             field_key = field.get('key')
             field_type = field.get('type')

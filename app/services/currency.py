@@ -24,7 +24,7 @@ from app.utils.decorators import session_required
 class CurrencyService(BaseService):
     model = Currency
 
-    @session_required()
+    @session_required(permissions=['currencies'])
     async def create(
             self,
             session: Session,

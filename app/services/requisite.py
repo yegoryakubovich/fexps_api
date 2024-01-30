@@ -32,7 +32,7 @@ from app.utils.exaptions.requisite import MinimumTotalValueError
 class RequisiteService(BaseService):
     model = Requisite
 
-    @session_required()
+    @session_required(permissions=['requisites'])
     async def create(
             self,
             session: Session,
@@ -117,7 +117,7 @@ class RequisiteService(BaseService):
 
         return {'requisite_id': requisite.id}
 
-    @session_required()
+    @session_required(permissions=['requisites'])
     async def get(
             self,
             session: Session,
@@ -143,7 +143,7 @@ class RequisiteService(BaseService):
             }
         }
 
-    @session_required()
+    @session_required(permissions=['requisites'])
     async def update(
             self,
             session: Session,

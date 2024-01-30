@@ -30,7 +30,7 @@ from config import settings
 class TransferService(BaseService):
     model = Transfer
 
-    @session_required()
+    @session_required(permissions=['transfers'])
     async def create(
             self,
             session: Session,
@@ -64,7 +64,7 @@ class TransferService(BaseService):
 
         return {'transfer_id': transfer.id}
 
-    @session_required()
+    @session_required(permissions=['transfers'])
     async def get(
             self,
             session: Session,
@@ -90,7 +90,7 @@ class TransferService(BaseService):
             }
         }
 
-    @session_required()
+    @session_required(permissions=['transfers'])
     async def search(
             self,
             session: Session,

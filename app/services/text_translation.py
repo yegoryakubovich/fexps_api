@@ -27,7 +27,7 @@ from app.utils.exaptions.text import TextTranslationExist
 class TextTranslationService(BaseService):
     model = TextTranslation
 
-    @session_required()
+    @session_required(permissions=['texts_translations'])
     async def create(
             self,
             session: Session,
@@ -56,7 +56,7 @@ class TextTranslationService(BaseService):
             return text_translation
         return {'translation_id': text_translation.id}
 
-    @session_required()
+    @session_required(permissions=['texts_translations'])
     async def update(
             self,
             session: Session,
@@ -85,7 +85,7 @@ class TextTranslationService(BaseService):
 
         return {}
 
-    @session_required()
+    @session_required(permissions=['texts_translations'])
     async def delete(
             self,
             session: Session,

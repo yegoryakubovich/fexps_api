@@ -28,7 +28,7 @@ from app.utils.decorators import session_required
 class CommissionPackService(BaseService):
     model = CommissionPack
 
-    @session_required()
+    @session_required(permissions=['commissions_packs'])
     async def create(
             self,
             session: Session,
@@ -77,7 +77,7 @@ class CommissionPackService(BaseService):
 
         return {'commissions_packs': commissions_packs}
 
-    @session_required()
+    @session_required(permissions=['commissions_packs'])
     async def delete(
             self,
             session: Session,

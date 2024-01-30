@@ -28,7 +28,7 @@ from config import settings
 class WalletBanService(BaseService):
     model = WalletBan
 
-    @session_required()
+    @session_required(permissions=['wallets_bans'])
     async def create(
             self,
             session: Session,
@@ -69,7 +69,7 @@ class WalletBanService(BaseService):
         wallet_ban = await WalletBanRepository().create(wallet=wallet, value=value, reason=reason)
         return wallet_ban
 
-    @session_required()
+    @session_required(permissions=['wallets_bans'])
     async def delete(
             self,
             session: Session,

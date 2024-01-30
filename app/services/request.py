@@ -34,7 +34,7 @@ from app.utils.decorators import session_required
 class RequestService(BaseService):
     model = Request
 
-    @session_required()
+    @session_required(permissions=['requests'])
     async def create(
             self,
             session: Session,
@@ -175,7 +175,7 @@ class RequestService(BaseService):
         elif request.type == RequestTypes.ALL:
             await self.create_relation_all(request=request)
 
-    @session_required()
+    @session_required(permissions=['requests'])
     async def delete(
             self,
             session: Session,

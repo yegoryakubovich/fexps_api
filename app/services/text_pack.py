@@ -49,7 +49,7 @@ class TextPackService(BaseService):
             'text_pack': json,
         }
 
-    @session_required()
+    @session_required(permissions=['texts_packs'])
     async def create(self, session: Session, language_id_str: str):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
         text_pack = await TextPackRepository().create_by_language(language=language)
@@ -63,7 +63,7 @@ class TextPackService(BaseService):
         )
         return {'text_pack_id': text_pack.id}
 
-    @session_required()
+    @session_required(permissions=['texts_packs'])
     async def delete(self, session: Session, id_: int):
         text_pack = await TextPackRepository().get_by_id(id_=id_)
         await TextPackRepository().delete(text_pack)

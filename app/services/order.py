@@ -90,7 +90,7 @@ class OrderService(BaseService):
             value=round(requisite.value - value),
         )
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def get(
             self,
             session: Session,
@@ -116,7 +116,7 @@ class OrderService(BaseService):
             }
         }
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def delete(
             self,
             session: Session,

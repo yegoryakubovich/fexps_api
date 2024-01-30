@@ -28,7 +28,7 @@ from app.utils.exaptions.order import OrderRequestValidationError, OrderRequestF
 class OrderRequestService(BaseService):
     model = OrderRequest
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def create(
             self,
             session: Session,
@@ -63,7 +63,7 @@ class OrderRequestService(BaseService):
 
         return {'order_request_id': order_request.id}
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def update(
             self,
             session: Session,
@@ -108,7 +108,7 @@ class OrderRequestService(BaseService):
         elif state == OrderRequestStates.CANCELED:
             pass
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def delete(
             self,
             session: Session,

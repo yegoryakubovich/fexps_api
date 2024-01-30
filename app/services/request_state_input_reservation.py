@@ -25,7 +25,7 @@ from app.utils.decorators import session_required
 class RequestStatesInputReservationService(BaseService):
     model = Request
 
-    @session_required()
+    @session_required(permissions=['requests'])
     async def update(
             self,
             session: Session,

@@ -26,7 +26,7 @@ from app.utils.decorators import session_required
 class OrderStatesPaymentService(BaseService):
     model = Order
 
-    @session_required()
+    @session_required(permissions=['orders'])
     async def update(
             self,
             session: Session,

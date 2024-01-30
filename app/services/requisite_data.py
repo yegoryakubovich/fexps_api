@@ -26,7 +26,7 @@ from app.utils.decorators import session_required
 class RequisiteDataService(BaseService):
     model = RequisiteData
 
-    @session_required()
+    @session_required(permissions=['requisites_datas'])
     async def create(
             self,
             session: Session,
@@ -53,7 +53,7 @@ class RequisiteDataService(BaseService):
 
         return {'requisite_id': requisite_data.id}
 
-    @session_required()
+    @session_required(permissions=['requisites_datas'])
     async def get(
             self,
             session: Session,
@@ -70,7 +70,7 @@ class RequisiteDataService(BaseService):
             }
         }
 
-    @session_required()
+    @session_required(permissions=['requisites_datas'])
     async def get_list(
             self,
             session: Session,
@@ -88,7 +88,7 @@ class RequisiteDataService(BaseService):
             ],
         }
 
-    @session_required()
+    @session_required(permissions=['requisites_datas'])
     async def delete(
             self,
             session: Session,

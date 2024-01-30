@@ -26,7 +26,7 @@ from app.utils.decorators import session_required
 class ContactService(BaseService):
     model = Contact
 
-    @session_required()
+    @session_required(permissions=['contacts'])
     async def create(
             self,
             session: Session,
@@ -74,7 +74,7 @@ class ContactService(BaseService):
             ],
         }
 
-    @session_required()
+    @session_required(permissions=['contacts'])
     async def delete(
             self,
             session: Session,
