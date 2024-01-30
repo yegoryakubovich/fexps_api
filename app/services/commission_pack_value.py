@@ -39,7 +39,7 @@ class IntervalNotFoundError(ApiException):
 class CommissionPackValueService(BaseService):
     model = CommissionPackValue
 
-    @session_required(permissions=['commissions_packs_values'])
+    @session_required(permissions=['commissions_packs'])
     async def create(
             self,
             session: Session,
@@ -74,7 +74,7 @@ class CommissionPackValueService(BaseService):
 
         return {'commission_pack_value_id': commission_pack_value.id}
 
-    @session_required(permissions=['commissions_packs_values'])
+    @session_required(permissions=['commissions_packs'])
     async def delete(
             self,
             session: Session,

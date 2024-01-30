@@ -30,7 +30,7 @@ class AccountContactsAlreadyExists(ApiException):
 class AccountContactService(BaseService):
     model = AccountContact
 
-    @session_required()
+    @session_required(permissions=['accounts'])
     async def create(
             self,
             session: Session,
@@ -54,7 +54,7 @@ class AccountContactService(BaseService):
 
         return {'account_contact_id': account_contact.id}
 
-    @session_required()
+    @session_required(permissions=['accounts'])
     async def get(
             self,
             session: Session,
@@ -71,7 +71,7 @@ class AccountContactService(BaseService):
             'value': account_contact.value,
         }
 
-    @session_required()
+    @session_required(permissions=['accounts'])
     async def get_list(
             self,
             session: Session,
@@ -92,7 +92,7 @@ class AccountContactService(BaseService):
 
         return {'account_contacts': account_contacts_list}
 
-    @session_required()
+    @session_required(permissions=['accounts'])
     async def update(
             self,
             session: Session,
@@ -116,7 +116,7 @@ class AccountContactService(BaseService):
 
         return {}
 
-    @session_required()
+    @session_required(permissions=['accounts'])
     async def delete(
             self,
             session: Session,
