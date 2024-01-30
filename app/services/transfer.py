@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet, Actions, TransferTypes
+from app.db.models import Transfer, Session, Wallet, Actions, TransferTypes, Order
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
@@ -128,6 +128,7 @@ class TransferService(BaseService):
             wallet_from: Wallet,
             wallet_to: Wallet,
             value: float,
+            order: Order = None,
     ) -> Transfer:
         balance = wallet_from.value - wallet_from.value_can_minus
         if value > balance:
@@ -135,13 +136,14 @@ class TransferService(BaseService):
         available_value = await WalletService().get_available_value(wallet=wallet_to)
         if value > available_value:
             raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {settings.wallet_max_value}")
+        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
         transfer = await TransferRepository().create(
             type=type_,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
             value=value,
+            order=order,
         )
-        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
         await WalletRepository().update(wallet_to, value=wallet_to.value + value)
 
         return transfer

@@ -166,6 +166,7 @@ class OrderService(BaseService):
                 wallet_from=order.requisite.wallet,
                 wallet_to=order.request.wallet,
                 value=order.value,
+                order=order,
             )
         elif order.type == OrderTypes.OUTPUT:  # FIXME (check)
             await WalletBanService().create_related(
