@@ -27,10 +27,10 @@ class Settings(BaseSettings):
     mysql_password: str
     mysql_name: str
 
-    redis_user: str
-    redis_password: str
     redis_host: str
     redis_port: int
+    redis_user: str
+    redis_password: str
 
     root_token: str
     debug: int
