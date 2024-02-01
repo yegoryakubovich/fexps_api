@@ -54,4 +54,5 @@ class Requisite(Base):
     value_min = Column(BigInteger, nullable=True)
     value_max = Column(BigInteger, nullable=True)
 
+    in_process = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
