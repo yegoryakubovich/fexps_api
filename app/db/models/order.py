@@ -36,7 +36,8 @@ class OrderStates:  # token, order_id
     COMPLETED = 'completed'  # None (Проверка всех ордеров, запуск RequestService finish)
     CANCELED = 'canceled'
 
-    choices = [RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
+    choices = [WAITING, RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
+    choices_one_side_cancel = [WAITING, RESERVE, PAYMENT]
 
 
 class OrderCanceledReasons:
