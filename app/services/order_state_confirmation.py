@@ -54,6 +54,5 @@ class OrderStatesConfirmationService(BaseService):
                 'confirmation_fields': confirmation_fields,
             },
         )
-        await RequestService().check_all_orders(request=order.request)
 
         return {}

@@ -41,6 +41,5 @@ class RequestStatesInputReservationService(BaseService):
                 'state': RequestStates.INPUT_RESERVATION,
             },
         )
-        await RequestService().check_all_orders(request=request)
 
         return {}

@@ -44,6 +44,5 @@ class OrderStatesPaymentService(BaseService):
                 'state': OrderStates.PAYMENT,
             },
         )
-        await RequestService().check_all_orders(request=order.request)
 
         return {}

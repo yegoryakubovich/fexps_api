@@ -46,6 +46,5 @@ class OrderStatesCompletedService(BaseService):
                 'state': OrderStates.COMPLETED,
             },
         )
-        await RequestService().check_all_orders(request=order.request)
 
         return {}

@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, OrderStates, RequestTypes
+from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, RequestTypes
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -23,7 +23,6 @@ from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
-from app.services.transfer_system import TransferSystemService
 from app.utils.calculations.orders import calc_all
 from app.utils.calculations.orders.input import calc_input
 from app.utils.calculations.orders.output import calc_output
@@ -213,75 +212,3 @@ class RequestService(BaseService):
             else:  # currency value
                 result -= order.currency_value
         return result
-
-    @staticmethod
-    async def state_waiting(request: Request) -> None:
-        pass
-
-    @staticmethod
-    async def state_input_reservation(request: Request) -> None:
-        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
-        if not need_input_value and not need_value:
-            await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
-            return
-
-        # FIXME (IF ORDER CANCELED, FOUND NEW ORDERS)
-
-    @staticmethod
-    async def state_input(request: Request) -> None:
-        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
-        if need_input_value or need_value:
-            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
-            return
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.RESERVE):
-            return  # Found payment reserve
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
-            return  # Found payment orders
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
-            return  # Found confirmation orders
-
-        await TransferSystemService().payment_commission(request=request)
-        await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Started next state
-
-    @staticmethod
-    async def state_output_reservation(request: Request) -> None:
-        need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
-        if not need_output_value and not need_value:
-            await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
-            return
-        for wait_order in await OrderRepository().get_list(
-                request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING,
-        ):
-            await OrderService().order_banned_value(
-                wallet=wait_order.request.wallet, value=wait_order.value,
-            )
-            await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
-
-    @staticmethod
-    async def state_output(request: Request) -> None:
-        need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
-        if need_output_value or need_value:
-            await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Back to previous state
-            return
-        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.RESERVE):
-            return  # Found payment reserve
-        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
-            return  # Found payment orders
-        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION):
-            return  # Found confirmation orders
-
-        await RequestRepository().update(request, state=RequestStates.COMPLETED)  # Started next state
-
-    async def check_all_orders(self, request: Request) -> None:
-        print(f'1 request.state = {request.state}')
-        if request.state == RequestStates.WAITING:
-            await self.state_waiting(request=request)
-        if request.state == RequestStates.INPUT_RESERVATION:
-            await self.state_input_reservation(request=request)
-        if request.state == RequestStates.INPUT:
-            await self.state_input(request=request)
-        if request.state == RequestStates.OUTPUT_RESERVATION:
-            await self.state_output_reservation(request=request)
-        if request.state == RequestStates.OUTPUT:
-            await self.state_output(request=request)
-        print(f'2 request.state = {request.state}')

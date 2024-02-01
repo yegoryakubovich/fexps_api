@@ -48,6 +48,5 @@ class OrderStatesCanceledService(BaseService):
                 'reason': reason,
             },
         )
-        await RequestService().check_all_orders(request=order.request)
 
         return {}
