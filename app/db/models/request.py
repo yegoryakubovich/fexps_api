@@ -30,6 +30,7 @@ class RequestTypes:
 
 
 class RequestStates:
+    LOADING = 'loading'
     WAITING = 'waiting'
     INPUT_RESERVATION = 'input_reservation'
     INPUT = 'input'

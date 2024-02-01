@@ -27,20 +27,23 @@ class Settings(BaseSettings):
     mysql_password: str
     mysql_name: str
 
+    redis_user: str
+    redis_password: str
     redis_host: str
     redis_port: int
 
+    root_token: str
     debug: int
     wallet_max_count: int
     wallet_max_value: int
-
-    root_token: str
 
     version: str = '0.1'
     path_articles: str = 'assets/articles'
     path_texts_packs: str = 'assets/texts_packs'
     path_images: str = 'assets/images'
+
     items_per_page: int = 10
+    request_wait_minutes: int = 2
 
     model_config = SettingsConfigDict(env_file='.env')
 

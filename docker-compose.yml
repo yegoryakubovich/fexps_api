@@ -31,22 +31,8 @@ services:
       dockerfile: celery.dockerfile
     volumes:
       - ./app/tasks:/app/app/tasks
-    depends_on:
-      - redis
-  beat:
-    build:
-      dockerfile: beat.dockerfile
-    depends_on:
-      - redis
   flower:
     build:
       dockerfile: flower.dockerfile
     ports:
       - "5555:5555"
-    depends_on:
-      - celery
-  redis:
-    image: redis
-    restart: on-failure
-    volumes:
-      - ./data/redis:/data

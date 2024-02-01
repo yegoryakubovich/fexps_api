@@ -15,15 +15,5 @@
 #
 
 
-from typing import List
-
-from app.db.models import Request
-from .base import BaseRepository
-
-
-class RequestRepository(BaseRepository[Request]):
-    model = Request
-
-    async def get_list_by_asc(self, **filters) -> List[Request]:
-        custom_order = self.model.id.asc()
-        return await self.get_list(custom_order=custom_order, **filters)
+from . import orders_checks
+from . import states

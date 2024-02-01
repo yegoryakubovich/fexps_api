@@ -15,15 +15,16 @@
 #
 
 
-from typing import List
+from app.db.models import RequestStates
+from app.repositories.request import RequestRepository
+from app.tasks import celery_app
+from app.utils.decorators.celery_async import celery_sync
 
-from app.db.models import Request
-from .base import BaseRepository
 
+@celery_app.task(name='request_state_waiting_check')
+@celery_sync
+async def request_state_waiting_check():
+    for request in await RequestRepository().get_list(state=RequestStates.WAITING):
+        pass
 
-class RequestRepository(BaseRepository[Request]):
-    model = Request
-
-    async def get_list_by_asc(self, **filters) -> List[Request]:
-        custom_order = self.model.id.asc()
-        return await self.get_list(custom_order=custom_order, **filters)
+    request_state_waiting_check.apply_async()
