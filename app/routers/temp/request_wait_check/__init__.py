@@ -15,15 +15,13 @@
 #
 
 
-from .favicon import router as router_favicon
-from .temp import router as router_temp
-from .client import router as router_client
-from .admin import router as router_admin
+from app.utils import Router
+from .start import router as router_start
 
 
-routers = [
-    router_temp,
-    router_favicon,
-    router_admin,
-    router_client,
-]
+router = Router(
+    prefix='/request/new/order/check',
+    routes_included=[
+        router_start,
+    ],
+)

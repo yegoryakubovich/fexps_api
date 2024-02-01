@@ -15,15 +15,14 @@
 #
 
 
-from .favicon import router as router_favicon
-from .temp import router as router_temp
-from .client import router as router_client
-from .admin import router as router_admin
+from app.utils import Router
+from .request_wait_check import router as router_request_wait_check
+from .request_states import router as router_request_states
 
 
-routers = [
-    router_temp,
-    router_favicon,
-    router_admin,
-    router_client,
-]
+router = Router(
+    routes_included=[
+        router_request_wait_check,
+        router_request_states,
+    ],
+)
