@@ -18,7 +18,7 @@
 from app.db.models import RequestStates, OrderTypes
 from app.repositories.request import RequestRepository
 from app.tasks import celery_app
-from app.utils.calculations.orders.utils.hard import get_need_values_input
+from app.utils.calculations.hard import get_need_values_input
 from app.utils.decorators.celery_async import celery_sync
 
 

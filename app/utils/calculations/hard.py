@@ -25,7 +25,7 @@ from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.repositories.order import OrderRepository
 from app.repositories.wallet import WalletRepository
 from app.services.commission_pack_value import IntervalNotFoundError
-from app.utils.schemes.calculations.orders import CalcRequisiteScheme
+from app.utils.schemes.calculations.orders import RequisiteScheme
 
 
 async def get_need_values_input(request: Request, order_type: str) -> tuple[Optional[int], Optional[int]]:
@@ -37,9 +37,8 @@ async def get_need_values_input(request: Request, order_type: str) -> tuple[Opti
             result_currency_value = round(result_currency_value - order.currency_value)
         if request.input_value:
             result_value = round(result_value - order.value)
-    result_value += request.commission_value
-    print(f'result_currency_value: {request.input_currency_value} -> {result_currency_value}')
-    print(f'result_value: {request.input_value} -> {result_value}')
+    if result_value:
+        result_value += request.commission_value
     return result_currency_value, result_value
 
 
@@ -52,21 +51,20 @@ async def get_need_values_output(request: Request, order_type: str) -> tuple[Opt
             result_currency_value = round(result_currency_value - order.currency_value)
         if request.output_value:
             result_value = round(result_value - order.value)
-    result_value += request.commission_value
-    print(f'result_currency_value: {request.output_currency_value} -> {result_currency_value}')
-    print(f'result_value: {request.output_value} -> {result_value}')
+    if result_value:
+        result_value += request.commission_value
     return result_currency_value, result_value
 
 
 async def get_results_by_calc_requisites(
         request: Request,
-        calc_requisites: List[CalcRequisiteScheme],
+        requisites_scheme_list: List[RequisiteScheme],
         type_: str,
 ) -> tuple[int, int, int, int]:
     currency_value_result, value_result, commission_value_result = 0, 0, 0
-    for calc_requisite in calc_requisites:
-        currency_value_result = round(currency_value_result + calc_requisite.currency_value)
-        value_result = round(value_result + calc_requisite.value)
+    for requisite_scheme in requisites_scheme_list:
+        currency_value_result = round(currency_value_result + requisite_scheme.currency_value)
+        value_result = round(value_result + requisite_scheme.value)
 
     if type_ == 'input':
         commission_value_result = await get_commission(wallet_id=request.wallet_id, value=value_result)

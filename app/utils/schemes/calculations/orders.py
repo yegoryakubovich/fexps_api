@@ -3,15 +3,15 @@ from typing import List
 from pydantic import BaseModel
 
 
-class CalcRequisiteScheme(BaseModel):
+class RequisiteScheme(BaseModel):
     requisite_id: int
     currency_value: int
     value: int
     rate: int
 
 
-class CalcOrderScheme(BaseModel):
-    calc_requisites: List[CalcRequisiteScheme]
+class RequisiteTypeScheme(BaseModel):
+    requisites_list: List[RequisiteScheme]
     currency_value: int
     commission_value: int = 0
     div_value: int = 0
@@ -19,13 +19,15 @@ class CalcOrderScheme(BaseModel):
     rate: int
 
 
-class CalcAllOrderScheme(BaseModel):
-    input_calc: CalcOrderScheme
-    output_calc: CalcOrderScheme
+class AllRequisiteTypeScheme(BaseModel):
+    input_requisites: RequisiteTypeScheme
     input_currency_value: int
     input_value: int
+
+    output_requisites: RequisiteTypeScheme
     output_currency_value: int
     output_value: int
-    commission_value: int
-    div_value: int
+
+    commission_value: int = 0
+    div_value: int = 0
     rate: int

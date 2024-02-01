@@ -15,8 +15,6 @@
 #
 
 
-from app.db.models import RequestStates
-from app.repositories.request import RequestRepository
 from app.tasks import celery_app
 from app.utils.decorators.celery_async import celery_sync
 
@@ -24,7 +22,5 @@ from app.utils.decorators.celery_async import celery_sync
 @celery_app.task(name='request_state_waiting_check')
 @celery_sync
 async def request_state_waiting_check():
-    for request in await RequestRepository().get_list(state=RequestStates.WAITING):
-        pass
-
-    request_state_waiting_check.apply_async()
+    # request_state_waiting_check.apply_async()
+    pass

@@ -20,7 +20,6 @@ from app.repositories.order import OrderRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.services.order_request import OrderRequestService
-from app.services.request import RequestService
 from app.utils.decorators import session_required
 
 

@@ -17,7 +17,6 @@
 
 from app.db.models import Session, Request, Actions, RequestStates
 from app.repositories.request import RequestRepository
-from app.services import RequestService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 

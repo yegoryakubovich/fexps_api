@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Order, Actions, Requisite, OrderTypes, Request, WalletBanReasons, TransferTypes, \
+from app.db.models import Session, Order, Actions, OrderTypes, Request, WalletBanReasons, TransferTypes, \
     OrderStates, Wallet
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
@@ -23,7 +23,7 @@ from app.services.base import BaseService
 from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
 from app.utils.decorators import session_required
-from app.utils.schemes.calculations.orders import CalcRequisiteScheme
+from app.utils.schemes.calculations.orders import RequisiteScheme
 
 
 class OrderService(BaseService):
@@ -41,54 +41,55 @@ class OrderService(BaseService):
     async def reserve_order(
             self,
             request: Request,
-            calc_requisite: CalcRequisiteScheme,
+            requisite_scheme: RequisiteScheme,
             order_type: OrderTypes,
     ) -> None:
         await self.waited_order(
-            request=request, calc_requisite=calc_requisite, order_type=order_type, order_state=OrderStates.RESERVE,
+            request=request, requisite_scheme=requisite_scheme, order_type=order_type, order_state=OrderStates.RESERVE,
         )
 
     @staticmethod
     async def waited_order(
             request: Request,
-            calc_requisite: CalcRequisiteScheme,
+            requisite_scheme: RequisiteScheme,
             order_type: OrderTypes,
             order_state: str = OrderStates.WAITING,
     ) -> None:
-        requisite = await RequisiteRepository().get_by_id(id_=calc_requisite.requisite_id)
+        requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
         await RequisiteRepository().update(
             requisite,
-            currency_value=round(requisite.currency_value - calc_requisite.currency_value),
-            value=round(requisite.value - calc_requisite.value),
+            currency_value=round(requisite.currency_value - requisite_scheme.currency_value),
+            value=round(requisite.value - requisite_scheme.value),
+            in_process=False,
         )
         await OrderRepository().create(
             type=order_type,
             state=order_state,
             request=request,
             requisite=requisite,
-            currency_value=calc_requisite.currency_value,
-            value=calc_requisite.value,
-            rate=calc_requisite.rate,
+            currency_value=requisite_scheme.currency_value,
+            value=requisite_scheme.value,
+            rate=requisite_scheme.rate,
             requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
         )
 
-    @staticmethod  # FIXME (REMOVE)
-    async def create_related(
-            order_type: str,
-            request: Request,
-            requisite: Requisite,
-            currency_value: int,
-            value: int,
-    ) -> Order:
-        if order_type == OrderTypes.OUTPUT:
-            await WalletBanService().create_related(
-                wallet=request.wallet, value=value, reason=WalletBanReasons.BY_ORDER,
-            )
-        await RequisiteRepository().update(
-            requisite,
-            currency_value=round(requisite.currency_value - currency_value),
-            value=round(requisite.value - value),
-        )
+    # @staticmethod  # FIXME (REMOVE)
+    # async def create_related(
+    #         order_type: str,
+    #         request: Request,
+    #         requisite: Requisite,
+    #         currency_value: int,
+    #         value: int,
+    # ) -> Order:
+    #     if order_type == OrderTypes.OUTPUT:
+    #         await WalletBanService().create_related(
+    #             wallet=request.wallet, value=value, reason=WalletBanReasons.BY_ORDER,
+    #         )
+    #     await RequisiteRepository().update(
+    #         requisite,
+    #         currency_value=round(requisite.currency_value - currency_value),
+    #         value=round(requisite.value - value),
+    #     )
 
     @session_required(permissions=['orders'])
     async def get(
