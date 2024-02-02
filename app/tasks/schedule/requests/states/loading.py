@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import logging
 import math
 from typing import List, Optional
@@ -27,6 +29,17 @@ from app.utils.calculations.hard import get_need_values_input, get_need_values_o
 from app.utils.calculations.simples import get_div_values, check_zero
 from app.utils.decorators.celery_async import celery_sync
 from app.utils.schemes.calculations.orders import RequisiteTypeScheme, RequisiteScheme, AllRequisiteTypeScheme
+
+
+@celery_app.task()
+def request_state_loading_check_smart_start():
+    name = 'request_state_loading_check'
+    actives = celery_app.control.inspect().active()
+    for worker in actives:
+        for task in actives[worker]:
+            if task['name'] == name:
+                return
+    request_state_loading_check.apply_async()
 
 
 @celery_app.task(name='request_state_loading_check')

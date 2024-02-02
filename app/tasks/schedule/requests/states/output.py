@@ -23,6 +23,17 @@ from app.utils.calculations.hard import get_need_values_output
 from app.utils.decorators.celery_async import celery_sync
 
 
+@celery_app.task()
+def request_state_output_check_smart_start():
+    name = 'request_state_output_check'
+    actives = celery_app.control.inspect().active()
+    for worker in actives:
+        for task in actives[worker]:
+            if task['name'] == name:
+                return
+    request_state_output_check.apply_async()
+
+
 @celery_app.task(name='request_state_output_check')
 @celery_sync
 async def request_state_output_check():

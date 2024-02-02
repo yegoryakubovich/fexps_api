@@ -16,13 +16,12 @@
 
 
 from app.utils import Router
-from .request_wait_check import router as router_request_wait_check
-from .request_states import router as router_request_states
+from .start import router as router_start
 
 
 router = Router(
     routes_included=[
-        router_request_wait_check,
-        router_request_states,
+        router_start,
     ],
+    tags=['Temps']
 )

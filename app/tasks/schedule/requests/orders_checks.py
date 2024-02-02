@@ -26,6 +26,17 @@ from app.utils.decorators.celery_async import celery_sync
 from config import settings
 
 
+@celery_app.task()
+def request_new_order_check_smart_start():
+    name = 'request_new_order_check'
+    actives = celery_app.control.inspect().active()
+    for worker in actives:
+        for task in actives[worker]:
+            if task['name'] == name:
+                return
+    request_new_order_check.apply_async()
+
+
 @celery_app.task(name='request_new_order_check')
 @celery_sync
 async def request_new_order_check():

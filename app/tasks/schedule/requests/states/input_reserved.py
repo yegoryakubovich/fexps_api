@@ -15,11 +15,23 @@
 #
 
 
-from app.db.models import RequestStates, OrderTypes
+from app.db.models import RequestStates, OrderTypes, RequisiteTypes
 from app.repositories.request import RequestRepository
+from app.repositories.requisite import RequisiteRepository
 from app.tasks import celery_app
 from app.utils.calculations.hard import get_need_values_input
 from app.utils.decorators.celery_async import celery_sync
+
+
+@celery_app.task()
+def request_state_input_reservation_check_smart_start():
+    name = 'request_state_input_reservation_check'
+    actives = celery_app.control.inspect().active()
+    for worker in actives:
+        for task in actives[worker]:
+            if task['name'] == name:
+                return
+    request_state_input_reservation_check.apply_async()
 
 
 @celery_app.task(name='request_state_input_reservation_check')
@@ -30,7 +42,9 @@ async def request_state_input_reservation_check():
         if not need_input_value and not need_value:
             await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
             return
-
-        # FIXME (IF ORDER CANCELED, FOUND NEW ORDERS)
+        for requisite in await RequisiteRepository().get_list_input_by_rate(
+                type=RequisiteTypes.OUTPUT, currency=request.input_method.currency, in_process=False,
+        ):
+            await RequisiteRepository().update(requisite, in_process=True)
 
     request_state_input_reservation_check.apply_async()
