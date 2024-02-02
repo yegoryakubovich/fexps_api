@@ -38,6 +38,7 @@ class OrderStates:  # token, order_id
 
     choices = [WAITING, RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
     choices_one_side_cancel = [WAITING, RESERVE, PAYMENT]
+    choices_return_banned_value = [RESERVE, PAYMENT, CONFIRMATION]
 
 
 class OrderCanceledReasons:

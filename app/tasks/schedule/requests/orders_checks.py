@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from app.db.models import RequestStates, Actions, Request, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.services import ActionService
+from app.services import ActionService, OrderService
 from app.tasks import celery_app
 from app.utils.decorators.celery_async import celery_sync
 from config import settings
@@ -50,5 +50,6 @@ async def request_new_order_check():
 
 async def request_set_state_canceled(request: Request) -> None:
     for order in await OrderRepository().get_list(request=request):
+        await OrderService().cancel_related(order=order)
         await OrderRepository().update(order, state=OrderStates.CANCELED)
     await RequestRepository().update(request, state=RequestStates.CANCELED)

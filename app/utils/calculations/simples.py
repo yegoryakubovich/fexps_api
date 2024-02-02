@@ -24,32 +24,43 @@ def check_zero(*args) -> bool:
     return False
 
 
-def get_div_by_currency_value(currency_value: int, div: int, rate: int, type_: str) -> tuple[int, int]:
+def get_div_by_currency_value(
+        currency_value: int, div: int, rate: int, rate_decimal: int, type_: str,
+) -> tuple[int, int]:
     currency_value = round(currency_value // div * div)
     if type_ == OrderTypes.INPUT:
-        value = math.floor(currency_value / rate * 100)
+        value = math.floor(currency_value / rate * 10 ** rate_decimal)
     else:
-        value = math.ceil(currency_value / rate * 100)
+        value = math.ceil(currency_value / rate * 10 ** rate_decimal)
     return currency_value, value
 
 
-def get_div_by_value(value: int, div: int, rate: int, type_: str) -> tuple[int, int]:
-    currency_value = round(value * rate / 100)
+def get_div_by_value(
+        value: int, div: int, rate: int, rate_decimal: int, type_: str,
+) -> tuple[int, int]:
+    currency_value = round(value * rate / 10 ** rate_decimal)
     currency_value = round(currency_value // div * div)
     if type_ == OrderTypes.INPUT:
-        value = math.floor(currency_value / rate * 100)
+        value = math.floor(currency_value / rate * 10 ** rate_decimal)
     else:
-        value = math.ceil(currency_value / rate * 100)
+        value = math.ceil(currency_value / rate * 10 ** rate_decimal)
     return currency_value, value
 
 
 def get_div_values(
-        rate: int, div: int, currency_value: int = None, value: int = None, type_: str = None,
+        rate: int,
+        rate_decimal: int,
+        div: int,
+        currency_value: int = None,
+        value: int = None,
+        type_: str = None,
 ) -> tuple[int, int]:
     if currency_value:
-        return get_div_by_currency_value(currency_value=currency_value, div=div, rate=rate, type_=type_)
+        return get_div_by_currency_value(
+            currency_value=currency_value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
+        )
     if value:
-        return get_div_by_value(value=value, div=div, rate=rate, type_=type_)
+        return get_div_by_value(
+            value=value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
+        )
 
-# print(get_div(currency_value=26583, rate=99, div=100))
-# print(get_div(value=26852, rate=99, div=100))

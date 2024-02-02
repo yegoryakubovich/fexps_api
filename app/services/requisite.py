@@ -15,9 +15,6 @@
 #
 
 
-import math
-from typing import Optional
-
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons
 from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
@@ -26,9 +23,11 @@ from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
+from app.utils.calculations.requisites import all_value_calc
 from app.utils.decorators import session_required
 from app.utils.exaptions.main import DoesNotPermission
 from app.utils.exaptions.requisite import MinimumTotalValueError
+from config import settings
 
 
 class RequisiteService(BaseService):
@@ -42,11 +41,11 @@ class RequisiteService(BaseService):
             wallet_id: int,
             output_requisite_data_id: int,
             input_method_id: int,
-            total_currency_value: int,
+            currency_value: int,
             currency_value_min: int,
             currency_value_max: int,
             rate: int,
-            total_value: int,
+            value: int,
             value_min: int,
             value_max: int,
     ) -> dict:
@@ -54,42 +53,33 @@ class RequisiteService(BaseService):
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet):
             raise DoesNotPermission('You do not have sufficient rights to this wallet')
-        total_currency_value_result, total_value_result, rate_result = await self.calc_value_params(
-            type_=type_,
-            total_currency_value=total_currency_value,
-            total_value=total_value,
-            rate=rate
-        )
-        currency = None
-        output_requisite_data = None
-        if output_requisite_data_id:
-            output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
-            currency = output_requisite_data.method.currency
-        input_method = None
+        input_method, output_requisite_data, currency = None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
             currency = input_method.currency
-
+        if output_requisite_data_id:
+            output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
+            currency = output_requisite_data.method.currency
+        currency_value_result, value_result, rate_result = await all_value_calc(
+            type_=type_, rate_decimal=currency.rate_decimal, currency_value=currency_value, value=value, rate=rate,
+        )
         if type_ == RequisiteTypes.OUTPUT:
             await WalletBanService().create_related(
-                wallet=wallet,
-                value=total_value_result,
-                reason=WalletBanReasons.BY_REQUISITE,
+                wallet=wallet, value=value_result, reason=WalletBanReasons.BY_REQUISITE,
             )
-
         requisite = await RequisiteRepository().create(
             type=type_,
             wallet=wallet,
             output_requisite_data=output_requisite_data,
             input_method=input_method,
             currency=currency,
-            currency_value=total_currency_value_result,
-            total_currency_value=total_currency_value_result,
+            currency_value=currency_value_result,
+            total_currency_value=currency_value_result,
             currency_value_min=currency_value_min,
             currency_value_max=currency_value_max,
             rate=rate_result,
-            value=total_value_result,
-            total_value=total_value_result,
+            value=value_result,
+            total_value=value_result,
             value_min=value_min,
             value_max=value_max,
         )
@@ -104,14 +94,14 @@ class RequisiteService(BaseService):
                 'output_requisite_data_id': output_requisite_data_id,
                 'input_method_id': input_method_id,
                 'currency': currency.id_str,
-                'total_currency_value': total_currency_value,
-                'total_currency_value_result': total_currency_value_result,
+                'currency_value': currency_value,
+                'currency_value_result': currency_value_result,
                 'currency_value_min': currency_value_min,
                 'currency_value_max': currency_value_max,
                 'rate': rate,
                 'rate_result': rate_result,
-                'total_value': total_value,
-                'total_value_result': total_value_result,
+                'value': value,
+                'value_result': value_result,
                 'value_min': value_min,
                 'value_max': value_max,
             },
@@ -145,7 +135,7 @@ class RequisiteService(BaseService):
             }
         }
 
-    @session_required(permissions=['requisites'])
+    @session_required(permissions=['requisites'])  # FIXME (CHECKME)
     async def update(
             self,
             session: Session,
@@ -162,9 +152,9 @@ class RequisiteService(BaseService):
             raise MinimumTotalValueError(f'Minimum value total_value = {access_change_balance}')
 
         new_value = round(total_value - (requisite.total_value - requisite.value))
-        new_currency_value = round(new_value * requisite.rate / 100)
+        new_currency_value = round(new_value * requisite.rate / 10 ** settings.rate_decimal)
         new_total_value = total_value
-        new_currency_total_value = round(new_total_value * requisite.rate / 100)
+        new_currency_total_value = round(new_total_value * requisite.rate / 10 ** settings.rate_decimal)
         await RequisiteRepository().update(
             requisite,
             value=new_value,
@@ -187,27 +177,3 @@ class RequisiteService(BaseService):
         )
 
         return {}
-
-    @staticmethod
-    async def calc_value_params(
-            type_: RequisiteTypes,
-            total_currency_value: Optional[int],
-            total_value: Optional[int],
-            rate: Optional[int],
-    ) -> tuple[int, int, int]:
-        if total_currency_value and total_value:
-            if type_ == RequisiteTypes.OUTPUT:
-                rate = math.ceil(total_currency_value / total_value * 100)
-            else:
-                rate = math.floor(total_currency_value / total_value * 100)
-        elif total_currency_value and rate:
-            if type_ == RequisiteTypes.OUTPUT:
-                total_value = math.floor(total_currency_value / rate * 100)
-            else:
-                total_value = math.ceil(total_currency_value / rate * 100)
-        else:
-            if type_ == RequisiteTypes.OUTPUT:
-                total_currency_value = math.ceil(total_value * rate / 100)
-            else:
-                total_currency_value = math.floor(total_value * rate / 100)
-        return total_currency_value, total_value, rate

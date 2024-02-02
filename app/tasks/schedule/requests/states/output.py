@@ -41,13 +41,16 @@ async def request_state_output_check():
         need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
         if need_output_value or need_value:
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Back to previous state
-            return
+            continue
+        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
+            await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Back to previous state
+            continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.RESERVE):
-            return  # Found payment reserve
+            continue  # Found reserve orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
-            return  # Found payment orders
+            continue  # Found payment orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION):
-            return  # Found confirmation orders
+            continue  # Found confirmation orders
 
         await RequestRepository().update(request, state=RequestStates.COMPLETED)  # Started next state
 

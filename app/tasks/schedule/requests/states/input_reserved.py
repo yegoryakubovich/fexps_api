@@ -15,11 +15,13 @@
 #
 
 
-from app.db.models import RequestStates, OrderTypes, RequisiteTypes
+from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates
+from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
+from app.services import OrderService
 from app.tasks import celery_app
-from app.utils.calculations.hard import get_need_values_input
+from app.utils.calculations.hard import get_need_values_input, suitability_check_currency_value
 from app.utils.decorators.celery_async import celery_sync
 
 
@@ -38,13 +40,42 @@ def request_state_input_reservation_check_smart_start():
 @celery_sync
 async def request_state_input_reservation_check():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
-        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
-        if not need_input_value and not need_value:
-            await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
-            return
+        currency = request.input_method.currency
+        need_currency_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
+        if not need_currency_value and not need_value:
+            waiting_orders = await OrderRepository().get_list(
+                request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING,
+            )
+            for wait_order in waiting_orders:
+                await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+            if not waiting_orders:
+                await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
+            continue
+
         for requisite in await RequisiteRepository().get_list_input_by_rate(
-                type=RequisiteTypes.OUTPUT, currency=request.input_method.currency, in_process=False,
+                type=RequisiteTypes.OUTPUT, currency=currency, in_process=False,
         ):
             await RequisiteRepository().update(requisite, in_process=True)
+            suitability_check_result = suitability_check_currency_value(
+                need_currency_value=need_currency_value,
+                requisite=requisite,
+                currency_div=currency.div,
+                order_type=OrderTypes.INPUT,
+            )
+            if not suitability_check_result:
+                await RequisiteRepository().update(requisite, in_process=False)
+                continue
+            suitable_currency_value, suitable_value = suitability_check_result
+            await OrderService().waited_order(
+                request=request,
+                requisite=requisite,
+                currency_value=suitable_currency_value,
+                value=suitable_value,
+                rate=requisite.rate,
+                order_type=OrderTypes.INPUT,
+            )
+            need_currency_value = round(need_currency_value - suitable_currency_value)
+
+
 
     request_state_input_reservation_check.apply_async()

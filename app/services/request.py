@@ -44,16 +44,20 @@ class RequestService(BaseService):
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method = None
+        rate_decimal = []
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
+            rate_decimal.append(input_method.currency.rate_decimal)
         output_requisite_data, output_method = None, None
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
+            rate_decimal.append(output_method.currency.rate_decimal)
         request = await RequestRepository().create(
             wallet=wallet,
             state=RequestStates.LOADING,
             type=type_,
+            rate_decimal=max(rate_decimal),
             input_currency_value=input_currency_value,
             input_value=input_value,
             input_method=input_method,

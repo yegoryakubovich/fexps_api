@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String, Integer
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -50,6 +50,7 @@ class Request(Base):
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     type = Column(String(length=8))
     state = Column(String(length=32))
+    rate_decimal = Column(Integer, default=2)
     rate_confirmed = Column(Boolean, default=False)
 
     input_currency_value = Column(BigInteger, nullable=True)

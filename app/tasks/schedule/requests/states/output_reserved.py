@@ -15,9 +15,10 @@
 #
 
 
-from app.db.models import RequestStates, OrderTypes, OrderStates
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequisiteTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
+from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
 from app.tasks import celery_app
 from app.utils.calculations.hard import get_need_values_output
@@ -41,14 +42,19 @@ async def request_state_output_reservation_check():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
         need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
         if not need_output_value and not need_value:
-            await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
-            return
-        for wait_order in await OrderRepository().get_list(
+            waiting_orders = await OrderRepository().get_list(
                 request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING,
-        ):
-            await OrderService().order_banned_value(
-                wallet=wait_order.request.wallet, value=wait_order.value,
             )
-            await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+            for wait_order in waiting_orders:
+                await OrderService().order_banned_value(wallet=wait_order.request.wallet, value=wait_order.value)
+                await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+            if not waiting_orders:
+                await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
+            continue
+        for requisite in await RequisiteRepository().get_list_input_by_rate(
+                type=RequisiteTypes.INPUT, currency=request.output_method.currency, in_process=False,
+        ):
+            await RequisiteRepository().update(requisite, in_process=True)
 
+            await RequisiteRepository().update(requisite, in_process=False)
     request_state_output_reservation_check.apply_async()

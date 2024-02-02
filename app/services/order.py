@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Order, Actions, OrderTypes, Request, WalletBanReasons, TransferTypes, \
-    OrderStates, Wallet
+    OrderStates, Wallet, Requisite
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
@@ -38,28 +38,20 @@ class OrderService(BaseService):
             wallet=wallet, value=value, reason=WalletBanReasons.BY_ORDER,
         )
 
-    async def reserve_order(
-            self,
-            request: Request,
-            requisite_scheme: RequisiteScheme,
-            order_type: OrderTypes,
-    ) -> None:
-        await self.waited_order(
-            request=request, requisite_scheme=requisite_scheme, order_type=order_type, order_state=OrderStates.RESERVE,
-        )
-
     @staticmethod
     async def waited_order(
             request: Request,
-            requisite_scheme: RequisiteScheme,
+            requisite: Requisite,
+            currency_value: int,
+            value: int,
+            rate: int,
             order_type: OrderTypes,
             order_state: str = OrderStates.WAITING,
     ) -> None:
-        requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
         await RequisiteRepository().update(
             requisite,
-            currency_value=round(requisite.currency_value - requisite_scheme.currency_value),
-            value=round(requisite.value - requisite_scheme.value),
+            currency_value=round(requisite.currency_value - currency_value),
+            value=round(requisite.value - value),
             in_process=False,
         )
         await OrderRepository().create(
@@ -67,10 +59,28 @@ class OrderService(BaseService):
             state=order_state,
             request=request,
             requisite=requisite,
+            currency_value=currency_value,
+            value=value,
+            rate=rate,
+            requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
+        )
+
+    async def waited_order_by_scheme(
+            self,
+            request: Request,
+            requisite_scheme: RequisiteScheme,
+            order_type: OrderTypes,
+            order_state: str = OrderStates.WAITING,
+    ) -> None:
+        requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
+        await self.waited_order(
+            request=request,
+            requisite=requisite,
             currency_value=requisite_scheme.currency_value,
             value=requisite_scheme.value,
             rate=requisite_scheme.rate,
-            requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
+            order_type=order_type,
+            order_state=order_state,
         )
 
     # @staticmethod  # FIXME (REMOVE)
@@ -142,7 +152,7 @@ class OrderService(BaseService):
 
     @staticmethod
     async def cancel_related(order: Order) -> None:
-        if order.type == OrderTypes.INPUT:
+        if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=-order.value,
@@ -169,7 +179,7 @@ class OrderService(BaseService):
                 value=order.value,
                 order=order,
             )
-        elif order.type == OrderTypes.OUTPUT:  # FIXME (check)
+        elif order.type == OrderTypes.OUTPUT:
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=-order.value,
@@ -180,9 +190,5 @@ class OrderService(BaseService):
                 wallet_from=order.request.wallet,
                 wallet_to=order.requisite.wallet,
                 value=order.value,
+                order=order,
             )
-        await RequisiteRepository().update(
-            order.requisite,
-            currency_value=round(order.requisite.currency_value + order.currency_value),
-            value=round(order.requisite.value + order.value),
-        )

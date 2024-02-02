@@ -13,18 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 import math
 from typing import List
 from typing import Optional
 
-from app.db.models import CommissionPackValue
+from app.db.models import CommissionPackValue, Requisite
 from app.db.models import Request, OrderStates
 from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.repositories.order import OrderRepository
 from app.repositories.wallet import WalletRepository
 from app.services.commission_pack_value import IntervalNotFoundError
+from app.utils.calculations.simples import check_zero, get_div_values
 from app.utils.schemes.calculations.orders import RequisiteScheme
 
 
@@ -61,18 +60,19 @@ async def get_results_by_calc_requisites(
         requisites_scheme_list: List[RequisiteScheme],
         type_: str,
 ) -> tuple[int, int, int, int]:
-    currency_value_result, value_result, commission_value_result = 0, 0, 0
-    for requisite_scheme in requisites_scheme_list:
-        currency_value_result = round(currency_value_result + requisite_scheme.currency_value)
-        value_result = round(value_result + requisite_scheme.value)
-
-    if type_ == 'input':
-        commission_value_result = await get_commission(wallet_id=request.wallet_id, value=value_result)
-        value_result = round(value_result - commission_value_result)
-        rate_result = math.ceil(currency_value_result / value_result * 100)
-    else:
-        rate_result = math.floor(currency_value_result / value_result * 100)
-    return currency_value_result, value_result, rate_result, commission_value_result
+    pass
+    # currency_value_result, value_result, commission_value_result = 0, 0, 0
+    # for requisite_scheme in requisites_scheme_list:
+    #     currency_value_result = round(currency_value_result + requisite_scheme.currency_value)
+    #     value_result = round(value_result + requisite_scheme.value)
+    #
+    # if type_ == 'input':
+    #     commission_value_result = await get_commission(wallet_id=request.wallet_id, value=value_result)
+    #     value_result = round(value_result - commission_value_result)
+    #     rate_result = math.ceil(currency_value_result / value_result * 10 ** settings.rate_decimal)
+    # else:
+    #     rate_result = math.floor(currency_value_result / value_result * 10 ** settings.rate_decimal)
+    # return currency_value_result, value_result, rate_result, commission_value_result
 
 
 def get_commission_value(value: int, commission_pack_value: CommissionPackValue) -> int:
@@ -93,3 +93,67 @@ async def get_commission(wallet_id: int, value: int) -> int:
     if not commission_pack_value:
         raise IntervalNotFoundError(f'By value == "{value}" not found suitable interval')
     return get_commission_value(value=value, commission_pack_value=commission_pack_value)
+
+
+def suitability_check_currency_value(
+        need_currency_value: int,
+        requisite: Requisite,
+        requisite_rate: int,
+        currency_div: int,
+        rate_decimal: int,
+        order_type: str,
+) -> Optional[tuple[int, int]]:
+    needed_currency_value = need_currency_value
+    if check_zero(needed_currency_value, requisite.currency_value):
+        return
+    if requisite.value_min and needed_currency_value < requisite.value_min:
+        return
+    if requisite.value_max and needed_currency_value > requisite.value_max:
+        needed_currency_value = requisite.value_max
+    if needed_currency_value < currency_div:
+        return
+    if requisite.currency_value >= needed_currency_value:
+        suitable_currency_value = needed_currency_value
+    else:
+        suitable_currency_value = requisite.currency_value
+    suitable_currency_value, suitable_value = get_div_values(
+        currency_value=suitable_currency_value,
+        rate=requisite_rate,
+        rate_decimal=rate_decimal,
+        div=currency_div,
+        type_=order_type,
+    )
+    if not suitable_currency_value or not suitable_value:
+        return
+
+    return suitable_currency_value, suitable_value
+
+
+def suitability_check_value(
+        need_value: int,
+        requisite: Requisite,
+        requisite_rate: int,
+        currency_div: int,
+        rate_decimal: int,
+        order_type: str,
+) -> Optional[tuple[int, int]]:
+    needed_value = need_value
+    if check_zero(needed_value, requisite.value):
+        return
+    if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума
+        return
+    if requisite.value_max and needed_value > requisite.value_max:  # Больше максимума
+        needed_value = requisite.value_max
+    if round(needed_value * requisite_rate / 10 ** rate_decimal) < currency_div:
+        return
+    if requisite.value >= needed_value:
+        suitable_value = needed_value
+    else:
+        suitable_value = requisite.value
+    suitable_currency_value, suitable_value = get_div_values(
+        value=suitable_value, rate=requisite_rate, rate_decimal=rate_decimal, div=currency_div, type_=order_type,
+    )
+    if not suitable_currency_value or not suitable_value:
+        return
+
+    return suitable_currency_value, suitable_value

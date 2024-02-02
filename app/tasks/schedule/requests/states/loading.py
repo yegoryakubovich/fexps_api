@@ -13,10 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import logging
-import math
 from typing import List, Optional
 
 from app.db.models import RequestStates, RequestTypes, OrderTypes, Request, Currency, RequisiteTypes, Actions
@@ -25,10 +21,11 @@ from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
 from app.services.base import BaseService
 from app.tasks import celery_app
-from app.utils.calculations.hard import get_need_values_input, get_need_values_output, get_results_by_calc_requisites
-from app.utils.calculations.simples import get_div_values, check_zero
+from app.utils.calculations.hard import get_need_values_input, get_need_values_output, suitability_check_currency_value, \
+    suitability_check_value
+from app.utils.calculations.request import calc_request_value, request_model_calculation
 from app.utils.decorators.celery_async import celery_sync
-from app.utils.schemes.calculations.orders import RequisiteTypeScheme, RequisiteScheme, AllRequisiteTypeScheme
+from app.utils.schemes.calculations.orders import RequisiteScheme, AllRequisiteTypeScheme
 
 
 @celery_app.task()
@@ -46,76 +43,41 @@ def request_state_loading_check_smart_start():
 @celery_sync
 async def request_state_loading_check():
     for request in await RequestRepository().get_list(state=RequestStates.LOADING):
-        if request.type == RequestTypes.ALL:
+        if request.type == RequestTypes.ALL:  # ALL
             result = await request_type_all(request=request)
             if not result:
                 continue
-            for input_requisite_scheme in result.input_requisites.requisites_list:
-                await OrderService().reserve_order(
+            for input_requisite_scheme in result.input_requisites:
+                await OrderService().waited_order_by_scheme(
                     request=request, requisite_scheme=input_requisite_scheme, order_type=OrderTypes.INPUT,
                 )
-            for output_requisite_scheme in result.output_requisites.requisites_list:
-                await OrderService().waited_order(
+            for output_requisite_scheme in result.output_requisites:
+                await OrderService().waited_order_by_scheme(
                     request=request, requisite_scheme=output_requisite_scheme, order_type=OrderTypes.OUTPUT,
                 )
-            await RequestRepository().update(
-                request,
-                state=RequestStates.WAITING,
-                input_currency_value=result.input_currency_value,
-                input_value=result.input_value,
-                input_rate=result.input_requisites.rate,
-                commission_value=result.commission_value,
-                div_value=result.div_value,
-                rate=result.rate,
-                output_currency_value=result.output_currency_value,
-                output_value=result.output_value,
-                output_rate=result.output_requisites.rate,
-            )
-            await BaseService().create_action(
-                model=request, action=Actions.UPDATE, parameters={},
-            )
-        elif request.type == RequestTypes.INPUT:
-            result = await request_type_input(request=request)
-            if not result:
+            await RequestRepository().update(request, state=RequestStates.WAITING)
+            await BaseService().create_action(model=request, action=Actions.UPDATE)
+        elif request.type == RequestTypes.INPUT:  # INPUT
+            result_list = await request_type_input(request=request)
+            if not result_list:
                 continue
-            for requisite_scheme in result.requisites_list:
-                await OrderService().reserve_order(
+            for requisite_scheme in result_list:
+                await OrderService().waited_order_by_scheme(
                     request=request, requisite_scheme=requisite_scheme, order_type=OrderTypes.INPUT,
                 )
-            await RequestRepository().update(
-                request,
-                state=RequestStates.WAITING,
-                input_currency_value=result.currency_value,
-                input_value=result.value,
-                input_rate=result.rate,
-                commission_value=result.commission_value,
-                div_value=result.div_value,
-                rate=result.rate,
-            )
-            await BaseService().create_action(
-                model=request, action=Actions.UPDATE, parameters={},
-            )
-        elif request.type == RequestTypes.OUTPUT:
-            result = await request_type_output(request=request)
-            if not result:
+            await RequestRepository().update(request, state=RequestStates.WAITING)
+            await BaseService().create_action(model=request, action=Actions.UPDATE)
+        elif request.type == RequestTypes.OUTPUT:  # OUTPUT
+            result_list = await request_type_output(request=request)
+            if not result_list:
                 continue
-            for requisite_scheme in result.requisites_list:
-                await OrderService().waited_order(
+            for requisite_scheme in result_list:
+                await OrderService().waited_order_by_scheme(
                     request=request, requisite_scheme=requisite_scheme, order_type=OrderTypes.OUTPUT,
                 )
-            await RequestRepository().update(
-                request,
-                state=RequestStates.WAITING,
-                commission_value=result.commission_value,
-                div_value=result.div_value,
-                rate=result.rate,
-                output_currency_value=result.currency_value,
-                output_value=result.value,
-                output_rate=result.rate,
-            )
-            await BaseService().create_action(
-                model=request, action=Actions.UPDATE, parameters={},
-            )
+            await RequestRepository().update(request, state=RequestStates.WAITING)
+            await BaseService().create_action(model=request, action=Actions.UPDATE)
+        await request_model_calculation(request=request)
 
     request_state_loading_check.apply_async()
 
@@ -136,46 +98,27 @@ async def request_type_all(request) -> Optional[AllRequisiteTypeScheme]:
         )
         if not input_result:
             return
+        _, input_value = await calc_request_value(request=request, requisites_list=input_result, type_='input')
+
         output_result = await request_type_output_value(
-            request=request, currency=output_currency, need_value=input_result.value,
+            request=request, currency=output_currency, need_value=input_value,
         )
         if not output_result:
             return
-        rate_result = math.ceil(input_result.currency_value / output_result.currency_value * 100)
-        return AllRequisiteTypeScheme(
-            input_requisites=input_result,
-            input_currency_value=input_result.currency_value,
-            input_value=input_result.value,
-            output_requisites=output_result,
-            output_currency_value=output_result.currency_value,
-            output_value=output_result.value,
-            commission_value=round(input_result.commission_value + output_result.commission_value),
-            div_value=round(input_result.div_value + output_result.div_value),
-            rate=rate_result,
-        )
+        return AllRequisiteTypeScheme(input_requisites=input_result, output_requisites=output_result)
     elif output_need_currency_value:
         output_result = await request_type_output_currency_value(
             request=request, currency=output_currency, need_currency_value=output_need_currency_value,
         )
         if not output_result:
             return
+        _, output_value = await calc_request_value(request=request, requisites_list=output_result, type_='output')
         input_result = await request_type_input_value(
-            request=request, currency=input_currency, need_value=output_result.value,
+            request=request, currency=input_currency, need_value=output_value,
         )
         if not input_result:
             return
-        rate_result = math.ceil(input_result.currency_value / output_result.currency_value * 100)
-        return AllRequisiteTypeScheme(
-            input_requisites=input_result,
-            input_currency_value=input_result.currency_value,
-            input_value=input_result.value,
-            output_requisites=output_result,
-            output_currency_value=output_result.currency_value,
-            output_value=output_result.value,
-            commission_value=round(input_result.commission_value + output_result.commission_value),
-            div_value=round(input_result.div_value + output_result.div_value),
-            rate=rate_result,
-        )
+        return AllRequisiteTypeScheme(input_requisites=input_result, output_requisites=output_result)
 
 
 """
@@ -183,7 +126,7 @@ INPUT
 """
 
 
-async def request_type_input(request) -> Optional[RequisiteTypeScheme]:
+async def request_type_input(request) -> List[RequisiteScheme]:
     currency = request.input_method.currency
     need_currency_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
     if need_currency_value:
@@ -198,110 +141,79 @@ async def request_type_input(request) -> Optional[RequisiteTypeScheme]:
 
 async def request_type_input_currency_value(
         request: Request, currency: Currency, need_currency_value: int,
-) -> Optional[RequisiteTypeScheme]:
+) -> List[RequisiteScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     for requisite in await RequisiteRepository().get_list_input_by_rate(
             type=RequisiteTypes.OUTPUT, currency=currency, in_process=False,
     ):
-        needed_currency_value = need_currency_value
-        if check_zero(needed_currency_value, requisite.currency_value):
-            continue
-        if requisite.currency_value_min and needed_currency_value < requisite.currency_value_min:
-            continue
-        if requisite.currency_value_max and needed_currency_value > requisite.currency_value_max:
-            needed_currency_value = requisite.currency_value_max
-
-        if requisite.currency_value >= needed_currency_value:
-            suitable_currency_value = needed_currency_value
-        else:
-            suitable_currency_value = requisite.currency_value
-        suitable_currency_value, suitable_value = get_div_values(
-            currency_value=suitable_currency_value, rate=requisite.rate, div=currency.div, type_=OrderTypes.INPUT,
+        await RequisiteRepository().update(requisite, in_process=True)
+        requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** request.rate_decimal)
+        suitability_check_result = suitability_check_currency_value(
+            need_currency_value=need_currency_value,
+            requisite=requisite,
+            requisite_rate=requisite_rate,
+            currency_div=currency.div,
+            rate_decimal=request.rate_decimal,
+            order_type=OrderTypes.INPUT,
         )
-        if not suitable_currency_value or not suitable_value:
+        if not suitability_check_result:
+            await RequisiteRepository().update(requisite, in_process=False)
             continue
+        suitable_currency_value, suitable_value = suitability_check_result
         requisites_scheme_list.append(RequisiteScheme(
             requisite_id=requisite.id,
             currency_value=suitable_currency_value,
             value=suitable_value,
-            rate=requisite.rate,
+            rate=requisite_rate,
         ))
-        await RequisiteRepository().update(requisite, in_process=True)
         need_currency_value = round(need_currency_value - suitable_currency_value)
     if need_currency_value >= currency.div:
         for requisite_scheme in requisites_scheme_list:
             requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-            await RequisiteRepository().update(requisite, in_process=True)
+            await RequisiteRepository().update(requisite, in_process=False)
         return
 
-    currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
-        request=request, requisites_scheme_list=requisites_scheme_list, type_='input',
-    )
-    return RequisiteTypeScheme(
-        requisites_list=requisites_scheme_list,
-        currency_value=currency_value_result,
-        commission_value=commission_value_result,
-        div_value=round(need_currency_value / rate_result * 100),
-        value=value_result, rate=rate_result,
-    )
+    return requisites_scheme_list
 
 
 async def request_type_input_value(
         request: Request, currency: Currency, need_value: int,
-) -> Optional[RequisiteTypeScheme]:
+) -> List[RequisiteScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     rates_list: List[int] = []
     for requisite in await RequisiteRepository().get_list_input_by_rate(
             type=RequisiteTypes.OUTPUT, currency=currency, in_process=False,
     ):
-        needed_value = need_value
-        if check_zero(needed_value, requisite.currency_value):
-            continue
-        if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума
-            continue
-        if requisite.value_max and needed_value > requisite.value_max:  # Больше максимума
-            needed_value = requisite.currency_value_max
-
-        if round(needed_value * requisite.rate) < currency.div:
-            continue
-        if requisite.value >= needed_value:
-            suitable_value = needed_value
-        else:
-            suitable_value = requisite.value
-        suitable_currency_value, suitable_value = get_div_values(
-            value=suitable_value, rate=requisite.rate, div=currency.div, type_=OrderTypes.INPUT,
+        await RequisiteRepository().update(requisite, in_process=True)
+        requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** request.rate_decimal)
+        suitability_check_result = suitability_check_value(
+            need_value=need_value,
+            requisite=requisite,
+            requisite_rate=requisite_rate,
+            currency_div=currency.div,
+            rate_decimal=request.rate_decimal,
+            order_type=OrderTypes.INPUT,
         )
-        if not suitable_currency_value or not suitable_value:
+        if not suitability_check_result:
+            await RequisiteRepository().update(requisite, in_process=False)
             continue
-
+        suitable_currency_value, suitable_value = suitability_check_result
         requisites_scheme_list.append(RequisiteScheme(
             requisite_id=requisite.id,
             currency_value=suitable_currency_value,
             value=suitable_value,
-            rate=requisite.rate,
+            rate=requisite_rate,
         ))
-        await RequisiteRepository().update(requisite, in_process=True)
         need_value = round(need_value - suitable_value)
-        rates_list.append(requisite.rate)
-    logging.info(rates_list)
+        rates_list.append(requisite_rate)
     mean_rate = round(sum(rates_list) / len(rates_list))
-    if round(need_value * mean_rate / 100) >= currency.div:
+    if round(need_value * mean_rate / 10 ** request.rate_decimal) >= currency.div:
         for requisite_scheme in requisites_scheme_list:
             requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-            await RequisiteRepository().update(requisite, in_process=True)
+            await RequisiteRepository().update(requisite, in_process=False)
         return
 
-    currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
-        request=request, requisites_scheme_list=requisites_scheme_list, type_='input',
-    )
-    return RequisiteTypeScheme(
-        requisites_list=requisites_scheme_list,
-        currency_value=currency_value_result,
-        commission_value=commission_value_result,
-        div_value=need_value,
-        value=value_result,
-        rate=rate_result,
-    )
+    return requisites_scheme_list
 
 
 """
@@ -309,7 +221,7 @@ OUTPUT
 """
 
 
-async def request_type_output(request) -> Optional[RequisiteTypeScheme]:
+async def request_type_output(request) -> List[RequisiteScheme]:
     currency = request.output_method.currency
     need_currency_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
     if need_currency_value:
@@ -324,34 +236,30 @@ async def request_type_output(request) -> Optional[RequisiteTypeScheme]:
 
 async def request_type_output_currency_value(
         request: Request, currency: Currency, need_currency_value: int,
-) -> Optional[RequisiteTypeScheme]:
+) -> List[RequisiteScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT, currency=currency, in_process=False,
     ):
-        needed_currency_value = need_currency_value
-        if check_zero(needed_currency_value, requisite.currency_value):
-            continue
-        if requisite.currency_value_min and needed_currency_value < requisite.currency_value_min:
-            continue
-        if requisite.currency_value_max and needed_currency_value > requisite.currency_value_max:
-            needed_currency_value = requisite.currency_value_max
-
-        if requisite.currency_value >= needed_currency_value:
-            suitable_currency_value = needed_currency_value
-        else:
-            suitable_currency_value = requisite.currency_value
-        suitable_currency_value, suitable_value = get_div_values(
-            currency_value=suitable_currency_value, rate=requisite.rate, div=currency.div, type_=OrderTypes.OUTPUT,
+        await RequisiteRepository().update(requisite, in_process=True)
+        requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** request.rate_decimal)
+        suitability_check_result = suitability_check_currency_value(
+            need_currency_value=need_currency_value,
+            requisite=requisite,
+            requisite_rate=requisite_rate,
+            currency_div=currency.div,
+            rate_decimal=request.rate_decimal,
+            order_type=OrderTypes.OUTPUT,
         )
-        if not suitable_currency_value or not suitable_value:
+        if not suitability_check_result:
+            await RequisiteRepository().update(requisite, in_process=False)
             continue
-
+        suitable_currency_value, suitable_value = suitability_check_result
         requisites_scheme_list.append(RequisiteScheme(
             requisite_id=requisite.id,
             currency_value=suitable_currency_value,
             value=suitable_value,
-            rate=requisite.rate,
+            rate=requisite_rate,
         ))
         await RequisiteRepository().update(requisite, in_process=True)
         need_currency_value = round(need_currency_value - suitable_currency_value)
@@ -361,69 +269,45 @@ async def request_type_output_currency_value(
             await RequisiteRepository().update(requisite, in_process=True)
         return
 
-    currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
-        request=request, requisites_scheme_list=requisites_scheme_list, type_='output',
-    )
-    return RequisiteTypeScheme(
-        requisites_list=requisites_scheme_list,
-        currency_value=currency_value_result,
-        commission_value=commission_value_result,
-        div_value=round(need_currency_value / rate_result * 100),
-        value=value_result,
-        rate=rate_result,
-    )
+    return requisites_scheme_list
 
 
 async def request_type_output_value(
         request: Request, currency: Currency, need_value: int,
-) -> Optional[RequisiteTypeScheme]:
+) -> List[RequisiteScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     rates_list: List[int] = []
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT, currency=currency, in_process=False,
     ):
-        needed_value = need_value
-        if check_zero(needed_value, requisite.currency_value):
-            continue
-        if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума
-            continue
-        if requisite.value_max and needed_value > requisite.value_max:  # Больше максимума
-            needed_value = requisite.currency_value_max
-
-        if round(needed_value * requisite.rate) < currency.div:
-            continue
-        if requisite.value >= needed_value:
-            suitable_value = needed_value
-        else:
-            suitable_value = requisite.value
-        suitable_currency_value, suitable_value = get_div_values(
-            value=suitable_value, rate=requisite.rate, div=currency.div, type_=OrderTypes.OUTPUT,
+        await RequisiteRepository().update(requisite, in_process=True)
+        requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** request.rate_decimal)
+        suitability_check_result = suitability_check_value(
+            need_value=need_value,
+            requisite=requisite,
+            requisite_rate=requisite_rate,
+            currency_div=currency.div,
+            rate_decimal=request.rate_decimal,
+            order_type=OrderTypes.OUTPUT,
         )
-        if not suitable_currency_value or not suitable_value:
+        if not suitability_check_result:
+            await RequisiteRepository().update(requisite, in_process=False)
             continue
-
+        suitable_currency_value, suitable_value = suitability_check_result
         requisites_scheme_list.append(RequisiteScheme(
-            requisite_id=requisite.id, currency_value=suitable_currency_value,
-            value=suitable_value, rate=requisite.rate,
+            requisite_id=requisite.id,
+            currency_value=suitable_currency_value,
+            value=suitable_value,
+            rate=requisite_rate,
         ))
         await RequisiteRepository().update(requisite, in_process=True)
         need_value = round(need_value - suitable_value)
         rates_list.append(requisite.rate)
     mean_rate = round(sum(rates_list) / len(rates_list))
-    if round(need_value * mean_rate / 100) >= currency.div:
+    if round(need_value * mean_rate / 10 ** request.rate_decimal) >= currency.div:
         for requisite_scheme in requisites_scheme_list:
             requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
             await RequisiteRepository().update(requisite, in_process=True)
         return
 
-    currency_value_result, value_result, rate_result, commission_value_result = await get_results_by_calc_requisites(
-        request=request, requisites_scheme_list=requisites_scheme_list, type_='output',
-    )
-    return RequisiteTypeScheme(
-        requisites_list=requisites_scheme_list,
-        currency_value=currency_value_result,
-        commission_value=commission_value_result,
-        div_value=need_value,
-        value=value_result,
-        rate=rate_result,
-    )
+    return requisites_scheme_list

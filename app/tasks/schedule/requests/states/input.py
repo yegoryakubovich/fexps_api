@@ -42,13 +42,16 @@ async def request_state_input_check():
         need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
         if need_input_value or need_value:
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
-            return
+            continue
+        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
+            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
+            continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.RESERVE):
-            return  # Found payment reserve
+            continue  # Found reserve orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
-            return  # Found payment orders
+            continue  # Found payment orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
-            return  # Found confirmation orders
+            continue  # Found confirmation orders
 
         await TransferSystemService().payment_commission(request=request)
         await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Started next state
