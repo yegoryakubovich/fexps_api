@@ -9,4 +9,3 @@ sqlalchemy==2.0.25
 aiomysql
 celery[redis]
 flower
-redis
