@@ -37,8 +37,8 @@ async def on_startup():
         logging.error('Failed to connect to database')
         exit(1)
 
-    from app.tests import start_test
-    await start_test()
+    # from app.tests import start_test
+    # await start_test()
 
 
 app = FastAPI(

@@ -13,15 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.utils import Router
-from .start import router as router_start
-
-
-router = Router(
-    routes_included=[
-        router_start,
-    ],
-    tags=['Temps']
-)

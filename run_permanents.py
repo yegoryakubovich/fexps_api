@@ -15,5 +15,8 @@
 #
 
 
-from . import orders_checks
-from . import states
+import asyncio
+
+from app.permanents.app import start_app
+
+asyncio.run(start_app())

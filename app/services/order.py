@@ -45,16 +45,16 @@ class OrderService(BaseService):
             currency_value: int,
             value: int,
             rate: int,
-            order_type: OrderTypes,
+            order_type: str,
             order_state: str = OrderStates.WAITING,
-    ) -> None:
+    ) -> Order:
         await RequisiteRepository().update(
             requisite,
             currency_value=round(requisite.currency_value - currency_value),
             value=round(requisite.value - value),
             in_process=False,
         )
-        await OrderRepository().create(
+        return await OrderRepository().create(
             type=order_type,
             state=order_state,
             request=request,

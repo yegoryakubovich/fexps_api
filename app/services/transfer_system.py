@@ -52,15 +52,17 @@ class TransferSystemService(BaseService):
             self,
             request: Request,
     ) -> None:
-        await self.create_transfer(
-            wallet_id=request.wallet_id,
-            value=request.commission_value,
-            reason=TransferSystemReasons.COMMISSION,
-            description=f'Request #{request.id}',
-        )
-        await self.create_transfer(
-            wallet_id=request.wallet_id,
-            value=request.div_value,
-            reason=TransferSystemReasons.DIV,
-            description=f'Request #{request.id}',
-        )
+        if request.commission_value:
+            await self.create_transfer(
+                wallet_id=request.wallet_id,
+                value=request.commission_value,
+                reason=TransferSystemReasons.COMMISSION,
+                description=f'Request #{request.id}',
+            )
+        if request.div_value:
+            await self.create_transfer(
+                wallet_id=request.wallet_id,
+                value=request.div_value,
+                reason=TransferSystemReasons.DIV,
+                description=f'Request #{request.id}',
+            )

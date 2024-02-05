@@ -17,7 +17,7 @@
 
 from pydantic import Field
 
-from app.services import RequestStatesInputReservationService
+from app.services import RequestStatesOutputReservationService
 from app.utils import BaseSchema
 from app.utils import Response, Router
 
@@ -26,14 +26,14 @@ router = Router(
 )
 
 
-class RequestStatesInputReservationUpdateSchema(BaseSchema):
+class RequestStatesOutputReservationUpdateSchema(BaseSchema):
     token: str = Field(min_length=32, max_length=64)
     request_id: int = Field()
 
 
 @router.post()
-async def route(schema: RequestStatesInputReservationUpdateSchema):
-    result = await RequestStatesInputReservationService().update(
+async def route(schema: RequestStatesOutputReservationUpdateSchema):
+    result = await RequestStatesOutputReservationService().update(
         token=schema.token,
         id_=schema.request_id,
     )

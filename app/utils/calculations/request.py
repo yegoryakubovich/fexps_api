@@ -20,42 +20,6 @@ async def request_model_calculation(request: Request):
         data = await data_all_calc(request=request)
     await RequestRepository().update(request, **data)
 
-    #
-    # input_commission_value, input_currency_value, input_value, input_rate = 0, 0, 0, 0
-    # output_commission_value, output_currency_value, output_value, output_rate = 0, 0, 0, 0
-    # commission_value, rate, div_value = 0, 0, 0
-    # for order in await OrderRepository().get_list(request=request):
-    #     if order.state == OrderStates.CANCELED:
-    #         continue
-    #     if order.type == OrderTypes.INPUT:
-    #         input_currency_value = round(input_currency_value + order.currency_value)
-    #         input_value = round(input_value + order.value)
-    #     elif order.type == OrderTypes.OUTPUT:
-    #         output_currency_value = round(output_currency_value + order.currency_value)
-    #         output_value = round(output_value + order.value)
-    # data = {}
-    # if request.type in [RequestTypes.INPUT, RequestTypes.ALL] and input_value > 0:
-    #     commission_value = await get_commission(wallet_id=request.wallet_id, value=input_value)
-    #     input_commission_value = round(input_currency_value + commission_value)
-    #     input_value = round(input_value - input_commission_value)
-    #     rate = input_rate = math.ceil(input_currency_value / input_value * 10 ** request.rate_decimal)
-    #     data.update(
-    #         input_currency_value=input_currency_value,
-    #         input_value=input_value,
-    #         input_rate=input_rate,
-    #     )
-    # if request.type in [RequestTypes.OUTPUT, RequestTypes.ALL] and output_value > 0:
-    #     rate = output_rate = math.ceil(output_currency_value / output_value * 10 ** request.rate_decimal)
-    #     data.update(
-    #         output_currency_value=output_currency_value,
-    #         output_value=output_value,
-    #         output_rate=output_rate,
-    #     )
-    # if request.type == RequestTypes.ALL and output_value > 0:
-    #     rate = math.ceil(input_value / output_value * 10 ** request.rate_decimal)
-    #     if round(input_value * output_rate / 10 ** request.rate_decimal):
-    #         pass
-
 
 async def data_all_calc(request: Request) -> dict:
     data = {}
@@ -123,7 +87,6 @@ async def data_output_calc(request: Request) -> dict:
         need_value = round(_value - result['output_value'])
         if need_value < request.output_method.currency.div:
             result['div_value'] = need_value
-    result['output_value'] = round(result['output_value'] - result['div_value'])
     return result
 
 

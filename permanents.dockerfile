@@ -15,13 +15,12 @@
 #
 
 
-from app.utils import Router
-from .update import router as router_update
+FROM python:3.11-slim
 
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-router = Router(
-    prefix='/output/reservation',
-    routes_included=[
-        router_update,
-    ],
-)
+COPY . /app
+WORKDIR /app
+
+ENTRYPOINT python run_permanents.py

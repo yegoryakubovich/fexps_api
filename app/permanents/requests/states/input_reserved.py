@@ -15,30 +15,25 @@
 #
 
 
+import asyncio
+
 from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
-from app.tasks import celery_app
-from app.utils.calculations.hard import get_need_values_input, suitability_check_currency_value
-from app.utils.decorators.celery_async import celery_sync
+from app.utils.calculations.hard import get_need_values_input, suitability_check_currency_value, suitability_check_value
 
 
-@celery_app.task()
-def request_state_input_reservation_check_smart_start():
-    name = 'request_state_input_reservation_check'
-    actives = celery_app.control.inspect().active()
-    for worker in actives:
-        for task in actives[worker]:
-            if task['name'] == name:
-                return
-    request_state_input_reservation_check.apply_async()
+async def request_state_input_reserved_check():
+    while True:
+        try:
+            await run()
+        except:
+            pass
 
 
-@celery_app.task(name='request_state_input_reservation_check')
-@celery_sync
-async def request_state_input_reservation_check():
+async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
         currency = request.input_method.currency
         need_currency_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
@@ -55,13 +50,23 @@ async def request_state_input_reservation_check():
         for requisite in await RequisiteRepository().get_list_input_by_rate(
                 type=RequisiteTypes.OUTPUT, currency=currency, in_process=False,
         ):
-            await RequisiteRepository().update(requisite, in_process=True)
-            suitability_check_result = suitability_check_currency_value(
-                need_currency_value=need_currency_value,
-                requisite=requisite,
-                currency_div=currency.div,
-                order_type=OrderTypes.INPUT,
-            )
+            if need_currency_value:
+                await RequisiteRepository().update(requisite, in_process=True)
+                suitability_check_result = suitability_check_currency_value(
+                    need_currency_value=need_currency_value,
+                    requisite=requisite,
+                    currency_div=currency.div,
+                    rate_decimal=request.rate_decimal,
+                    order_type=OrderTypes.INPUT,
+                )
+            else:
+                suitability_check_result = suitability_check_value(
+                    need_value=need_value,
+                    requisite=requisite,
+                    currency_div=currency.div,
+                    rate_decimal=request.rate_decimal,
+                    order_type=OrderTypes.INPUT,
+                )
             if not suitability_check_result:
                 await RequisiteRepository().update(requisite, in_process=False)
                 continue
@@ -75,7 +80,6 @@ async def request_state_input_reservation_check():
                 order_type=OrderTypes.INPUT,
             )
             need_currency_value = round(need_currency_value - suitable_currency_value)
-
-
-
-    request_state_input_reservation_check.apply_async()
+            await asyncio.sleep(0.125)
+        await asyncio.sleep(0.25)
+    await asyncio.sleep(0.5)

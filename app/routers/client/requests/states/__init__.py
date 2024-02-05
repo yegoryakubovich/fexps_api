@@ -17,11 +17,13 @@
 
 from app.utils import Router
 from .input_reservation import router as router_input_reservation
+from .output_reservation import router as router_output_reservation
 
 
 router = Router(
     prefix='/states',
     routes_included=[
         router_input_reservation,
+        router_output_reservation,
     ],
 )

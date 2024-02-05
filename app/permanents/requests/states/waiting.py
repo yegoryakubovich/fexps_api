@@ -15,13 +15,17 @@
 #
 
 
-from app.utils import Router
-from .update import router as router_update
+import asyncio
 
 
-router = Router(
-    prefix='/output/reservation',
-    routes_included=[
-        router_update,
-    ],
-)
+async def request_state_waiting_check():
+    while True:
+        try:
+            await run()
+        except:
+            pass
+
+
+async def run():
+    # request_state_waiting_check.apply_async()
+    await asyncio.sleep(0.5)

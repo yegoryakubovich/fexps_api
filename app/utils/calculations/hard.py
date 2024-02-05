@@ -50,29 +50,9 @@ async def get_need_values_output(request: Request, order_type: str) -> tuple[Opt
             result_currency_value = round(result_currency_value - order.currency_value)
         if request.output_value:
             result_value = round(result_value - order.value)
-    if result_value:
-        result_value += request.commission_value
+    if result_value and request.commission_value:
+        result_value = round(result_value - request.commission_value)
     return result_currency_value, result_value
-
-
-async def get_results_by_calc_requisites(
-        request: Request,
-        requisites_scheme_list: List[RequisiteScheme],
-        type_: str,
-) -> tuple[int, int, int, int]:
-    pass
-    # currency_value_result, value_result, commission_value_result = 0, 0, 0
-    # for requisite_scheme in requisites_scheme_list:
-    #     currency_value_result = round(currency_value_result + requisite_scheme.currency_value)
-    #     value_result = round(value_result + requisite_scheme.value)
-    #
-    # if type_ == 'input':
-    #     commission_value_result = await get_commission(wallet_id=request.wallet_id, value=value_result)
-    #     value_result = round(value_result - commission_value_result)
-    #     rate_result = math.ceil(currency_value_result / value_result * 10 ** settings.rate_decimal)
-    # else:
-    #     rate_result = math.floor(currency_value_result / value_result * 10 ** settings.rate_decimal)
-    # return currency_value_result, value_result, rate_result, commission_value_result
 
 
 def get_commission_value(value: int, commission_pack_value: CommissionPackValue) -> int:
@@ -98,12 +78,12 @@ async def get_commission(wallet_id: int, value: int) -> int:
 def suitability_check_currency_value(
         need_currency_value: int,
         requisite: Requisite,
-        requisite_rate: int,
         currency_div: int,
         rate_decimal: int,
         order_type: str,
 ) -> Optional[tuple[int, int]]:
     needed_currency_value = need_currency_value
+    requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** rate_decimal)
     if check_zero(needed_currency_value, requisite.currency_value):
         return
     if requisite.value_min and needed_currency_value < requisite.value_min:
@@ -132,12 +112,12 @@ def suitability_check_currency_value(
 def suitability_check_value(
         need_value: int,
         requisite: Requisite,
-        requisite_rate: int,
         currency_div: int,
         rate_decimal: int,
         order_type: str,
 ) -> Optional[tuple[int, int]]:
     needed_value = need_value
+    requisite_rate = round(requisite.rate / 10 ** requisite.currency.rate_decimal * 10 ** rate_decimal)
     if check_zero(needed_value, requisite.value):
         return
     if requisite.value_min and needed_value < requisite.value_min:  # Меньше минимума

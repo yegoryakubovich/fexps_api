@@ -16,13 +16,11 @@
 
 
 from .favicon import router as router_favicon
-from .temp import router as router_temp
 from .client import router as router_client
 from .admin import router as router_admin
 
 
 routers = [
-    router_temp,
     router_favicon,
     router_admin,
     router_client,

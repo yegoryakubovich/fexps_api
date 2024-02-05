@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestStates
+from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, RequestTypes
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -24,6 +24,7 @@ from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.utils.decorators import session_required
+from app.utils.exaptions.wallet import NotEnoughFundsOnBalance
 
 
 class RequestService(BaseService):
@@ -53,6 +54,10 @@ class RequestService(BaseService):
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
             rate_decimal.append(output_method.currency.rate_decimal)
+        if type_ == RequestTypes.OUTPUT and output_value:
+            balance = wallet.value - wallet.value_can_minus
+            if output_value > balance:
+                raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
         request = await RequestRepository().create(
             wallet=wallet,
             state=RequestStates.LOADING,

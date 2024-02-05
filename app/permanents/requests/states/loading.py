@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+import asyncio
 from typing import List, Optional
 
 from app.db.models import RequestStates, RequestTypes, OrderTypes, Request, Currency, RequisiteTypes, Actions
@@ -20,28 +23,21 @@ from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
 from app.services.base import BaseService
-from app.tasks import celery_app
 from app.utils.calculations.hard import get_need_values_input, get_need_values_output, suitability_check_currency_value, \
     suitability_check_value
 from app.utils.calculations.request import calc_request_value, request_model_calculation
-from app.utils.decorators.celery_async import celery_sync
 from app.utils.schemes.calculations.orders import RequisiteScheme, AllRequisiteTypeScheme
 
 
-@celery_app.task()
-def request_state_loading_check_smart_start():
-    name = 'request_state_loading_check'
-    actives = celery_app.control.inspect().active()
-    for worker in actives:
-        for task in actives[worker]:
-            if task['name'] == name:
-                return
-    request_state_loading_check.apply_async()
-
-
-@celery_app.task(name='request_state_loading_check')
-@celery_sync
 async def request_state_loading_check():
+    while True:
+        try:
+            await run()
+        except:
+            pass
+
+
+async def run():
     for request in await RequestRepository().get_list(state=RequestStates.LOADING):
         if request.type == RequestTypes.ALL:  # ALL
             result = await request_type_all(request=request)
@@ -78,8 +74,8 @@ async def request_state_loading_check():
             await RequestRepository().update(request, state=RequestStates.WAITING)
             await BaseService().create_action(model=request, action=Actions.UPDATE)
         await request_model_calculation(request=request)
-
-    request_state_loading_check.apply_async()
+        await asyncio.sleep(0.25)
+    await asyncio.sleep(0.5)
 
 
 """
@@ -151,7 +147,6 @@ async def request_type_input_currency_value(
         suitability_check_result = suitability_check_currency_value(
             need_currency_value=need_currency_value,
             requisite=requisite,
-            requisite_rate=requisite_rate,
             currency_div=currency.div,
             rate_decimal=request.rate_decimal,
             order_type=OrderTypes.INPUT,
@@ -189,7 +184,6 @@ async def request_type_input_value(
         suitability_check_result = suitability_check_value(
             need_value=need_value,
             requisite=requisite,
-            requisite_rate=requisite_rate,
             currency_div=currency.div,
             rate_decimal=request.rate_decimal,
             order_type=OrderTypes.INPUT,
@@ -246,7 +240,6 @@ async def request_type_output_currency_value(
         suitability_check_result = suitability_check_currency_value(
             need_currency_value=need_currency_value,
             requisite=requisite,
-            requisite_rate=requisite_rate,
             currency_div=currency.div,
             rate_decimal=request.rate_decimal,
             order_type=OrderTypes.OUTPUT,
@@ -261,12 +254,11 @@ async def request_type_output_currency_value(
             value=suitable_value,
             rate=requisite_rate,
         ))
-        await RequisiteRepository().update(requisite, in_process=True)
         need_currency_value = round(need_currency_value - suitable_currency_value)
     if need_currency_value >= currency.div:
         for requisite_scheme in requisites_scheme_list:
             requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-            await RequisiteRepository().update(requisite, in_process=True)
+            await RequisiteRepository().update(requisite, in_process=False)
         return
 
     return requisites_scheme_list
@@ -285,7 +277,6 @@ async def request_type_output_value(
         suitability_check_result = suitability_check_value(
             need_value=need_value,
             requisite=requisite,
-            requisite_rate=requisite_rate,
             currency_div=currency.div,
             rate_decimal=request.rate_decimal,
             order_type=OrderTypes.OUTPUT,
@@ -300,14 +291,13 @@ async def request_type_output_value(
             value=suitable_value,
             rate=requisite_rate,
         ))
-        await RequisiteRepository().update(requisite, in_process=True)
         need_value = round(need_value - suitable_value)
         rates_list.append(requisite.rate)
     mean_rate = round(sum(rates_list) / len(rates_list))
     if round(need_value * mean_rate / 10 ** request.rate_decimal) >= currency.div:
         for requisite_scheme in requisites_scheme_list:
             requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-            await RequisiteRepository().update(requisite, in_process=True)
+            await RequisiteRepository().update(requisite, in_process=False)
         return
 
     return requisites_scheme_list

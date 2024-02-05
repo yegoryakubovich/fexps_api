@@ -13,14 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-FROM python:3.11-slim
-
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
-
-COPY . /app
-WORKDIR /app
-
-ENTRYPOINT celery -A app.tasks beat -l info

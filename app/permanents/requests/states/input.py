@@ -15,36 +15,31 @@
 #
 
 
-from app.db.models import RequestStates, OrderTypes, OrderStates
+import asyncio
+
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import TransferSystemService
-from app.tasks import celery_app
 from app.utils.calculations.hard import get_need_values_input
-from app.utils.decorators.celery_async import celery_sync
 
 
-@celery_app.task()
-def request_state_input_check_smart_start():
-    name = 'request_state_input_check'
-    actives = celery_app.control.inspect().active()
-    for worker in actives:
-        for task in actives[worker]:
-            if task['name'] == name:
-                return
-    request_state_input_check.apply_async()
-
-
-@celery_app.task(name='request_state_input_check')
-@celery_sync
 async def request_state_input_check():
+    while True:
+        try:
+            await run()
+        except:
+            pass
+
+
+async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT):
         need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
         if need_input_value or need_value:
-            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
+            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
-            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)  # Back to previous state
+            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.RESERVE):
             continue  # Found reserve orders
@@ -54,6 +49,9 @@ async def request_state_input_check():
             continue  # Found confirmation orders
 
         await TransferSystemService().payment_commission(request=request)
-        await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)  # Started next state
-
-    request_state_input_check.apply_async()
+        if request.type == RequestTypes.INPUT:
+            await RequestRepository().update(request, state=RequestStates.COMPLETED)
+        else:
+            await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
+        await asyncio.sleep(0.25)
+    await asyncio.sleep(0.5)
