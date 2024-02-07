@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, RequestTypes
+from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, RequestTypes, RequestFirstLine
 from app.repositories.method import MethodRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -43,13 +43,25 @@ class RequestService(BaseService):
             output_value: int,
             output_requisite_data_id: int,
     ) -> dict:
+        first_line, first_line_value = None, None
+        input_method, output_requisite_data, output_method = None, None, None
+        if input_currency_value:
+            first_line = RequestFirstLine.INPUT_CURRENCY_VALUE
+            first_line_value = input_currency_value
+        elif input_value:
+            first_line = RequestFirstLine.INPUT_VALUE
+            first_line_value = input_value
+        elif output_currency_value:
+            first_line = RequestFirstLine.OUTPUT_CURRENCY_VALUE
+            first_line_value = output_currency_value
+        elif output_value:
+            first_line = RequestFirstLine.OUTPUT_VALUE
+            first_line_value = output_value
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        input_method = None
         rate_decimal = []
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
             rate_decimal.append(input_method.currency.rate_decimal)
-        output_requisite_data, output_method = None, None
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
@@ -63,13 +75,11 @@ class RequestService(BaseService):
             state=RequestStates.LOADING,
             type=type_,
             rate_decimal=max(rate_decimal),
-            input_currency_value=input_currency_value,
-            input_value=input_value,
+            first_line=first_line,
+            first_line_value=first_line_value,
             input_method=input_method,
-            output_currency_value=output_currency_value,
-            output_value=output_value,
-            output_method=output_method,
             output_requisite_data=output_requisite_data,
+            output_method=output_method,
         )
         await self.create_action(
             model=request,
@@ -78,13 +88,11 @@ class RequestService(BaseService):
                 'creator': f'session_{session.id}',
                 'id': request.id,
                 'wallet_id': wallet_id,
-                'input_currency_value': input_currency_value,
-                'input_value': input_value,
-                'input_method': input_method,
-                'output_currency_value': output_currency_value,
-                'output_value': output_value,
-                'output_method': output_method,
-                'output_requisite_data': output_requisite_data,
+                'first_line': first_line,
+                'first_line_value': input_currency_value,
+                'input_method_id': input_method.id,
+                'output_requisite_data_id': output_requisite_data.id,
+                'output_method_id': output_method.id,
             },
         )
 

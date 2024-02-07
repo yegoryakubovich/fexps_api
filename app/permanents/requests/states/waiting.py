@@ -16,14 +16,17 @@
 
 
 import asyncio
+import logging
+
+prefix = '[request_state_waiting_check]'
 
 
 async def request_state_waiting_check():
     while True:
         try:
             await run()
-        except:
-            pass
+        except Exception as e:
+            logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():

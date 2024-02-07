@@ -36,7 +36,7 @@ class OrderStatesConfirmationService(BaseService):
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
         await MethodService().check_confirmation_field(
-            method=order.requisite.requisite_data.method, fields=confirmation_fields,
+            method=order.requisite.output_requisite_data.method, fields=confirmation_fields,
         )
 
         await OrderRepository().update(

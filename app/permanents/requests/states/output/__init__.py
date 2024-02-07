@@ -16,25 +16,35 @@
 
 
 import asyncio
+import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.utils.calculations.hard import get_need_values_output
+from app.services import TransferSystemService, WalletBanService
+from app.utils.calculations.request.need_value import check_need_value
+
+prefix = '[request_state_output_check]'
 
 
 async def request_state_output_check():
     while True:
         try:
             await run()
-        except:
-            pass
+        except Exception as e:
+            logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT):
-        need_output_value, need_value = await get_need_values_output(request=request, order_type=OrderTypes.OUTPUT)
-        if need_output_value or need_value:
+        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
+        _need_value = await check_need_value(
+            request=request,
+            order_type=OrderTypes.OUTPUT,
+            from_value=request.output_value_raw,
+        )
+        # check wait orders / complete state
+        if _need_value:
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
@@ -48,6 +58,13 @@ async def run():
                 request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION
         ):
             continue  # Found confirmation orders
+        await TransferSystemService().payment_div(request=request)
+        if request.type == RequestTypes.INPUT:
+            await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-request.input_value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
         await RequestRepository().update(request, state=RequestStates.COMPLETED)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)

@@ -1,4 +1,4 @@
-import redis
+import math
 
 
 async def start_test():
@@ -38,15 +38,18 @@ async def start_test():
 
 
 if __name__ == '__main__':
-    redis = redis.Redis(
-        host='37.1.192.150',
-        port=2001,
-        username='default',
-        password='YKrcAH1X130PqxlheNJzpMZC3pupGwZQPXpya0R8Wj1O3iuZSMVNhOTdHVvXFH9f',
-        decode_responses=True,
-    )
-    print(type(redis.keys()))
-    redis.delete(*redis.keys())
-    print(redis.keys())
+    c_percent = 100
+    c_value = 200
 
+    value1 = 10000
+    c_1 = math.ceil(value1 - value1 * (100_00 - c_percent) / 100_00)
+    c_1 += c_value
+    result1 = value1 - c_1
+    print(value1, '->', c_1, '->', result1)
+    value2 = result1
+    c_value_2 = value2 + c_value
+    c_2 = math.ceil(c_value_2 / (100_00 - c_percent) * 100_00 - c_value_2)
+    c_2 += c_value
+    result2 = value2 + c_2
 
+    print(value2, '->', c_2, '->', result2)

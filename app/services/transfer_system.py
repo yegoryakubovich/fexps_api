@@ -59,6 +59,11 @@ class TransferSystemService(BaseService):
                 reason=TransferSystemReasons.COMMISSION,
                 description=f'Request #{request.id}',
             )
+
+    async def payment_div(
+            self,
+            request: Request,
+    ) -> None:
         if request.div_value:
             await self.create_transfer(
                 wallet_id=request.wallet_id,

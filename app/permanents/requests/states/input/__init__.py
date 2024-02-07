@@ -16,26 +16,35 @@
 
 
 import asyncio
+import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.services import TransferSystemService
-from app.utils.calculations.hard import get_need_values_input
+from app.services import TransferSystemService, WalletBanService
+from app.utils.calculations.request.need_value import check_need_value
+
+prefix = '[request_state_input_check]'
 
 
 async def request_state_input_check():
     while True:
         try:
             await run()
-        except:
-            pass
+        except Exception as e:
+            logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT):
-        need_input_value, need_value = await get_need_values_input(request=request, order_type=OrderTypes.INPUT)
-        if need_input_value or need_value:
+        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
+        _need_value = await check_need_value(
+            request=request,
+            order_type=OrderTypes.INPUT,
+            from_value=request.input_value_raw,
+        )
+        # check / change states
+        if _need_value:
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
@@ -48,6 +57,11 @@ async def run():
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
             continue  # Found confirmation orders
 
+        await WalletBanService().create_related(
+            wallet=request.wallet,
+            value=-(request.input_value + request.commission_value),
+            reason=WalletBanReasons.BY_ORDER,
+        )
         await TransferSystemService().payment_commission(request=request)
         if request.type == RequestTypes.INPUT:
             await RequestRepository().update(request, state=RequestStates.COMPLETED)

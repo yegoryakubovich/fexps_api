@@ -14,7 +14,9 @@
 # limitations under the License.
 #
 
+
 import asyncio
+import logging
 
 from app.permanents.requests.orders_checks import request_new_order_check
 from app.permanents.requests.states.input import request_state_input_check
@@ -24,7 +26,11 @@ from app.permanents.requests.states.output import request_state_output_check
 from app.permanents.requests.states.output_reserved import request_state_output_reserved_check
 
 
+prefix = '[start_app]'
+
+
 async def start_app() -> None:
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]
         if 'request_new_order_check' not in tasks_names:

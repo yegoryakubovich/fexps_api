@@ -31,7 +31,7 @@ class OrderStatesCanceledService(BaseService):
             self,
             session: Session,
             id_: int,
-            reason: str,
+            reason: str = None,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)

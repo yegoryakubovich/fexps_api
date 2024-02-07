@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     path_images: str = 'assets/images'
 
     items_per_page: int = 10
-    request_wait_minutes: int = 2
+    request_wait_minutes: int = 1
 
     model_config = SettingsConfigDict(env_file='.env')
 

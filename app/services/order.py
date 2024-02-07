@@ -22,8 +22,8 @@ from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
 from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
+from app.utils.calculations.schemes.loading import RequisiteScheme
 from app.utils.decorators import session_required
-from app.utils.schemes.calculations.orders import RequisiteScheme
 
 
 class OrderService(BaseService):
@@ -178,6 +178,11 @@ class OrderService(BaseService):
                 wallet_to=order.request.wallet,
                 value=order.value,
                 order=order,
+            )
+            await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=order.value,
+                reason=WalletBanReasons.BY_ORDER,
             )
         elif order.type == OrderTypes.OUTPUT:
             await WalletBanService().create_related(

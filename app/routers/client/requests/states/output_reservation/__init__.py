@@ -20,7 +20,7 @@ from .update import router as router_update
 
 
 router = Router(
-    prefix='/input/reservation',
+    prefix='/output/reservation',
     routes_included=[
         router_update,
     ],

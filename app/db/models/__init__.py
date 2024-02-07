@@ -39,7 +39,7 @@ from .transfer import Transfer, TransferTypes
 
 from .account import Account
 from .requisite import Requisite, RequisiteTypes
-from .request import Request, RequestTypes, RequestStates
+from .request import Request, RequestTypes, RequestStates, RequestFirstLine
 from .transfer_system import TransferSystem, TransferSystemTypes
 
 from .session import Session

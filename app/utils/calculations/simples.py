@@ -18,17 +18,11 @@ import math
 from app.db.models import OrderTypes
 
 
-def check_zero(*args) -> bool:
-    if 0 in args:
-        return True
-    return False
-
-
 def get_div_by_currency_value(
-        currency_value: int, div: int, rate: int, rate_decimal: int, type_: str,
+        currency_value: int, div: int, rate: int, rate_decimal: int, order_type: str,
 ) -> tuple[int, int]:
     currency_value = round(currency_value // div * div)
-    if type_ == OrderTypes.INPUT:
+    if order_type == OrderTypes.INPUT:
         value = math.floor(currency_value / rate * 10 ** rate_decimal)
     else:
         value = math.ceil(currency_value / rate * 10 ** rate_decimal)
@@ -46,21 +40,19 @@ def get_div_by_value(
         value = math.ceil(currency_value / rate * 10 ** rate_decimal)
     return currency_value, value
 
-
-def get_div_values(
-        rate: int,
-        rate_decimal: int,
-        div: int,
-        currency_value: int = None,
-        value: int = None,
-        type_: str = None,
-) -> tuple[int, int]:
-    if currency_value:
-        return get_div_by_currency_value(
-            currency_value=currency_value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
-        )
-    if value:
-        return get_div_by_value(
-            value=value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
-        )
-
+# def get_div_values(
+#         rate: int,
+#         rate_decimal: int,
+#         div: int,
+#         currency_value: int = None,
+#         value: int = None,
+#         type_: str = None,
+# ) -> tuple[int, int]:
+#     if currency_value:
+#         return get_div_by_currency_value(
+#             currency_value=currency_value, div=div, rate=rate, order_type=type_, rate_decimal=rate_decimal,
+#         )
+#     if value:
+#         return get_div_by_value(
+#             value=value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
+#         )
