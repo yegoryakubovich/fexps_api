@@ -50,8 +50,6 @@ async def run():
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
             continue  # Found waiting orders
-        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.RESERVE):
-            continue  # Found reserve orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
             continue  # Found payment orders
         if await OrderRepository().get_list(

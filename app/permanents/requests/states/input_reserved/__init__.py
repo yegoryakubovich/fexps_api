@@ -54,7 +54,7 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
-                await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+                await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
                 await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
             continue

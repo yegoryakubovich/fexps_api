@@ -19,13 +19,11 @@ from app.utils import Router
 from .canceled import router as router_canceled
 from .completed import router as router_completed
 from .confirmation import router as router_confirmation
-from .payment import router as router_payment
 
 
 router = Router(
     prefix='/states',
     routes_included=[
-        router_payment,
         router_confirmation,
         router_completed,
         router_canceled,

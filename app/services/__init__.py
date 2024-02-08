@@ -33,10 +33,7 @@ from .order_request import OrderRequestService
 from .order_state_canceled import OrderStatesCanceledService
 from .order_state_completed import OrderStatesCompletedService
 from .order_state_confirmation import OrderStatesConfirmationService
-from .order_state_payment import OrderStatesPaymentService
 from .request import RequestService
-from .request_state_input_reservation import RequestStatesInputReservationService
-from .request_state_output_reservation import RequestStatesOutputReservationService
 from .requisite import RequisiteService
 from .requisite_data import RequisiteDataService
 from .role import RoleService

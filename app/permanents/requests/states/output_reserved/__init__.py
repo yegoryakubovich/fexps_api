@@ -55,7 +55,7 @@ async def run():
             )
             for wait_order in waiting_orders:
                 await OrderService().order_banned_value(wallet=request.wallet, value=wait_order.value)
-                await OrderRepository().update(wait_order, state=OrderStates.RESERVE)
+                await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue

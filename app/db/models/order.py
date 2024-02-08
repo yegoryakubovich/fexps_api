@@ -30,15 +30,14 @@ class OrderTypes:
 
 class OrderStates:  # token, order_id
     WAITING = 'waiting'
-    RESERVE = 'reserve'
     PAYMENT = 'payment'
     CONFIRMATION = 'confirmation'
     COMPLETED = 'completed'  # None (Проверка всех ордеров, запуск RequestService finish)
     CANCELED = 'canceled'
 
-    choices = [WAITING, RESERVE, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
-    choices_one_side_cancel = [WAITING, RESERVE, PAYMENT]
-    choices_return_banned_value = [RESERVE, PAYMENT, CONFIRMATION]
+    choices = [WAITING, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
+    choices_one_side_cancel = [WAITING, PAYMENT]
+    choices_return_banned_value = [PAYMENT, CONFIRMATION]
 
 
 class OrderCanceledReasons:
