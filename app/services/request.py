@@ -24,6 +24,7 @@ from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.utils.decorators import session_required
+from app.utils.exceptions.request import RequestStateWrong
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 
 
@@ -96,6 +97,35 @@ class RequestService(BaseService):
             },
         )
         return {'request_id': request.id}
+
+    @session_required(permissions=['request'])
+    async def update_confirmation(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        request = await RequestRepository().get_by_id(id_=id_)
+        if request.state != RequestStates.WAITING:
+            raise RequestStateWrong(
+                kwargs={
+                    'id_': request.id,
+                    'state': request.state,
+                    'need_state': RequestStates.WAITING,
+                },
+            )
+        next_state = RequestStates.INPUT_RESERVATION
+        if request.type == RequestTypes.OUTPUT:
+            next_state = RequestStates.OUTPUT_RESERVATION
+        await RequestRepository().update(request, state=next_state)
+        await self.create_action(
+            model=request,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
 
     @session_required(permissions=['requests'])
     async def delete(
