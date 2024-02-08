@@ -16,10 +16,9 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import CountryService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -28,12 +27,11 @@ router = Router(
 )
 
 
-class CountryGetSchema(BaseSchema):
+class CountryGetSchema(BaseModel):
     id_str: str = Field(min_length=2, max_length=16)
 
 
 @router.get()
 async def route(schema: CountryGetSchema = Depends()):
     result = await CountryService().get(id_str=schema.id_str)
-
     return Response(**result)

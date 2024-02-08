@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import OrderStatesConfirmationService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class OrderStatesConfirmationUpdateSchema(BaseSchema):
+class OrderStatesConfirmationUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
     confirmation_fields: dict = Field()
@@ -40,5 +39,4 @@ async def route(schema: OrderStatesConfirmationUpdateSchema):
         id_=schema.order_id,
         confirmation_fields=schema.confirmation_fields,
     )
-
     return Response(**result)

@@ -19,21 +19,9 @@ from app.db.models import CommissionPackValue, CommissionPack, Session, Actions
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.services.base import BaseService
-from app.utils import ApiException
 from app.utils.decorators import session_required
+from app.utils.exceptions.commission_pack import CommissionIntervalAlreadyTaken
 from config import settings
-
-
-class IntervalAlreadyTaken(ApiException):
-    pass
-
-
-class IntervalValidationError(ApiException):
-    pass
-
-
-class IntervalNotFoundError(ApiException):
-    pass
 
 
 class CommissionPackValueService(BaseService):
@@ -101,4 +89,4 @@ class CommissionPackValueService(BaseService):
             pack_value_start = pack_value.value_from
             pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else settings.wallet_max_value
             if (new_start <= pack_value_stop) and (new_stop >= pack_value_start):
-                raise IntervalAlreadyTaken('This interval already taken')
+                raise CommissionIntervalAlreadyTaken()

@@ -15,18 +15,18 @@
 #
 
 
-from pydantic import  Field
-from app.utils import BaseSchema
+from pydantic import Field, BaseModel
 
 from app.services import AccountContactService
 from app.utils import Router, Response
+
 
 router = Router(
     prefix='/delete',
 )
 
 
-class AccountContactDeleteSchema(BaseSchema):
+class AccountContactDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
@@ -37,5 +37,4 @@ async def route(schema: AccountContactDeleteSchema):
         token=schema.token,
         id_=schema.id,
     )
-
     return Response(**result)

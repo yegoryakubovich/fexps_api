@@ -15,21 +15,22 @@
 #
 
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, BaseModel, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequisiteTypes
 from app.services import RequisiteService
-from app.utils import Router, Response, BaseSchema
-from app.utils.base_schema import ValueMustBePositive
-from app.utils.exaptions.main import DataValidationError
+from app.utils import Router, Response
+from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError, ParametersAllContainError, \
+    ParameterTwoContainError
+
 
 router = Router(
     prefix='/create',
 )
 
 
-class RequisiteCreateSchema(BaseSchema):
+class RequisiteCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     type: str = Field(min_length=1, max_length=8)
     wallet_id: int = Field()
@@ -49,13 +50,22 @@ class RequisiteCreateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequisiteCreateSchema':
         if self.type not in RequisiteTypes.choices:
-            raise DataValidationError(f'The "type" must contain: {"/".join(RequisiteTypes.choices)}')
+            raise ParameterContainError(
+                kwargs={
+                    'field_name': 'type',
+                    'parameters': RequisiteTypes.choices,
+                },
+            )
 
         datas = {
             RequisiteTypes.INPUT: {
@@ -68,13 +78,19 @@ class RequisiteCreateSchema(BaseSchema):
             },
         }
         if None in datas[self.type]['required']:
-            raise DataValidationError(f'For {self.type}, only these parameters are taken into account: '
-                                      f'{", ".join(datas[self.type]["required_names"])}')
-
+            raise ParametersAllContainError(
+                kwargs={
+                    'parameters': datas[self.type]["required_names"],
+                },
+            )
         value_optional = [self.currency_value, self.value, self.rate]
         value_optional_names = ['total_currency_value', 'total_value', 'rate']
         if (len(value_optional) - value_optional.count(None)) != 2:
-            raise DataValidationError(f'The position must be two of: {"/".join(value_optional_names)}')
+            raise ParameterTwoContainError(
+                kwargs={
+                    'parameters': value_optional_names,
+                },
+            )
         return self
 
 
@@ -94,5 +110,4 @@ async def route(schema: RequisiteCreateSchema):
         value_min=schema.value_min,
         value_max=schema.value_max,
     )
-
     return Response(**result)

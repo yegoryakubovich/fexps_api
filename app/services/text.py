@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Text, Actions
-from app.repositories.text import TextExist, TextRepository
+from app.repositories.text import TextAlreadyExist, TextRepository
 from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -34,7 +34,11 @@ class TextService(BaseService):
             return_model: bool = False,
     ) -> dict | Text:
         if await TextRepository().get(key=key):
-            raise TextExist(f'Text with key "{key}" already exist')
+            raise TextAlreadyExist(
+                kwargs={
+                    'key': key,
+                },
+            )
         text = await TextRepository().create(key=key, value_default=value_default)
         await self.create_action(
             model=text,
@@ -71,7 +75,6 @@ class TextService(BaseService):
                     ],
                 }
             )
-
         return {'texts': texts_list}
 
     @session_required(permissions=['texts'])

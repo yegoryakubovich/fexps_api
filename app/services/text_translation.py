@@ -21,7 +21,7 @@ from app.repositories.text import TextRepository
 from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exaptions.text import TextTranslationExist
+from app.utils.exceptions.text import TextTranslationAlreadyExist
 
 
 class TextTranslationService(BaseService):
@@ -39,7 +39,11 @@ class TextTranslationService(BaseService):
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
         if await TextTranslationRepository().get(text=text, language=language):
-            raise TextTranslationExist(f'Text translation with language "{language.id_str}" already exist')
+            raise TextTranslationAlreadyExist(
+                kwargs={
+                    'id_str': language.id_str,
+                },
+            )
         text_translation = await TextTranslationRepository().create(text=text, language=language, value=value)
         await self.create_action(
             model=text_translation,
@@ -51,7 +55,6 @@ class TextTranslationService(BaseService):
                 'value': value,
             },
         )
-
         if return_model:
             return text_translation
         return {'translation_id': text_translation.id}
@@ -82,7 +85,6 @@ class TextTranslationService(BaseService):
                 'value': value,
             },
         )
-
         return {}
 
     @session_required(permissions=['texts_translations'])
@@ -107,5 +109,4 @@ class TextTranslationService(BaseService):
                 'language': language,
             },
         )
-
         return {}

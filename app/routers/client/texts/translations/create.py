@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TextTranslationService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class TextTranslationCreateSchema(BaseSchema):
+class TextTranslationCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     text_key: str = Field(min_length=2, max_length=128)
     language: str = Field(min_length=2, max_length=128)
@@ -42,5 +41,4 @@ async def route(schema: TextTranslationCreateSchema):
         language=schema.language,
         value=schema.value,
     )
-
     return Response(**result)

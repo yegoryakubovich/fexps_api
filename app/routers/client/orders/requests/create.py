@@ -15,21 +15,21 @@
 #
 
 
-from pydantic import Field, model_validator, field_validator
+from pydantic import Field, model_validator, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import OrderRequestTypes
 from app.services import OrderRequestService
-from app.utils import Router, Response, BaseSchema
-from app.utils.base_schema import ValueMustBePositive
-from app.utils.exaptions.main import DataValidationError
+from app.utils import Router, Response
+from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError
+
 
 router = Router(
     prefix='/create',
 )
 
 
-class OrderRequestCreateSchema(BaseSchema):
+class OrderRequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
     type: str = Field(min_length=1, max_length=16)
@@ -38,7 +38,12 @@ class OrderRequestCreateSchema(BaseSchema):
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':
         if self.type not in OrderRequestTypes.choices:
-            raise DataValidationError(f'The type parameter must contain: {"/".join(OrderRequestTypes.choices)}')
+            raise ParameterContainError(
+                kwargs={
+                    'field_name': 'type',
+                    'parameters': OrderRequestTypes.choices,
+                },
+            )
         return self
 
     @field_validator('value')
@@ -47,7 +52,11 @@ class OrderRequestCreateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -59,5 +68,4 @@ async def route(schema: OrderRequestCreateSchema):
         type_=schema.type,
         value=schema.value,
     )
-
     return Response(**result)

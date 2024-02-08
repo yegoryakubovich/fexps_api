@@ -23,7 +23,7 @@ from config import settings
 from .base import BaseRepository
 from .language import LanguageRepository
 from .text import TextRepository
-from app.utils.exaptions.text import TextPackDoesNotExist
+from app.utils.exceptions.text import TextPackDoesNotExist
 
 
 class TextPackRepository(BaseRepository[TextPack]):
@@ -47,5 +47,9 @@ class TextPackRepository(BaseRepository[TextPack]):
     async def get_current(self, language: Language) -> Optional[TextPack]:
         text_pack_all = await self.get_list(language=language)
         if not text_pack_all:
-            raise TextPackDoesNotExist(f'TextPack with language "{language.name}" does not exist')
+            raise TextPackDoesNotExist(
+                kwargs={
+                    'language_name': language.name,
+                },
+            )
         return text_pack_all[0]

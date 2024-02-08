@@ -15,14 +15,14 @@
 #
 
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequestTypes
 from app.services import RequestService
-from app.utils import Router, Response, BaseSchema
-from app.utils.base_schema import ValueMustBePositive
-from app.utils.exaptions.main import DataValidationError
+from app.utils import Router, Response
+from app.utils.exceptions.main import ParametersAllContainError
+from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError, ParameterOneContainError
 
 router = Router(
     prefix='/create',
@@ -30,7 +30,7 @@ router = Router(
 )
 
 
-class RequestCreateSchema(BaseSchema):
+class RequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     type: str = Field(min_length=1, max_length=8)
@@ -44,7 +44,12 @@ class RequestCreateSchema(BaseSchema):
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':
         if self.type not in RequestTypes.choices:
-            raise DataValidationError(f'The type parameter must contain: {"/".join(RequestTypes.choices)}')
+            raise ParameterContainError(
+                kwargs={
+                    'field_name': 'type',
+                    'parameters': RequestTypes.choices,
+                },
+            )
         datas = {
             RequestTypes.INPUT: {
                 'required': [self.input_method_id],
@@ -66,11 +71,17 @@ class RequestCreateSchema(BaseSchema):
             },
         }
         if None in datas[self.type]['required']:
-            raise DataValidationError(f'For {self.type}, only these parameters are taken into account: '
-                                      f'{", ".join(datas[self.type]["required_names"])}')
+            raise ParametersAllContainError(
+                kwargs={
+                    'parameters': datas[self.type]["required_names"],
+                },
+            )
         if (len(datas[self.type]['optional']) - datas[self.type]['optional'].count(None)) != 1:
-            raise DataValidationError(f'The position must be one of: '
-                                      f'{"/".join(datas[self.type]["optional_names"])}')
+            raise ParameterOneContainError(
+                kwargs={
+                    'parameters': datas[self.type]["optional_names"],
+                },
+            )
         return self
 
     @field_validator('input_currency_value', 'input_value', 'output_currency_value', 'output_value')
@@ -79,7 +90,11 @@ class RequestCreateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -96,5 +111,4 @@ async def route(schema: RequestCreateSchema):
         output_currency_value=schema.output_currency_value,
         output_value=schema.output_value,
     )
-
     return Response(**result)

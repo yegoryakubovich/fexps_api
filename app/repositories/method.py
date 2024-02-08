@@ -18,7 +18,7 @@
 from app.db.models import Method
 from .base import BaseRepository
 from .currency import CurrencyRepository
-from app.utils.exaptions.main import NoRequiredParameters
+from app.utils.exceptions.main import NoRequiredParameters
 
 
 class MethodRepository(BaseRepository[Method]):
@@ -33,5 +33,7 @@ class MethodRepository(BaseRepository[Method]):
             await self.update(db_obj, schema_fields=schema_fields)
         if not currency_id_str and not name_text_key and not schema_fields:
             raise NoRequiredParameters(
-                'One of the following parameters must be filled in: currency_id_str, name_text_key, schema_fields'
+                kwargs={
+                    'parameters': ['currency_id_str', 'name_text_key', 'schema_fields']
+                },
             )

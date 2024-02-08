@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TextService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class TextDeleteSchema(BaseSchema):
+class TextDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=2, max_length=128)
 
@@ -38,5 +37,4 @@ async def route(schema: TextDeleteSchema):
         token=schema.token,
         key=schema.key,
     )
-
     return Response(**result)

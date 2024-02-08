@@ -25,8 +25,8 @@ from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.requisites import all_value_calc
 from app.utils.decorators import session_required
-from app.utils.exaptions.main import DoesNotPermission
-from app.utils.exaptions.requisite import MinimumTotalValueError
+from app.utils.exceptions.requisite import RequisiteMinimumValueError
+from app.utils.exceptions.wallet import WalletPermissionError
 from config import settings
 
 
@@ -52,7 +52,7 @@ class RequisiteService(BaseService):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet):
-            raise DoesNotPermission('You do not have sufficient rights to this wallet')
+            raise WalletPermissionError()
         input_method, output_requisite_data, currency = None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
@@ -118,7 +118,7 @@ class RequisiteService(BaseService):
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
         if requisite.requisite_data.account.id != account.id and requisite.wallet.account.id != account.id:
-            raise DoesNotPermission('You do not have sufficient rights to this wallet or requisite_data')
+            raise WalletPermissionError()
         return {
             'requisite': {
                 'id': requisite.id,
@@ -145,11 +145,14 @@ class RequisiteService(BaseService):
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
         if not await WalletAccountRepository().get(account=account, wallet=requisite.wallet):
-            raise DoesNotPermission('You do not have sufficient rights to this wallet')
+            raise WalletPermissionError()
         access_change_balance = requisite.total_value - requisite.value
-
         if total_value < access_change_balance:
-            raise MinimumTotalValueError(f'Minimum value total_value = {access_change_balance}')
+            raise RequisiteMinimumValueError(
+                kwargs={
+                    'access_change_balance': access_change_balance,
+                },
+            )
 
         new_value = round(total_value - (requisite.total_value - requisite.value))
         new_currency_value = round(new_value * requisite.rate / 10 ** settings.rate_decimal)

@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import LanguageService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class LanguageCreateSchema(BaseSchema):
+class LanguageCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=1, max_length=16)
     name: str = Field(min_length=1, max_length=32)
@@ -40,5 +39,4 @@ async def route(schema: LanguageCreateSchema):
         id_str=schema.id_str,
         name=schema.name,
     )
-
     return Response(**result)

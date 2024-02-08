@@ -26,5 +26,4 @@ router = Router(
 @router.get()
 async def route():
     result = {}
-
     return Response(**result)

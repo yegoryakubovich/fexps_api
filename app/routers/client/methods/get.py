@@ -16,10 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import MethodService
-from app.utils import BaseSchema
+
 from app.utils import Router, Response
 
 
@@ -28,12 +28,11 @@ router = Router(
 )
 
 
-class MethodGetSchema(BaseSchema):
+class MethodGetSchema(BaseModel):
     id: int = Field()
 
 
 @router.get()
 async def route(schema: MethodGetSchema = Depends()):
     result = await MethodService().get(id_=schema.id)
-
     return Response(**result)

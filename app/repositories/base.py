@@ -25,7 +25,7 @@ from sqlalchemy import select
 from app.db.base_class import Base
 from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
-from app.utils.exaptions.main import ModelDoesNotExist
+from app.utils.exceptions.main import ModelDoesNotExist
 from config import settings
 
 ModelType = TypeVar('ModelType', bound=Base)
@@ -70,13 +70,25 @@ class BaseRepository(Generic[ModelType]):
     async def get_by_id(self, id_: int, **filters) -> Optional[ModelType]:
         result = await self.get(id=id_, **filters)
         if not result:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
+            raise ModelDoesNotExist(
+                kwargs={
+                    'model': self.model.__name__,
+                    'id_type': 'id',
+                    'id_value': id_,
+                },
+            )
         return result
 
     async def get_by_id_str(self, id_str: str) -> Optional[ModelType]:
         result = await self.get(id_str=id_str)
         if not result:
-            raise ModelDoesNotExist(f'{self.model.__name__} "{id_str}" does not exist')
+            raise ModelDoesNotExist(
+                kwargs={
+                    'model': self.model.__name__,
+                    'id_type': 'id_str',
+                    'id_value': id_str,
+                },
+            )
         return result
 
     async def get(self, custom_where=None, custom_order=None,**filters) -> Optional[ModelType]:

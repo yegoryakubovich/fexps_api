@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import ContactService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class ContactCreateSchema(BaseSchema):
+class ContactCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     name: str = Field(min_length=1, max_length=1024)
 
@@ -38,5 +37,4 @@ async def route(schema: ContactCreateSchema):
         token=schema.token,
         name=schema.name,
     )
-
     return Response(**result)

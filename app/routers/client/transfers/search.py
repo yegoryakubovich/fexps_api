@@ -16,10 +16,9 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TransferService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -28,7 +27,7 @@ router = Router(
 )
 
 
-class TransferSearchSchema(BaseSchema):
+class TransferSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     is_sender: bool = Field(default=True)
@@ -45,5 +44,4 @@ async def route(schema: TransferSearchSchema = Depends()):
         is_receiver=schema.is_receiver,
         page=schema.page,
     )
-
     return Response(**result)

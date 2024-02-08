@@ -27,5 +27,4 @@ router = Router(
 @router.get()
 async def route():
     result = await MethodService().get_list()
-
     return Response(**result)

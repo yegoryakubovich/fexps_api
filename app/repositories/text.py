@@ -18,9 +18,8 @@
 from app.db.models import Text, Language
 from .base import BaseRepository
 from .text_translation import TextTranslationRepository
-from app.utils import ApiException
-from app.utils.exaptions.main import NoRequiredParameters
-from app.utils.exaptions.text import TextDoesNotExist, TextExist
+from app.utils.exceptions.main import NoRequiredParameters
+from app.utils.exceptions.text import TextDoesNotExist, TextAlreadyExist
 
 
 class TextRepository(BaseRepository[Text]):
@@ -29,7 +28,11 @@ class TextRepository(BaseRepository[Text]):
     async def get_by_key(self, key: str) -> Text:
         result = await self.get(key=key)
         if not result:
-            raise TextDoesNotExist(f'Text with key "{key}" does not exist')
+            raise TextDoesNotExist(
+                kwargs={
+                    'key': key,
+                },
+            )
         return result
 
     @staticmethod
@@ -42,7 +45,11 @@ class TextRepository(BaseRepository[Text]):
 
     async def create(self, key: str, value_default: str) -> Text:
         if await self.get(key=key):
-            raise TextExist(f'Text with key "{key}" already exist')
+            raise TextAlreadyExist(
+                kwargs={
+                    'key': key,
+                },
+            )
         return await super().create(key=key, value_default=value_default)
 
     async def update_text(self, db_obj: Text, value_default: str = None, new_key: str = None):
@@ -52,5 +59,7 @@ class TextRepository(BaseRepository[Text]):
             await self.update(db_obj, key=new_key)
         if not value_default and not new_key:
             raise NoRequiredParameters(
-                'One of the following parameters must be filled in: value_default, new_key'
+                kwargs={
+                    'parameters': ['value_default', 'new_key']
+                }
             )

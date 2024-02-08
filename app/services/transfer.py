@@ -22,8 +22,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exaptions.main import DoesNotPermission
-from app.utils.exaptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
+from app.utils.exceptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached, WalletPermissionError
 from config import settings
 
 
@@ -41,7 +40,7 @@ class TransferService(BaseService):
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
         if not await WalletAccountRepository().get(account=account, wallet=wallet_from):
-            raise DoesNotPermission('You do not have sufficient rights to this wallet')
+            raise WalletPermissionError()
         await WalletAccountRepository().check_permission(account=account, wallet=wallet_from)
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
         transfer = await self.transfer(
@@ -79,7 +78,7 @@ class TransferService(BaseService):
             account=account, wallet=transfer.wallet_to
         )
         if not perm_from and not perm_to:
-            raise DoesNotPermission(f'You do not have enough rights for this transfer')
+            raise WalletPermissionError()
 
         return {
             'transfer': {
@@ -132,10 +131,14 @@ class TransferService(BaseService):
     ) -> Transfer:
         balance = wallet_from.value - wallet_from.value_can_minus
         if value > balance:
-            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
+            raise NotEnoughFundsOnBalance()
         available_value = await WalletService().get_available_value(wallet=wallet_to)
         if value > available_value:
-            raise WalletLimitReached(f"Transaction cannot be executed, max wallet value {settings.wallet_max_value}")
+            raise WalletLimitReached(
+                kwargs={
+                    'wallet_max_value': settings.wallet_max_value,
+                },
+            )
         await WalletRepository().update(wallet_from, value=wallet_from.value - value)
         transfer = await TransferRepository().create(
             type=type_,

@@ -19,12 +19,8 @@ from app.db.models import AccountContact, Session, Actions
 from app.repositories.account_contact import AccountContactRepository
 from app.repositories.contact import ContactRepository
 from app.services.base import BaseService
-from app.utils import ApiException
 from app.utils.decorators import session_required
-
-
-class AccountContactsAlreadyExists(ApiException):
-    pass
+from app.utils.exceptions.account import AccountContactsAlreadyExists
 
 
 class AccountContactService(BaseService):
@@ -40,7 +36,7 @@ class AccountContactService(BaseService):
         account = session.account
         contact = await ContactRepository().get_by_id(id_=contact_id)
         if await AccountContactRepository().get(account=account, contact=contact):
-            raise AccountContactsAlreadyExists('Account Contact has already exists')
+            raise AccountContactsAlreadyExists()
         account_contact = await AccountContactRepository().create(account=account, contact=contact, value=value)
         await self.create_action(
             model=contact,
@@ -51,7 +47,6 @@ class AccountContactService(BaseService):
                 'contact_id': f'{contact.id}',
             },
         )
-
         return {'account_contact_id': account_contact.id}
 
     @session_required(permissions=['accounts'])
@@ -63,7 +58,6 @@ class AccountContactService(BaseService):
         account = session.account
         account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
         contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
-
         return {
             'id': account_contact.id,
             'contact_id': contact.id,
@@ -89,7 +83,6 @@ class AccountContactService(BaseService):
                     'value': account_contact.value,
                 }
             )
-
         return {'account_contacts': account_contacts_list}
 
     @session_required(permissions=['accounts'])
@@ -113,7 +106,6 @@ class AccountContactService(BaseService):
                 'updater': f'session_{session.id}',
             },
         )
-
         return {}
 
     @session_required(permissions=['accounts'])
@@ -133,5 +125,4 @@ class AccountContactService(BaseService):
                 'id': id_,
             },
         )
-
         return {}

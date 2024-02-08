@@ -38,7 +38,6 @@ class OrderStatesConfirmationService(BaseService):
         await MethodService().check_confirmation_field(
             method=order.requisite.output_requisite_data.method, fields=confirmation_fields,
         )
-
         await OrderRepository().update(
             order,
             confirmation_fields=confirmation_fields,
@@ -53,5 +52,4 @@ class OrderStatesConfirmationService(BaseService):
                 'confirmation_fields': confirmation_fields,
             },
         )
-
         return {}

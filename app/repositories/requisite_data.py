@@ -25,5 +25,11 @@ class RequisiteDataRepository(BaseRepository[RequisiteData]):
     async def get_by_account_and_id(self, account: Account, id_: int) -> RequisiteData:
         result = await self.get(account=account, id=id_)
         if not result:
-            raise ModelDoesNotExist(f'{self.model.__name__}.{id_} does not exist')
+            raise ModelDoesNotExist(
+                kwargs={
+                    'model': self.model.__name__,
+                    'id_type': 'id',
+                    'id_value': id_,
+                },
+            )
         return result

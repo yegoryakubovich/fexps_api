@@ -17,8 +17,7 @@
 
 from typing import Optional
 
-from pydantic import  Field
-from app.utils import BaseSchema
+from pydantic import Field, BaseModel
 
 from app.services import AccountService
 from app.utils import Router, Response
@@ -29,7 +28,7 @@ router = Router(
 )
 
 
-class CreateAccountSchema(BaseSchema):
+class CreateAccountSchema(BaseModel):
     username: str = Field(min_length=6, max_length=32)
     password: str = Field(min_length=6, max_length=128)
     firstname: str = Field(min_length=2, max_length=32)
@@ -54,5 +53,4 @@ async def route(schema: CreateAccountSchema):
         timezone_id_str=schema.timezone,
         currency_id_str=schema.currency,
     )
-
     return Response(**result)

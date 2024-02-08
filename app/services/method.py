@@ -22,7 +22,7 @@ from app.repositories.text import TextRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-from app.utils.exaptions.method import FieldsMissingParams, FieldsValidationError
+from app.utils.exceptions.method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodFieldsTypeError
 
 
 class MethodService(BaseService):
@@ -38,7 +38,11 @@ class MethodService(BaseService):
             confirmation_fields: list[dict],
     ) -> dict:
         if isinstance(fields, str):
-            raise FieldsMissingParams(f'fields missing')
+            raise MethodFieldsMissing(
+                kwargs={
+                    'field_name': 'fields',
+                },
+            )
         for field in fields:
             name_text = await TextRepository().create(
                 key=f'method_field_{await create_id_str()}',
@@ -46,7 +50,11 @@ class MethodService(BaseService):
             )
             field['name_text_key'] = name_text.key
         if isinstance(confirmation_fields, str):
-            raise FieldsMissingParams(f'confirmation_fields missing')
+            raise MethodFieldsMissing(
+                kwargs={
+                    'field_name': 'confirmation_fields',
+                },
+            )
         for confirmation_field in confirmation_fields:
             name_text = await TextRepository().create(
                 key=f'method_confirmation_field_{await create_id_str()}',
@@ -74,7 +82,6 @@ class MethodService(BaseService):
                 'currency': currency.id_str
             },
         )
-
         return {'method_id': method.id}
 
     @staticmethod
@@ -82,7 +89,6 @@ class MethodService(BaseService):
             id_: int,
     ):
         method = await MethodRepository().get_by_id(id_=id_)
-
         return {
             'method': {
                 'id': method.id,
@@ -96,7 +102,6 @@ class MethodService(BaseService):
 
     @staticmethod
     async def get_list() -> dict:
-
         return {
             'methods': [
                 {
@@ -138,7 +143,6 @@ class MethodService(BaseService):
             action=Actions.UPDATE,
             parameters=action_parameters,
         )
-
         return {}
 
     @session_required(permissions=['methods'])
@@ -157,7 +161,6 @@ class MethodService(BaseService):
                 'id': id_,
             },
         )
-
         return {}
 
     @staticmethod
@@ -170,11 +173,28 @@ class MethodService(BaseService):
             if not field_result and field_optional:
                 continue
             if not field_result:
-                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
+                raise MethodFieldsParameterMissing(
+                    kwargs={
+                        'field_name': 'fields',
+                        'parameter': field_key,
+                    },
+                )
             if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )
             if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )
 
     @staticmethod
     async def check_confirmation_field(method: Method, fields: dict):
@@ -186,10 +206,33 @@ class MethodService(BaseService):
             if not field_result and field_optional:
                 continue
             if not field_result:
-                raise FieldsMissingParams(f'fields missing parameter "{field_key}"')
+                raise MethodFieldsParameterMissing(
+                    kwargs={
+                        'field_name': 'fields',
+                        'parameter': field_key,
+                    },
+                )
             if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )
             if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
-                raise FieldsValidationError(f'fields.{field_key} does not match {field_type}')
-            if field_type == MethodFieldTypes.IMAGE: # FIXME
-                raise FieldsValidationError(f'fields.{field_key} IMAGE FIXME')
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )
+            if field_type == MethodFieldTypes.IMAGE:  # FIXME
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )

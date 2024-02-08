@@ -32,17 +32,14 @@ class TextPackService(BaseService):
     async def get(language_id_str: str):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
         text_pack = await TextPackRepository().get_current(language=language)
-
         # FIXME
         if text_pack.id == 0:
             return {
                 'text_pack_id': text_pack.id,
                 'text_pack': {},
             }
-
         with open(f'{settings.path_texts_packs}/{text_pack.id}.json', encoding='utf-8', mode='r') as md_file:
             json_str = md_file.read()
-
         json = loads(json_str)
         return {
             'text_pack_id': text_pack.id,

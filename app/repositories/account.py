@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import Account
-from app.utils.exaptions.account import AccountWithUsernameDoeNotExist
+from app.utils.exceptions.account import AccountWithUsernameDoeNotExist
 from .base import BaseRepository
 
 
@@ -28,5 +28,9 @@ class AccountRepository(BaseRepository[Account]):
     async def get_by_username(self, username: str) -> Optional[Account]:
         result = await self.get(username=username)
         if not result:
-            raise AccountWithUsernameDoeNotExist(f'Account @{username} does not exist')
+            raise AccountWithUsernameDoeNotExist(
+                kwargs={
+                    'username': username,
+                },
+            )
         return result

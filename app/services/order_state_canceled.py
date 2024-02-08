@@ -35,7 +35,6 @@ class OrderStatesCanceledService(BaseService):
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
-
         await OrderService().cancel_related(order=order)
         await OrderRepository().update(order, state=OrderStates.CANCELED)
         await self.create_action(
@@ -47,5 +46,4 @@ class OrderStatesCanceledService(BaseService):
                 'reason': reason,
             },
         )
-
         return {}

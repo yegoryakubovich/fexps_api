@@ -16,10 +16,9 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import RequisiteDataService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -28,7 +27,7 @@ router = Router(
 )
 
 
-class RequisiteDataGetSchema(BaseSchema):
+class RequisiteDataGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
@@ -39,5 +38,4 @@ async def route(schema: RequisiteDataGetSchema = Depends()):
         token=schema.token,
         id_=schema.id,
     )
-
     return Response(**result)

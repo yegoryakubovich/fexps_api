@@ -35,7 +35,6 @@ class OrderStatesCompletedService(BaseService):
         order = await OrderRepository().get_by_id(id_=id_)
         await OrderRequestService().check_have_order_request(order=order)
         await OrderService().compete_related(order=order)
-
         await OrderRepository().update(order, state=OrderStates.COMPLETED)
         await self.create_action(
             model=order,
@@ -45,5 +44,4 @@ class OrderStatesCompletedService(BaseService):
                 'state': OrderStates.COMPLETED,
             },
         )
-
         return {}

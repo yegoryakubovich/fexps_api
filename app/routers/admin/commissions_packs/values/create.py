@@ -15,14 +15,13 @@
 #
 
 
-from pydantic import Field, model_validator, field_validator
+from pydantic import Field, model_validator, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
 from app.services import CommissionPackValueService
-from app.services.commission_pack_value import IntervalValidationError
-from app.utils import BaseSchema
 from app.utils import Router, Response
-from app.utils.exaptions.main import DataValidationError
+from app.utils.exceptions.commission_pack import CommissionIntervalValidationError
+from app.utils.exceptions.main import ParameterOneContainError, ValueMustBePositive
 
 
 router = Router(
@@ -30,7 +29,7 @@ router = Router(
 )
 
 
-class CommissionPackValueCreateSchema(BaseSchema):
+class CommissionPackValueCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     commission_pack_id: int = Field()
     value_from: int = Field()
@@ -41,21 +40,28 @@ class CommissionPackValueCreateSchema(BaseSchema):
     @model_validator(mode='after')
     def check_type(self) -> 'CommissionPackValueCreateSchema':
         if (self.value_from >= self.value_to) and (self.value_to != 0):
-            raise IntervalValidationError(f'The field value_to must be greater than value_from')
+            raise CommissionIntervalValidationError()
 
         optional = [self.percent, self.value]
         optional_names = ['percent', 'value']
 
         if (len(optional) - optional.count(None)) < 1:
-            raise DataValidationError(f'There must be at least one position: {"/".join(optional_names)}')
-
+            raise ParameterOneContainError(
+                kwargs={
+                    'parameters': optional_names,
+                },
+            )
         return self
 
     @field_validator('value_from', 'value_to')
     @classmethod
     def check_value_interval(cls, value: int, info: ValidationInfo):
         if value < 0:
-            raise IntervalValidationError(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -69,5 +75,4 @@ async def route(schema: CommissionPackValueCreateSchema):
         percent=schema.percent,
         value=schema.value,
     )
-
     return Response(**result)

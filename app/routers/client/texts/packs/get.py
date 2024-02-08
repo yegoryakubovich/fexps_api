@@ -16,10 +16,9 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TextPackService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -28,12 +27,11 @@ router = Router(
 )
 
 
-class TextPackGetSchema(BaseSchema):
+class TextPackGetSchema(BaseModel):
     language: str = Field(min_length=2, max_length=128)
 
 
 @router.get()
 async def route(schema: TextPackGetSchema = Depends()):
     result = await TextPackService.get(language_id_str=schema.language)
-
     return Response(**result)

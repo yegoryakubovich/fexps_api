@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TextService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class TextUpdateSchema(BaseSchema):
+class TextUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=2, max_length=128)
     new_key: str = Field(default=None, min_length=2, max_length=128)
@@ -42,5 +41,4 @@ async def route(schema: TextUpdateSchema):
         value_default=schema.value_default or None,
         new_key=schema.new_key or None,
     )
-
     return Response(**result)

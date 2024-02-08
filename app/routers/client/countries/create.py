@@ -15,10 +15,10 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import CountryService
-from app.utils import BaseSchema
+
 from app.utils import Router, Response
 
 
@@ -27,7 +27,7 @@ router = Router(
 )
 
 
-class CountryCreateSchema(BaseSchema):
+class CountryCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=16)
     name: str = Field(min_length=1, max_length=1024)
@@ -46,5 +46,4 @@ async def route(schema: CountryCreateSchema):
         timezone=schema.timezone,
         currency=schema.currency,
     )
-
     return Response(**result)

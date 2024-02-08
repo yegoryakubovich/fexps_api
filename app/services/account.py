@@ -26,7 +26,7 @@ from app.services.account_role import AccountRoleService
 from app.services.base import BaseService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
-from app.utils.exaptions.account import AccountUsernameExist, WrongPassword
+from app.utils.exceptions.account import AccountUsernameExist, AccountWrongPassword
 
 
 class AccountService(BaseService):
@@ -43,7 +43,11 @@ class AccountService(BaseService):
             surname: str = None,
     ) -> dict:
         if await AccountRepository().is_exist(username=username):
-            raise AccountUsernameExist(f'Account with username "{username}" already exist')
+            raise AccountUsernameExist(
+                kwargs={
+                    'username': username,
+                },
+            )
 
         # Generate salt and password hash
         password_salt = await create_salt()
@@ -103,7 +107,11 @@ class AccountService(BaseService):
             username: str,
     ):
         if await AccountRepository().is_exist(username=username):
-            raise AccountUsernameExist(f'Account with username "{username}" already exist')
+            raise AccountUsernameExist(
+                kwargs={
+                    'username': username,
+                },
+            )
 
         return {}
 
@@ -136,4 +144,4 @@ class AccountService(BaseService):
         ):
             return True
         else:
-            raise WrongPassword('Wrong password')
+            raise AccountWrongPassword()

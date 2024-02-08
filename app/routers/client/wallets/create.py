@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import WalletService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class WalletCreateSchema(BaseSchema):
+class WalletCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     name: str = Field(min_length=1, max_length=1024, default='Wallet')
 
@@ -38,5 +37,4 @@ async def route(schema: WalletCreateSchema):
         token=schema.token,
         name=schema.name,
     )
-
     return Response(**result)

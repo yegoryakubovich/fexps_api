@@ -15,10 +15,10 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import MethodService
-from app.utils import BaseSchema
+
 from app.utils import Response, Router
 
 
@@ -27,7 +27,7 @@ router = Router(
 )
 
 
-class MethodUpdateSchema(BaseSchema):
+class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
     currency_id_str: str = Field(default=None, min_length=2, max_length=32)
@@ -42,5 +42,4 @@ async def route(schema: MethodUpdateSchema):
         currency_id_str=schema.currency_id_str or None,
         schema_fields=schema.schema_fields or None,
     )
-
     return Response(**result)

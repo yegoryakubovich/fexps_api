@@ -19,8 +19,7 @@ from typing import Optional
 
 from app.db.models import AccountContact, Account
 from .base import BaseRepository
-from app.utils import ApiException
-from app.utils.exaptions.account import AccountContactNotFound
+from ..utils.exceptions.main import ModelDoesNotExist
 
 
 class AccountContactRepository(BaseRepository[AccountContact]):
@@ -29,5 +28,11 @@ class AccountContactRepository(BaseRepository[AccountContact]):
     async def get_by_account_and_id(self, account: Account, id_: int) -> Optional[AccountContact]:
         result = await self.get(account=account, id=id_)
         if not result:
-            raise AccountContactNotFound(f'{self.model.__name__}.{id_} does not exist')
+            raise ModelDoesNotExist(
+                kwargs={
+                    'model': self.model.__name__,
+                    'id_type': 'id',
+                    'id': id_,
+                },
+            )
         return result

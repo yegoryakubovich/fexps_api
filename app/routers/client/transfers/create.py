@@ -15,19 +15,20 @@
 #
 
 
-from pydantic import Field, field_validator
+from pydantic import Field, BaseModel, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.services import TransferService
-from app.utils import Router, Response, BaseSchema
-from app.utils.base_schema import ValueMustBePositive
+from app.utils import Router, Response
+from app.utils.exceptions.main import ValueMustBePositive
+
 
 router = Router(
     prefix='/create',
 )
 
 
-class TransferCreateSchema(BaseSchema):
+class TransferCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_from_id: int = Field()
     wallet_to_id: int = Field()
@@ -39,7 +40,11 @@ class TransferCreateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -51,5 +56,4 @@ async def route(schema: TransferCreateSchema):
         wallet_to_id=schema.wallet_to_id,
         value=schema.value,
     )
-
     return Response(**result)

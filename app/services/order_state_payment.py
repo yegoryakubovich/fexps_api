@@ -43,5 +43,4 @@ class OrderStatesPaymentService(BaseService):
                 'state': OrderStates.PAYMENT,
             },
         )
-
         return {}

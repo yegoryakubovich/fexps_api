@@ -16,19 +16,19 @@
 
 
 from fastapi import Depends
-from pydantic import  Field
-from app.utils import BaseSchema
+from pydantic import Field, BaseModel
 
 from app.services import AccountContactService
 from app.utils import Router
 from app.utils.response import Response
+
 
 router = Router(
     prefix='/get',
 )
 
 
-class AccountContactGetSchema(BaseSchema):
+class AccountContactGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
@@ -39,5 +39,4 @@ async def route(schema: AccountContactGetSchema = Depends()):
         token=schema.token,
         id_=schema.id
     )
-
     return Response(**result)

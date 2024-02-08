@@ -20,7 +20,7 @@ from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exaptions.main import DoesNotPermission
+from app.utils.exceptions.wallet import WalletPermissionError
 
 
 class WalletAccountService(BaseService):
@@ -60,7 +60,7 @@ class WalletAccountService(BaseService):
         account = session.account
         wallet_account = await WalletAccountRepository().get_by_id(id_=id_)
         if wallet_account.account.id != account.id:
-            raise DoesNotPermission('You do not have sufficient rights to delete this WalletAccount')
+            raise WalletPermissionError()
         await WalletAccountRepository().delete(wallet_account)
         await self.create_action(
             model=wallet_account,

@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import CountryService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class CountryDeleteSchema(BaseSchema):
+class CountryDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=16)
 
@@ -38,5 +37,4 @@ async def route(schema: CountryDeleteSchema):
         token=schema.token,
         id_str=schema.id_str,
     )
-
     return Response(**result)

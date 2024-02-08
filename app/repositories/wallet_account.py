@@ -17,7 +17,7 @@
 
 from app.db.models import WalletAccount, Account, Wallet
 from .base import BaseRepository
-from app.utils.exaptions.main import DoesNotPermission
+from ..utils.exceptions.wallet import WalletPermissionError
 
 
 class WalletAccountRepository(BaseRepository[WalletAccount]):
@@ -26,5 +26,5 @@ class WalletAccountRepository(BaseRepository[WalletAccount]):
     async def check_permission(self, account: Account, wallet: Wallet) -> WalletAccount:
         result = await self.get(account=account, wallet=wallet)
         if not result:
-            raise DoesNotPermission(f'You do not have enough rights for this wallet')
+            raise WalletPermissionError()
         return result

@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import WalletService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class WalletDeleteSchema(BaseSchema):
+class WalletDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
@@ -38,5 +37,4 @@ async def route(schema: WalletDeleteSchema):
         token=schema.token,
         id_=schema.id,
     )
-
     return Response(**result)

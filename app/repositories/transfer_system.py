@@ -17,8 +17,6 @@
 
 from app.db.models import TransferSystem
 from .base import BaseRepository
-from app.utils import ApiException
-
 
 
 class TransferSystemRepository(BaseRepository[TransferSystem]):

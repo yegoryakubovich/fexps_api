@@ -22,8 +22,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
-from app.utils.exaptions.main import DoesNotPermission
-from app.utils.exaptions.wallet import WalletLimitReached
+from app.utils.exceptions.wallet import WalletCountLimitReached
 from config import settings
 
 
@@ -39,7 +38,7 @@ class WalletService(BaseService):
         account = session.account
         wallet_account_list = await WalletAccountRepository().get_list(account=account, role=WalletAccountRoles.OWNER)
         if len(wallet_account_list) >= settings.wallet_max_count:
-            raise WalletLimitReached('Wallet limit reached.')
+            raise WalletCountLimitReached()
         commission_pack = await CommissionPackRepository().get(is_default=True)
         wallet = await WalletRepository().create(name=name, commission_pack=commission_pack)
         await self.create_action(

@@ -15,10 +15,10 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import RequestStatesOutputReservationService
-from app.utils import BaseSchema
+
 from app.utils import Response, Router
 
 
@@ -27,7 +27,7 @@ router = Router(
 )
 
 
-class RequestStatesOutputReservationUpdateSchema(BaseSchema):
+class RequestStatesOutputReservationUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     request_id: int = Field()
 
@@ -38,5 +38,4 @@ async def route(schema: RequestStatesOutputReservationUpdateSchema):
         token=schema.token,
         id_=schema.request_id,
     )
-
     return Response(**result)

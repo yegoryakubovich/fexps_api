@@ -21,7 +21,7 @@ from app.repositories.wallet_ban import WalletBanRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exaptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
+from app.utils.exceptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
 from config import settings
 
 
@@ -59,7 +59,7 @@ class WalletBanService(BaseService):
     ) -> WalletBan:
         wallet_free_balance = await WalletService().get_free_value(wallet=wallet)
         if wallet_free_balance < value:
-            raise NotEnoughFundsOnBalance("There are not enough funds on your balance")
+            raise NotEnoughFundsOnBalance()
 
         await WalletRepository().update(
             wallet,
@@ -93,7 +93,11 @@ class WalletBanService(BaseService):
     async def delete_related(wallet_ban: WalletBan) -> None:
         wallet_available_balance = await WalletService().get_available_value(wallet=wallet_ban.wallet)
         if wallet_available_balance < wallet_ban.value:
-            raise WalletLimitReached(f"Wallet limit reached. Max wallet value {settings.wallet_max_value}")
+            raise WalletLimitReached(
+                kwargs={
+                    'wallet_max_value': settings.wallet_max_value,
+                },
+            )
         wallet = wallet_ban.wallet
 
         await WalletRepository().update(

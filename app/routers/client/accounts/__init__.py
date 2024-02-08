@@ -21,6 +21,7 @@ from .contacts import router as router_contacts
 from .create import router as router_create
 from .get import router as router_get
 
+
 router = Router(
     prefix='/accounts',
     routes_included=[

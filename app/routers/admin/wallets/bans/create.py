@@ -15,22 +15,21 @@
 #
 
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, field_validator, model_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import WalletBanReasons
-from app.utils.exaptions.main import DataValidationError
 from app.services import WalletBanService
-from app.utils import Router, Response, BaseSchema
-from app.utils.base_schema import ValueMustBePositive
-
+from app.utils import Router, Response
+from app.utils.exceptions.main import ParameterContainError
+from app.utils.exceptions.main import ValueMustBePositive
 
 router = Router(
     prefix='/create',
 )
 
 
-class WalletBanCreateSchema(BaseSchema):
+class WalletBanCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     value: int = Field()
@@ -39,8 +38,12 @@ class WalletBanCreateSchema(BaseSchema):
     @model_validator(mode='after')
     def check_type(self) -> 'WalletBanCreateSchema':
         if self.reason not in WalletBanReasons.choices:
-            raise DataValidationError(f'The type parameter must contain: {"/".join(WalletBanReasons.choices)}')
-
+            raise ParameterContainError(
+                kwargs={
+                    'field_name': 'type',
+                    'parameters': WalletBanReasons.choices,
+                },
+            )
         return self
 
     @field_validator('value')
@@ -49,7 +52,11 @@ class WalletBanCreateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -61,5 +68,4 @@ async def route(schema: WalletBanCreateSchema):
         value=schema.value,
         reason=schema.reason,
     )
-
     return Response(**result)

@@ -21,6 +21,7 @@ from .delete import router as router_delete
 from .get import router as router_get
 from .get_list import router as router_get_list
 
+
 router = Router(
     prefix='/contacts',
     routes_included=[

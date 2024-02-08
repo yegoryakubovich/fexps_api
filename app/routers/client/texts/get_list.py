@@ -16,10 +16,9 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TextService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -28,7 +27,7 @@ router = Router(
 )
 
 
-class TextListGetSchema(BaseSchema):
+class TextListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
@@ -37,5 +36,4 @@ async def route(schema: TextListGetSchema = Depends()):
     result = await TextService().get_list(
         token=schema.token,
     )
-
     return Response(**result)

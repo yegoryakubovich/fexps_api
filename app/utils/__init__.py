@@ -15,14 +15,14 @@
 #
 
 
+from app.utils.exceptions.base import ApiException
 from . import client
 from . import crypto
-from .exception import ApiException
 from .response import Response, ResponseState
 from .router import Router
 from .use_schema import use_schema
 from .validation_error import validation_error
-from .base_schema import BaseSchema
+
 
 __all__ = [
     'ApiException',
@@ -33,5 +33,4 @@ __all__ = [
     'client',
     'use_schema',
     'validation_error',
-    'BaseSchema',
 ]

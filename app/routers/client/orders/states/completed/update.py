@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import OrderStatesCompletedService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class OrderStatesCompletedUpdateSchema(BaseSchema):
+class OrderStatesCompletedUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
 
@@ -38,5 +37,4 @@ async def route(schema: OrderStatesCompletedUpdateSchema):
         token=schema.token,
         id_=schema.order_id,
     )
-
     return Response(**result)

@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import SessionService
-from app.utils import BaseSchema
 from app.utils import Response, Router
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class SessionCreateSchema(BaseSchema):
+class SessionCreateSchema(BaseModel):
     username: str = Field(min_length=6, max_length=32)
     password: str = Field(min_length=6, max_length=128)
 
@@ -38,5 +37,4 @@ async def route(schema: SessionCreateSchema):
         username=schema.username,
         password=schema.password,
     )
-
     return Response(**result)

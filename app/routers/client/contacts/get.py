@@ -16,10 +16,10 @@
 
 
 from fastapi import Depends
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import ContactService
-from app.utils import Router, Response, BaseSchema
+from app.utils import Router, Response
 
 
 router = Router(
@@ -27,12 +27,11 @@ router = Router(
 )
 
 
-class ContactGetSchema(BaseSchema):
+class ContactGetSchema(BaseModel):
     id: int = Field()
 
 
 @router.get()
 async def route(schema: ContactGetSchema = Depends()):
     result = await ContactService().get(id_=schema.id)
-
     return Response(**result)

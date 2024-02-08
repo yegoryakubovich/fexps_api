@@ -15,10 +15,9 @@
 #
 
 
-from pydantic import Field
+from pydantic import Field, BaseModel
 
 from app.services import TimezoneService
-from app.utils import BaseSchema
 from app.utils import Router, Response
 
 
@@ -27,7 +26,7 @@ router = Router(
 )
 
 
-class TimezoneCreateSchema(BaseSchema):
+class TimezoneCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=1, max_length=16)
     deviation: int = Field()
@@ -40,5 +39,4 @@ async def route(schema: TimezoneCreateSchema):
         id_str=schema.id_str,
         deviation=schema.deviation,
     )
-
     return Response(**result)

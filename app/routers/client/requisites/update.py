@@ -15,15 +15,12 @@
 #
 
 
-from decimal import Decimal
-
-from pydantic import Field, field_validator
+from pydantic import Field, BaseModel, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.services import RequisiteService
-from app.utils import BaseSchema
 from app.utils import Router, Response
-from app.utils.base_schema import ValueMustBePositive
+from app.utils.exceptions.main import ValueMustBePositive
 
 
 router = Router(
@@ -31,7 +28,7 @@ router = Router(
 )
 
 
-class RequisiteUpdateSchema(BaseSchema):
+class RequisiteUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id: int = Field()
     total_value: int = Field()
@@ -42,7 +39,11 @@ class RequisiteUpdateSchema(BaseSchema):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(f'The field "{info.field_name}" must be positive')
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 
@@ -53,5 +54,4 @@ async def route(schema: RequisiteUpdateSchema):
         id_=schema.id,
         total_value=schema.total_value,
     )
-
     return Response(**result)

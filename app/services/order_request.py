@@ -23,7 +23,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.utils.decorators import session_required
-from app.utils.exaptions.order import OrderRequestValidationError, OrderRequestFound
+from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAlreadyExists
 
 
 class OrderRequestService(BaseService):
@@ -58,7 +58,11 @@ class OrderRequestService(BaseService):
                     )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
-                raise OrderRequestValidationError('Parameter "value" not found')
+                raise OrderRequestFieldsMissing(
+                    kwargs={
+                        'field_name': 'value',
+                    },
+                )
             data['value'] = value
 
         if not order_request:
@@ -78,7 +82,6 @@ class OrderRequestService(BaseService):
                 'value': value,
             },
         )
-
         return {'order_request_id': order_request.id}
 
     @session_required(permissions=['orders'])
@@ -106,7 +109,6 @@ class OrderRequestService(BaseService):
                 'state': state,
             },
         )
-
         return {}
 
     @staticmethod
@@ -144,11 +146,15 @@ class OrderRequestService(BaseService):
                 'id': id_,
             },
         )
-
         return {}
 
     @staticmethod
     async def check_have_order_request(order: Order) -> None:
         order_request = await OrderRequestRepository().get(order=order, state=OrderRequestStates.WAIT)
         if order_request:
-            raise OrderRequestFound(f'Found order_request.{order_request.id} in status "{OrderRequestStates.WAIT}"')
+            raise OrderRequestAlreadyExists(
+                kwargs={
+                    'id_': order_request.id,
+                    'state': order_request.state,
+                },
+            )
