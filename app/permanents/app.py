@@ -18,13 +18,13 @@
 import asyncio
 import logging
 
-from app.permanents.requests.orders_checks import request_new_order_check
+from app.permanents.requests.rate_reservation_check import request_rate_reservation_check
 from app.permanents.requests.states.input import request_state_input_check
 from app.permanents.requests.states.input_reserved import request_state_input_reserved_check
 from app.permanents.requests.states.loading import request_state_loading_check
 from app.permanents.requests.states.output import request_state_output_check
 from app.permanents.requests.states.output_reserved import request_state_output_reserved_check
-
+from app.permanents.requests.waiting_check import request_waiting_check
 
 prefix = '[start_app]'
 
@@ -34,7 +34,9 @@ async def start_app() -> None:
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]
         if 'request_new_order_check' not in tasks_names:
-            asyncio.create_task(coro=request_new_order_check(), name='request_new_order_check')
+            asyncio.create_task(coro=request_waiting_check(), name='request_new_order_check')
+        if 'request_rate_reservation_check' not in tasks_names:
+            asyncio.create_task(coro=request_rate_reservation_check(), name='request_rate_reservation_check')
         if 'request_state_loading_check' not in tasks_names:
             asyncio.create_task(coro=request_state_loading_check(), name='request_state_loading_check')
         if 'request_state_input_reserved_check' not in tasks_names:
