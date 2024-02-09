@@ -23,6 +23,7 @@ from app.permanents.requests.states.loading.all import request_type_all
 from app.permanents.requests.states.loading.input import request_type_input
 from app.permanents.requests.states.loading.output import request_type_output
 from app.repositories.request import RequestRepository
+from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.utils.calculations.request.basic import write_other
@@ -57,9 +58,8 @@ async def run():
                     request=request, requisite_scheme=input_requisite_scheme, order_type=OrderTypes.INPUT,
                 )
             for output_requisite_scheme in result.output_requisites_type.requisites_scheme_list:
-                await OrderService().waited_order_by_scheme(
-                    request=request, requisite_scheme=output_requisite_scheme, order_type=OrderTypes.OUTPUT,
-                )
+                requisite = await RequisiteRepository().get_by_id(output_requisite_scheme.requisite_id)
+                await RequisiteRepository().update(requisite, in_process=False)
             await RequestRepository().update(
                 request,
                 input_currency_value_raw=result.input_requisite_type.sum_currency_value,
@@ -129,7 +129,7 @@ async def run():
                 div_value=0,
             )
         await write_other(request=request, check_rate_confirmed=False)
-        await RequestRepository().update(request, state=RequestStates.WAITING)
+        await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
         await BaseService().create_action(model=request, action=Actions.UPDATE)
         await asyncio.sleep(0.25)
     # await asyncio.sleep(0.5)

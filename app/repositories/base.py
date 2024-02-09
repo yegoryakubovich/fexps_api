@@ -91,7 +91,7 @@ class BaseRepository(Generic[ModelType]):
             )
         return result
 
-    async def get(self, custom_where=None, custom_order=None,**filters) -> Optional[ModelType]:
+    async def get(self, custom_where=None, custom_order=None, **filters) -> Optional[ModelType]:
         if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
             filters['is_deleted'] = False
         custom_select = select(self.model)

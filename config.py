@@ -44,7 +44,7 @@ class Settings(BaseSettings):
 
     items_per_page: int = 10
     request_waiting_check: int = 2
-    request_rate_reservation_minutes: int = 60
+    request_rate_confirmed_minutes: int = 60
 
     model_config = SettingsConfigDict(env_file='.env')
 

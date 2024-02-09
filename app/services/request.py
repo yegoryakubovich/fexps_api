@@ -98,7 +98,7 @@ class RequestService(BaseService):
         )
         return {'request_id': request.id}
 
-    @session_required(permissions=['request'])
+    @session_required(permissions=['requests'])
     async def update_confirmation(
             self,
             session: Session,

@@ -16,6 +16,7 @@
 
 
 import logging
+from typing import List
 
 from inflection import underscore
 
@@ -36,7 +37,6 @@ class ActionService:
     ) -> None:
         if not parameters:
             parameters = {}
-
         action = await ActionRepository().create(model=model, model_id=model_id, action=action)
         params_str = ''
         for key, value in parameters.items():
@@ -44,7 +44,6 @@ class ActionService:
             if not value:
                 value = 'none'
             params_str += f'{key.upper()} = {str(value).upper()}\n'
-
         logging.debug(
             msg=f'ACTION: {action.model.upper()}.{action.model_id}.{action.action.upper()}. '
                 f'PARAMS: \n{params_str}',
@@ -60,5 +59,16 @@ class ActionService:
             model_id=model.id,
             action=action
         )
+        return result
 
+    @staticmethod
+    async def get_actions(
+            model: Base,
+            action: Actions,
+    ) -> List[Action]:
+        result = await ActionRepository().get_list(
+            model=underscore(model.__class__.__name__),
+            model_id=model.id,
+            action=action
+        )
         return result

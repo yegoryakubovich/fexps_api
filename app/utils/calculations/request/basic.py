@@ -71,10 +71,13 @@ async def get_all_data(
     data = {}
     input_data = await get_input_data(request=request)
     output_data = await get_output_data(request=request)
+    _output_currency_value = request.output_currency_value_raw
+    if output_data.get('output_currency_value'):
+        _output_currency_value = output_data.get('output_currency_value')
     rate = get_auto_rate(
         request=request,
         currency_value=input_data['input_currency_value'],
-        value=output_data['output_currency_value'],
+        value=_output_currency_value,
         rate_decimal=request.rate_decimal,
     )
     data.update(input_data)

@@ -40,6 +40,7 @@ class RequestStates:
     CANCELED = 'canceled'
 
     choices = [WAITING, INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT, COMPLETED, CANCELED]
+    choices_rate_confirmation = [INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT]
 
 
 class RequestFirstLine:

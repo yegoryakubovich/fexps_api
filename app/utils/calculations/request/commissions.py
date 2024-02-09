@@ -4,7 +4,7 @@ import math
 from app.db.models import CommissionPackValue, RequestFirstLine, Request
 from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.repositories.wallet import WalletRepository
-from app.services.commission_pack_value import IntervalNotFoundError
+from app.utils.exceptions.commission_pack import IntervalNotExistsError
 
 
 def get_commission_value_input(
@@ -45,7 +45,11 @@ async def get_commission(
         value=value,
     )
     if not commission_pack_value:
-        raise IntervalNotFoundError(f'By value == "{value}" not found suitable interval')
+        raise IntervalNotExistsError(
+            kwargs={
+                'value': value,
+            },
+        )
     if request.first_line in RequestFirstLine.choices_input:
         return get_commission_value_input(value=value, commission_pack_value=commission_pack_value)
     elif request.first_line in RequestFirstLine.choices_output:
