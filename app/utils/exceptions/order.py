@@ -14,3 +14,8 @@ class OrderRequestAlreadyExists(ApiException):
 class OrderStateWrong(ApiException):
     code = 5002
     message = 'Order.{id_value} has state "{state}", but should have state "{need_state}"'
+
+
+class OrderStateNotPermission(ApiException):
+    code = 5003
+    message = 'Order.{id_value} you dont have permission to execute "{action}"'

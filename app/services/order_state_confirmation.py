@@ -15,13 +15,14 @@
 #
 
 
-from app.db.models import Order, Session, OrderStates, Actions
+from app.db.models import Order, Session, OrderStates, Actions, OrderTypes
 from app.repositories.order import OrderRepository
+from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
-from app.utils.exceptions.order import OrderStateWrong
+from app.utils.exceptions.order import OrderStateWrong, OrderStateNotPermission
 
 
 class OrderStatesConfirmationService(BaseService):
@@ -35,6 +36,27 @@ class OrderStatesConfirmationService(BaseService):
             confirmation_fields: dict,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
+        next_state = OrderStates.CONFIRMATION
+        if order.type == OrderTypes.INPUT:
+            request_wallet = order.request.wallet
+            wallet_account = await WalletAccountRepository().get(wallet=request_wallet, account=session.account)
+            if not wallet_account:
+                raise OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+        elif order.type == OrderTypes.OUTPUT:
+            requisite_wallet = order.requisite.wallet
+            wallet_account = await WalletAccountRepository().get(wallet=requisite_wallet, account=session.account)
+            if not wallet_account:
+                raise OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
         need_state = OrderStates.PAYMENT
         if order.state != need_state:
             raise OrderStateWrong(
@@ -51,14 +73,14 @@ class OrderStatesConfirmationService(BaseService):
         await OrderRepository().update(
             order,
             confirmation_fields=confirmation_fields,
-            state=OrderStates.CONFIRMATION,
+            state=next_state,
         )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
-                'state': OrderStates.CONFIRMATION,
+                'state': next_state,
                 'confirmation_fields': confirmation_fields,
             },
         )

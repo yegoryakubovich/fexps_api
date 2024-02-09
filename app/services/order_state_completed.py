@@ -15,13 +15,14 @@
 #
 
 
-from app.db.models import Order, Session, OrderStates, Actions
+from app.db.models import Order, Session, OrderStates, Actions, OrderTypes
 from app.repositories.order import OrderRepository
+from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
-from app.utils.exceptions.order import OrderStateWrong
+from app.utils.exceptions.order import OrderStateWrong, OrderStateNotPermission
 
 
 class OrderStatesCompletedService(BaseService):
@@ -34,6 +35,27 @@ class OrderStatesCompletedService(BaseService):
             id_: int,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
+        next_state = OrderStates.COMPLETED
+        if order.type == OrderTypes.INPUT:
+            requisite_wallet = order.requisite.wallet
+            wallet_account = await WalletAccountRepository().get(wallet=requisite_wallet, account=session.account)
+            if not wallet_account:
+                raise OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+        elif order.type == OrderTypes.OUTPUT:
+            request_wallet = order.request.wallet
+            wallet_account = await WalletAccountRepository().get(wallet=request_wallet, account=session.account)
+            if not wallet_account:
+                raise OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
         need_state = OrderStates.CONFIRMATION
         if order.state != need_state:
             raise OrderStateWrong(
@@ -45,13 +67,13 @@ class OrderStatesCompletedService(BaseService):
             )
         await OrderRequestService().check_have_order_request(order=order)
         await OrderService().compete_related(order=order)
-        await OrderRepository().update(order, state=OrderStates.COMPLETED)
+        await OrderRepository().update(order, state=next_state)
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
-                'state': OrderStates.COMPLETED,
+                'state': next_state,
             },
         )
         return {}
