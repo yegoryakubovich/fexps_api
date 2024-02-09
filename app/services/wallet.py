@@ -22,7 +22,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
-from app.utils.exceptions.wallet import WalletCountLimitReached
+from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
 from config import settings
 
 
@@ -67,6 +67,8 @@ class WalletService(BaseService):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
         wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
+        if not wallet_account:
+            raise WalletPermissionError()
         return {
             'wallet': {
                 'id': wallet_account.wallet.id,
@@ -135,7 +137,7 @@ class WalletService(BaseService):
         wallet = await WalletRepository().get_by_id(id_=id_)
         wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
         if wallet_account.role != WalletAccountRoles.OWNER:
-            raise DoesNotPermission('You do not have sufficient rights to delete this wallet')
+            raise WalletPermissionError()
         await WalletRepository().delete(wallet_account.wallet)
         await self.create_action(
             model=wallet,
