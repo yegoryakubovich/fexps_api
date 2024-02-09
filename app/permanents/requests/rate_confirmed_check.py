@@ -19,7 +19,7 @@ import asyncio
 import logging
 from datetime import datetime, timedelta
 
-from app.db.models import RequestStates, Actions, Request, RequestTypes
+from app.db.models import RequestStates, Actions, Request
 from app.repositories.action_parameter import ActionParameterRepository
 from app.repositories.request import RequestRepository
 from app.services import ActionService
@@ -38,17 +38,16 @@ async def request_rate_confirmed_check():
 
 async def run():
     time_now = datetime.utcnow()
-    for request in await RequestRepository().get_list_by_asc():
-        if request.state not in RequestStates.choices_rate_confirmation:
-            continue
+    for request in await RequestRepository().get_list_not_finished(rate_confirmed=True):
         request_action = await get_action_by_state(request, state=RequestStates.WAITING)
         if not request_action:
+            logging.debug(f'{prefix} Request.{request.id} not action')
             continue
         request_action_delta = time_now - request_action.datetime
         if request_action_delta >= timedelta(minutes=settings.request_rate_confirmed_minutes):
             await RequestRepository().update(request, rate_confirmed=False)
-        await asyncio.sleep(0.125)
-    await asyncio.sleep(0.25)
+            logging.debug(f'{prefix} Request.{request.id} rate_confirmed=False')
+        await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)
 
 

@@ -37,7 +37,6 @@ async def request_state_output_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT):
-        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
         _need_value = await check_need_value(
             request=request,
             order_type=OrderTypes.OUTPUT,
@@ -45,15 +44,19 @@ async def run():
         )
         # check wait orders / complete state
         if _need_value:
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION} (1)')
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION} (2)')
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
             continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
             continue  # Found payment orders
         if await OrderRepository().get_list(
-                request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION
+                request=request,
+                type=OrderTypes.OUTPUT,
+                state=OrderStates.CONFIRMATION,
         ):
             continue  # Found confirmation orders
         await TransferSystemService().payment_div(request=request)
@@ -63,6 +66,7 @@ async def run():
                 value=-request.input_value,
                 reason=WalletBanReasons.BY_ORDER,
             )
+        logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.COMPLETED}')
         await RequestRepository().update(request, state=RequestStates.COMPLETED)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)

@@ -13,11 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+from operator import and_
 from typing import List
 
-from app.db.models import Request
+from app.db.models import Request, RequestStates
 from .base import BaseRepository
 
 
@@ -27,3 +26,7 @@ class RequestRepository(BaseRepository[Request]):
     async def get_list_by_asc(self, **filters) -> List[Request]:
         custom_order = self.model.id.asc()
         return await self.get_list(custom_order=custom_order, **filters)
+
+    async def get_list_not_finished(self, **filters) -> List[Request]:
+        custom_where = and_(self.model.state != RequestStates.CANCELED, self.model.state != RequestStates.COMPLETED)
+        return await self.get_list(custom_where=custom_where, **filters)

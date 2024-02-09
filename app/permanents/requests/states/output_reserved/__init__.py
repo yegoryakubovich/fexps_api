@@ -54,9 +54,11 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
+                logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderService().order_banned_value(wallet=request.wallet, value=wait_order.value)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
+                logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT}')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue
         # create missing orders

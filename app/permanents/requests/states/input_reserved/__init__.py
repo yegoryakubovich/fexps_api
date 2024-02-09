@@ -40,7 +40,6 @@ async def request_state_input_reserved_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
-        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
         _need_value = await check_need_value(
             request=request,
             order_type=OrderTypes.INPUT,
@@ -54,9 +53,11 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
+                logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
-                await RequestRepository().update(request, state=RequestStates.INPUT)  # Started next state
+                logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT}')
+                await RequestRepository().update(request, state=RequestStates.INPUT)
             continue
         # create missing orders
         if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:

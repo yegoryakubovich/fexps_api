@@ -45,16 +45,17 @@ async def run():
         )
         # check / change states
         if _need_value:
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (1)')
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (2)')
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
             continue  # Found payment orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
             continue  # Found confirmation orders
-
         await WalletBanService().create_related(
             wallet=request.wallet,
             value=-(request.input_value + request.commission_value),
@@ -62,8 +63,10 @@ async def run():
         )
         await TransferSystemService().payment_commission(request=request)
         if request.type == RequestTypes.INPUT:
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.COMPLETED}')
             await RequestRepository().update(request, state=RequestStates.COMPLETED)
         else:
+            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION}')
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)

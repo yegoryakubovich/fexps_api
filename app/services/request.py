@@ -21,10 +21,12 @@ from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
+from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
 from app.utils.decorators import session_required
-from app.utils.exceptions.request import RequestStateWrong
+from app.utils.exceptions.order import OrderStateNotPermission
+from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 
 
@@ -105,6 +107,17 @@ class RequestService(BaseService):
             id_: int,
     ):
         request = await RequestRepository().get_by_id(id_=id_)
+        next_state = RequestStates.INPUT_RESERVATION
+        if request.type == RequestTypes.OUTPUT:
+            next_state = RequestStates.OUTPUT_RESERVATION
+        wallet_account = await WalletAccountRepository().get(wallet=request.wallet, account=session.account)
+        if not wallet_account:
+            raise RequestStateNotPermission(
+                kwargs={
+                    'id_value': request.id,
+                    'action': f'Update state to {next_state}',
+                }
+            )
         if request.state != RequestStates.WAITING:
             raise RequestStateWrong(
                 kwargs={
@@ -113,9 +126,6 @@ class RequestService(BaseService):
                     'need_state': RequestStates.WAITING,
                 },
             )
-        next_state = RequestStates.INPUT_RESERVATION
-        if request.type == RequestTypes.OUTPUT:
-            next_state = RequestStates.OUTPUT_RESERVATION
         await RequestRepository().update(request, state=next_state)
         await self.create_action(
             model=request,
