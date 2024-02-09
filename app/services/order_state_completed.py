@@ -21,6 +21,7 @@ from app.services.base import BaseService
 from app.services.order import OrderService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
+from app.utils.exceptions.order import OrderStateWrong
 
 
 class OrderStatesCompletedService(BaseService):
@@ -33,6 +34,15 @@ class OrderStatesCompletedService(BaseService):
             id_: int,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
+        need_state = OrderStates.CONFIRMATION
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
+            )
         await OrderRequestService().check_have_order_request(order=order)
         await OrderService().compete_related(order=order)
         await OrderRepository().update(order, state=OrderStates.COMPLETED)

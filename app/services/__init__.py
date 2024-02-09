@@ -30,7 +30,6 @@ from .language import LanguageService
 from .method import MethodService
 from .order import OrderService
 from .order_request import OrderRequestService
-from .order_state_canceled import OrderStatesCanceledService
 from .order_state_completed import OrderStatesCompletedService
 from .order_state_confirmation import OrderStatesConfirmationService
 from .request import RequestService

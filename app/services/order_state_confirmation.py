@@ -21,6 +21,7 @@ from app.services.base import BaseService
 from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
+from app.utils.exceptions.order import OrderStateWrong
 
 
 class OrderStatesConfirmationService(BaseService):
@@ -34,6 +35,15 @@ class OrderStatesConfirmationService(BaseService):
             confirmation_fields: dict,
     ) -> dict:
         order = await OrderRepository().get_by_id(id_=id_)
+        need_state = OrderStates.PAYMENT
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
+            )
         await OrderRequestService().check_have_order_request(order=order)
         await MethodService().check_confirmation_field(
             method=order.requisite.output_requisite_data.method, fields=confirmation_fields,
