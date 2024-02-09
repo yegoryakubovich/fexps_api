@@ -108,7 +108,7 @@ class RequestService(BaseService):
         if request.state != RequestStates.WAITING:
             raise RequestStateWrong(
                 kwargs={
-                    'id_': request.id,
+                    'id_value': request.id,
                     'state': request.state,
                     'need_state': RequestStates.WAITING,
                 },
