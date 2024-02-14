@@ -29,8 +29,7 @@ class TransferSystemTypes:
 class TransferSystemReasons:
     SALARY = 'salary'
     COMMISSION = 'commission'
-    DIV = 'div'
-    DIFFERENCE_RATE = 'difference_rate'
+    DIFFERENCE = 'difference'
 
 
 class TransferSystem(Base):
@@ -42,5 +41,7 @@ class TransferSystem(Base):
     transfer = relationship('Transfer', foreign_keys=transfer_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))
     reason = Column(String(length=32))
+    model = Column(String(64))
+    model_id = Column(BigInteger)
     description = Column(String(length=128))
     is_deleted = Column(Boolean, default=False)

@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from operator import and_
+
+
+from operator import or_
 from typing import List
 
 from app.db.models import Request, RequestStates
@@ -28,5 +30,5 @@ class RequestRepository(BaseRepository[Request]):
         return await self.get_list(custom_order=custom_order, **filters)
 
     async def get_list_not_finished(self, **filters) -> List[Request]:
-        custom_where = and_(self.model.state != RequestStates.CANCELED, self.model.state != RequestStates.COMPLETED)
+        custom_where = or_(self.model.state == RequestStates.INPUT, self.model.state == RequestStates.INPUT_RESERVATION)
         return await self.get_list(custom_where=custom_where, **filters)

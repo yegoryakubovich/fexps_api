@@ -1,10 +1,27 @@
+#
+# (c) 2024, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 import logging
 
 from app.db.models import Request, RequestFirstLine
 from app.permanents.requests.states.loading.input import request_type_input_currency_value, request_type_input_value
 from app.permanents.requests.states.loading.output import request_type_output_value, request_type_output_currency_value
 from app.repositories.requisite import RequisiteRepository
-from app.utils.calculations.request import get_commission
+from app.utils.calculations.request.commissions import get_commission
 from app.utils.calculations.request.need_value import input_get_need_currency_value, output_get_need_value, \
     output_get_need_currency_value, input_get_need_value
 from app.utils.calculations.request.rates import get_auto_rate

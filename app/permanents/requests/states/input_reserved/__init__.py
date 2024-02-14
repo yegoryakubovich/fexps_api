@@ -23,8 +23,8 @@ from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import OrderService
-from app.utils.calculations.request.need_value import input_get_need_currency_value, input_get_need_value, \
-    check_need_value
+from app.utils.calculations.request.basic import write_other
+from app.utils.calculations.request.need_value import input_get_need_currency_value
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
 
 prefix = '[request_state_input_reserved_check]'
@@ -40,13 +40,14 @@ async def request_state_input_reserved_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
-        _need_value = await check_need_value(
-            request=request,
-            order_type=OrderTypes.INPUT,
-            from_value=request.input_value_raw,
-        )
+        request = await RequestRepository().get_by_id(id_=request.id)
+        if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
+            _from_value = request.first_line_value
+        else:
+            _from_value = request.input_currency_value_raw
+        _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
         # check / change states
-        if not _need_value:
+        if not _need_currency_value:
             waiting_orders = await OrderRepository().get_list(
                 request=request,
                 type=OrderTypes.INPUT,
@@ -56,16 +57,12 @@ async def run():
                 logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
+                await write_other(request=request)
                 logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT}')
                 await RequestRepository().update(request, state=RequestStates.INPUT)
             continue
         # create missing orders
-        if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-            need_currency_value = await input_get_need_currency_value(request=request)
-            await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
-        elif request.first_line == RequestFirstLine.INPUT_VALUE:
-            need_value = await input_get_need_value(request=request)
-            await get_new_requisite_by_value(request=request, need_value=need_value)
+        await get_new_requisite_by_currency_value(request=request, need_currency_value=_need_currency_value)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)
 

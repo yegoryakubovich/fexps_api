@@ -40,6 +40,7 @@ class RequestStates:
     CANCELED = 'canceled'
 
     choices = [WAITING, INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT, COMPLETED, CANCELED]
+    choices_rate_confirm = [INPUT_RESERVATION, INPUT]
 
 
 class RequestFirstLine:
@@ -63,6 +64,7 @@ class Request(Base):
     state = Column(String(length=32))
     rate_decimal = Column(Integer, default=2)
     rate_confirmed = Column(Boolean, default=False)
+    difference_confirmed = Column(BigInteger, default=0)
 
     first_line = Column(String(length=32))
     first_line_value = Column(BigInteger)
@@ -74,8 +76,7 @@ class Request(Base):
     input_rate_raw = Column(BigInteger, nullable=True)
     input_rate = Column(BigInteger, nullable=True)
 
-    commission_value = Column(BigInteger, nullable=True)
-    div_value = Column(BigInteger, nullable=True)
+    commission_value = Column(BigInteger, default=0)
     rate = Column(BigInteger, nullable=True)
 
     output_currency_value_raw = Column(BigInteger, nullable=True)

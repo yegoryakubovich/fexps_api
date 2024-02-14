@@ -13,3 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+from app.db.models import Request
+
+
+def get_difference(request: Request) -> int:
+    if not request.output_value:
+        return 0
+    return request.input_value_raw - request.commission_value - request.output_value

@@ -18,11 +18,12 @@
 import asyncio
 import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons, RequestFirstLine
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import TransferSystemService, WalletBanService
-from app.utils.calculations.request.need_value import check_need_value
+from app.utils.calculations.request.difference import get_difference
+from app.utils.calculations.request.need_value import output_get_need_currency_value
 
 prefix = '[request_state_output_check]'
 
@@ -37,13 +38,14 @@ async def request_state_output_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT):
-        _need_value = await check_need_value(
-            request=request,
-            order_type=OrderTypes.OUTPUT,
-            from_value=request.output_value_raw,
-        )
+        request = await RequestRepository().get_by_id(id_=request.id)
+        if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
+            _from_value = request.first_line_value
+        else:
+            _from_value = request.output_currency_value_raw
+        _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
         # check wait orders / complete state
-        if _need_value:
+        if _need_currency_value:
             logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION} (1)')
             await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
             continue
@@ -53,19 +55,8 @@ async def run():
             continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
             continue  # Found payment orders
-        if await OrderRepository().get_list(
-                request=request,
-                type=OrderTypes.OUTPUT,
-                state=OrderStates.CONFIRMATION,
-        ):
+        if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION):
             continue  # Found confirmation orders
-        await TransferSystemService().payment_div(request=request)
-        if request.type == RequestTypes.INPUT:
-            await WalletBanService().create_related(
-                wallet=request.wallet,
-                value=-request.input_value,
-                reason=WalletBanReasons.BY_ORDER,
-            )
         logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.COMPLETED}')
         await RequestRepository().update(request, state=RequestStates.COMPLETED)
         await asyncio.sleep(0.25)

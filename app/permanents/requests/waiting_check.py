@@ -40,6 +40,8 @@ async def run():
     time_now = datetime.utcnow()
     for request in await RequestRepository().get_list_by_asc(state=RequestStates.WAITING):
         request_action = await ActionService().get_action(request, action=Actions.UPDATE)
+        if not request_action:
+            continue
         request_action_delta = time_now - request_action.datetime
         if request_action_delta >= timedelta(minutes=settings.request_waiting_check):
             await orders_update_state_to_canceled(request=request)

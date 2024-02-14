@@ -18,13 +18,15 @@
 import asyncio
 import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestFirstLine, Request, RequisiteTypes
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestFirstLine, Request, RequisiteTypes, \
+    RequestTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
-from app.services import OrderService
-from app.utils.calculations.request.need_value import output_get_need_value, output_get_need_currency_value, \
-    check_need_value
+from app.services import OrderService, TransferSystemService
+from app.utils.calculations.request.basic import write_other
+from app.utils.calculations.request.difference import get_difference
+from app.utils.calculations.request.need_value import output_get_need_currency_value, output_get_need_value
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
 
 prefix = '[request_state_output_reserved_check]'
@@ -40,34 +42,53 @@ async def request_state_output_reserved_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
-        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
-        _need_value = await check_need_value(
-            request=request,
-            order_type=OrderTypes.OUTPUT,
-            from_value=request.output_value_raw,
-        )
+        request = await RequestRepository().get_by_id(id_=request.id)
+        if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE and not request.rate_confirmed:
+            _from_value = request.first_line_value
+        else:
+            _from_value = request.output_currency_value_raw
+        _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
         # check wait orders / complete state
-        if not _need_value:
+        if not _need_currency_value:
             waiting_orders = await OrderRepository().get_list(
                 request=request,
                 type=OrderTypes.OUTPUT,
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
+                if request.type == RequestTypes.OUTPUT:
+                    logging.debug(f'{prefix} order_{wait_order.id} banned value = {wait_order.value}')
+                    await OrderService().order_banned_value(wallet=request.wallet, value=wait_order.value)
                 logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
-                await OrderService().order_banned_value(wallet=request.wallet, value=wait_order.value)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
+                await write_other(request=request)
                 logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT}')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue
         # create missing orders
-        if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-            need_currency_value = await output_get_need_currency_value(request=request)
+        if request.rate_confirmed:
+            _from_value = request.output_currency_value_raw
+            need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
+            logging.debug(f'create missing orders request_{request.id} need_currency_value = {need_currency_value}')
             await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
-        elif request.first_line == RequestFirstLine.OUTPUT_VALUE:
+        else:
+            _from_value = request.input_value
             need_value = await output_get_need_value(request=request)
+            logging.debug(f'create missing orders request_{request.id} need_value = {need_value}')
             await get_new_requisite_by_value(request=request, need_value=need_value)
+        await write_other(request=request)
+        difference_value = get_difference(request=request)
+        if request.difference_confirmed != difference_value:
+            logging.debug(f'{prefix} request_{request.id} '
+                          f'difference_value {difference_value} '
+                          f'difference_confirmed= {request.difference_confirmed} ')
+            await TransferSystemService().payment_difference(
+                request=request,
+                value=difference_value - request.difference_confirmed,
+                from_banned_value=True,
+            )
+            await RequestRepository().update(request, difference_confirmed=difference_value)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)
 

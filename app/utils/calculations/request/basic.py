@@ -1,16 +1,29 @@
+#
+# (c) 2024, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 from app.db.models import Request, RequestTypes, OrderTypes, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.utils.calculations.request.divs import get_div_auto
 from app.utils.calculations.request.rates import get_auto_rate
 
 
 async def write_other(
         request: Request,
-        check_rate_confirmed: bool = True,
 ) -> None:
-    if check_rate_confirmed and request.rate_confirmed:
-        return
     data = {}
     if request.type == RequestTypes.INPUT:
         data = await get_input_data(request=request)
@@ -20,7 +33,6 @@ async def write_other(
         data.update(rate=data['output_rate'])
     elif request.type == RequestTypes.ALL:
         data = await get_all_data(request=request)
-    data['div_value'] = await get_div_auto(request=request)
     await RequestRepository().update(request, **data)
 
 

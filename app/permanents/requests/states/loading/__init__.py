@@ -44,6 +44,7 @@ async def request_state_loading_check():
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.LOADING):
+        request = await RequestRepository().get_by_id(id_=request.id)
         logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
         if request.type == RequestTypes.ALL:  # ALL
             result: AllRequisiteTypeScheme = await request_type_all(request=request)
@@ -96,7 +97,6 @@ async def run():
                 input_value_raw=result.sum_value,
                 input_rate_raw=input_rate,
                 commission_value=commission_value,
-                div_value=0,
             )
         elif request.type == RequestTypes.OUTPUT:  # OUTPUT
             result: RequisiteTypeScheme = await request_type_output(request=request)
@@ -121,9 +121,8 @@ async def run():
                 output_value_raw=result.sum_value,
                 output_rate_raw=output_rate,
                 commission_value=0,
-                div_value=0,
             )
-        await write_other(request=request, check_rate_confirmed=False)
+        await write_other(request=request)
         logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.WAITING}')
         await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
         await BaseService().create_action(
