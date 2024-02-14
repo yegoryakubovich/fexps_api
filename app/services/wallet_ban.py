@@ -56,11 +56,11 @@ class WalletBanService(BaseService):
             wallet: Wallet,
             value: int,
             reason: str,
+            ignore_bal: bool = False
     ) -> WalletBan:
         wallet_free_balance = await WalletService().get_free_value(wallet=wallet)
-        if wallet_free_balance < value:
+        if not ignore_bal and wallet_free_balance < value:
             raise NotEnoughFundsOnBalance()
-
         await WalletRepository().update(
             wallet,
             value=wallet.value - value,

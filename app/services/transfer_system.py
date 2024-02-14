@@ -15,12 +15,18 @@
 #
 
 
-from app.db.models import TransferSystem, Request, TransferTypes, TransferSystemTypes
+import logging
+
+from inflection import underscore
+
+from app.db.base_class import Base
+from app.db.models import TransferSystem, Request, TransferTypes, TransferSystemTypes, WalletBanReasons
 from app.db.models.transfer_system import TransferSystemReasons
 from app.repositories.transfer_system import TransferSystemRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.transfer import TransferService
+from app.services.wallet_ban import WalletBanService
 
 
 class TransferSystemService(BaseService):
@@ -28,11 +34,15 @@ class TransferSystemService(BaseService):
 
     @staticmethod
     async def create_transfer(
+            model: Base,
             reason: str,
             wallet_id: int,
             value: int,
             description: str = None,
+            ignore_bal: bool = False,
     ) -> None:
+        if value == 0:
+            return
         wallet_from = await WalletRepository().get_by_id(id_=wallet_id)
         wallet_to = await WalletRepository().get_system_wallet()
         transfer = await TransferService().transfer(
@@ -40,10 +50,14 @@ class TransferSystemService(BaseService):
             wallet_from=wallet_from,
             wallet_to=wallet_to,
             value=value,
+            ignore_bal=ignore_bal,
         )
+        transfer_system_type = TransferSystemTypes.INPUT if value > 0 else TransferSystemTypes.OUTPUT
         await TransferSystemRepository().create(
             transfer=transfer,
-            type=TransferSystemTypes.INPUT,
+            model=underscore(model.__class__.__name__),
+            model_id=model.id,
+            type=transfer_system_type,
             reason=reason,
             description=description,
         )
@@ -51,23 +65,46 @@ class TransferSystemService(BaseService):
     async def payment_commission(
             self,
             request: Request,
+            from_banned_value: bool = False,
     ) -> None:
-        if request.commission_value:
-            await self.create_transfer(
-                wallet_id=request.wallet_id,
-                value=request.commission_value,
-                reason=TransferSystemReasons.COMMISSION,
-                description=f'Request #{request.id}',
+        if not request.commission_value:
+            return
+        logging.critical(f'xxxx1 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
+        if from_banned_value:
+            await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-request.commission_value,
+                reason=WalletBanReasons.BY_ORDER,
+                ignore_bal=True,
             )
+        logging.critical(f'xxxx2 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
+        await self.create_transfer(
+            model=request,
+            wallet_id=request.wallet_id,
+            value=request.commission_value,
+            reason=TransferSystemReasons.COMMISSION,
+        )
+        logging.critical(f'xxxx3 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
 
-    async def payment_div(
+
+
+    async def payment_difference(
             self,
             request: Request,
+            value: int,
+            from_banned_value: bool = False,
     ) -> None:
-        if request.div_value:
-            await self.create_transfer(
-                wallet_id=request.wallet_id,
-                value=request.div_value,
-                reason=TransferSystemReasons.DIV,
-                description=f'Request #{request.id}',
+        if from_banned_value:
+            await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-value,
+                reason=WalletBanReasons.BY_ORDER,
+                ignore_bal=True,
             )
+        await self.create_transfer(
+            model=request,
+            wallet_id=request.wallet_id,
+            value=value,
+            reason=TransferSystemReasons.DIFFERENCE,
+            ignore_bal=True,
+        )

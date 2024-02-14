@@ -15,7 +15,9 @@
 #
 
 
-from app.db.models import Session, Order, Actions, OrderTypes, Request, WalletBanReasons, TransferTypes, \
+import logging
+
+from app.db.models import Session, Order, OrderTypes, Request, WalletBanReasons, TransferTypes, \
     OrderStates, Wallet, Requisite
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
@@ -33,9 +35,13 @@ class OrderService(BaseService):
     async def order_banned_value(
             wallet: Wallet,
             value: int,
+            ignore_bal: bool = False,
     ) -> None:
         await WalletBanService().create_related(
-            wallet=wallet, value=value, reason=WalletBanReasons.BY_ORDER,
+            wallet=wallet,
+            value=value,
+            reason=WalletBanReasons.BY_ORDER,
+            ignore_bal=ignore_bal,
         )
 
     @staticmethod
@@ -127,29 +133,6 @@ class OrderService(BaseService):
             }
         }
 
-    @session_required(permissions=['orders'])
-    async def delete(
-            self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        order = await OrderRepository().get_by_id(id_=id_)
-        await self.delete_related(order=order)
-        await self.create_action(
-            model=order,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id': id_,
-            },
-        )
-
-        return {}
-
-    async def delete_related(self, order: Order) -> None:
-        await self.cancel_related(order=order)
-        await OrderRepository().delete(order)
-
     @staticmethod
     async def cancel_related(order: Order) -> None:
         if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
@@ -166,12 +149,15 @@ class OrderService(BaseService):
 
     @staticmethod
     async def compete_related(order: Order) -> None:
+        logging.critical(f'o1 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
         if order.type == OrderTypes.INPUT:
+            logging.critical(f'o2 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.requisite.wallet,
                 value=-order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
+            logging.critical(f'o3 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await TransferService().transfer(
                 type_=TransferTypes.IN_ORDER,
                 wallet_from=order.requisite.wallet,
@@ -179,17 +165,21 @@ class OrderService(BaseService):
                 value=order.value,
                 order=order,
             )
+            logging.critical(f'o4 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
+            logging.critical(f'o5 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
         elif order.type == OrderTypes.OUTPUT:
+            logging.critical(f'o11 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=-order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
+            logging.critical(f'o12 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await TransferService().transfer(
                 type_=TransferTypes.IN_ORDER,
                 wallet_from=order.request.wallet,
@@ -197,3 +187,4 @@ class OrderService(BaseService):
                 value=order.value,
                 order=order,
             )
+        logging.critical(f'o22 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
