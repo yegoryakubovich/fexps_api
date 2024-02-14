@@ -15,17 +15,18 @@
 #
 
 
-import logging
-
 from app.db.models import Session, Order, OrderTypes, Request, WalletBanReasons, TransferTypes, \
     OrderStates, Wallet, Requisite
 from app.repositories.order import OrderRepository
+from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
 from app.services.transfer import TransferService
+from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.schemes.loading import RequisiteScheme
 from app.utils.decorators import session_required
+from app.utils.exceptions.order import OrderNotPermission
 
 
 class OrderService(BaseService):
@@ -89,24 +90,6 @@ class OrderService(BaseService):
             order_state=order_state,
         )
 
-    # @staticmethod  # FIXME (REMOVE)
-    # async def create_related(
-    #         order_type: str,
-    #         request: Request,
-    #         requisite: Requisite,
-    #         currency_value: int,
-    #         value: int,
-    # ) -> Order:
-    #     if order_type == OrderTypes.OUTPUT:
-    #         await WalletBanService().create_related(
-    #             wallet=request.wallet, value=value, reason=WalletBanReasons.BY_ORDER,
-    #         )
-    #     await RequisiteRepository().update(
-    #         requisite,
-    #         currency_value=round(requisite.currency_value - currency_value),
-    #         value=round(requisite.value - value),
-    #     )
-
     @session_required(permissions=['orders'])
     async def get(
             self,
@@ -115,22 +98,49 @@ class OrderService(BaseService):
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=id_)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(kwargs={'field': 'Order', 'id_value': order.id}),
+        )
+        return {'order': self.get_order_dict(order=order)}
 
+    @session_required(permissions=['orders'])
+    async def get_all_by_request(
+            self,
+            session: Session,
+            request_id: int,
+    ) -> dict:
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=request_id)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=OrderNotPermission(kwargs={'field': 'Request', 'id_value': request.id}),
+        )
         return {
-            'requisite': {
-                'id': order.id,
-                'type': order.type,
-                'state': order.state,
-                'canceled_reason': order.canceled_reason,
-                'request_id': order.request_id,
-                'requisite_id': order.requisite_id,
-                'wallet_ban_id': order.wallet_ban_id,
-                'currency_value': order.currency_value,
-                'value': order.value,
-                'rate': order.rate,
-                'requisite_fields': order.requisite_fields,
-                'confirmation_fields': order.confirmation_fields,
-            }
+            'orders': [
+                self.get_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+            ]
+        }
+
+    @session_required(permissions=['orders'])
+    async def get_all_by_requisite(
+            self,
+            session: Session,
+            requisite_id: int,
+    ) -> dict:
+        account = session.account
+        requisite = await RequisiteRepository().get_by_id(id_=requisite_id)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+            exception=OrderNotPermission(kwargs={'field': 'Requisite', 'id_value': requisite.id}),
+        )
+        return {
+            'orders': [
+                self.get_order_dict(order=order) for order in await OrderRepository().get_list(requisite=requisite)
+            ]
         }
 
     @staticmethod
@@ -149,15 +159,12 @@ class OrderService(BaseService):
 
     @staticmethod
     async def compete_related(order: Order) -> None:
-        logging.critical(f'o1 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
         if order.type == OrderTypes.INPUT:
-            logging.critical(f'o2 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.requisite.wallet,
                 value=-order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
-            logging.critical(f'o3 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await TransferService().transfer(
                 type_=TransferTypes.IN_ORDER,
                 wallet_from=order.requisite.wallet,
@@ -165,21 +172,17 @@ class OrderService(BaseService):
                 value=order.value,
                 order=order,
             )
-            logging.critical(f'o4 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
-            logging.critical(f'o5 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
         elif order.type == OrderTypes.OUTPUT:
-            logging.critical(f'o11 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await WalletBanService().create_related(
                 wallet=order.request.wallet,
                 value=-order.value,
                 reason=WalletBanReasons.BY_ORDER,
             )
-            logging.critical(f'o12 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
             await TransferService().transfer(
                 type_=TransferTypes.IN_ORDER,
                 wallet_from=order.request.wallet,
@@ -187,4 +190,19 @@ class OrderService(BaseService):
                 value=order.value,
                 order=order,
             )
-        logging.critical(f'o22 value = {order.request.wallet.value}, value_banned = {order.request.wallet.value_banned}')
+
+    @staticmethod
+    def get_order_dict(order: Order):
+        return {
+            'id': order.id,
+            'type': order.type,
+            'state': order.state,
+            'canceled_reason': order.canceled_reason,
+            'request': order.request_id,
+            'requisite': order.requisite_id,
+            'currency_value': order.currency_value,
+            'value': order.value,
+            'rate': order.rate,
+            'requisite_fields': order.requisite_fields,
+            'confirmation_fields': order.confirmation_fields,
+        }

@@ -19,3 +19,8 @@ class OrderStateWrong(ApiException):
 class OrderStateNotPermission(ApiException):
     code = 5003
     message = 'Order.{id_value} you dont have permission to execute "{action}"'
+
+
+class OrderNotPermission(ApiException):
+    code = 5004
+    message = '{field}.{id_value} you dont have permission'
