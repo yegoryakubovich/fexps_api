@@ -19,6 +19,7 @@ from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, Ord
     OrderCanceledReasons
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
+from app.repositories.request import RequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.order import OrderService
@@ -43,17 +44,20 @@ class OrderRequestService(BaseService):
         data = {}
         if type_ == OrderRequestTypes.CANCEL:
             if order.state in OrderStates.choices_one_side_cancel:
-                wallet_account = await WalletAccountRepository().get(wallet=order.request.wallet)
-                if wallet_account and session.account_id == wallet_account.account_id:
+                wallet_account = await WalletAccountRepository().get(
+                    wallet=order.request.wallet,
+                    account=session.account,
+                )
+                if wallet_account:
                     order_request = await OrderRequestRepository().create(
                         order=order,
                         type=type_,
-                        state=OrderRequestStates.COMPLETED,
+                        state=OrderRequestStates.WAIT,
                         data=data,
                     )
                     await self.update_type_cancel(
                         order_request=order_request,
-                        state=OrderRequestStates.CANCELED,
+                        state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
                     )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
@@ -120,15 +124,19 @@ class OrderRequestService(BaseService):
                 state=OrderStates.CANCELED,
                 canceled_reason=canceled_reason,
             )
+            await OrderRequestRepository().update(order_request, state=state)
+            await RequestRepository().update(order_request.order.request, rate_confirmed=False)
         elif state == OrderRequestStates.CANCELED:
-            pass
+            await OrderRequestRepository().update(order_request, state=state)
 
     @staticmethod
     async def update_type_update_value(order_request: OrderRequest, state: str):
         if state == OrderRequestStates.COMPLETED:
-            pass
+            """CHANGE VALUE LOGIC"""
+            await OrderRequestRepository().update(order_request, state=state)
+            await RequestRepository().update(order_request.order.request, rate_confirmed=False)
         elif state == OrderRequestStates.CANCELED:
-            pass
+            await OrderRequestRepository().update(order_request, state=state)
 
     @session_required(permissions=['orders'])
     async def delete(
