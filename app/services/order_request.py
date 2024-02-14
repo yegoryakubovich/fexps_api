@@ -19,12 +19,12 @@ from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, Ord
     OrderCanceledReasons
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
-from app.repositories.request import RequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAlreadyExists
-from app.utils.service_addons.order import order_cancel_related
+from app.utils.service_addons.order_request import order_request_update_type_cancel, \
+    order_request_update_type_update_value
 
 
 class OrderRequestService(BaseService):
@@ -55,7 +55,7 @@ class OrderRequestService(BaseService):
                         state=OrderRequestStates.WAIT,
                         data=data,
                     )
-                    await self.update_type_cancel(
+                    await order_request_update_type_cancel(
                         order_request=order_request,
                         state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
@@ -64,7 +64,6 @@ class OrderRequestService(BaseService):
             if not value:
                 raise OrderRequestFieldsMissing(kwargs={'field_name': 'value'})
             data['value'] = value
-
         if not order_request:
             order_request = await OrderRequestRepository().create(
                 order=order,
@@ -93,12 +92,11 @@ class OrderRequestService(BaseService):
     ) -> dict:
         order_request = await OrderRequestRepository().get_by_id(id_=id_, state=OrderRequestStates.WAIT)
         if order_request.type == OrderRequestTypes.CANCEL:
-            await self.update_type_cancel(
+            await order_request_update_type_cancel(
                 order_request=order_request, state=state, canceled_reason=OrderCanceledReasons.TWO_SIDED,
             )
         elif order_request.type == OrderRequestTypes.UPDATE_VALUE:
-            await self.update_type_update_value(order_request=order_request, state=state)
-
+            await order_request_update_type_update_value(order_request=order_request, state=state)
         await OrderRequestRepository().update(order_request, state=state)
         await self.create_action(
             model=order_request,
@@ -110,29 +108,6 @@ class OrderRequestService(BaseService):
             },
         )
         return {}
-
-    @staticmethod
-    async def update_type_cancel(order_request: OrderRequest, state: str, canceled_reason: str):
-        if state == OrderRequestStates.COMPLETED:
-            await order_cancel_related(order=order_request.order)
-            await OrderRepository().update(
-                order_request.order,
-                state=OrderStates.CANCELED,
-                canceled_reason=canceled_reason,
-            )
-            await OrderRequestRepository().update(order_request, state=state)
-            await RequestRepository().update(order_request.order.request, rate_confirmed=False)
-        elif state == OrderRequestStates.CANCELED:
-            await OrderRequestRepository().update(order_request, state=state)
-
-    @staticmethod
-    async def update_type_update_value(order_request: OrderRequest, state: str):
-        if state == OrderRequestStates.COMPLETED:
-            """CHANGE VALUE LOGIC"""
-            await OrderRequestRepository().update(order_request, state=state)
-            await RequestRepository().update(order_request.order.request, rate_confirmed=False)
-        elif state == OrderRequestStates.CANCELED:
-            await OrderRequestRepository().update(order_request, state=state)
 
     @session_required(permissions=['orders'])
     async def delete(
