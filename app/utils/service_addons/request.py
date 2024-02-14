@@ -13,28 +13,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from app.db.models import Request, OrderTypes
+from app.repositories.order import OrderRepository
 
 
-from pydantic import Field, BaseModel
-
-from app.services import OrderStatesCompletedService
-from app.utils import Response, Router
-
-
-router = Router(
-    prefix='/update',
-)
-
-
-class OrderStatesCompletedUpdateSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-    order_id: int = Field()
-
-
-@router.post()
-async def route(schema: OrderStatesCompletedUpdateSchema):
-    result = await OrderStatesCompletedService().update(
-        token=schema.token,
-        id_=schema.order_id,
-    )
-    return Response(**result)
+async def request_get_need_value(
+        request: Request,
+        type_: OrderTypes,
+        currency_value: int = None,
+        value: int = None,
+) -> int:
+    if not value and not currency_value:
+        return 0
+    result = value or currency_value
+    for order in await OrderRepository().get_list(request=request, type=type_):
+        if value:  # value
+            result -= order.value
+        else:  # currency value
+            result -= order.currency_value
+    return result

@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import math
 
 from app.db.models import OrderTypes
@@ -39,20 +41,3 @@ def get_div_by_value(
     else:
         value = math.ceil(currency_value / rate * 10 ** rate_decimal)
     return currency_value, value
-
-# def get_div_values(
-#         rate: int,
-#         rate_decimal: int,
-#         div: int,
-#         currency_value: int = None,
-#         value: int = None,
-#         type_: str = None,
-# ) -> tuple[int, int]:
-#     if currency_value:
-#         return get_div_by_currency_value(
-#             currency_value=currency_value, div=div, rate=rate, order_type=type_, rate_decimal=rate_decimal,
-#         )
-#     if value:
-#         return get_div_by_value(
-#             value=value, div=div, rate=rate, type_=type_, rate_decimal=rate_decimal,
-#         )

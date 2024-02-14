@@ -15,14 +15,15 @@
 #
 
 
-from app.db.models import Transfer, Session, Wallet, Actions, TransferTypes, Order
+from app.db.models import Transfer, Session, Actions, TransferTypes
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
-from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exceptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached, WalletPermissionError
+from app.utils.exceptions.wallet import WalletPermissionError
+from app.utils.service_addons.transfer import create_transfer
+from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -39,11 +40,9 @@ class TransferService(BaseService):
     ) -> dict:
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
-        if not await WalletAccountRepository().get(account=account, wallet=wallet_from):
-            raise WalletPermissionError()
-        await WalletAccountRepository().check_permission(account=account, wallet=wallet_from)
+        await wallet_check_permission(account=account, wallets=[wallet_from])
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
-        transfer = await self.transfer(
+        transfer = await create_transfer(
             type_=TransferTypes.PAYMENT,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
@@ -120,29 +119,3 @@ class TransferService(BaseService):
             'pages': transfers_db[2],
             'items_per_page': settings.items_per_page,
         }
-
-    @staticmethod
-    async def transfer(
-            type_: str,
-            wallet_from: Wallet,
-            wallet_to: Wallet,
-            value: float,
-            order: Order = None,
-            ignore_bal: bool = False,
-    ) -> Transfer:
-        balance = wallet_from.value - wallet_from.value_can_minus
-        if not ignore_bal and value > balance:
-            raise NotEnoughFundsOnBalance()
-        available_value = await WalletService().get_available_value(wallet=wallet_to)
-        if not ignore_bal and value > available_value:
-            raise WalletLimitReached(kwargs={'wallet_max_value': settings.wallet_max_value})
-        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
-        transfer = await TransferRepository().create(
-            type=type_,
-            wallet_from=wallet_from,
-            wallet_to=wallet_to,
-            value=value,
-            order=order,
-        )
-        await WalletRepository().update(wallet_to, value=wallet_to.value + value)
-        return transfer

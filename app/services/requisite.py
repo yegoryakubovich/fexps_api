@@ -23,7 +23,7 @@ from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
-from app.utils.calculations.requisites import all_value_calc
+from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
 from app.utils.exceptions.wallet import WalletPermissionError

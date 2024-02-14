@@ -26,7 +26,7 @@ from app.services.account_role import AccountRoleService
 from app.services.base import BaseService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
-from app.utils.exceptions.account import AccountUsernameExist, AccountWrongPassword
+from app.utils.exceptions.account import AccountUsernameExist
 
 
 class AccountService(BaseService):
@@ -89,24 +89,6 @@ class AccountService(BaseService):
 
         return {'account_id': account.id}
 
-    async def check_password(
-            self,
-            account: Account,
-            password: str,
-    ):
-        await self._is_correct_password(account=account, password=password)
-
-        return True
-
-    @staticmethod
-    async def check_username(
-            username: str,
-    ):
-        if await AccountRepository().is_exist(username=username):
-            raise AccountUsernameExist(kwargs={'username': username})
-
-        return {}
-
     @session_required(return_account=True)
     async def get(
             self,
@@ -127,13 +109,3 @@ class AccountService(BaseService):
             'permissions': permissions,
             'text_pack_id': text_pack.id,
         }
-
-    @staticmethod
-    async def _is_correct_password(account: Account, password: str):
-        if account.password_hash == await create_hash_by_string_and_salt(
-                string=password,
-                salt=account.password_salt,
-        ):
-            return True
-        else:
-            raise AccountWrongPassword()

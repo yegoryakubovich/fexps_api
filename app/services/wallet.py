@@ -15,15 +15,12 @@
 #
 
 
-from typing import List
-
-from app.db.models import Wallet, Session, WalletAccountRoles, Actions, Account
+from app.db.models import Wallet, Session, WalletAccountRoles, Actions
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
-from app.utils import ApiException
 from app.utils.decorators import session_required
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
 from config import settings
@@ -58,7 +55,6 @@ class WalletService(BaseService):
             session=session,
             wallet_id=wallet.id,
         )
-
         return {'wallet_id': wallet.id}
 
     @session_required(permissions=['wallets'])
@@ -100,7 +96,6 @@ class WalletService(BaseService):
                 for wallet_account in await WalletAccountRepository().get_list(account=account)
             ],
         }
-
         return wallets
 
     @session_required(permissions=['wallets'])
@@ -127,7 +122,6 @@ class WalletService(BaseService):
                 'name': name,
             },
         )
-
         return {}
 
     @session_required(permissions=['wallets'])
@@ -154,26 +148,4 @@ class WalletService(BaseService):
             session=session,
             id_=wallet_account.id,
         )
-
         return {}
-
-    @staticmethod
-    async def get_available_value(wallet: Wallet) -> float:  # FIXME
-        return settings.wallet_max_value - wallet.value
-
-    @staticmethod
-    async def get_free_value(wallet: Wallet):
-        return wallet.value - wallet.value_can_minus
-
-    @staticmethod
-    async def check_permission(
-            account: Account,
-            wallets: List[Wallet],
-            exception: ApiException = WalletPermissionError(),
-    ) -> None:
-        permission = False
-        for wallet in wallets:
-            if await WalletAccountRepository().get(account=account, wallet=wallet):
-                permission = True
-        if not permission:
-            raise exception

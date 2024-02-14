@@ -25,8 +25,8 @@ from app.db.models.transfer_system import TransferSystemReasons
 from app.repositories.transfer_system import TransferSystemRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
-from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
+from app.utils.service_addons.transfer import create_transfer
 
 
 class TransferSystemService(BaseService):
@@ -45,7 +45,7 @@ class TransferSystemService(BaseService):
             return
         wallet_from = await WalletRepository().get_by_id(id_=wallet_id)
         wallet_to = await WalletRepository().get_system_wallet()
-        transfer = await TransferService().transfer(
+        transfer = await create_transfer(
             type_=TransferTypes.IN_ORDER,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
@@ -85,8 +85,6 @@ class TransferSystemService(BaseService):
             reason=TransferSystemReasons.COMMISSION,
         )
         logging.critical(f'xxxx3 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
-
-
 
     async def payment_difference(
             self,

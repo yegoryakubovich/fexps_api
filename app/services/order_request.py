@@ -22,9 +22,9 @@ from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
-from app.services.order import OrderService
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAlreadyExists
+from app.utils.service_addons.order import order_cancel_related
 
 
 class OrderRequestService(BaseService):
@@ -114,7 +114,7 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def update_type_cancel(order_request: OrderRequest, state: str, canceled_reason: str):
         if state == OrderRequestStates.COMPLETED:
-            await OrderService().cancel_related(order=order_request.order)
+            await order_cancel_related(order=order_request.order)
             await OrderRepository().update(
                 order_request.order,
                 state=OrderStates.CANCELED,

@@ -15,13 +15,12 @@
 #
 
 
-from app.db.models import CommissionPackValue, CommissionPack, Session, Actions
+from app.db.models import CommissionPackValue, Session, Actions
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions.commission_pack import CommissionIntervalAlreadyTaken
-from config import settings
+from app.utils.service_addons.commissio_pack_value import commission_pack_check_interval
 
 
 class CommissionPackValueService(BaseService):
@@ -38,7 +37,11 @@ class CommissionPackValueService(BaseService):
             value: int,
     ) -> dict:
         commission_pack = await CommissionPackRepository().get_by_id(id_=commission_pack_id)
-        await self.check_interval(commission_pack=commission_pack, value_from=value_from, value_to=value_to)
+        await commission_pack_check_interval(
+            commission_pack=commission_pack,
+            value_from=value_from,
+            value_to=value_to,
+        )
         commission_pack_value = await CommissionPackValueRepository().create(
             commission_pack=commission_pack,
             value_from=value_from,
@@ -80,13 +83,3 @@ class CommissionPackValueService(BaseService):
         )
 
         return {}
-
-    @staticmethod
-    async def check_interval(commission_pack: CommissionPack, value_from: int, value_to: int):
-        new_start = value_from
-        new_stop = value_to if value_to != 0 else settings.wallet_max_value
-        for pack_value in await CommissionPackValueRepository().get_list(commission_pack=commission_pack):
-            pack_value_start = pack_value.value_from
-            pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else settings.wallet_max_value
-            if (new_start <= pack_value_stop) and (new_stop >= pack_value_start):
-                raise CommissionIntervalAlreadyTaken()

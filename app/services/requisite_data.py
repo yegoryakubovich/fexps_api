@@ -18,9 +18,9 @@
 from app.db.models import Session, RequisiteData, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.requisite_data import RequisiteDataRepository
-from app.services import MethodService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.service_addons.method import method_check_validation_scheme
 
 
 class RequisiteDataService(BaseService):
@@ -35,7 +35,7 @@ class RequisiteDataService(BaseService):
     ) -> dict:
         account = session.account
         method = await MethodRepository().get_by_id(id_=method_id)
-        await MethodService().check_validation_scheme(method=method, fields=fields)
+        await method_check_validation_scheme(method=method, fields=fields)
         requisite_data = await RequisiteDataRepository().create(
             account=account,
             method=method,

@@ -15,17 +15,14 @@
 #
 
 
-from app.db.models import Session, Request, OrderTypes, Actions, RequestStates, RequestTypes, RequestFirstLine
+from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine
 from app.repositories.method import MethodRepository
-from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
-from app.services.order import OrderService
 from app.utils.decorators import session_required
-from app.utils.exceptions.order import OrderStateNotPermission
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 
@@ -136,41 +133,3 @@ class RequestService(BaseService):
             },
         )
         return {}
-
-    @session_required(permissions=['requests'])
-    async def delete(
-            self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        account = session.account
-        request = await RequestRepository().get_by_id(id_=id_)
-        for order in await OrderRepository().get_list(request=request):
-            await OrderService().delete(session=session, id_=order.id)
-        await RequestRepository().delete(request)
-        await self.create_action(
-            model=request,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id': id_,
-            },
-        )
-        return {}
-
-    @staticmethod
-    async def get_need_value(
-            request: Request,
-            type_: OrderTypes,
-            currency_value: int = None,
-            value: int = None,
-    ) -> int:
-        if not value and not currency_value:
-            return 0
-        result = value or currency_value
-        for order in await OrderRepository().get_list(request=request, type=type_):
-            if value:  # value
-                result -= order.value
-            else:  # currency value
-                result -= order.currency_value
-        return result

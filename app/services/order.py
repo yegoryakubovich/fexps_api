@@ -15,80 +15,21 @@
 #
 
 
-from app.db.models import Session, Order, OrderTypes, Request, WalletBanReasons, TransferTypes, \
-    OrderStates, Wallet, Requisite
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
-from app.services.transfer import TransferService
-from app.services.wallet import WalletService
-from app.services.wallet_ban import WalletBanService
-from app.utils.calculations.schemes.loading import RequisiteScheme
+from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
-from app.utils.exceptions.order import OrderNotPermission
+from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
+from app.utils.service_addons.method import method_check_confirmation_field
+from app.utils.service_addons.order import order_compete_related, get_order_dict
+from app.utils.service_addons.wallet import wallet_check_permission
 
 
 class OrderService(BaseService):
     model = Order
-
-    @staticmethod
-    async def order_banned_value(
-            wallet: Wallet,
-            value: int,
-            ignore_bal: bool = False,
-    ) -> None:
-        await WalletBanService().create_related(
-            wallet=wallet,
-            value=value,
-            reason=WalletBanReasons.BY_ORDER,
-            ignore_bal=ignore_bal,
-        )
-
-    @staticmethod
-    async def waited_order(
-            request: Request,
-            requisite: Requisite,
-            currency_value: int,
-            value: int,
-            rate: int,
-            order_type: str,
-            order_state: str = OrderStates.WAITING,
-    ) -> Order:
-        await RequisiteRepository().update(
-            requisite,
-            currency_value=round(requisite.currency_value - currency_value),
-            value=round(requisite.value - value),
-            in_process=False,
-        )
-        return await OrderRepository().create(
-            type=order_type,
-            state=order_state,
-            request=request,
-            requisite=requisite,
-            currency_value=currency_value,
-            value=value,
-            rate=rate,
-            requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
-        )
-
-    async def waited_order_by_scheme(
-            self,
-            request: Request,
-            requisite_scheme: RequisiteScheme,
-            order_type: OrderTypes,
-            order_state: str = OrderStates.WAITING,
-    ) -> None:
-        requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-        await self.waited_order(
-            request=request,
-            requisite=requisite,
-            currency_value=requisite_scheme.currency_value,
-            value=requisite_scheme.value,
-            rate=requisite_scheme.rate,
-            order_type=order_type,
-            order_state=order_state,
-        )
 
     @session_required(permissions=['orders'])
     async def get(
@@ -98,12 +39,12 @@ class OrderService(BaseService):
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=id_)
-        await WalletService().check_permission(
+        await wallet_check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(kwargs={'field': 'Order', 'id_value': order.id}),
         )
-        return {'order': self.get_order_dict(order=order)}
+        return {'order': get_order_dict(order=order)}
 
     @session_required(permissions=['orders'])
     async def get_all_by_request(
@@ -113,14 +54,14 @@ class OrderService(BaseService):
     ) -> dict:
         account = session.account
         request = await RequestRepository().get_by_id(id_=request_id)
-        await WalletService().check_permission(
+        await wallet_check_permission(
             account=account,
             wallets=[request.wallet],
             exception=OrderNotPermission(kwargs={'field': 'Request', 'id_value': request.id}),
         )
         return {
             'orders': [
-                self.get_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+                get_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
             ]
         }
 
@@ -132,77 +73,186 @@ class OrderService(BaseService):
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=requisite_id)
-        await WalletService().check_permission(
+        await wallet_check_permission(
             account=account,
             wallets=[requisite.wallet],
             exception=OrderNotPermission(kwargs={'field': 'Requisite', 'id_value': requisite.id}),
         )
         return {
             'orders': [
-                self.get_order_dict(order=order) for order in await OrderRepository().get_list(requisite=requisite)
+                get_order_dict(order=order) for order in await OrderRepository().get_list(requisite=requisite)
             ]
         }
 
-    @staticmethod
-    async def cancel_related(order: Order) -> None:
-        if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
-            await WalletBanService().create_related(
-                wallet=order.request.wallet,
-                value=-order.value,
-                reason=WalletBanReasons.BY_ORDER,
-            )
-        await RequisiteRepository().update(
-            order.requisite,
-            currency_value=round(order.requisite.currency_value + order.currency_value),
-            value=round(order.requisite.value + order.value),
-        )
-
-    @staticmethod
-    async def compete_related(order: Order) -> None:
+    @session_required(permissions=['orders'])
+    async def update_confirmation(
+            self,
+            session: Session,
+            id_: int,
+            confirmation_fields: dict,
+    ) -> dict:
+        account = session.account
+        need_state = OrderStates.PAYMENT
+        next_state = OrderStates.CONFIRMATION
+        order = await OrderRepository().get_by_id(id_=id_)
         if order.type == OrderTypes.INPUT:
-            await WalletBanService().create_related(
-                wallet=order.requisite.wallet,
-                value=-order.value,
-                reason=WalletBanReasons.BY_ORDER,
-            )
-            await TransferService().transfer(
-                type_=TransferTypes.IN_ORDER,
-                wallet_from=order.requisite.wallet,
-                wallet_to=order.request.wallet,
-                value=order.value,
-                order=order,
-            )
-            await WalletBanService().create_related(
-                wallet=order.request.wallet,
-                value=order.value,
-                reason=WalletBanReasons.BY_ORDER,
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.request.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
             )
         elif order.type == OrderTypes.OUTPUT:
-            await WalletBanService().create_related(
-                wallet=order.request.wallet,
-                value=-order.value,
-                reason=WalletBanReasons.BY_ORDER,
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.requisite.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
             )
-            await TransferService().transfer(
-                type_=TransferTypes.IN_ORDER,
-                wallet_from=order.request.wallet,
-                wallet_to=order.requisite.wallet,
-                value=order.value,
-                order=order,
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
             )
+        await OrderRequestService().check_have_order_request(order=order)
+        if order.type == OrderTypes.INPUT:
+            await method_check_confirmation_field(
+                method=order.requisite.output_requisite_data.method,
+                fields=confirmation_fields,
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await method_check_confirmation_field(
+                method=order.requisite.input_method,
+                fields=confirmation_fields,
+            )
+        await OrderRepository().update(
+            order,
+            confirmation_fields=confirmation_fields,
+            state=next_state,
+        )
+        await self.create_action(
+            model=order,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+                'confirmation_fields': confirmation_fields,
+            },
+        )
+        return {}
 
-    @staticmethod
-    def get_order_dict(order: Order):
-        return {
-            'id': order.id,
-            'type': order.type,
-            'state': order.state,
-            'canceled_reason': order.canceled_reason,
-            'request': order.request_id,
-            'requisite': order.requisite_id,
-            'currency_value': order.currency_value,
-            'value': order.value,
-            'rate': order.rate,
-            'requisite_fields': order.requisite_fields,
-            'confirmation_fields': order.confirmation_fields,
-        }
+    @session_required(permissions=['orders'])
+    async def update_completed(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = OrderStates.CONFIRMATION
+        next_state = OrderStates.COMPLETED
+        order = await OrderRepository().get_by_id(id_=id_)
+        if order.type == OrderTypes.INPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.requisite.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.request.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
+            )
+        await OrderRequestService().check_have_order_request(order=order)
+        await order_compete_related(order=order)
+        await OrderRepository().update(order, state=next_state)
+        await self.create_action(
+            model=order,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
+
+    @session_required(permissions=['orders'])
+    async def update_payment(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = OrderStates.CONFIRMATION
+        next_state = OrderStates.PAYMENT
+        order = await OrderRepository().get_by_id(id_=id_)
+        if order.type == OrderTypes.INPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.requisite.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.request.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
+            )
+        await OrderRequestService().check_have_order_request(order=order)
+        await OrderRepository().update(order, state=next_state)
+        await self.create_action(
+            model=order,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}

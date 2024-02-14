@@ -15,14 +15,14 @@
 #
 
 
-from app.db.models import Method, Session, MethodFieldTypes, Actions
+from app.db.models import Method, Session, Actions
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-from app.utils.exceptions.method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodFieldsTypeError
+from app.utils.exceptions.method import MethodFieldsMissing
 
 
 class MethodService(BaseService):
@@ -154,77 +154,3 @@ class MethodService(BaseService):
             },
         )
         return {}
-
-    @staticmethod
-    async def check_validation_scheme(method: Method, fields: dict):
-        for field in method.schema_fields:
-            field_key = field.get('key')
-            field_type = field.get('type')
-            field_optional = field.get('optional')
-            field_result = fields.get(field_key)
-            if not field_result and field_optional:
-                continue
-            if not field_result:
-                raise MethodFieldsParameterMissing(
-                    kwargs={
-                        'field_name': 'fields',
-                        'parameter': field_key,
-                    },
-                )
-            if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
-                raise MethodFieldsTypeError(
-                    kwargs={
-                        'field_name': 'fields',
-                        'param_name': field_key,
-                        'type_name': field_type,
-                    },
-                )
-            if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
-                raise MethodFieldsTypeError(
-                    kwargs={
-                        'field_name': 'fields',
-                        'param_name': field_key,
-                        'type_name': field_type,
-                    },
-                )
-
-    @staticmethod
-    async def check_confirmation_field(method: Method, fields: dict):
-        for field in method.schema_confirmation_fields:
-            field_key = field.get('key')
-            field_type = field.get('type')
-            field_optional = field.get('optional')
-            field_result = fields.get(field_key)
-            if not field_result and field_optional:
-                continue
-            if not field_result:
-                raise MethodFieldsParameterMissing(
-                    kwargs={
-                        'field_name': 'fields',
-                        'parameter': field_key,
-                    },
-                )
-            if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
-                raise MethodFieldsTypeError(
-                    kwargs={
-                        'field_name': 'fields',
-                        'param_name': field_key,
-                        'type_name': field_type,
-                    },
-                )
-            if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
-                raise MethodFieldsTypeError(
-                    kwargs={
-                        'field_name': 'fields',
-                        'param_name': field_key,
-                        'type_name': field_type,
-                    },
-                )
-            if field_type == MethodFieldTypes.IMAGE:  # FIXME
-                raise MethodFieldsTypeError(
-                    kwargs={
-                        'field_name': 'fields',
-                        'param_name': field_key,
-                        'type_name': field_type,
-                    },
-                )

@@ -23,6 +23,8 @@ from app.utils.exceptions.main import WrongTokenFormat, WrongToken
 
 
 class SessionGetByTokenService(BaseService):
+    model = Session
+
     @staticmethod
     async def execute(token: str) -> Session:
         # Get session ID and token

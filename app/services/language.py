@@ -25,7 +25,6 @@ class LanguageService(BaseService):
 
     @staticmethod
     async def get_list() -> dict:
-
         return {
             'languages': [
                 {

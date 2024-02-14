@@ -50,7 +50,6 @@ class CurrencyService(BaseService):
             id_str: str,
     ):
         currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
-
         return {
             'currency': {
                 'id': currency.id,
@@ -60,7 +59,6 @@ class CurrencyService(BaseService):
 
     @staticmethod
     async def get_list() -> dict:
-
         return {
             'currencies': [
                 {

@@ -19,16 +19,15 @@ from app.utils import Router
 from .get import router as router_get
 from .get_list import router as router_get_list
 from .requests import router as router_requests
-from .states import router as router_states
-
+from .updates import router as router_updates
 
 router = Router(
     prefix='/orders',
     routes_included=[
         router_requests,
-        router_states,
         router_get,
         router_get_list,
+        router_updates,
     ],
     tags=['Orders'],
 )
