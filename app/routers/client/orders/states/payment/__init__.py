@@ -16,16 +16,12 @@
 
 
 from app.utils import Router
-from .completed import router as router_completed
-from .confirmation import router as router_confirmation
-from .payment import router as router_payment
+from .update import router as router_update
 
 
 router = Router(
-    prefix='/states',
+    prefix='/payment',
     routes_included=[
-        router_confirmation,
-        router_completed,
-        router_payment,
+        router_update,
     ],
 )

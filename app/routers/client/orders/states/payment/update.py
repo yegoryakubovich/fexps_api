@@ -15,17 +15,26 @@
 #
 
 
-from app.utils import Router
-from .completed import router as router_completed
-from .confirmation import router as router_confirmation
-from .payment import router as router_payment
+from pydantic import Field, BaseModel
+
+from app.services import OrderStatesPaymentService
+from app.utils import Response, Router
 
 
 router = Router(
-    prefix='/states',
-    routes_included=[
-        router_confirmation,
-        router_completed,
-        router_payment,
-    ],
+    prefix='/update',
 )
+
+
+class OrderStatesPaymentUpdateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    order_id: int = Field()
+
+
+@router.post()
+async def route(schema: OrderStatesPaymentUpdateSchema):
+    result = await OrderStatesPaymentService().update(
+        token=schema.token,
+        id_=schema.order_id,
+    )
+    return Response(**result)
