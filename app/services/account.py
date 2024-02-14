@@ -43,11 +43,7 @@ class AccountService(BaseService):
             surname: str = None,
     ) -> dict:
         if await AccountRepository().is_exist(username=username):
-            raise AccountUsernameExist(
-                kwargs={
-                    'username': username,
-                },
-            )
+            raise AccountUsernameExist(kwargs={'username': username})
 
         # Generate salt and password hash
         password_salt = await create_salt()
@@ -107,11 +103,7 @@ class AccountService(BaseService):
             username: str,
     ):
         if await AccountRepository().is_exist(username=username):
-            raise AccountUsernameExist(
-                kwargs={
-                    'username': username,
-                },
-            )
+            raise AccountUsernameExist(kwargs={'username': username})
 
         return {}
 

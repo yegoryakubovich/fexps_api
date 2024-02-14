@@ -16,10 +16,10 @@
 
 
 from app.db.models import Text, Language
-from .base import BaseRepository
-from .text_translation import TextTranslationRepository
 from app.utils.exceptions.main import NoRequiredParameters
 from app.utils.exceptions.text import TextDoesNotExist, TextAlreadyExist
+from .base import BaseRepository
+from .text_translation import TextTranslationRepository
 
 
 class TextRepository(BaseRepository[Text]):
@@ -28,11 +28,7 @@ class TextRepository(BaseRepository[Text]):
     async def get_by_key(self, key: str) -> Text:
         result = await self.get(key=key)
         if not result:
-            raise TextDoesNotExist(
-                kwargs={
-                    'key': key,
-                },
-            )
+            raise TextDoesNotExist(kwargs={'key': key})
         return result
 
     @staticmethod
@@ -45,11 +41,7 @@ class TextRepository(BaseRepository[Text]):
 
     async def create(self, key: str, value_default: str) -> Text:
         if await self.get(key=key):
-            raise TextAlreadyExist(
-                kwargs={
-                    'key': key,
-                },
-            )
+            raise TextAlreadyExist(kwargs={'key': key})
         return await super().create(key=key, value_default=value_default)
 
     async def update_text(self, db_obj: Text, value_default: str = None, new_key: str = None):

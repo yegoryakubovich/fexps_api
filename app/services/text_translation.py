@@ -39,11 +39,7 @@ class TextTranslationService(BaseService):
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
         if await TextTranslationRepository().get(text=text, language=language):
-            raise TextTranslationAlreadyExist(
-                kwargs={
-                    'id_str': language.id_str,
-                },
-            )
+            raise TextTranslationAlreadyExist(kwargs={'id_str': language.id_str})
         text_translation = await TextTranslationRepository().create(text=text, language=language, value=value)
         await self.create_action(
             model=text_translation,

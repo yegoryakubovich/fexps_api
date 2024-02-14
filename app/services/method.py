@@ -38,11 +38,7 @@ class MethodService(BaseService):
             confirmation_fields: list[dict],
     ) -> dict:
         if isinstance(fields, str):
-            raise MethodFieldsMissing(
-                kwargs={
-                    'field_name': 'fields',
-                },
-            )
+            raise MethodFieldsMissing(kwargs={'field_name': 'fields'})
         for field in fields:
             name_text = await TextRepository().create(
                 key=f'method_field_{await create_id_str()}',
@@ -50,11 +46,7 @@ class MethodService(BaseService):
             )
             field['name_text_key'] = name_text.key
         if isinstance(confirmation_fields, str):
-            raise MethodFieldsMissing(
-                kwargs={
-                    'field_name': 'confirmation_fields',
-                },
-            )
+            raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
         for confirmation_field in confirmation_fields:
             name_text = await TextRepository().create(
                 key=f'method_confirmation_field_{await create_id_str()}',

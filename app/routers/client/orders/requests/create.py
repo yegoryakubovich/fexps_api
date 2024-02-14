@@ -23,7 +23,6 @@ from app.services import OrderRequestService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError
 
-
 router = Router(
     prefix='/create',
 )
@@ -52,11 +51,7 @@ class OrderRequestCreateSchema(BaseModel):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(
-                kwargs={
-                    'field_name': info.field_name,
-                },
-            )
+            raise ValueMustBePositive(kwargs={'field_name': info.field_name})
         return value
 
 

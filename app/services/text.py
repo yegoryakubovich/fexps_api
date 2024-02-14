@@ -34,11 +34,7 @@ class TextService(BaseService):
             return_model: bool = False,
     ) -> dict | Text:
         if await TextRepository().get(key=key):
-            raise TextAlreadyExist(
-                kwargs={
-                    'key': key,
-                },
-            )
+            raise TextAlreadyExist(kwargs={'key': key})
         text = await TextRepository().create(key=key, value_default=value_default)
         await self.create_action(
             model=text,

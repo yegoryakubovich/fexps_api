@@ -19,11 +19,11 @@ from json import dumps
 from typing import Optional
 
 from app.db.models import TextPack, Language
+from app.utils.exceptions.text import TextPackDoesNotExist
 from config import settings
 from .base import BaseRepository
 from .language import LanguageRepository
 from .text import TextRepository
-from app.utils.exceptions.text import TextPackDoesNotExist
 
 
 class TextPackRepository(BaseRepository[TextPack]):
@@ -47,9 +47,5 @@ class TextPackRepository(BaseRepository[TextPack]):
     async def get_current(self, language: Language) -> Optional[TextPack]:
         text_pack_all = await self.get_list(language=language)
         if not text_pack_all:
-            raise TextPackDoesNotExist(
-                kwargs={
-                    'language_name': language.name,
-                },
-            )
+            raise TextPackDoesNotExist(kwargs={'language_name': language.name})
         return text_pack_all[0]

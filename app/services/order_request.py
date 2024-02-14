@@ -62,11 +62,7 @@ class OrderRequestService(BaseService):
                     )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
-                raise OrderRequestFieldsMissing(
-                    kwargs={
-                        'field_name': 'value',
-                    },
-                )
+                raise OrderRequestFieldsMissing(kwargs={'field_name': 'value'})
             data['value'] = value
 
         if not order_request:

@@ -22,7 +22,6 @@ from app.services import MethodService
 from app.utils import Router, Response
 from app.utils.exceptions.method import MethodFieldsMissing, MethodParametersMissing, MethodParametersValidationError
 
-
 router = Router(
     prefix='/create',
 )
@@ -76,11 +75,7 @@ class MethodCreateSchema(BaseModel):
     @classmethod
     def confirmation_fields_valid(cls, confirmation_fields):
         if isinstance(confirmation_fields, str):
-            raise MethodFieldsMissing(
-                kwargs={
-                    'field_name': 'confirmation_fields',
-                },
-            )
+            raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
         for i, field in enumerate(confirmation_fields, start=1):
             for key in ['key', 'type', 'name', 'optional']:
                 if field.get(key) is None:

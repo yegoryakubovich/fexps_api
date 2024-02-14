@@ -23,7 +23,6 @@ from app.utils import Router, Response
 from app.utils.exceptions.commission_pack import CommissionIntervalValidationError
 from app.utils.exceptions.main import ParameterOneContainError, ValueMustBePositive
 
-
 router = Router(
     prefix='/create',
 )
@@ -46,22 +45,14 @@ class CommissionPackValueCreateSchema(BaseModel):
         optional_names = ['percent', 'value']
 
         if (len(optional) - optional.count(None)) < 1:
-            raise ParameterOneContainError(
-                kwargs={
-                    'parameters': optional_names,
-                },
-            )
+            raise ParameterOneContainError(kwargs={'parameters': optional_names})
         return self
 
     @field_validator('value_from', 'value_to')
     @classmethod
     def check_value_interval(cls, value: int, info: ValidationInfo):
         if value < 0:
-            raise ValueMustBePositive(
-                kwargs={
-                    'field_name': info.field_name,
-                },
-            )
+            raise ValueMustBePositive(kwargs={'field_name': info.field_name})
         return value
 
 

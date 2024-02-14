@@ -26,11 +26,7 @@ class AccountRoleService(BaseService):
 
     async def check_permission(self, account: Account, id_str: str):
         if id_str not in await self.get_permissions(account=account):
-            raise AccountMissingRole(
-                kwargs={
-                    'id_str': id_str,
-                },
-            )
+            raise AccountMissingRole(kwargs={'id_str': id_str})
 
     @staticmethod
     async def get_permissions(

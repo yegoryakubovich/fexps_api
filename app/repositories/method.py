@@ -34,6 +34,6 @@ class MethodRepository(BaseRepository[Method]):
         if not currency_id_str and not name_text_key and not schema_fields:
             raise NoRequiredParameters(
                 kwargs={
-                    'parameters': ['currency_id_str', 'name_text_key', 'schema_fields']
+                    'parameters': ['currency_id_str', 'name_text_key', 'schema_fields'],
                 },
             )

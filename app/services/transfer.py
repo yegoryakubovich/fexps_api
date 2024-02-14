@@ -135,9 +135,7 @@ class TransferService(BaseService):
             raise NotEnoughFundsOnBalance()
         available_value = await WalletService().get_available_value(wallet=wallet_to)
         if not ignore_bal and value > available_value:
-            raise WalletLimitReached(
-                kwargs={'wallet_max_value': settings.wallet_max_value},
-            )
+            raise WalletLimitReached(kwargs={'wallet_max_value': settings.wallet_max_value})
         await WalletRepository().update(wallet_from, value=wallet_from.value - value)
         transfer = await TransferRepository().create(
             type=type_,

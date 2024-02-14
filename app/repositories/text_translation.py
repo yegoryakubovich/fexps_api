@@ -18,8 +18,8 @@
 from typing import Optional, List
 
 from app.db.models import TextTranslation, Text, Language
-from .base import BaseRepository
 from app.utils.exceptions.text import TextTranslationDoesNotExist
+from .base import BaseRepository
 
 
 class TextTranslationRepository(BaseRepository[TextTranslation]):
@@ -28,11 +28,7 @@ class TextTranslationRepository(BaseRepository[TextTranslation]):
     async def get_by_text_lang(self, text: Text, language: Language) -> Optional[TextTranslation]:
         result = await self.get_list(text=text, language=language)
         if not result:
-            raise TextTranslationDoesNotExist(
-                kwargs={
-                    'id_str': language.id_str,
-                },
-            )
+            raise TextTranslationDoesNotExist(kwargs={'id_str': language.id_str})
         return result[0]
 
     async def get_list_by_text(self, text: Text) -> List[TextTranslation]:

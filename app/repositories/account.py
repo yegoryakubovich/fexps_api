@@ -28,9 +28,5 @@ class AccountRepository(BaseRepository[Account]):
     async def get_by_username(self, username: str) -> Optional[Account]:
         result = await self.get(username=username)
         if not result:
-            raise AccountWithUsernameDoeNotExist(
-                kwargs={
-                    'username': username,
-                },
-            )
+            raise AccountWithUsernameDoeNotExist(kwargs={'username': username})
         return result

@@ -148,11 +148,7 @@ class RequisiteService(BaseService):
             raise WalletPermissionError()
         access_change_balance = requisite.total_value - requisite.value
         if total_value < access_change_balance:
-            raise RequisiteMinimumValueError(
-                kwargs={
-                    'access_change_balance': access_change_balance,
-                },
-            )
+            raise RequisiteMinimumValueError(kwargs={'access_change_balance': access_change_balance})
 
         new_value = round(total_value - (requisite.total_value - requisite.value))
         new_currency_value = round(new_value * requisite.rate / 10 ** settings.rate_decimal)

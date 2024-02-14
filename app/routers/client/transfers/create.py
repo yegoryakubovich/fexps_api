@@ -22,7 +22,6 @@ from app.services import TransferService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ValueMustBePositive
 
-
 router = Router(
     prefix='/create',
 )
@@ -40,11 +39,7 @@ class TransferCreateSchema(BaseModel):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(
-                kwargs={
-                    'field_name': info.field_name,
-                },
-            )
+            raise ValueMustBePositive(kwargs={'field_name': info.field_name})
         return value
 
 

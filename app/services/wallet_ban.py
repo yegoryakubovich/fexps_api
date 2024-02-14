@@ -93,11 +93,7 @@ class WalletBanService(BaseService):
     async def delete_related(wallet_ban: WalletBan) -> None:
         wallet_available_balance = await WalletService().get_available_value(wallet=wallet_ban.wallet)
         if wallet_available_balance < wallet_ban.value:
-            raise WalletLimitReached(
-                kwargs={
-                    'wallet_max_value': settings.wallet_max_value,
-                },
-            )
+            raise WalletLimitReached(kwargs={'wallet_max_value': settings.wallet_max_value})
         wallet = wallet_ban.wallet
 
         await WalletRepository().update(
