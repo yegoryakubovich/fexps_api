@@ -28,11 +28,11 @@ class OrderTypes:
     choices = [INPUT, OUTPUT]
 
 
-class OrderStates:  # token, order_id
+class OrderStates:
     WAITING = 'waiting'
     PAYMENT = 'payment'
     CONFIRMATION = 'confirmation'
-    COMPLETED = 'completed'  # None (Проверка всех ордеров, запуск RequestService finish)
+    COMPLETED = 'completed'
     CANCELED = 'canceled'
 
     choices = [WAITING, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
