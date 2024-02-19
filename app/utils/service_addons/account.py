@@ -31,13 +31,6 @@ async def account_is_correct_password(account: Account, password: str) -> bool:
         raise AccountWrongPassword()
 
 
-async def account_check_username(username: str) -> dict:
-    if await AccountRepository().is_exist(username=username):
-        raise AccountUsernameExist(kwargs={'username': username})
-
-    return {}
-
-
 async def account_check_password(
         account: Account,
         password: str,

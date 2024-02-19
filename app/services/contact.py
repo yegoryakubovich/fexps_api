@@ -46,7 +46,7 @@ class ContactService(BaseService):
             },
         )
 
-        return {'contact_id': contact.id}
+        return {'id': contact.id}
 
     @staticmethod
     async def get(

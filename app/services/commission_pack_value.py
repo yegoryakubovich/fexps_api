@@ -63,7 +63,7 @@ class CommissionPackValueService(BaseService):
             },
         )
 
-        return {'commission_pack_value_id': commission_pack_value.id}
+        return {'id': commission_pack_value.id}
 
     @session_required(permissions=['commissions_packs'])
     async def delete(

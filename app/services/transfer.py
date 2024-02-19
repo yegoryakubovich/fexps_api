@@ -60,7 +60,7 @@ class TransferService(BaseService):
             },
         )
 
-        return {'transfer_id': transfer.id}
+        return {'id': transfer.id}
 
     @session_required(permissions=['transfers'])
     async def get(

@@ -51,7 +51,7 @@ class RequisiteDataService(BaseService):
             },
         )
 
-        return {'requisite_id': requisite_data.id}
+        return {'id': requisite_data.id}
 
     @session_required(permissions=['requisites_datas'])
     async def get(

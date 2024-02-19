@@ -74,7 +74,7 @@ class MethodService(BaseService):
                 'currency': currency.id_str
             },
         )
-        return {'method_id': method.id}
+        return {'id': method.id}
 
     @staticmethod
     async def get(

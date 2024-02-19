@@ -54,7 +54,7 @@ class CommissionPackService(BaseService):
             },
         )
 
-        return {'commission_pack_id': commission_pack.id}
+        return {'id': commission_pack.id}
 
     @staticmethod
     async def get_list() -> dict:

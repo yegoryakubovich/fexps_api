@@ -53,7 +53,7 @@ class TextTranslationService(BaseService):
         )
         if return_model:
             return text_translation
-        return {'translation_id': text_translation.id}
+        return {'id': text_translation.id}
 
     @session_required(permissions=['texts_translations'])
     async def update(

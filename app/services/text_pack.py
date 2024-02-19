@@ -58,7 +58,7 @@ class TextPackService(BaseService):
                 'language': language_id_str,
             },
         )
-        return {'text_pack_id': text_pack.id}
+        return {'id': text_pack.id}
 
     @session_required(permissions=['texts_packs'])
     async def delete(self, session: Session, id_: int):

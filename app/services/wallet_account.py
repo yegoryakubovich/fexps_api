@@ -48,7 +48,7 @@ class WalletAccountService(BaseService):
                 'role': role,
             },
         )
-        return {'wallet_account_id': wallet_account.id}
+        return {'id': wallet_account.id}
 
     @session_required()
     async def delete(

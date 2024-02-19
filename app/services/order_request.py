@@ -81,7 +81,7 @@ class OrderRequestService(BaseService):
                 'value': value,
             },
         )
-        return {'order_request_id': order_request.id}
+        return {'id': order_request.id}
 
     @session_required(permissions=['orders'])
     async def update(

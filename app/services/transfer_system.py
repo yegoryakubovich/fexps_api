@@ -69,7 +69,6 @@ class TransferSystemService(BaseService):
     ) -> None:
         if not request.commission_value:
             return
-        logging.critical(f'xxxx1 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
         if from_banned_value:
             await WalletBanService().create_related(
                 wallet=request.wallet,
@@ -77,14 +76,12 @@ class TransferSystemService(BaseService):
                 reason=WalletBanReasons.BY_ORDER,
                 ignore_bal=True,
             )
-        logging.critical(f'xxxx2 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
         await self.create_transfer(
             model=request,
             wallet_id=request.wallet_id,
             value=request.commission_value,
             reason=TransferSystemReasons.COMMISSION,
         )
-        logging.critical(f'xxxx3 value = {request.wallet.value}, value_banned = {request.wallet.value_banned}')
 
     async def payment_difference(
             self,

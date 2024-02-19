@@ -47,7 +47,7 @@ class AccountContactService(BaseService):
                 'contact_id': f'{contact.id}',
             },
         )
-        return {'account_contact_id': account_contact.id}
+        return {'id': account_contact.id}
 
     @session_required(permissions=['accounts'])
     async def get(
