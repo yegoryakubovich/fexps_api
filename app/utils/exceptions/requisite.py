@@ -1,4 +1,4 @@
-from app.utils import ApiException
+from .base import ApiException
 
 
 class RequisiteMinimumValueError(ApiException):
