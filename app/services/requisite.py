@@ -116,16 +116,22 @@ class RequisiteService(BaseService):
     ):
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        if requisite.requisite_data.account.id != account.id and requisite.wallet.account.id != account.id:
-            raise WalletPermissionError()
+        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        if requisite.type == RequisiteTypes.OUTPUT:
+            if requisite.output_requisite_data.account.id != account.id:
+                raise WalletPermissionError()
         return {
             'requisite': {
                 'id': requisite.id,
                 'type': requisite.type,
                 'wallet_id': requisite.wallet.id,
-                'requisite_data_id': requisite.requisite_data.id,
+                'input_method_id': requisite.input_method_id,
+                'output_requisite_data': requisite.output_requisite_data_id,
                 'currency': requisite.currency.id_str,
                 'currency_value': requisite.currency_value,
+                'total_currency_value': requisite.total_currency_value,
+                'currency_value_min': requisite.currency_value_min,
+                'currency_value_max': requisite.currency_value_max,
                 'rate': requisite.rate,
                 'value': requisite.value,
                 'total_value': requisite.total_value,
@@ -143,8 +149,7 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        if not await WalletAccountRepository().get(account=account, wallet=requisite.wallet):
-            raise WalletPermissionError()
+        await wallet_check_permission(account=account, wallets=[requisite.wallet])
         access_change_balance = requisite.total_value - requisite.value
         if total_value < access_change_balance:
             raise RequisiteMinimumValueError(kwargs={'access_change_balance': access_change_balance})
