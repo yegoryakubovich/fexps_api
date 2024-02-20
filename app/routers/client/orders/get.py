@@ -29,13 +29,13 @@ router = Router(
 
 class OrderGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
 
 
 @router.get()
 async def route(schema: OrderGetSchema = Depends()):
     result = await OrderService().get(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
     )
     return Response(**result)

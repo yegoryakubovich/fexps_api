@@ -28,7 +28,7 @@ router = Router(
 
 class AccountContactUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
     value: str = Field(min_length=1, max_length=128)
 
 
@@ -36,7 +36,7 @@ class AccountContactUpdateSchema(BaseModel):
 async def route(schema: AccountContactUpdateSchema):
     result = await AccountContactService().update(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
         value=schema.value,
     )
     return Response(**result)

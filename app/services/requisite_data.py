@@ -50,7 +50,6 @@ class RequisiteDataService(BaseService):
                 'method_id': method.id,
             },
         )
-
         return {'id': requisite_data.id}
 
     @session_required(permissions=['requisites_datas'])
@@ -61,7 +60,6 @@ class RequisiteDataService(BaseService):
     ):
         account = session.account
         requisite_data = await RequisiteDataRepository().get_by_account_and_id(account=account, id_=id_)
-
         return {
             'requisite_data': {
                 'id': requisite_data.id,
@@ -76,7 +74,6 @@ class RequisiteDataService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
-
         return {
             'requisite_datas': [
                 {
@@ -105,5 +102,4 @@ class RequisiteDataService(BaseService):
                 'id': id_,
             },
         )
-
         return {}

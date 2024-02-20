@@ -161,7 +161,6 @@ class RequisiteService(BaseService):
             currency_value=new_currency_value,
             total_currency_value=new_currency_total_value,
         )
-
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -174,5 +173,4 @@ class RequisiteService(BaseService):
                 'new_currency_total_value': new_currency_total_value,
             },
         )
-
         return {}

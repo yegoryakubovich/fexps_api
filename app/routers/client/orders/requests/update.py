@@ -30,7 +30,7 @@ router = Router(
 
 class OrderRequestUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
     state: str = Field()
 
     @model_validator(mode='after')
@@ -49,7 +49,7 @@ class OrderRequestUpdateSchema(BaseModel):
 async def route(schema: OrderRequestUpdateSchema):
     result = await OrderRequestService().update(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
         state=schema.state,
     )
     return Response(**result)

@@ -20,7 +20,7 @@ from .bans import router as router_bans
 
 
 router = Router(
-    prefix='/commissions/packs',
+    prefix='/wallets',
     routes_included=[
         router_bans,
     ],

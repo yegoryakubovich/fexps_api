@@ -31,8 +31,8 @@ router = Router(
 
 class RequisiteCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    type: str = Field(min_length=1, max_length=8)
     wallet_id: int = Field()
+    type_: str = Field(min_length=1, max_length=8)
     output_requisite_data_id: int = Field(default=None)
     input_method_id: int = Field(default=None)
     currency_value: int = Field(default=None)
@@ -55,10 +55,10 @@ class RequisiteCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequisiteCreateSchema':
-        if self.type not in RequisiteTypes.choices:
+        if self.type_ not in RequisiteTypes.choices:
             raise ParameterContainError(
                 kwargs={
-                    'field_name': 'type',
+                    'field_name': 'type_',
                     'parameters': RequisiteTypes.choices,
                 },
             )
@@ -73,10 +73,10 @@ class RequisiteCreateSchema(BaseModel):
                 'required_names': ['output_requisite_data_id'],
             },
         }
-        if None in datas[self.type]['required']:
+        if None in datas[self.type_]['required']:
             raise ParametersAllContainError(
                 kwargs={
-                    'parameters': datas[self.type]["required_names"],
+                    'parameters': datas[self.type_]["required_names"],
                 },
             )
         value_optional = [self.currency_value, self.value, self.rate]
@@ -90,7 +90,7 @@ class RequisiteCreateSchema(BaseModel):
 async def route(schema: RequisiteCreateSchema):
     result = await RequisiteService().create(
         token=schema.token,
-        type_=schema.type,
+        type_=schema.type_,
         wallet_id=schema.wallet_id,
         output_requisite_data_id=schema.output_requisite_data_id,
         input_method_id=schema.input_method_id,

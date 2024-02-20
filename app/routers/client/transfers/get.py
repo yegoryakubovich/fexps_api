@@ -29,13 +29,13 @@ router = Router(
 
 class TransferGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
 
 
 @router.get()
 async def route(schema: TransferGetSchema = Depends()):
     result = await TransferService().get(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
     )
     return Response(**result)

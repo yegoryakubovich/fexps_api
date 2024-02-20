@@ -28,10 +28,10 @@ router = Router(
 
 
 class ContactGetSchema(BaseModel):
-    id: int = Field()
+    id_: int = Field()
 
 
 @router.get()
 async def route(schema: ContactGetSchema = Depends()):
-    result = await ContactService().get(id_=schema.id)
+    result = await ContactService().get(id_=schema.id_)
     return Response(**result)

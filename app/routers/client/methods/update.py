@@ -29,7 +29,7 @@ router = Router(
 
 class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
     currency_id_str: str = Field(default=None, min_length=2, max_length=32)
     schema_fields: list[dict] = Field(default=None)
 
@@ -38,7 +38,7 @@ class MethodUpdateSchema(BaseModel):
 async def route(schema: MethodUpdateSchema):
     result = await MethodService().update(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
         currency_id_str=schema.currency_id_str or None,
         schema_fields=schema.schema_fields or None,
     )

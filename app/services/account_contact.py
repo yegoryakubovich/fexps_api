@@ -59,10 +59,12 @@ class AccountContactService(BaseService):
         account_contact = await AccountContactRepository().get_by_account_and_id(account=account, id_=id_)
         contact = await ContactRepository().get_by_id(id_=account_contact.contact.id)
         return {
-            'id': account_contact.id,
-            'contact_id': contact.id,
-            'contact_name_key': contact.name_text.key,
-            'value': account_contact.value,
+            'account_contact': {
+                'id': account_contact.id,
+                'contact_id': contact.id,
+                'contact_name_key': contact.name_text.key,
+                'value': account_contact.value,
+            },
         }
 
     @session_required(permissions=['accounts'])

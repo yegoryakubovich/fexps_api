@@ -28,13 +28,13 @@ router = Router(
 
 class OrderUpdatePaymentSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    order_id: int = Field()
+    id_: int = Field()
 
 
 @router.post()
 async def route(schema: OrderUpdatePaymentSchema):
     result = await OrderService().update_payment(
         token=schema.token,
-        id_=schema.order_id,
+        id_=schema.id_,
     )
     return Response(**result)

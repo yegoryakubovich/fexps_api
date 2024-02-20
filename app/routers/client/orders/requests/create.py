@@ -31,15 +31,15 @@ router = Router(
 class OrderRequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
-    type: str = Field(min_length=1, max_length=16)
+    type_: str = Field(min_length=1, max_length=16)
     value: int = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':
-        if self.type not in OrderRequestTypes.choices:
+        if self.type_ not in OrderRequestTypes.choices:
             raise ParameterContainError(
                 kwargs={
-                    'field_name': 'type',
+                    'field_name': 'type_',
                     'parameters': OrderRequestTypes.choices,
                 },
             )
@@ -60,7 +60,7 @@ async def route(schema: OrderRequestCreateSchema):
     result = await OrderRequestService().create(
         token=schema.token,
         order_id=schema.order_id,
-        type_=schema.type,
+        type_=schema.type_,
         value=schema.value,
     )
     return Response(**result)

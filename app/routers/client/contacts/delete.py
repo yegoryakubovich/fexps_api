@@ -28,13 +28,13 @@ router = Router(
 
 class ContactDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
 
 
 @router.post()
 async def route(schema: ContactDeleteSchema):
     result = await ContactService().delete(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
     )
     return Response(**result)

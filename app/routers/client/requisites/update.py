@@ -29,7 +29,7 @@ router = Router(
 
 class RequisiteUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
     total_value: int = Field()
 
     @field_validator('total_value')
@@ -46,7 +46,7 @@ class RequisiteUpdateSchema(BaseModel):
 async def route(schema: RequisiteUpdateSchema):
     result = await RequisiteService().update(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
         total_value=schema.total_value,
     )
     return Response(**result)

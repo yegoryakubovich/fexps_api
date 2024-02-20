@@ -28,7 +28,7 @@ router = Router(
 
 class WalletUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field()
+    id_: int = Field()
     name: str = Field(min_length=1, max_length=1024)
 
 
@@ -36,7 +36,7 @@ class WalletUpdateSchema(BaseModel):
 async def route(schema: WalletUpdateSchema):
     result = await WalletService().update(
         token=schema.token,
-        id_=schema.id,
+        id_=schema.id_,
         name=schema.name,
     )
     return Response(**result)

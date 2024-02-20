@@ -33,7 +33,7 @@ router = Router(
 class RequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
-    type: str = Field(min_length=1, max_length=8)
+    type_: str = Field(min_length=1, max_length=8)
     input_method_id: int = Field(default=None)
     input_currency_value: int = Field(default=None)
     input_value: int = Field(default=None)
@@ -43,10 +43,10 @@ class RequestCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':
-        if self.type not in RequestTypes.choices:
+        if self.type_ not in RequestTypes.choices:
             raise ParameterContainError(
                 kwargs={
-                    'field_name': 'type',
+                    'field_name': 'type_',
                     'parameters': RequestTypes.choices,
                 },
             )
@@ -70,16 +70,16 @@ class RequestCreateSchema(BaseModel):
                 'optional_names': ['input_currency_value', 'output_currency_value'],
             },
         }
-        if None in datas[self.type]['required']:
+        if None in datas[self.type_]['required']:
             raise ParametersAllContainError(
                 kwargs={
-                    'parameters': datas[self.type]["required_names"],
+                    'parameters': datas[self.type_]["required_names"],
                 },
             )
-        if (len(datas[self.type]['optional']) - datas[self.type]['optional'].count(None)) != 1:
+        if (len(datas[self.type_]['optional']) - datas[self.type_]['optional'].count(None)) != 1:
             raise ParameterOneContainError(
                 kwargs={
-                    'parameters': datas[self.type]["optional_names"],
+                    'parameters': datas[self.type_]["optional_names"],
                 },
             )
         return self
@@ -99,7 +99,7 @@ async def route(schema: RequestCreateSchema):
     result = await RequestService().create(
         token=schema.token,
         wallet_id=schema.wallet_id,
-        type_=schema.type,
+        type_=schema.type_,
         input_method_id=schema.input_method_id,
         input_currency_value=schema.input_currency_value,
         input_value=schema.input_value,

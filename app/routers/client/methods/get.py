@@ -29,10 +29,10 @@ router = Router(
 
 
 class MethodGetSchema(BaseModel):
-    id: int = Field()
+    id_: int = Field()
 
 
 @router.get()
 async def route(schema: MethodGetSchema = Depends()):
-    result = await MethodService().get(id_=schema.id)
+    result = await MethodService().get(id_=schema.id_)
     return Response(**result)

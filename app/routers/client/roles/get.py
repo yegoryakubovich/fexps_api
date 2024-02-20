@@ -24,6 +24,6 @@ router = Router(
 
 
 @router.get()
-async def route():
+async def route():  # FIXME
     result = {}
     return Response(**result)

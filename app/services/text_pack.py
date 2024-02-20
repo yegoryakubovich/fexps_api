@@ -28,6 +28,20 @@ from config import settings
 class TextPackService(BaseService):
     model = TextPack
 
+    @session_required(permissions=['texts_packs'])
+    async def create(self, session: Session, language_id_str: str):
+        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
+        text_pack = await TextPackRepository().create_by_language(language=language)
+        await self.create_action(
+            model=text_pack,
+            action=Actions.CREATE,
+            parameters={
+                'creator': f'session_{session.id}',
+                'language': language_id_str,
+            },
+        )
+        return {'id': text_pack.id}
+
     @staticmethod
     async def get(language_id_str: str):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
@@ -45,20 +59,6 @@ class TextPackService(BaseService):
             'text_pack_id': text_pack.id,
             'text_pack': json,
         }
-
-    @session_required(permissions=['texts_packs'])
-    async def create(self, session: Session, language_id_str: str):
-        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository().create_by_language(language=language)
-        await self.create_action(
-            model=text_pack,
-            action=Actions.CREATE,
-            parameters={
-                'creator': f'session_{session.id}',
-                'language': language_id_str,
-            },
-        )
-        return {'id': text_pack.id}
 
     @session_required(permissions=['texts_packs'])
     async def delete(self, session: Session, id_: int):
