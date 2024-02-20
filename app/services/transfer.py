@@ -21,7 +21,6 @@ from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions.wallet import WalletPermissionError
 from app.utils.service_addons.transfer import create_transfer
 from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
@@ -70,15 +69,10 @@ class TransferService(BaseService):
     ):
         account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
-        perm_from = await WalletAccountRepository().get(
-            account=account, wallet=transfer.wallet_from
+        await wallet_check_permission(
+            account=account,
+            wallets=[transfer.wallet_from, transfer.wallet_to],
         )
-        perm_to = await WalletAccountRepository().get(
-            account=account, wallet=transfer.wallet_to
-        )
-        if not perm_from and not perm_to:
-            raise WalletPermissionError()
-
         return {
             'transfer': {
                 'id': transfer.id,
@@ -99,7 +93,7 @@ class TransferService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        await WalletAccountRepository().get(account=account, wallet=wallet)
+        await wallet_check_permission(account=account, wallets=[wallet])
         transfers_db = await TransferRepository().search_by_wallet(
             wallet=wallet, is_sender=is_sender, is_receiver=is_receiver, page=page
         )

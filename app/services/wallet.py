@@ -23,6 +23,7 @@ from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
+from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 

@@ -20,13 +20,13 @@ from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
 from app.utils.exceptions.wallet import WalletPermissionError
+from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -51,8 +51,7 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        if not await WalletAccountRepository().get(account=account, wallet=wallet):
-            raise WalletPermissionError()
+        await wallet_check_permission(account=account, wallets=[wallet])
         input_method, output_requisite_data, currency = None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)

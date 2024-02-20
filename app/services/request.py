@@ -20,11 +20,11 @@ from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
+from app.utils.service_addons.wallet import wallet_check_permission
 
 
 class RequestService(BaseService):
@@ -103,18 +103,21 @@ class RequestService(BaseService):
             session: Session,
             id_: int,
     ):
+        account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
         next_state = RequestStates.INPUT_RESERVATION
         if request.type == RequestTypes.OUTPUT:
             next_state = RequestStates.OUTPUT_RESERVATION
-        wallet_account = await WalletAccountRepository().get(wallet=request.wallet, account=session.account)
-        if not wallet_account:
-            raise RequestStateNotPermission(
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=RequestStateNotPermission(
                 kwargs={
                     'id_value': request.id,
                     'action': f'Update state to {next_state}',
                 }
             )
+        )
         if request.state != RequestStates.WAITING:
             raise RequestStateWrong(
                 kwargs={
