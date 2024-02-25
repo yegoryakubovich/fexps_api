@@ -15,22 +15,22 @@
 #
 
 
-from app.utils import Router
-from .check_username import router as router_check_username
-from .check_password import router as router_check_password
-from .contacts import router as router_contacts
-from .create import router as router_create
-from .get import router as router_get
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
+from app.services import AccountService
+from app.utils import Router, Response
 
 router = Router(
-    prefix='/accounts',
-    routes_included=[
-        router_create,
-        router_check_username,
-        router_check_password,
-        router_get,
-        router_contacts,
-    ],
-    tags=['Accounts'],
+    prefix='/password/check',
 )
+
+
+class CheckAccountPasswordSchema(BaseModel):
+    password: str = Field(min_length=6, max_length=32)
+
+
+@router.get()
+async def route(schema: CheckAccountPasswordSchema = Depends()):
+    result = await AccountService()._is_valid_password(password=schema.password)
+    return Response(**result)

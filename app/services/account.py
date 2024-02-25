@@ -15,6 +15,8 @@
 #
 
 
+from re import search, compile
+
 from app.db.models import Account, Actions
 from app.repositories.account import AccountRepository
 from app.repositories.country import CountryRepository
@@ -117,3 +119,12 @@ class AccountService(BaseService):
         if await AccountRepository().is_exist(username=username):
             raise AccountUsernameExist(kwargs={'username': username})
         return {}
+
+    @staticmethod
+    async def _is_valid_password(password: str):
+        register = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{7,32}$"
+        pattern = compile(register)
+        if search(pattern, password):
+            return True
+        else:
+            return False
