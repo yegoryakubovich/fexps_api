@@ -26,6 +26,12 @@ services:
       MAX_WORKERS: 2
     ports:
       - "${APP_PORT}:80"
+    volumes:
+      - ./assets/articles:/app/assets/articles
+      - ./assets/texts_packs:/app/assets/texts_packs
+      - ./assets/images:/app/assets/images
+    env_file:
+      - .env
 #  celery:
 #    build:
 #      dockerfile: celery.dockerfile
@@ -39,3 +45,9 @@ services:
   permanents:
     build:
       dockerfile: permanents.dockerfile
+    volumes:
+      - ./assets/articles:/app/assets/articles
+      - ./assets/texts_packs:/app/assets/texts_packs
+      - ./assets/images:/app/assets/images
+    env_file:
+      - .env
