@@ -31,7 +31,7 @@ class AccountContactListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
-@router.post()
+@router.get()
 async def route(schema: AccountContactListGetSchema = Depends()):
     result = await AccountContactService().get_list(
         token=schema.token,

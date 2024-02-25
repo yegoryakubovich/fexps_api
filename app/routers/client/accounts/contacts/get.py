@@ -33,7 +33,7 @@ class AccountContactGetSchema(BaseModel):
     id_: int = Field()
 
 
-@router.post()
+@router.get()
 async def route(schema: AccountContactGetSchema = Depends()):
     result = await AccountContactService().get(
         token=schema.token,
