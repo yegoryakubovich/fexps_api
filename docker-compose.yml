@@ -34,7 +34,7 @@ services:
       - .env
 #  celery:
 #    build:
-#      dockerfile: celery.dockerfile
+#      dockerfile: tasks_celery.dockerfile
 #    volumes:
 #      - ./app/tasks:/app/app/tasks
 #  flower:
@@ -44,7 +44,7 @@ services:
 #      - "5555:5555"
   permanents:
     build:
-      dockerfile: permanents.dockerfile
+      dockerfile: tasks_permanents.dockerfile
     volumes:
       - ./assets/articles:/app/assets/articles
       - ./assets/texts_packs:/app/assets/texts_packs

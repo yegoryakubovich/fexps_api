@@ -18,13 +18,14 @@
 import asyncio
 import logging
 
-from app.permanents.requests.rate_confirmed_check import request_rate_confirmed_check
-from app.permanents.requests.states.input import request_state_input_check
-from app.permanents.requests.states.input_reserved import request_state_input_reserved_check
-from app.permanents.requests.states.loading import request_state_loading_check
-from app.permanents.requests.states.output import request_state_output_check
-from app.permanents.requests.states.output_reserved import request_state_output_reserved_check
-from app.permanents.requests.waiting_check import request_waiting_check
+from app.tasks.permanents.requests.rate_confirmed_check import request_rate_confirmed_check
+from app.tasks.permanents.requests.states.input import request_state_input_check
+from app.tasks.permanents.requests.states.input_reserved import request_state_input_reserved_check
+from app.tasks.permanents.requests.states.loading import request_state_loading_check
+from app.tasks.permanents.requests.states.output import request_state_output_check
+from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
+from app.tasks.permanents.requests.waiting_check import request_waiting_check
+
 
 prefix = '[start_app]'
 
@@ -48,3 +49,7 @@ async def start_app() -> None:
         if 'request_state_output_check' not in tasks_names:
             asyncio.create_task(coro=request_state_output_check(), name='request_state_output_check')
         await asyncio.sleep(10 * 60)
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(start_app())

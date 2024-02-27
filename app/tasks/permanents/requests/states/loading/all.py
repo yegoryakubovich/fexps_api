@@ -18,8 +18,8 @@
 import logging
 
 from app.db.models import Request, RequestFirstLine
-from app.permanents.requests.states.loading.input import request_type_input_currency_value, request_type_input_value
-from app.permanents.requests.states.loading.output import request_type_output_value, request_type_output_currency_value
+from app.tasks.permanents.requests.states.loading.input import request_type_input_currency_value, request_type_input_value
+from app.tasks.permanents.requests.states.loading.output import request_type_output_value, request_type_output_currency_value
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.request.commissions import get_commission
 from app.utils.calculations.request.need_value import input_get_need_currency_value, output_get_need_value, \

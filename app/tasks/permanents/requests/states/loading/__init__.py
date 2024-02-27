@@ -19,9 +19,9 @@ import asyncio
 import logging
 
 from app.db.models import RequestStates, RequestTypes, OrderTypes, Actions
-from app.permanents.requests.states.loading.all import request_type_all
-from app.permanents.requests.states.loading.input import request_type_input
-from app.permanents.requests.states.loading.output import request_type_output
+from app.tasks.permanents.requests.states.loading.all import request_type_all
+from app.tasks.permanents.requests.states.loading.input import request_type_input
+from app.tasks.permanents.requests.states.loading.output import request_type_output
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService

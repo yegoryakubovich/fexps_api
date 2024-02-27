@@ -13,3 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+from celery.app import Celery
+
+from config import settings
+
+
+redis_url = f'redis://{settings.redis_user}:{settings.redis_password}@{settings.redis_host}:{settings.redis_port}'
+celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
+celery_app.control.purge()
+
+celery_app.autodiscover_tasks(['app.tasks.schedule'])
