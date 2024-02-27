@@ -16,7 +16,7 @@
 
 
 from app.db.models import Order
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class OrderRepository(BaseRepository[Order]):

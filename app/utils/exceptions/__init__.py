@@ -15,4 +15,21 @@
 #
 
 
+from .account import AccountWrongPassword, AccountUsernameExist, AccountWithUsernameDoeNotExist, AccountMissingRole, \
+    AccountContactsAlreadyExists
 from .base import ApiException
+from .commission_pack import CommissionIntervalAlreadyTaken, CommissionIntervalValidationError, IntervalNotExistsError
+from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters, ParameterContainError, \
+    ParameterOneContainError, ParameterTwoContainError, ParametersAllContainError, ValueMustBePositive, WrongToken, \
+    WrongTokenFormat, MethodNotSupportedRoot
+from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodParametersMissing, \
+    MethodParametersValidationError, MethodFieldsTypeError
+from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
+    OrderNotPermission
+from .request import RequestStateWrong, RequestStateNotPermission
+from .requisite import RequisiteMinimumValueError
+from .role import RoleAlreadyExist
+from .text import TextDoesNotExist, TextAlreadyExist, TextPackDoesNotExist, TextTranslationDoesNotExist, \
+    TextTranslationAlreadyExist
+from .wallet import WalletLimitReached, WalletCountLimitReached, NotEnoughFundsOnBalance, SystemWalletNotExists, \
+    WalletPermissionError

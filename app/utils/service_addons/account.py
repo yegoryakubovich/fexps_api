@@ -16,9 +16,8 @@
 
 
 from app.db.models import Account
-from app.repositories.account import AccountRepository
 from app.utils.crypto import create_hash_by_string_and_salt
-from app.utils.exceptions.account import AccountUsernameExist, AccountWrongPassword
+from app.utils.exceptions import AccountWrongPassword
 
 
 async def account_is_correct_password(account: Account, password: str) -> bool:

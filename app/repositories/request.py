@@ -19,7 +19,7 @@ from operator import or_
 from typing import List
 
 from app.db.models import Request, RequestStates
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class RequestRepository(BaseRepository[Request]):

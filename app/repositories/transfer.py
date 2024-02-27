@@ -18,7 +18,7 @@
 from sqlalchemy.sql.operators import or_, and_
 
 from app.db.models import Transfer, Wallet
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class TransferRepository(BaseRepository[Transfer]):

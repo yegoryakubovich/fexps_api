@@ -25,7 +25,7 @@ from sqlalchemy import select
 from app.db.base_class import Base
 from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
-from app.utils.exceptions.main import ModelDoesNotExist
+from app.utils.exceptions import ModelDoesNotExist
 from config import settings
 
 ModelType = TypeVar('ModelType', bound=Base)

@@ -16,7 +16,7 @@
 
 
 from app.db.models import OrderRequest
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class OrderRequestRepository(BaseRepository[OrderRequest]):

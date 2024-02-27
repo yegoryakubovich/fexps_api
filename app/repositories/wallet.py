@@ -16,8 +16,8 @@
 
 
 from app.db.models import Wallet
-from .base import BaseRepository
-from ..utils.exceptions.wallet import SystemWalletNotExists
+from app.repositories.base import BaseRepository
+from app.utils.exceptions import SystemWalletNotExists
 
 
 class WalletRepository(BaseRepository[Wallet]):

@@ -18,8 +18,8 @@
 from typing import Optional
 
 from app.db.models import AccountContact, Account
-from .base import BaseRepository
-from ..utils.exceptions.main import ModelDoesNotExist
+from app.repositories.base import BaseRepository
+from app.utils.exceptions import ModelDoesNotExist
 
 
 class AccountContactRepository(BaseRepository[AccountContact]):

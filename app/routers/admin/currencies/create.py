@@ -30,6 +30,9 @@ router = Router(
 class CurrencyCreateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=32)
+    decimal: int = Field()
+    rate_decimal: int = Field()
+    div: int = Field()
 
 
 @router.post()
@@ -37,5 +40,8 @@ async def route(schema: CurrencyCreateByAdminSchema):
     result = await CurrencyService().create_by_admin(
         token=schema.token,
         id_str=schema.id_str,
+        decimal=schema.decimal,
+        rate_decimal=schema.rate_decimal,
+        div=schema.div,
     )
     return Response(**result)

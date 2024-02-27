@@ -19,5 +19,5 @@ from app.db.models import Country
 from app.repositories.base import BaseRepository
 
 
-class CountryRepository(BaseRepository):
+class CountryRepository(BaseRepository[Country]):
     model = Country

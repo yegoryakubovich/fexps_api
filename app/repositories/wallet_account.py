@@ -16,8 +16,8 @@
 
 
 from app.db.models import WalletAccount, Account, Wallet
-from .base import BaseRepository
-from ..utils.exceptions.wallet import WalletPermissionError
+from app.repositories.base import BaseRepository
+from app.utils.exceptions import WalletPermissionError
 
 
 class WalletAccountRepository(BaseRepository[WalletAccount]):

@@ -16,7 +16,7 @@
 
 
 from app.db.models import RequisiteData, Account
-from .base import BaseRepository, ModelDoesNotExist
+from app.repositories.base import BaseRepository, ModelDoesNotExist
 
 
 class RequisiteDataRepository(BaseRepository[RequisiteData]):

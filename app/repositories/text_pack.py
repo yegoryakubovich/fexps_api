@@ -16,44 +16,36 @@
 
 
 from json import dumps
+from typing import Optional
 
-from peewee import DoesNotExist
-
-from app.db.models import Language, TextPack, Text
-from .text import TextRepository
+from app.db.models import TextPack, Language
 from app.repositories.base import BaseRepository
+from app.repositories.language import LanguageRepository
+from app.repositories.text import TextRepository
+from app.utils.exceptions import TextPackDoesNotExist
 from config import settings
 
 
-class TextPackRepository(BaseRepository):
+class TextPackRepository(BaseRepository[TextPack]):
     model = TextPack
 
-    @staticmethod
-    async def create(language: Language):
+    async def create_by_language(self, language: Language) -> Optional[TextPack]:
         json = {}
-        for text in Text.select():
-            value = await TextRepository.get_value(text=text, language=language)
+        for text in await TextRepository().get_list():
+            value = await TextRepository().get_value(text, language=language)
             key = text.key
             json[key] = value
-
-        text_pack = TextPack.create(language=language)
-
+        text_pack = await self.create(language=language)
         with open(f'{settings.path_texts_packs}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
-            md_file.write(dumps(json))
-
+            md_file.write(dumps(json, ensure_ascii=False))
         return text_pack
 
     async def create_all(self):
-        for language in Language.select():
-            await self.create(language=language)
+        for language in await LanguageRepository().get_list():
+            await self.create_by_language(language=language)
 
-    @staticmethod
-    async def get_current(language: Language) -> TextPack:
-        try:
-            text_pack = TextPack.select().where(
-                (TextPack.language == language) &
-                (TextPack.is_deleted == False)
-            ).order_by(TextPack.id.desc()).get()
-            return text_pack
-        except DoesNotExist:
-            return TextPack().get(TextPack.id == 0)
+    async def get_current(self, language: Language) -> Optional[TextPack]:
+        text_pack_all = await self.get_list(language=language)
+        if not text_pack_all:
+            raise TextPackDoesNotExist(kwargs={'language_name': language.name})
+        return text_pack_all[0]
