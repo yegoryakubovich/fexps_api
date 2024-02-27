@@ -15,14 +15,16 @@
 #
 
 
-from app.db.models import Session
-from app.repositories import TimezoneRepository
+from app.db.models import Timezone, Session
+from app.repositories.timezone import TimezoneRepository
 from app.services.base import BaseService
-from app.utils.exceptions import ModelAlreadyExist
 from app.utils.decorators import session_required
+from app.utils.exceptions import ModelAlreadyExist
 
 
 class TimezoneService(BaseService):
+    model = Timezone
+
     @session_required(permissions=['timezones'], can_root=True)
     async def create_by_admin(
             self,

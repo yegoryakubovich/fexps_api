@@ -21,3 +21,6 @@ from app.repositories.base import BaseRepository
 
 class CountryRepository(BaseRepository[Country]):
     model = Country
+
+    async def is_exist_by_id_str(self, id_str: str) -> bool:
+        return await self.is_exist(id_str=id_str)

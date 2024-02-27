@@ -58,7 +58,6 @@ class TransferService(BaseService):
                 'value': value
             },
         )
-
         return {'id': transfer.id}
 
     @session_required(permissions=['transfers'])

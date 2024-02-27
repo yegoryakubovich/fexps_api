@@ -15,19 +15,24 @@
 #
 
 
-from app.db.models import Session
-from app.repositories import CurrencyRepository
+from app.db.models import Session, Currency
+from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
-from app.utils.exceptions import ModelAlreadyExist
 from app.utils.decorators import session_required
+from app.utils.exceptions import ModelAlreadyExist
 
 
 class CurrencyService(BaseService):
+    model = Currency
+
     @session_required(permissions=['currencies'], can_root=True)
     async def create_by_admin(
             self,
             session: Session,
             id_str: str,
+            decimal: int,
+            rate_decimal: int,
+            div: int,
     ):
         if await CurrencyRepository().is_exist_by_id_str(id_str=id_str):
             raise ModelAlreadyExist(
@@ -40,6 +45,9 @@ class CurrencyService(BaseService):
 
         currency = await CurrencyRepository().create(
             id_str=id_str,
+            decimal=decimal,
+            rate_decimal=rate_decimal,
+            div=div,
         )
 
         await self.create_action(
@@ -48,6 +56,9 @@ class CurrencyService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
+                'decimal': decimal,
+                'rate_decimal': rate_decimal,
+                'div': div,
                 'by_admin': True,
             }
         )
@@ -84,6 +95,9 @@ class CurrencyService(BaseService):
             'currency': {
                 'id': currency.id,
                 'id_str': currency.id_str,
+                'decimal': currency.decimal,
+                'rate_decimal': currency.rate_decimal,
+                'div': currency.div,
             }
         }
 
@@ -94,6 +108,9 @@ class CurrencyService(BaseService):
                 {
                     'id': currency.id,
                     'id_str': currency.id_str,
+                    'decimal': currency.decimal,
+                    'rate_decimal': currency.rate_decimal,
+                    'div': currency.div,
                 }
                 for currency in await CurrencyRepository().get_list()
             ],

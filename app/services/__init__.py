@@ -26,14 +26,17 @@ from .commission_pack_value import CommissionPackValueService
 from .contact import ContactService
 from .country import CountryService
 from .currency import CurrencyService
+from .image import ImageService
 from .language import LanguageService
 from .method import MethodService
 from .order import OrderService
 from .order_request import OrderRequestService
+from .permission import PermissionService
 from .request import RequestService
 from .requisite import RequisiteService
 from .requisite_data import RequisiteDataService
 from .role import RoleService
+from .role_permission import RolePermissionService
 from .session import SessionService
 from .session_get_by_token import SessionGetByTokenService
 from .text import TextService

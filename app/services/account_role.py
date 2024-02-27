@@ -16,12 +16,13 @@
 
 
 from app.db.models import AccountRole, Session
-from app.repositories import AccountRepository, AccountRoleRepository, RoleRepository
+from app.repositories import AccountRoleRepository, AccountRepository, RoleRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
 
 class AccountRoleService(BaseService):
+    model = AccountRole
 
     @session_required(permissions=['accounts'], can_root=True)
     async def create_by_admin(
@@ -36,7 +37,6 @@ class AccountRoleService(BaseService):
             account=account,
             role=role,
         )
-
         await self.create_action(
             model=account_role,
             action='create',
@@ -47,7 +47,6 @@ class AccountRoleService(BaseService):
                 'by_admin': True,
             }
         )
-
         return {'id': account_role.id}
 
     @session_required(permissions=['accounts'])
@@ -58,7 +57,6 @@ class AccountRoleService(BaseService):
     ):
         account_role = await AccountRoleRepository().get_by_id(id_=id_)
         await AccountRoleRepository().delete(model=account_role)
-
         await self.create_action(
             model=account_role,
             action='delete',
@@ -67,7 +65,6 @@ class AccountRoleService(BaseService):
                 'by_admin': True,
             }
         )
-
         return {}
 
     @session_required(permissions=['accounts'], return_model=False)

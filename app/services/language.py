@@ -15,15 +15,17 @@
 #
 
 
-from app.db.models import Session
-from app.repositories import LanguageRepository
-from app.services.text_pack import TextPackService
+from app.db.models import Language, Session
+from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
-from app.utils.exceptions import ModelAlreadyExist
+from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required
+from app.utils.exceptions import ModelAlreadyExist
 
 
 class LanguageService(BaseService):
+    model = Language
+
     @session_required(permissions=['languages'], can_root=True)
     async def create_by_admin(
             self,

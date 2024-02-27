@@ -16,63 +16,15 @@
 
 
 from app.db.models import Session, Text
-from app.repositories import TextRepository, TextTranslationRepository
-from app.services.text_pack import TextPackService
+from app.repositories.text import TextRepository
+from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
+from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required
 
 
 class TextService(BaseService):
-    @session_required(return_model=False, permissions=['texts'])
-    async def get(
-            self,
-            key: str,
-    ):
-        text = await TextRepository().get_by_key(key=key)
-        translations = await TextTranslationRepository().get_list_by_text(text=text)
-
-        return {
-            'text': {
-                'id': text.id,
-                'key': text.key,
-                'value_default': text.value_default,
-                'translations': [
-                    {
-                        'language': translation.language.id_str,
-                        'value': translation.value,
-                    }
-                    for translation in translations
-                ],
-            },
-        }
-
-    @session_required(return_model=False, permissions=['texts'], can_root=True)
-    async def get_list(
-            self,
-    ) -> dict:
-        texts_list = []
-
-        texts = await TextRepository().get_list()
-        for text in texts:
-            text: Text
-            translations = await TextTranslationRepository().get_list_by_text(text=text)
-            texts_list.append(
-                {
-                    'id': text.id,
-                    'key': text.key,
-                    'value_default': text.value_default,
-                    'translations': [
-                        {
-                            'language': translation.language.id_str,
-                            'value': translation.value,
-                        }
-                        for translation in translations
-                    ],
-                }
-            )
-        return {
-            'texts': texts_list,
-        }
+    model = Text
 
     @session_required(permissions=['texts'], can_root=True)
     async def create_by_admin(
@@ -167,3 +119,54 @@ class TextService(BaseService):
         await TextPackService().create_all_by_admin(session=session)
 
         return {}
+
+    @session_required(return_model=False, permissions=['texts'])
+    async def get(
+            self,
+            key: str,
+    ):
+        text = await TextRepository().get_by_key(key=key)
+        translations = await TextTranslationRepository().get_list_by_text(text=text)
+
+        return {
+            'text': {
+                'id': text.id,
+                'key': text.key,
+                'value_default': text.value_default,
+                'translations': [
+                    {
+                        'language': translation.language.id_str,
+                        'value': translation.value,
+                    }
+                    for translation in translations
+                ],
+            },
+        }
+
+    @session_required(return_model=False, permissions=['texts'], can_root=True)
+    async def get_list(
+            self,
+    ) -> dict:
+        texts_list = []
+
+        texts = await TextRepository().get_list()
+        for text in texts:
+            text: Text
+            translations = await TextTranslationRepository().get_list_by_text(text=text)
+            texts_list.append(
+                {
+                    'id': text.id,
+                    'key': text.key,
+                    'value_default': text.value_default,
+                    'translations': [
+                        {
+                            'language': translation.language.id_str,
+                            'value': translation.value,
+                        }
+                        for translation in translations
+                    ],
+                }
+            )
+        return {
+            'texts': texts_list,
+        }

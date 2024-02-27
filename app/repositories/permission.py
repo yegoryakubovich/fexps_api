@@ -21,3 +21,6 @@ from app.repositories.base import BaseRepository
 
 class PermissionRepository(BaseRepository[Permission]):
     model = Permission
+
+    async def is_exist_by_id_str(self, **filters):
+        return await self.is_exist(**filters)

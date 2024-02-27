@@ -52,7 +52,14 @@ class BaseRepository(Generic[ModelType]):
 
             return db_obj
 
-    async def get_list(self, custom_where=None, custom_order=None, **filters) -> List[ModelType]:
+    async def get_list(
+            self,
+            custom_where=None,
+            custom_order=None,
+            custom_limit=None,
+            custom_offset=None,
+            **filters
+    ) -> List[ModelType]:
         custom_select = select(self.model)
         if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
             filters['is_deleted'] = False
@@ -62,6 +69,10 @@ class BaseRepository(Generic[ModelType]):
             custom_select = custom_select.order_by(self.model.id.desc())
         else:
             custom_select = custom_select.order_by(custom_order)
+        if custom_limit:
+            custom_select = custom_select.limit(custom_limit)
+        if custom_offset:
+            custom_select = custom_select.offset(custom_offset)
 
         async with self._get_session() as session:
             result = await session.execute(custom_select.filter_by(**filters))
@@ -119,20 +130,6 @@ class BaseRepository(Generic[ModelType]):
     async def delete(self, model: ModelType) -> Optional[ModelType]:
         return await self.update(model, is_deleted=True)
 
-    @staticmethod
-    def _get_session():
-        return SessionLocal()
-
-    @staticmethod
-    def _convert_obj(obj_in_data: dict) -> dict:
-        result = {}
-        for key, value in obj_in_data.items():
-            if type(value) in [str, int, float, bool, list, dict, NoneType, Decimal]:
-                result[key] = value
-                continue
-            result[f"{key}_id"] = value.id
-        return result
-
     async def count(self, custom_select, **filters):
         async with self._get_session() as session:
             if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
@@ -140,7 +137,7 @@ class BaseRepository(Generic[ModelType]):
             result = await session.execute(custom_select.filter_by(**filters))
             return len(result.scalars().all())
 
-    async def search(self, page: int, custom_where=None, **filters) -> tuple[List[ModelType], int, int]:
+    async def _search(self, page: int, custom_where=None, **filters) -> tuple[List[ModelType], int, int]:
         if custom_where is None:
             custom_select = select(self.model)
         else:
@@ -157,3 +154,17 @@ class BaseRepository(Generic[ModelType]):
             )
             count = await self.count(custom_select, **filters)
             return result.scalars().all(), count, ceil(count / items_per_page)
+
+    @staticmethod
+    def _get_session():
+        return SessionLocal()
+
+    @staticmethod
+    def _convert_obj(obj_in_data: dict) -> dict:
+        result = {}
+        for key, value in obj_in_data.items():
+            if type(value) in [str, int, float, bool, list, dict, NoneType, Decimal]:
+                result[key] = value
+                continue
+            result[f"{key}_id"] = value.id
+        return result

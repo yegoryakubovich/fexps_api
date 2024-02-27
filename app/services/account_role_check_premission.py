@@ -15,16 +15,18 @@
 #
 
 
-from app.db.models import Account
+from app.db.models import Account, AccountRole
 from app.repositories import AccountRoleRepository
 from app.services.base import BaseService
 from app.utils.exceptions import AccountMissingPermission
 
 
 class AccountRoleCheckPermissionService(BaseService):
+    model = AccountRole
+
     @staticmethod
     async def get_permissions(account: Account):
-        permissions = await AccountRoleRepository.get_account_permissions(
+        permissions = await AccountRoleRepository().get_account_permissions(
             account=account,
             only_id_str=True,
         )

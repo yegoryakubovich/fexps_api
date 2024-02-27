@@ -15,13 +15,13 @@
 #
 
 
-from .account import AccountWrongPassword, AccountUsernameExist, AccountWithUsernameDoeNotExist, AccountMissingRole, \
-    AccountContactsAlreadyExists
+from .account import WrongPassword, InvalidUsername, AccountWithUsernameDoeNotExist, AccountMissingPermission, \
+    AccountContactsAlreadyExists, InvalidPassword
 from .base import ApiException
 from .commission_pack import CommissionIntervalAlreadyTaken, CommissionIntervalValidationError, IntervalNotExistsError
 from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters, ParameterContainError, \
     ParameterOneContainError, ParameterTwoContainError, ParametersAllContainError, ValueMustBePositive, WrongToken, \
-    WrongTokenFormat, MethodNotSupportedRoot
+    WrongTokenFormat, MethodNotSupportedRoot, ModelAlreadyExist
 from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodParametersMissing, \
     MethodParametersValidationError, MethodFieldsTypeError
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \

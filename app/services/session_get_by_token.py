@@ -17,14 +17,17 @@
 
 from addict import Dict
 
-from app.repositories import SessionRepository
 from app.db.models import Session
+from app.repositories.session import SessionRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_hash_by_string_and_salt
+from app.utils.exceptions.main import WrongTokenFormat, WrongToken
 from config import settings
 
 
 class SessionGetByTokenService(BaseService):
+    model = Session
+
     @staticmethod
     async def execute(token: str) -> Session | Dict:
         # Get session ID and token
@@ -58,8 +61,8 @@ class SessionGetByTokenService(BaseService):
 
         session: Session = await SessionRepository().get_by_id(id_=session_id)
         if session.token_hash == await create_hash_by_string_and_salt(
-            string=token,
-            salt=session.token_salt,
+                string=token,
+                salt=session.token_salt,
         ):
             return session
         else:

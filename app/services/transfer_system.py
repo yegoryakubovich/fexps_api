@@ -15,8 +15,6 @@
 #
 
 
-import logging
-
 from inflection import underscore
 
 from app.db.base_class import Base

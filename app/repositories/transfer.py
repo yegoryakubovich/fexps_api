@@ -39,5 +39,5 @@ class TransferRepository(BaseRepository[Transfer]):
             custom_where = self.model.wallet_to == wallet
         else:
             custom_where = and_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
-        result = await self.search(page=page, custom_where=custom_where)
+        result = await self._search(page=page, custom_where=custom_where)
         return result
