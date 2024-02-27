@@ -15,20 +15,16 @@
 #
 
 
-from app.db.models import Language, Session, Text, TextTranslation, Actions
-from app.repositories.language import LanguageRepository
-from app.repositories.text import TextRepository
-from app.repositories.text_translation import TextTranslationRepository
+from app.db.models import Language, Session, Text, TextTranslation
+from app.repositories import LanguageRepository, TextRepository, TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions.text import TextTranslationAlreadyExist
+from app.utils.exceptions import ModelAlreadyExist, ModelDoesNotExist
 
 
 class TextTranslationService(BaseService):
-    model = TextTranslation
-
-    @session_required(permissions=['texts_translations'])
-    async def create(
+    @session_required(permissions=['texts'])
+    async def create_by_admin(
             self,
             session: Session,
             text_key: str,
@@ -38,25 +34,42 @@ class TextTranslationService(BaseService):
     ) -> dict | TextTranslation:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
-        if await TextTranslationRepository().get(text=text, language=language):
-            raise TextTranslationAlreadyExist(kwargs={'id_str': language.id_str})
-        text_translation = await TextTranslationRepository().create(text=text, language=language, value=value)
+
+        try:
+            await TextTranslationRepository.get(text=text, language=language)
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'TextTranslation',
+                    'id_type': 'language',
+                    'id_value': language.id_str,
+                },
+            )
+        except ModelDoesNotExist:
+            text_translation = await TextTranslationRepository().create(
+                text=text,
+                language=language,
+                value=value,
+            )
+
         await self.create_action(
             model=text_translation,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'text_key': text_key,
-                'language': language.id_str,
+                'language': language,
                 'value': value,
+                'by_admin': True,
             },
         )
         if return_model:
             return text_translation
-        return {'id': text_translation.id}
+        return {
+            'id': text_translation.id,
+        }
 
-    @session_required(permissions=['texts_translations'])
-    async def update(
+    @session_required(permissions=['texts'])
+    async def update_by_admin(
             self,
             session: Session,
             text_key: str,
@@ -65,26 +78,28 @@ class TextTranslationService(BaseService):
     ) -> dict:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await TextTranslationRepository().get_by_text_lang(text=text,
-                                                                                               language=language)
+        text_translation: TextTranslation = await TextTranslationRepository().get(text=text, language=language)
+
         await TextTranslationRepository().update(
-            text_translation,
+            model=text_translation,
             value=value,
         )
         await self.create_action(
             model=text_translation,
-            action=Actions.UPDATE,
+            action='update',
             parameters={
                 'updater': f'session_{session.id}',
                 'text_key': text_key,
                 'language': language,
                 'value': value,
+                'by_admin': True,
             },
         )
+
         return {}
 
-    @session_required(permissions=['texts_translations'])
-    async def delete(
+    @session_required(permissions=['texts'])
+    async def delete_by_admin(
             self,
             session: Session,
             text_key: str,
@@ -92,17 +107,19 @@ class TextTranslationService(BaseService):
     ) -> dict:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
-        text_translation: TextTranslation = await TextTranslationRepository().get_by_text_lang(
-            text=text, language=language,
+        text_translation: TextTranslation = await TextTranslationRepository().get(text=text, language=language)
+        await TextTranslationRepository().delete(
+            model=text_translation,
         )
-        await TextTranslationRepository().delete(text_translation)
         await self.create_action(
             model=text_translation,
-            action=Actions.DELETE,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'text_key': text_key,
                 'language': language,
+                'by_admin': True,
             },
         )
+
         return {}

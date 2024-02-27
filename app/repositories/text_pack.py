@@ -16,36 +16,44 @@
 
 
 from json import dumps
-from typing import Optional
 
-from app.db.models import TextPack, Language
-from app.utils.exceptions.text import TextPackDoesNotExist
-from config import settings
-from .base import BaseRepository
-from .language import LanguageRepository
+from peewee import DoesNotExist
+
+from app.db.models import Language, TextPack, Text
 from .text import TextRepository
+from app.repositories.base import BaseRepository
+from config import settings
 
 
-class TextPackRepository(BaseRepository[TextPack]):
+class TextPackRepository(BaseRepository):
     model = TextPack
 
-    async def create_by_language(self, language: Language) -> Optional[TextPack]:
+    @staticmethod
+    async def create(language: Language):
         json = {}
-        for text in await TextRepository().get_list():
-            value = await TextRepository().get_value(text, language=language)
+        for text in Text.select():
+            value = await TextRepository.get_value(text=text, language=language)
             key = text.key
             json[key] = value
-        text_pack = await self.create(language=language)
+
+        text_pack = TextPack.create(language=language)
+
         with open(f'{settings.path_texts_packs}/{text_pack.id}.json', encoding='utf-8', mode='w') as md_file:
-            md_file.write(dumps(json, ensure_ascii=False))
+            md_file.write(dumps(json))
+
         return text_pack
 
     async def create_all(self):
-        for language in await LanguageRepository().get_list():
-            await self.create_by_language(language=language)
+        for language in Language.select():
+            await self.create(language=language)
 
-    async def get_current(self, language: Language) -> Optional[TextPack]:
-        text_pack_all = await self.get_list(language=language)
-        if not text_pack_all:
-            raise TextPackDoesNotExist(kwargs={'language_name': language.name})
-        return text_pack_all[0]
+    @staticmethod
+    async def get_current(language: Language) -> TextPack:
+        try:
+            text_pack = TextPack.select().where(
+                (TextPack.language == language) &
+                (TextPack.is_deleted == False)
+            ).order_by(TextPack.id.desc()).get()
+            return text_pack
+        except DoesNotExist:
+            return TextPack().get(TextPack.id == 0)

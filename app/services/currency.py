@@ -15,35 +15,65 @@
 #
 
 
-from app.db.models import Session, Currency, Actions
-from app.repositories.currency import CurrencyRepository
+from app.db.models import Session
+from app.repositories import CurrencyRepository
 from app.services.base import BaseService
+from app.utils.exceptions import ModelAlreadyExist
 from app.utils.decorators import session_required
 
 
 class CurrencyService(BaseService):
-    model = Currency
-
-    @session_required(permissions=['currencies'])
-    async def create(
+    @session_required(permissions=['currencies'], can_root=True)
+    async def create_by_admin(
             self,
             session: Session,
             id_str: str,
     ):
+        if await CurrencyRepository().is_exist_by_id_str(id_str=id_str):
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'Currency',
+                    'id_type': 'id_str',
+                    'id_value': id_str,
+                }
+            )
+
         currency = await CurrencyRepository().create(
             id_str=id_str,
         )
 
         await self.create_action(
             model=currency,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
+                'by_admin': True,
             }
         )
 
-        return {'id': currency.id}
+        return {'id_str': currency.id_str}
+
+    @session_required(permissions=['currencies'])
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+        await CurrencyRepository().delete(model=currency)
+
+        await self.create_action(
+            model=currency,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+                'by_admin': True,
+            }
+        )
+
+        return {}
 
     @staticmethod
     async def get(
@@ -59,7 +89,7 @@ class CurrencyService(BaseService):
 
     @staticmethod
     async def get_list() -> dict:
-        return {
+        currencies = {
             'currencies': [
                 {
                     'id': currency.id,
@@ -68,23 +98,4 @@ class CurrencyService(BaseService):
                 for currency in await CurrencyRepository().get_list()
             ],
         }
-
-    @session_required()
-    async def delete(
-            self,
-            session: Session,
-            id_str: str,
-    ):
-        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
-        await self.delete(model=currency)
-
-        await self.create_action(
-            model=currency,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id_str': id_str,
-            }
-        )
-
-        return {}
+        return currencies

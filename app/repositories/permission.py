@@ -16,8 +16,8 @@
 
 
 from app.db.models import Permission
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
-class PermissionRepository(BaseRepository[Permission]):
+class PermissionRepository(BaseRepository):
     model = Permission

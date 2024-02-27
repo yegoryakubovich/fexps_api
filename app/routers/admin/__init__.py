@@ -15,14 +15,43 @@
 #
 
 
+from .accounts import router as router_accounts
+from .articles import router as router_articles
+from .billings import router as router_billings
+from .countries import router as router_countries
+from .currencies import router as router_currencies
+from .exercises import router as router_exercises
+from .images import router as router_images
+from .languages import router as router_languages
+from .meals import router as router_meals
+from .permissions import router as router_permissions
+from .products import router as router_products
+from .roles import router as router_roles
+from .services import router as router_services
+from .texts import router as router_texts
+from .timezones import router as router_timezones
+from .trainings import router as router_trainings
 from app.utils import Router
-from .commissions_packs import router as router_commissions_packs
-from .wallets import router as router_wallets
+
 
 router = Router(
     prefix='/admin',
     routes_included=[
-        router_commissions_packs,
-        router_wallets,
+        router_accounts,
+        router_articles,
+        router_billings,
+        router_countries,
+        router_currencies,
+        router_exercises,
+        router_images,
+        router_languages,
+        router_meals,
+        router_permissions,
+        router_products,
+        router_roles,
+        router_services,
+        router_texts,
+        router_timezones,
+        router_trainings,
     ],
 )

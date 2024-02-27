@@ -16,7 +16,7 @@
 
 
 from fastapi import Depends
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from app.services import AccountService
 from app.utils import Router
@@ -28,11 +28,13 @@ router = Router(
 )
 
 
-class SessionSchema(BaseModel):
+class AccountGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: SessionSchema = Depends()):
-    result = await AccountService().get(token=schema.token)
+async def route(schema: AccountGetSchema = Depends()):
+    result = await AccountService().get(
+        token=schema.token,
+    )
     return Response(**result)

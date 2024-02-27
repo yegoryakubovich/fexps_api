@@ -15,17 +15,26 @@
 #
 
 
-from typing import List
-
-from app.db.models import RolePermission, Role, Permission
-from .base import BaseRepository
+from app.db.models import Role, RolePermission
+from app.repositories.base import BaseRepository
 
 
-class RolePermissionRepository(BaseRepository[RolePermission]):
+class RolePermissionRepository(BaseRepository):
     model = RolePermission
 
-    async def get_permissions_by_role(self, role: Role, only_id_str=False) -> [List[str], List[Permission]]:
-        result = []
-        for role_permission in await self.get_list(role=role):
-            result.append(role_permission.permission.id_str if only_id_str else role_permission.permission)
-        return result
+    @staticmethod
+    async def get_permissions_by_role(role: Role, only_id_str=False) -> list[str or RolePermission]:
+        return [
+            role_permission.permission.id_str if only_id_str else role_permission.permission
+            for role_permission in RolePermission.select().where(
+                (RolePermission.role == role) &
+                (RolePermission.is_deleted == False)
+            )
+        ]
+
+    @staticmethod
+    async def get_list_by_role(role: Role) -> list[RolePermission]:
+        return RolePermission.select().where(
+                (RolePermission.role == role) &
+                (RolePermission.is_deleted == False)
+            )

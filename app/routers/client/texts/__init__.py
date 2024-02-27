@@ -17,23 +17,13 @@
 
 from app.utils import Router
 
-from .get_list import router as router_get_list
-from .create import router as router_create
-from .update import router as router_update
-from .delete import router as router_delete
-from .translations import router as router_translations
 from .packs import router as router_packs
 
 
 router = Router(
     prefix='/texts',
     routes_included=[
-        router_create,
-        router_get_list,
-        router_update,
-        router_delete,
         router_packs,
-        router_translations,
     ],
     tags=['Texts'],
 )

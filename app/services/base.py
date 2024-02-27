@@ -19,7 +19,7 @@ from json import dumps
 
 from inflection import underscore
 
-from app.db.base_class import Base
+from app.db.models.base import BaseModel
 from app.services.action import ActionService
 from app.utils import client
 
@@ -27,11 +27,11 @@ from app.utils import client
 class BaseService:
     @staticmethod
     async def create_action(
-            model: Base,
+            model: BaseModel,
             action: str,
             with_client: bool = False,
-            parameters: dict = None
-    ) -> None:
+            parameters: dict = None,
+    ):
         if not parameters:
             parameters = {}
         if with_client:

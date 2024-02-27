@@ -15,16 +15,13 @@
 #
 
 
-from typing import Optional
-
 from app.db.models import Action, ActionParameter
-from .action_parameter import ActionParameterRepository
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
-class ActionRepository(BaseRepository[Action]):
+class ActionRepository(BaseRepository):
     model = Action
 
     @staticmethod
-    async def create_parameter(action: Action, key: str, value: str) -> Optional[ActionParameter]:
-        return await ActionParameterRepository().create(action=action, key=key, value=value)
+    async def create_parameter(action: Action, key: str, value: str) -> ActionParameter:
+        return ActionParameter.create(action=action, key=key, value=value)

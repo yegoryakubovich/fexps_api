@@ -15,17 +15,89 @@
 #
 
 
-from app.db.models import Language
-from app.repositories.language import LanguageRepository
+from app.db.models import Session
+from app.repositories import LanguageRepository
+from app.services.text_pack import TextPackService
 from app.services.base import BaseService
+from app.utils.exceptions import ModelAlreadyExist
+from app.utils.decorators import session_required
 
 
 class LanguageService(BaseService):
-    model = Language
+    @session_required(permissions=['languages'], can_root=True)
+    async def create_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+            name: str,
+    ):
+        if await LanguageRepository().is_exist_by_id_str(id_str=id_str):
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'Language',
+                    'id_type': 'id_str',
+                    'id_value': id_str,
+                }
+            )
+
+        language = await LanguageRepository().create(
+            id_str=id_str,
+            name=name,
+        )
+
+        await self.create_action(
+            model=language,
+            action='create',
+            parameters={
+                'creator': f'session_{session.id}',
+                'id_str': language.id_str,
+                'name': language.name,
+                'by_admin': True,
+            },
+            with_client=True,
+        )
+
+        await TextPackService().create_by_admin(session=session, language_id_str=language.id_str)
+        return {'id_str': language.id_str}
+
+    @session_required(permissions=['languages'])
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        language = await LanguageRepository().get_by_id_str(id_str=id_str)
+
+        await LanguageRepository().delete(model=language)
+
+        await self.create_action(
+            model=language,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+                'by_admin': True,
+            }
+        )
+
+        return {}
+
+    @staticmethod
+    async def get(
+            id_str: str,
+    ):
+        language = await LanguageRepository().get_by_id_str(id_str=id_str)
+        return {
+            'language': {
+                'id': language.id,
+                'id_str': language.id_str,
+                'name': language.name,
+            }
+        }
 
     @staticmethod
     async def get_list() -> dict:
-        return {
+        languages = {
             'languages': [
                 {
                     'id': language.id,
@@ -35,3 +107,4 @@ class LanguageService(BaseService):
                 for language in await LanguageRepository().get_list()
             ],
         }
+        return languages

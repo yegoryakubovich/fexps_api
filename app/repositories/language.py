@@ -16,8 +16,8 @@
 
 
 from app.db.models import Language
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
-class LanguageRepository(BaseRepository[Language]):
+class LanguageRepository(BaseRepository):
     model = Language

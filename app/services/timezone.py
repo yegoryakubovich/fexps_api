@@ -15,17 +15,86 @@
 #
 
 
-from app.db.models import Timezone
-from app.repositories.timezone import TimezoneRepository
+from app.db.models import Session
+from app.repositories import TimezoneRepository
 from app.services.base import BaseService
+from app.utils.exceptions import ModelAlreadyExist
+from app.utils.decorators import session_required
 
 
 class TimezoneService(BaseService):
-    model = Timezone
+    @session_required(permissions=['timezones'], can_root=True)
+    async def create_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+            deviation: int,
+    ):
+        if await TimezoneRepository().is_exist_by_id_str(id_str=id_str):
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'Timezone',
+                    'id_type': 'id_str',
+                    'id_value': id_str,
+                }
+            )
+
+        timezone = await TimezoneRepository().create(
+            id_str=id_str,
+            deviation=deviation
+        )
+
+        await self.create_action(
+            model=timezone,
+            action='create',
+            parameters={
+                'creator': f'session_{session.id}',
+                'id_str': timezone.id_str,
+                'deviation': timezone.deviation,
+                'by_admin': True,
+            },
+            with_client=True,
+        )
+
+        return {'id_str': timezone.id_str}
+
+    @session_required(permissions=['timezones'])
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        timezone = await TimezoneRepository().get_by_id_str(id_str=id_str)
+        await TimezoneRepository().delete(model=timezone)
+
+        await self.create_action(
+            model=timezone,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+                'by_admin': True,
+            }
+        )
+
+        return {}
+
+    @staticmethod
+    async def get(
+            id_str: str,
+    ):
+        timezone = await TimezoneRepository().get_by_id_str(id_str=id_str)
+        return {
+            'timezone': {
+                'id': timezone.id,
+                'id_str': timezone.id_str,
+                'deviation': timezone.deviation,
+            }
+        }
 
     @staticmethod
     async def get_list() -> dict:
-        return {
+        timezones = {
             'timezones': [
                 {
                     'id': timezone.id,
@@ -35,3 +104,4 @@ class TimezoneService(BaseService):
                 for timezone in await TimezoneRepository().get_list()
             ],
         }
+        return timezones

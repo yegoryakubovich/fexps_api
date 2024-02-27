@@ -49,3 +49,8 @@ class WrongToken(ApiException):
 class WrongTokenFormat(ApiException):
     code = 1009
     message = 'Token does not match format'
+
+
+class MethodNotSupportedRoot(ApiException):
+    code = 1010
+    message = 'Method do not support root user'

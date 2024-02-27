@@ -15,8 +15,6 @@
 #
 
 
-from .create import router as router_create
-from .delete import router as router_delete
 from .get import router as router_get
 from .get_list import router as router_get_list
 from app.utils import Router
@@ -25,10 +23,8 @@ from app.utils import Router
 router = Router(
     prefix='/languages',
     routes_included=[
-        router_create,
         router_get,
         router_get_list,
-        router_delete,
     ],
     tags=['Languages'],
 )

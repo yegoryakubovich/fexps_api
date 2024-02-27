@@ -15,51 +15,50 @@
 #
 
 
-from app.db.models import Session, Text, Actions
-from app.repositories.text import TextAlreadyExist, TextRepository
-from app.repositories.text_translation import TextTranslationRepository
+from app.db.models import Session, Text
+from app.repositories import TextRepository, TextTranslationRepository
+from app.services.text_pack import TextPackService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 
 
 class TextService(BaseService):
-    model = Text
-
-    @session_required(permissions=['texts'])
-    async def create(
-            self,
-            session: Session,
-            key: str,
-            value_default: str,
-            return_model: bool = False,
-    ) -> dict | Text:
-        if await TextRepository().get(key=key):
-            raise TextAlreadyExist(kwargs={'key': key})
-        text = await TextRepository().create(key=key, value_default=value_default)
-        await self.create_action(
-            model=text,
-            action=Actions.CREATE,
-            parameters={
-                'creator': f'session_{session.id}',
-                'key': key,
-                'value_default': value_default,
-            },
-        )
-        if return_model:
-            return text
-        return {'id': text.id}
-
     @session_required(return_model=False, permissions=['texts'])
+    async def get(
+            self,
+            key: str,
+    ):
+        text = await TextRepository().get_by_key(key=key)
+        translations = await TextTranslationRepository().get_list_by_text(text=text)
+
+        return {
+            'text': {
+                'id': text.id,
+                'key': text.key,
+                'value_default': text.value_default,
+                'translations': [
+                    {
+                        'language': translation.language.id_str,
+                        'value': translation.value,
+                    }
+                    for translation in translations
+                ],
+            },
+        }
+
+    @session_required(return_model=False, permissions=['texts'], can_root=True)
     async def get_list(
             self,
     ) -> dict:
         texts_list = []
+
         texts = await TextRepository().get_list()
         for text in texts:
             text: Text
             translations = await TextTranslationRepository().get_list_by_text(text=text)
             texts_list.append(
                 {
+                    'id': text.id,
                     'key': text.key,
                     'value_default': text.value_default,
                     'translations': [
@@ -71,10 +70,41 @@ class TextService(BaseService):
                     ],
                 }
             )
-        return {'texts': texts_list}
+        return {
+            'texts': texts_list,
+        }
+
+    @session_required(permissions=['texts'], can_root=True)
+    async def create_by_admin(
+            self,
+            session: Session,
+            key: str,
+            value_default: str,
+            return_model: bool = False,
+            create_text_pack: bool = True,
+    ) -> dict | Text:
+        text = await TextRepository().create(
+            key=key,
+            value_default=value_default,
+        )
+        await self.create_action(
+            model=text,
+            action='create',
+            parameters={
+                'creator': f'session_{session.id}',
+                'key': key,
+                'value_default': value_default,
+                'by_admin': True,
+            },
+        )
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
+        if return_model:
+            return text
+        return {'key': text.key}
 
     @session_required(permissions=['texts'])
-    async def update(
+    async def update_by_admin(
             self,
             session: Session,
             key: str,
@@ -82,41 +112,58 @@ class TextService(BaseService):
             new_key: str = None,
     ) -> dict:
         text = await TextRepository().get_by_key(key=key)
-        await TextRepository().update_text(
-            text,
+        await TextRepository().update(
+            model=text,
             value_default=value_default,
             new_key=new_key,
         )
+
         action_parameters = {
             'updater': f'session_{session.id}',
             'key': key,
+            'by_admin': True,
         }
         if value_default:
-            action_parameters['value_default'] = value_default
+            action_parameters.update(
+                {
+                    'value_default': value_default,
+                }
+            )
         if new_key:
-            action_parameters['new_key'] = new_key
+            action_parameters.update(
+                {
+                    'new_key': new_key,
+                }
+            )
 
         await self.create_action(
             model=text,
-            action=Actions.UPDATE,
+            action='update',
             parameters=action_parameters,
         )
+        await TextPackService().create_all_by_admin(session=session)
+
         return {}
 
     @session_required(permissions=['texts'])
-    async def delete(
+    async def delete_by_admin(
             self,
             session: Session,
             key: str,
     ) -> dict:
         text = await TextRepository().get_by_key(key=key)
-        await TextRepository().delete(text)
+        await TextRepository().delete(
+            model=text,
+        )
         await self.create_action(
             model=text,
-            action=Actions.DELETE,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'key': key,
+                'by_admin': True,
             },
         )
+        await TextPackService().create_all_by_admin(session=session)
+
         return {}

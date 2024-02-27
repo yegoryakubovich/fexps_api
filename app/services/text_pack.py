@@ -17,9 +17,8 @@
 
 from json import loads
 
-from app.db.models import TextPack, Session, Actions
-from app.repositories.language import LanguageRepository
-from app.repositories.text_pack import TextPackRepository
+from app.db.models import TextPack, Session
+from app.repositories import TextPackRepository, LanguageRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import settings
@@ -28,47 +27,65 @@ from config import settings
 class TextPackService(BaseService):
     model = TextPack
 
-    @session_required(permissions=['texts_packs'])
-    async def create(self, session: Session, language_id_str: str):
-        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository().create_by_language(language=language)
-        await self.create_action(
-            model=text_pack,
-            action=Actions.CREATE,
-            parameters={
-                'creator': f'session_{session.id}',
-                'language': language_id_str,
-            },
-        )
-        return {'id': text_pack.id}
-
     @staticmethod
     async def get(language_id_str: str):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository().get_current(language=language)
-        # FIXME
+        text_pack = await TextPackRepository.get_current(language=language)
+
         if text_pack.id == 0:
             return {
                 'text_pack_id': text_pack.id,
                 'text_pack': {},
             }
+
         with open(f'{settings.path_texts_packs}/{text_pack.id}.json', encoding='utf-8', mode='r') as md_file:
             json_str = md_file.read()
+
         json = loads(json_str)
         return {
             'text_pack_id': text_pack.id,
             'text_pack': json,
         }
 
-    @session_required(permissions=['texts_packs'])
-    async def delete(self, session: Session, id_: int):
-        text_pack = await TextPackRepository().get_by_id(id_=id_)
-        await TextPackRepository().delete(text_pack)
+    @session_required(permissions=['texts'], can_root=True)
+    async def create_by_admin(
+            self,
+            session: Session,
+            language_id_str: str,
+    ):
+        language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
+        text_pack = await TextPackRepository.create(language=language)
         await self.create_action(
             model=text_pack,
-            action=Actions.DELETE,
+            action='create',
+            parameters={
+                'creator': f'session_{session.id}',
+                'by_admin': True,
+            },
+        )
+        return {
+            'id': text_pack.id,
+        }
+
+    @session_required(permissions=['texts'], can_root=True)
+    async def create_all_by_admin(
+            self,
+            session: Session,
+    ):
+        languages = await LanguageRepository().get_list()
+        for language in languages:
+            await self.create_by_admin(session=session, language_id_str=language.id_str)
+
+    @session_required(permissions=['texts'])
+    async def delete_by_admin(self, session: Session, id_: int):
+        text_pack = await TextPackRepository().get_by_id(id_=id_)
+        await TextPackRepository().delete(model=text_pack)
+        await self.create_action(
+            model=text_pack,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
+                'by_admin': True,
             },
         )
         return {}

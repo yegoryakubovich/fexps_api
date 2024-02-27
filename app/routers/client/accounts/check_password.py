@@ -16,10 +16,11 @@
 
 
 from fastapi import Depends
-from pydantic import Field, BaseModel
+from pydantic import BaseModel, Field
 
 from app.services import AccountService
 from app.utils import Router, Response
+
 
 router = Router(
     prefix='/password/check',
@@ -27,10 +28,10 @@ router = Router(
 
 
 class CheckAccountPasswordSchema(BaseModel):
-    password: str = Field(min_length=6, max_length=32)
+    password: str = Field()
 
 
 @router.get()
 async def route(schema: CheckAccountPasswordSchema = Depends()):
-    result = await AccountService()._is_valid_password(password=schema.password)
+    result = await AccountService().is_valid_password(password=schema.password)
     return Response(**result)

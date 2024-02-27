@@ -15,21 +15,36 @@
 #
 
 
-from typing import Optional, List
+from peewee import DoesNotExist
 
-from app.db.models import TextTranslation, Text, Language
-from app.utils.exceptions.text import TextTranslationDoesNotExist
-from .base import BaseRepository
+from app.db.models import Text, Language, TextTranslation
+from app.repositories.base import BaseRepository
+from app.utils.exceptions import ModelAlreadyExist, ModelDoesNotExist
 
 
-class TextTranslationRepository(BaseRepository[TextTranslation]):
+class TextTranslationRepository(BaseRepository):
     model = TextTranslation
 
-    async def get_by_text_lang(self, text: Text, language: Language) -> Optional[TextTranslation]:
-        result = await self.get_list(text=text, language=language)
-        if not result:
-            raise TextTranslationDoesNotExist(kwargs={'id_str': language.id_str})
-        return result[0]
+    @staticmethod
+    async def get(text: Text, language: Language):
+        try:
+            return TextTranslation.get(
+                (TextTranslation.text == text) &
+                (TextTranslation.language == language) &
+                (TextTranslation.is_deleted == False)
+            )
+        except DoesNotExist:
+            raise ModelDoesNotExist(
+                kwargs={
+                    'model': 'TextTranslation',
+                    'id_type': 'language',
+                    'id_value': language.id_str,
+                },
+            )
 
-    async def get_list_by_text(self, text: Text) -> List[TextTranslation]:
-        return await self.get_list(text=text)
+    @staticmethod
+    async def get_list_by_text(text: Text) -> list[TextTranslation]:
+        return TextTranslation.select().where(
+            (TextTranslation.text == text) &
+            (TextTranslation.is_deleted == False)
+        ).execute()

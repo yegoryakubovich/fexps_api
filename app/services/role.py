@@ -15,36 +15,91 @@
 #
 
 
-from app.db.models import Role, Session, Actions
-from app.repositories.role import RoleRepository
-from app.repositories.text import TextRepository
+from app.db.models import Role, Session
+from app.repositories import RolePermissionRepository, RoleRepository
+from app.services.text import TextService
 from app.services.base import BaseService
+from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-from app.utils.exceptions.role import RoleAlreadyExist
 
 
 class RoleService(BaseService):
-    model = Role
-
-    @session_required(permissions=['create_roles'])
-    async def create(
+    @session_required(permissions=['roles'], can_root=True)
+    async def create_by_admin(
             self,
             session: Session,
-            id_str: str,
-            name_text_key: str,
-    ) -> dict:
-        if await RoleRepository().is_exist(id_str=id_str):
-            raise RoleAlreadyExist(kwargs={'id_str': id_str})
+            name: str,
+    ):
+        name_text = await TextService().create_by_admin(
+            session=session,
+            key=f'role_{await create_id_str()}',
+            value_default=name,
+            return_model=True,
+        )
 
-        name_text = await TextRepository().get_by_key(key=name_text_key)
-        role = await RoleRepository().create(name_text=name_text)
+        role = await RoleRepository().create(
+            name_text=name_text,
+        )
+
         await self.create_action(
             model=role,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
-                'id_str': id_str,
-            },
+                'name_text': name_text.key,
+                'by_admin': True,
+            }
         )
 
         return {'id': role.id}
+
+    @session_required(permissions=['roles'])
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        role = await RoleRepository().get_by_id(id_=id_)
+
+        await TextService().delete_by_admin(
+            session=session,
+            key=role.name_text.key,
+        )
+
+        await RoleRepository().delete(model=role)
+
+        await self.create_action(
+            model=role,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'by_admin': True,
+            }
+        )
+
+        return {}
+
+    @staticmethod
+    async def get(
+            id_: int,
+    ):
+        role: Role = await RoleRepository().get_by_id(id_=id_)
+        return {
+            'role': {
+                'id': role.id,
+                'name_text': role.name_text.key,
+                'permissions': await RolePermissionRepository().get_permissions_by_role(role=role, only_id_str=True)
+            }
+        }
+
+    @staticmethod
+    async def get_list():
+        return {
+            'roles': [
+                {
+                    'id': role.id,
+                    'name_text': role.name_text.key,
+                    'permissions': await RolePermissionRepository().get_permissions_by_role(role=role, only_id_str=True)
+                } for role in await RoleRepository().get_list()
+            ]
+        }

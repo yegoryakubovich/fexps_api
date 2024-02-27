@@ -15,20 +15,20 @@
 #
 
 
-from app.db.models import Session, Actions
-from app.repositories.account import AccountRepository
-from app.repositories.session import SessionRepository
+from app.repositories import SessionRepository, AccountRepository
+from app.services.account import AccountService
 from app.services.base import BaseService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
-from app.utils.service_addons.account import account_check_password
 
 
 class SessionService(BaseService):
-    model = Session
-
-    async def create(self, username: str, password: str) -> dict:
-        account = await AccountRepository().get_by_username(username=username)
-        await account_check_password(account=account, password=password)
+    async def create(
+            self,
+            username: str,
+            password: str,
+    ) -> dict:
+        account = await AccountRepository.get_by_username(username=username)
+        await AccountService().check_password(account=account, password=password)
 
         # Create token hash
         token = await create_salt()
@@ -36,12 +36,17 @@ class SessionService(BaseService):
         token_hash = await create_hash_by_string_and_salt(string=token, salt=token_salt)
 
         # Create session and action
-        session = await SessionRepository().create(account=account, token_hash=token_hash, token_salt=token_salt)
+        session = await SessionRepository().create(
+            account=account,
+            token_hash=token_hash,
+            token_salt=token_salt,
+        )
         await self.create_action(
             model=session,
-            action=Actions.CREATE,
+            action='create',
             with_client=True,
         )
+
         token = f'{session.id:08}:{token}'
         return {
             'session': {

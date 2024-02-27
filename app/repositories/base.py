@@ -106,18 +106,18 @@ class BaseRepository(Generic[ModelType]):
             result = await session.execute(custom_select.filter_by(**filters))
             return result.scalars().first()
 
-    async def update(self, db_obj: ModelType, **obj_in_data) -> ModelType:
+    async def update(self, model: ModelType, **obj_in_data) -> ModelType:
         obj_in_data = self._convert_obj(obj_in_data)
         async with self._get_session() as session:
             for field, value in obj_in_data.items():
-                setattr(db_obj, field, obj_in_data[field])
-            session.add(db_obj)
+                setattr(model, field, obj_in_data[field])
+            session.add(model)
             await session.commit()
-            await session.refresh(db_obj)
-            return db_obj
+            await session.refresh(model)
+            return model
 
-    async def delete(self, db_obj: ModelType) -> Optional[ModelType]:
-        return await self.update(db_obj, is_deleted=True)
+    async def delete(self, model: ModelType) -> Optional[ModelType]:
+        return await self.update(model, is_deleted=True)
 
     @staticmethod
     def _get_session():

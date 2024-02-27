@@ -16,8 +16,8 @@
 
 
 from app.db.models import Role
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
-class RoleRepository(BaseRepository[Role]):
+class RoleRepository(BaseRepository):
     model = Role
