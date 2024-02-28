@@ -16,7 +16,7 @@
 
 
 from app.db.models import WalletBan
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class WalletBanRepository(BaseRepository[WalletBan]):

@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-
 from app.db.models import Wallet, Session, WalletAccountRoles, Actions
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.wallet import WalletRepository
@@ -23,7 +22,6 @@ from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
-from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 

@@ -16,14 +16,16 @@
 
 
 from app.db.models import Country, Session
-from app.repositories import CountryRepository, CurrencyRepository, LanguageRepository, TimezoneRepository
-from app.services.text import TextService
+from app.repositories import LanguageRepository, TimezoneRepository, CurrencyRepository, CountryRepository
 from app.services.base import BaseService
+from app.services.text import TextService
 from app.utils.decorators import session_required
 from app.utils.exceptions import ModelAlreadyExist, NoRequiredParameters
 
 
 class CountryService(BaseService):
+    model = Country
+
     @session_required(permissions=['countries'], can_root=True)
     async def create_by_admin(
             self,
@@ -156,18 +158,6 @@ class CountryService(BaseService):
 
         await TextService().delete_by_admin(session=session, key=f'country_{id_str}')
         await CountryRepository().delete(model=country)
-
-        await self.create_action(
-            model=country,
-            action='delete',
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id_str': id_str,
-                'by_admin': True,
-            }
-        )
-
-        return {}
 
     async def get(
             self,

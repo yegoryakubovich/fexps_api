@@ -15,26 +15,16 @@
 #
 
 
-from pydantic import Field, BaseModel
+from sqlalchemy import Column, BigInteger, Boolean, String
 
-from app.services import LanguageService
-from app.utils import Router, Response
-
-
-router = Router(
-    prefix='/delete',
-)
+from app.db.base_class import Base
 
 
-class LanguageDeleteSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=1, max_length=16)
+class Image(Base):
+    __tablename__ = 'images'
 
-
-@router.post()
-async def route(schema: LanguageDeleteSchema):
-    result = await LanguageService().delete(
-        token=schema.token,
-        id_str=schema.id_str,
-    )
-    return Response(**result)
+    id = Column(BigInteger, primary_key=True)
+    id_str = Column(String(16))
+    model = Column(String(64))
+    model_id = Column(BigInteger)
+    is_deleted = Column(Boolean, default=False)

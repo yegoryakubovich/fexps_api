@@ -44,7 +44,7 @@ class AccountService(BaseService):
             currency_id_str: str,
             surname: str = None,
     ) -> dict:
-        if await AccountRepository.is_exist_by_username(username=username):
+        if await AccountRepository().is_exist_by_username(username=username):
             raise ModelAlreadyExist(
                 kwargs={
                     'model': 'Account',
@@ -100,41 +100,10 @@ class AccountService(BaseService):
         )
         return {'id': account.id}
 
-    async def check_password(
-            self,
-            account: Account,
-            password: str,
-    ):
-        await self._is_correct_password(account=account, password=password)
-
-    async def check_username(
-            self,
-            username: str,
-    ):
-        await self.is_valid_username(username=username)
-        if await AccountRepository.is_exist_by_username(username=username):
-            raise ModelAlreadyExist(
-                kwargs={
-                    'model': 'Account',
-                    'id_type': 'username',
-                    'id_value': username,
-                }
-            )
-        return {}
-
-    async def is_valid_password(
-            self,
-            password: str,
-    ):
-        if await self._is_valid_password(password=password):
-            return {}
-        else:
-            raise InvalidPassword()
-
     @session_required(return_model=False, permissions=['accounts'])
     async def get_by_admin(self, id_: int) -> dict:
         account = await AccountRepository().get_by_id(id_=id_)
-        permissions = await AccountRoleCheckPermissionService.get_permissions(account=account)
+        permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
 
         return {
             'account': {
@@ -152,8 +121,8 @@ class AccountService(BaseService):
 
     @session_required(return_account=True)
     async def get(self, account: Account) -> dict:
-        text_pack = await TextPackRepository.get_current(language=account.language)
-        permissions = await AccountRoleCheckPermissionService.get_permissions(account=account)
+        text_pack = await TextPackRepository().get_current(language=account.language)
+        permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
 
         return {
             'account': {
@@ -172,8 +141,7 @@ class AccountService(BaseService):
 
     @session_required(return_model=False, permissions=['accounts'])
     async def search_by_admin(self, id_, username: str, page: int) -> dict:
-        accounts, results = await AccountRepository.search(id_=id_, username=username, page=page)
-
+        accounts, results = await AccountRepository().search(id_=id_, username=username, page=page)
         accounts = [
             {
                 'id': account.id,
@@ -188,14 +156,25 @@ class AccountService(BaseService):
             }
             for account in accounts
         ]
-
         return {
             'accounts': accounts,
             'results': results,
-            'pages': ceil(results/settings.items_per_page),
+            'pages': ceil(results / settings.items_per_page),
             'page': page,
             'items_per_page': settings.items_per_page,
         }
+
+    @session_required(permissions=['accounts'])
+    async def change_password_by_admin(
+            self,
+            session: Session,
+            account_id: int,
+    ):
+        return await self._change_password(
+            session=session,
+            account_id=account_id,
+            by_admin=True,
+        )
 
     @session_required()
     async def change_password(
@@ -210,18 +189,6 @@ class AccountService(BaseService):
             new_password=new_password,
         )
 
-    @session_required(permissions=['accounts'])
-    async def change_password_by_admin(
-            self,
-            session: Session,
-            account_id: int,
-    ):
-        return await self._change_password(
-            session=session,
-            account_id=account_id,
-            by_admin=True,
-        )
-
     async def _change_password(
             self,
             session: Session,
@@ -231,7 +198,6 @@ class AccountService(BaseService):
             by_admin: bool = False,
     ):
         generated_password = None
-
         if by_admin:
             account: Account = await AccountRepository().get_by_id(id_=account_id)
             chars = ascii_letters + digits + '!@#$%^&*'
@@ -248,38 +214,55 @@ class AccountService(BaseService):
                 raise InvalidPassword()
             password_salt = await create_salt()
             password_hash = await create_hash_by_string_and_salt(string=new_password, salt=password_salt)
-        account.password_salt = password_salt
-        account.password_hash = password_hash
-        account.save()
-
+        await AccountRepository().update(account, password_salt=password_salt, password_hash=password_hash)
         action_parameters = {
             'account_id': account.id,
             'password_salt': password_salt,
             'password_hash': password_hash,
         }
-
         if by_admin:
             action_parameters['by_admin'] = True
-
         await self.create_action(
             model=account,
             action='change_password',
             parameters=action_parameters,
         )
-
         if generated_password:
             return {'new_password': generated_password}
         return {}
 
     @staticmethod
-    async def _is_correct_password(account: Account, password: str):
-        if account.password_hash == await create_hash_by_string_and_salt(
-                string=password,
-                salt=account.password_salt,
-        ):
+    async def is_valid_username(username: str):
+        register = "^[a-zA-Z][a-zA-Z0-9_]{7,32}$"
+        pattern = compile(register)
+        if search(pattern, username):
             return True
         else:
-            raise WrongPassword()
+            raise InvalidUsername()
+
+    async def check_username(
+            self,
+            username: str,
+    ):
+        await self.is_valid_username(username=username)
+        if await AccountRepository().is_exist_by_username(username=username):
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'Account',
+                    'id_type': 'username',
+                    'id_value': username,
+                }
+            )
+        return {}
+
+    async def is_valid_password(
+            self,
+            password: str,
+    ):
+        if await self._is_valid_password(password=password):
+            return {}
+        else:
+            raise InvalidPassword()
 
     @staticmethod
     async def _is_valid_password(password: str):
@@ -290,11 +273,19 @@ class AccountService(BaseService):
         else:
             return False
 
+    async def check_password(
+            self,
+            account: Account,
+            password: str,
+    ):
+        await self._is_correct_password(account=account, password=password)
+
     @staticmethod
-    async def is_valid_username(username: str):
-        register = "^[a-zA-Z][a-zA-Z0-9_]{7,32}$"
-        pattern = compile(register)
-        if search(pattern, username):
+    async def _is_correct_password(account: Account, password: str):
+        if account.password_hash == await create_hash_by_string_and_salt(
+                string=password,
+                salt=account.password_salt,
+        ):
             return True
         else:
-            raise InvalidUsername()
+            raise WrongPassword()

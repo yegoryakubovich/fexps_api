@@ -15,53 +15,35 @@
 #
 
 
-from peewee import DoesNotExist
+from typing import Optional
+
+from sqlalchemy.sql.operators import and_
 
 from app.db.models import Account
 from app.repositories.base import BaseRepository
-from app.utils.exceptions import ModelDoesNotExist
+from app.utils.exceptions import AccountWithUsernameDoeNotExist
 from config import settings
 
 
-class AccountRepository(BaseRepository):
+class AccountRepository(BaseRepository[Account]):
     model = Account
 
-    @staticmethod
-    async def get_by_username(username: str) -> Account:
-        try:
-            return Account.get(Account.username == username)
-        except DoesNotExist:
-            raise ModelDoesNotExist(
-                kwargs={
-                    'model': 'Account',
-                    'id_type': 'username',
-                    'id_value': username,
-                },
-            )
+    async def get_by_username(self, username: str) -> Optional[Account]:
+        result = await self.get(username=username)
+        if not result:
+            raise AccountWithUsernameDoeNotExist(kwargs={'username': username})
+        return result
 
-    @staticmethod
-    async def is_exist_by_username(username: str) -> bool:
-        try:
-            Account.get(Account.username == username)
-            return True
-        except DoesNotExist:
-            return False
+    async def is_exist_by_username(self, username: str) -> bool:
+        return self.is_exist(username=username)
 
-    @staticmethod
-    async def search(id_, username: str, page: int) -> tuple[list[Account], int]:
+    async def search(self, id_, username: str, page: int) -> tuple[list[Account], int]:
         if not username:
             username = ''
         if not id_:
             id_ = ''
-
-        query = Account.select().where(
-            (Account.is_deleted == False) &
-            (Account.username % f'%{username}%') &
-            (Account.id % f'%{id_}%')
-        )
-
-        accounts = query.limit(
-            settings.items_per_page
-        ).offset(settings.items_per_page*(page-1)).order_by(Account.id).execute()
-        results = query.count()
-        return accounts, results
+        custom_where = and_(self.model.id.like(f'%{id_}%'), self.model.username.like(f'%{username}%'))
+        custom_limit = settings.items_per_page
+        custom_offset = settings.items_per_page * (page - 1)
+        result = await self.get_list(custom_where=custom_where, custom_limit=custom_limit, custom_offset=custom_offset)
+        return result, len(result)

@@ -16,14 +16,17 @@
 
 
 from app.db.models import Role, Session
-from app.repositories import RolePermissionRepository, RoleRepository
-from app.services.text import TextService
+from app.repositories import RolePermissionRepository
+from app.repositories.role import RoleRepository
 from app.services.base import BaseService
+from app.services.text import TextService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 
 
 class RoleService(BaseService):
+    model = Role
+
     @session_required(permissions=['roles'], can_root=True)
     async def create_by_admin(
             self,

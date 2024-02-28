@@ -19,5 +19,5 @@ from app.db.models import Image
 from app.repositories.base import BaseRepository
 
 
-class ImageRepository(BaseRepository):
+class ImageRepository(BaseRepository[Image]):
     model = Image

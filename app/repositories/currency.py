@@ -19,5 +19,8 @@ from app.db.models import Currency
 from app.repositories.base import BaseRepository
 
 
-class CurrencyRepository(BaseRepository):
+class CurrencyRepository(BaseRepository[Currency]):
     model = Currency
+
+    async def is_exist_by_id_str(self, id_str: str) -> bool:
+        return await self.is_exist(id_str=id_str)

@@ -23,6 +23,7 @@ from app.utils import Router, Response
 from app.utils.exceptions.commission_pack import CommissionIntervalValidationError
 from app.utils.exceptions.main import ParameterOneContainError, ValueMustBePositive
 
+
 router = Router(
     prefix='/create',
 )

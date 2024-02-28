@@ -18,7 +18,7 @@
 from operator import and_
 
 from app.db.models import CommissionPackValue, CommissionPack
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):

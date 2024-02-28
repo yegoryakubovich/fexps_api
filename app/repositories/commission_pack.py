@@ -16,7 +16,7 @@
 
 
 from app.db.models import CommissionPack
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class CommissionPackRepository(BaseRepository[CommissionPack]):

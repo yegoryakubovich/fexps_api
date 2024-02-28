@@ -20,7 +20,7 @@ from typing import List
 from sqlalchemy import select
 
 from app.db.models import Requisite
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class RequisiteRepository(BaseRepository[Requisite]):

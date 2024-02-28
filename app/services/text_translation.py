@@ -16,13 +16,17 @@
 
 
 from app.db.models import Language, Session, Text, TextTranslation
-from app.repositories import LanguageRepository, TextRepository, TextTranslationRepository
+from app.repositories.language import LanguageRepository
+from app.repositories.text import TextRepository
+from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions import ModelAlreadyExist, ModelDoesNotExist
+from app.utils.exceptions import ModelDoesNotExist, ModelAlreadyExist
 
 
 class TextTranslationService(BaseService):
+    model = TextTranslation
+
     @session_required(permissions=['texts'])
     async def create_by_admin(
             self,
@@ -36,7 +40,7 @@ class TextTranslationService(BaseService):
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
 
         try:
-            await TextTranslationRepository.get(text=text, language=language)
+            await TextTranslationRepository().get(text=text, language=language)
             raise ModelAlreadyExist(
                 kwargs={
                     'model': 'TextTranslation',

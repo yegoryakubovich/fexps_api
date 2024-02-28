@@ -16,31 +16,56 @@
 
 
 import logging
+from typing import List
 
-from app.repositories import ActionRepository
+from inflection import underscore
+
+from app.db.base_class import Base
+from app.db.models import Action, Actions
+from app.repositories.action import ActionRepository
 
 
 class ActionService:
+    model = Action
+
     @staticmethod
     async def create(
             model: str,
             model_id: int,
             action: str,
             parameters: dict = None,
-    ):
+    ) -> None:
         if not parameters:
             parameters = {}
-
         action = await ActionRepository().create(model=model, model_id=model_id, action=action)
-
         params_str = ''
         for key, value in parameters.items():
-            await ActionRepository().create_parameter(action=action, key=key, value=value)
+            await ActionRepository().create_parameter(action=action, key=key, value=str(value))
             if not value:
                 value = 'none'
             params_str += f'{key.upper()} = {str(value).upper()}\n'
-
         logging.debug(
             msg=f'ACTION: {action.model.upper()}.{action.model_id}.{action.action.upper()}. '
                 f'PARAMS: \n{params_str}',
         )
+
+    @staticmethod
+    async def get_action(
+            model: Base,
+            action: Actions,
+    ) -> Action:
+        result = await ActionRepository().get(model=underscore(model.__class__.__name__), model_id=model.id,
+                                              action=action)
+        return result
+
+    @staticmethod
+    async def get_actions(
+            model: Base,
+            action: Actions,
+    ) -> List[Action]:
+        result = await ActionRepository().get_list(
+            model=underscore(model.__class__.__name__),
+            model_id=model.id,
+            action=action
+        )
+        return result

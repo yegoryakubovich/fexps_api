@@ -17,7 +17,6 @@
 
 from .get import router as router_get
 from .search import router as router_search
-from .services import router as router_services
 from .change_password import router as router_change_password
 from .roles import router as router_roles
 from app.utils import Router
@@ -28,7 +27,6 @@ router = Router(
     routes_included=[
         router_get,
         router_search,
-        router_services,
         router_change_password,
         router_roles,
     ],

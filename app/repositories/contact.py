@@ -16,7 +16,7 @@
 
 
 from app.db.models import Contact
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class ContactRepository(BaseRepository[Contact]):

@@ -20,7 +20,7 @@ from app.repositories.account_contact import AccountContactRepository
 from app.repositories.contact import ContactRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions.account import AccountContactsAlreadyExists
+from app.utils.exceptions import AccountContactsAlreadyExists
 
 
 class AccountContactService(BaseService):

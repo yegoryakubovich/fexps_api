@@ -16,7 +16,7 @@
 
 
 from app.db.models import ActionParameter
-from .base import BaseRepository
+from app.repositories.base import BaseRepository
 
 
 class ActionParameterRepository(BaseRepository[ActionParameter]):

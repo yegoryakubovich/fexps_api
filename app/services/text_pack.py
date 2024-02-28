@@ -18,7 +18,8 @@
 from json import loads
 
 from app.db.models import TextPack, Session
-from app.repositories import TextPackRepository, LanguageRepository
+from app.repositories.language import LanguageRepository
+from app.repositories.text_pack import TextPackRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import settings
@@ -30,7 +31,7 @@ class TextPackService(BaseService):
     @staticmethod
     async def get(language_id_str: str):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository.get_current(language=language)
+        text_pack = await TextPackRepository().get_current(language=language)
 
         if text_pack.id == 0:
             return {
@@ -54,7 +55,7 @@ class TextPackService(BaseService):
             language_id_str: str,
     ):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository.create(language=language)
+        text_pack = await TextPackRepository().create(language=language)
         await self.create_action(
             model=text_pack,
             action='create',
