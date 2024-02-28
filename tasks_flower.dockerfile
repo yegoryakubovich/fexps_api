@@ -23,4 +23,4 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY . /app
 WORKDIR /app
 
-ENTRYPOINT celery -A app.tasks flower
+ENTRYPOINT celery -A tasks_celery flower

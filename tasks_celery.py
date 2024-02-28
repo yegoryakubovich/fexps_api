@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
+import os
 
 from celery.app import Celery
 
@@ -24,4 +25,4 @@ redis_url = f'redis://{settings.redis_user}:{settings.redis_password}@{settings.
 celery_app = Celery(__name__, broker=redis_url, backend=redis_url)
 celery_app.control.purge()
 
-celery_app.autodiscover_tasks(['app.tasks.schedule'])
+celery_app.autodiscover_tasks(['app.tasks.celery'], force=True)

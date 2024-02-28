@@ -22,32 +22,32 @@ services:
     build:
       dockerfile: api.dockerfile
     environment:
-      MODULE_NAME: "main"
+      MODULE_NAME: "api"
       MAX_WORKERS: 2
     ports:
       - "${APP_PORT}:80"
     volumes:
-      - ./assets/articles:/app/assets/articles
       - ./assets/texts_packs:/app/assets/texts_packs
       - ./assets/images:/app/assets/images
     env_file:
       - .env
-#  celery:
-#    build:
-#      dockerfile: tasks_celery.dockerfile
-#    volumes:
-#      - ./app/tasks:/app/app/tasks
-#  flower:
-#    build:
-#      dockerfile: flower.dockerfile
-#    ports:
-#      - "5555:5555"
-  permanents:
+  tasks_permanents:
     build:
       dockerfile: tasks_permanents.dockerfile
     volumes:
-      - ./assets/articles:/app/assets/articles
       - ./assets/texts_packs:/app/assets/texts_packs
       - ./assets/images:/app/assets/images
     env_file:
       - .env
+  tasks_celery:
+    build:
+      dockerfile: tasks_celery.dockerfile
+    volumes:
+      - ./app/tasks/:/app/app/tasks
+  tasks_flower:
+    environment:
+      FLOWER_BASIC_AUTH: ${FLOWER_USER}:${FLOWER_PASSWORD}
+    build:
+      dockerfile: tasks_flower.dockerfile
+    ports:
+      - "5555:5555"

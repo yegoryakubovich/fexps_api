@@ -13,3 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+import asyncio
+
+from app.tasks.permanents.app import start_app
+
+
+loop = asyncio.get_event_loop()
+loop.run_until_complete(start_app())

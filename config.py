@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     redis_user: str
     redis_password: str
 
+    flower_user: str
+    flower_password: str
+
     root_token: str
     debug: int
     wallet_max_count: int
