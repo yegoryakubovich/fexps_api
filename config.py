@@ -41,7 +41,6 @@ class Settings(BaseSettings):
     wallet_max_value: int
 
     version: str = '0.1'
-    path_articles: str = 'assets/articles'
     path_texts_packs: str = 'assets/texts_packs'
     path_images: str = 'assets/images'
 

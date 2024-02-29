@@ -55,7 +55,7 @@ class TextPackService(BaseService):
             language_id_str: str,
     ):
         language = await LanguageRepository().get_by_id_str(id_str=language_id_str)
-        text_pack = await TextPackRepository().create(language=language)
+        text_pack = await TextPackRepository().create_by_language(language=language)
         await self.create_action(
             model=text_pack,
             action='create',
