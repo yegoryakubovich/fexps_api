@@ -17,7 +17,7 @@
 
 import asyncio
 
-from app.tasks.permanents.app import start_app
+from app.tasks.permanents import start_app
 
 
 loop = asyncio.get_event_loop()

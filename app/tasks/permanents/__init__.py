@@ -13,3 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
+import asyncio
+import logging
+
+from app.tasks.permanents.requests.rate_confirmed_check import request_rate_confirmed_check
+from app.tasks.permanents.requests.states.input import request_state_input_check
+from app.tasks.permanents.requests.states.input_reserved import request_state_input_reserved_check
+from app.tasks.permanents.requests.states.loading import request_state_loading_check
+from app.tasks.permanents.requests.states.output import request_state_output_check
+from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
+from app.tasks.permanents.requests.waiting_check import request_waiting_check
+
+
+prefix = '[start_app]'
+
+
+async def start_app() -> None:
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    while True:
+        tasks_names = [task.get_name() for task in asyncio.all_tasks()]
+        if 'request_new_order_check' not in tasks_names:
+            asyncio.create_task(coro=request_waiting_check(), name='request_new_order_check')
+        if 'request_rate_confirmed_check' not in tasks_names:
+            asyncio.create_task(coro=request_rate_confirmed_check(), name='request_rate_confirmed_check')
+        if 'request_state_loading_check' not in tasks_names:
+            asyncio.create_task(coro=request_state_loading_check(), name='request_state_loading_check')
+        if 'request_state_input_reserved_check' not in tasks_names:
+            asyncio.create_task(coro=request_state_input_reserved_check(), name='request_state_input_reserved_check')
+        if 'request_state_input_check' not in tasks_names:
+            asyncio.create_task(coro=request_state_input_check(), name='request_state_input_check')
+        if 'request_state_output_reserved_check' not in tasks_names:
+            asyncio.create_task(coro=request_state_output_reserved_check(), name='request_state_output_reserved_check')
+        if 'request_state_output_check' not in tasks_names:
+            asyncio.create_task(coro=request_state_output_check(), name='request_state_output_check')
+        await asyncio.sleep(10 * 60)
