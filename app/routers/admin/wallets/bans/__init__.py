@@ -19,6 +19,7 @@ from app.utils import Router
 from .create import router as router_create
 from .delete import router as router_delete
 
+
 router = Router(
     prefix='/bans',
     routes_included=[

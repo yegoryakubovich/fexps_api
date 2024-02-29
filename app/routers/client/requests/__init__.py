@@ -17,7 +17,6 @@
 
 from app.utils import Router
 from .create import router as router_create
-from .delete import router as router_delete
 from .update_confirmation import router as router_update_confirmation
 
 
@@ -26,7 +25,6 @@ router = Router(
     routes_included=[
         router_create,
         router_update_confirmation,
-        router_delete,
     ],
     tags=['Requests'],
 )

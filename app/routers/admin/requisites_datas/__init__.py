@@ -16,15 +16,15 @@
 
 
 from app.utils import Router
-from .get import router as router_get
-from .get_list import router as router_get_list
+from .create import router as router_create
+from .delete import router as router_delete
 
 
 router = Router(
     prefix='/requisites_datas',
     routes_included=[
-        router_get,
-        router_get_list,
+        router_create,
+        router_delete,
     ],
     tags=['RequisitesDatas'],
 )

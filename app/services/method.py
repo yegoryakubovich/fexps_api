@@ -28,8 +28,8 @@ from app.utils.exceptions.method import MethodFieldsMissing
 class MethodService(BaseService):
     model = Method
 
-    @session_required(permissions=['methods'])
-    async def create(
+    @session_required(permissions=['methods'], can_root=True)
+    async def create_by_admin(
             self,
             session: Session,
             currency_id_str: str,
@@ -108,8 +108,8 @@ class MethodService(BaseService):
             ],
         }
 
-    @session_required(permissions=['methods'])
-    async def update(
+    @session_required(permissions=['methods'], can_root=True)
+    async def update_by_admin(
             self,
             session: Session,
             id_: int,
@@ -137,8 +137,8 @@ class MethodService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['methods'])
-    async def delete(
+    @session_required(permissions=['methods'], can_root=True)
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,

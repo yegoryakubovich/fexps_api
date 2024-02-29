@@ -15,16 +15,14 @@
 #
 
 
+from .requests import router as router_requests
 from app.utils import Router
-from .get import router as router_get
-from .get_list import router as router_get_list
 
 
 router = Router(
-    prefix='/requisites_datas',
+    prefix='/orders',
     routes_included=[
-        router_get,
-        router_get_list,
+        router_requests,
     ],
-    tags=['RequisitesDatas'],
+    tags=['Orders'],
 )

@@ -15,16 +15,28 @@
 #
 
 
-from app.utils import Router
-from .get import router as router_get
-from .get_list import router as router_get_list
+from pydantic import Field, BaseModel
+
+from app.services import RequisiteDataService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/requisites_datas',
-    routes_included=[
-        router_get,
-        router_get_list,
-    ],
-    tags=['RequisitesDatas'],
+    prefix='/create',
 )
+
+
+class RequisiteDataCreateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    method_id: int = Field()
+    fields: dict = Field()
+
+
+@router.post()
+async def route(schema: RequisiteDataCreateSchema):
+    result = await RequisiteDataService().create_by_admin(
+        token=schema.token,
+        method_id=schema.method_id,
+        fields=schema.fields,
+    )
+    return Response(**result)

@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import RequestService
+from app.services import OrderRequestService
 from app.utils import Router, Response
 
 
@@ -27,14 +27,14 @@ router = Router(
 )
 
 
-class RequestDeleteSchema(BaseModel):
+class OrderRequestDeleteSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
 
 
 @router.post()
-async def route(schema: RequestDeleteSchema):
-    result = await RequestService().delete(
+async def route(schema: OrderRequestDeleteSchema):
+    result = await OrderRequestService().delete_by_admin(
         token=schema.token,
         id_=schema.id_,
     )

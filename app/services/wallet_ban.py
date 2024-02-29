@@ -29,7 +29,7 @@ class WalletBanService(BaseService):
     model = WalletBan
 
     @session_required(permissions=['wallets_bans'])
-    async def create(
+    async def create_by_admin(
             self,
             session: Session,
             wallet_id: int,
@@ -69,7 +69,7 @@ class WalletBanService(BaseService):
         return wallet_ban
 
     @session_required(permissions=['wallets_bans'])
-    async def delete(
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,

@@ -58,7 +58,7 @@ class WalletBanCreateSchema(BaseModel):
 
 @router.post()
 async def route(schema: WalletBanCreateSchema):
-    result = await WalletBanService().create(
+    result = await WalletBanService().create_by_admin(
         token=schema.token,
         wallet_id=schema.wallet_id,
         value=schema.value,

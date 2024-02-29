@@ -33,7 +33,7 @@ class WalletBanDeleteSchema(BaseModel):
 
 @router.post()
 async def route(schema: WalletBanDeleteSchema):
-    result = await WalletBanService().delete(
+    result = await WalletBanService().delete_by_admin(
         token=schema.token,
         id_=schema.id_,
     )
