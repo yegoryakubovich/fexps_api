@@ -26,8 +26,8 @@ from app.utils.service_addons.method import method_check_validation_scheme
 class RequisiteDataService(BaseService):
     model = RequisiteData
 
-    @session_required(permissions=['requisites_datas'])
-    async def create(
+    @session_required(permissions=['requisites_datas'], can_root=True)
+    async def create_by_admin(
             self,
             session: Session,
             method_id: int,
@@ -85,8 +85,8 @@ class RequisiteDataService(BaseService):
             ],
         }
 
-    @session_required(permissions=['requisites_datas'])
-    async def delete(
+    @session_required(permissions=['requisites_datas'], can_root=True)
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,

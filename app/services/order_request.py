@@ -109,8 +109,8 @@ class OrderRequestService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['orders'])
-    async def delete(
+    @session_required(permissions=['orders'], can_root=True)
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,

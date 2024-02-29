@@ -17,7 +17,6 @@
 
 from app.utils import Router
 from .create import router as router_create
-from .delete import router as router_delete
 from .update import router as router_update
 
 
@@ -25,7 +24,6 @@ router = Router(
     prefix='/requests',
     routes_included=[
         router_create,
-        router_delete,
         router_update,
     ],
 )

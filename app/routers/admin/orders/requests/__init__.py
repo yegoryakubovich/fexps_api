@@ -15,26 +15,13 @@
 #
 
 
-from pydantic import Field, BaseModel
-
-from app.services import ContactService
-from app.utils import Router, Response
+from app.utils import Router
+from .delete import router as router_delete
 
 
 router = Router(
-    prefix='/delete',
+    prefix='/requests',
+    routes_included=[
+        router_delete,
+    ],
 )
-
-
-class ContactDeleteSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
-
-
-@router.post()
-async def route(schema: ContactDeleteSchema):
-    result = await ContactService().delete(
-        token=schema.token,
-        id_=schema.id_,
-    )
-    return Response(**result)

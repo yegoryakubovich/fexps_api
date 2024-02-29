@@ -15,28 +15,16 @@
 #
 
 
-from pydantic import Field, BaseModel
-
-from app.services import RequisiteDataService
-from app.utils import Router, Response
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
 
 
 router = Router(
-    prefix='/create',
+    prefix='/contacts',
+    routes_included=[
+        router_create,
+        router_delete,
+    ],
+    tags=['Contacts'],
 )
-
-
-class RequisiteDataCreateSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-    method_id: int = Field()
-    fields: dict = Field()
-
-
-@router.post()
-async def route(schema: RequisiteDataCreateSchema):
-    result = await RequisiteDataService().create(
-        token=schema.token,
-        method_id=schema.method_id,
-        fields=schema.fields,
-    )
-    return Response(**result)

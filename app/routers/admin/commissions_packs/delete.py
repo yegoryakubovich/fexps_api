@@ -33,7 +33,7 @@ class CommissionDeleteSchema(BaseModel):
 
 @router.post()
 async def route(schema: CommissionDeleteSchema):
-    result = await CommissionPackService().delete(
+    result = await CommissionPackService().delete_by_admin(
         token=schema.token,
         id_=schema.id_,
     )

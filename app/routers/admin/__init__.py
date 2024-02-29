@@ -18,11 +18,15 @@
 from app.utils import Router
 from .accounts import router as router_accounts
 from .commissions_packs import router as router_commissions_packs
+from .contacts import router as router_contacts
 from .countries import router as router_countries
 from .currencies import router as router_currencies
 from .images import router as router_images
 from .languages import router as router_languages
+from .methods import router as router_methods
+from .orders import router as router_orders
 from .permissions import router as router_permissions
+from .requisites_datas import router as router_requisites_datas
 from .roles import router as router_roles
 from .texts import router as router_texts
 from .timezones import router as router_timezones
@@ -33,11 +37,15 @@ router = Router(
     routes_included=[
         router_accounts,
         router_commissions_packs,
+        router_contacts,
         router_countries,
         router_currencies,
         router_images,
         router_languages,
+        router_methods,
+        router_orders,
         router_permissions,
+        router_requisites_datas,
         router_roles,
         router_texts,
         router_timezones,

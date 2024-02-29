@@ -110,7 +110,7 @@ class MethodCreateSchema(BaseModel):
 
 @router.post()
 async def route(schema: MethodCreateSchema):
-    result = await MethodService().create(
+    result = await MethodService().create_by_admin(
         token=schema.token,
         currency_id_str=schema.currency,
         name=schema.name,

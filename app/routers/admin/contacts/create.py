@@ -17,29 +17,24 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import MethodService
-
-from app.utils import Response, Router
+from app.services import ContactService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/update',
+    prefix='/create',
 )
 
 
-class MethodUpdateSchema(BaseModel):
+class ContactCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
-    currency_id_str: str = Field(default=None, min_length=2, max_length=32)
-    schema_fields: list[dict] = Field(default=None)
+    name: str = Field(min_length=1, max_length=1024)
 
 
 @router.post()
-async def route(schema: MethodUpdateSchema):
-    result = await MethodService().update(
+async def route(schema: ContactCreateSchema):
+    result = await ContactService().create_by_admin(
         token=schema.token,
-        id_=schema.id_,
-        currency_id_str=schema.currency_id_str or None,
-        schema_fields=schema.schema_fields or None,
+        name=schema.name,
     )
     return Response(**result)
