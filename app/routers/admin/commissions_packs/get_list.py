@@ -15,6 +15,8 @@
 #
 
 
+from pydantic import BaseModel, Field
+
 from app.services import CommissionPackService
 from app.utils import Router, Response
 
@@ -24,7 +26,11 @@ router = Router(
 )
 
 
+class CommissionListGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
 @router.get()
-async def route():
-    result = await CommissionPackService().get_list_by_admin()
+async def route(schema: CommissionListGetSchema):
+    result = await CommissionPackService().get_list_by_admin(token=schema.token)
     return Response(**result)

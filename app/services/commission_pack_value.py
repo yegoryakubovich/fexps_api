@@ -27,7 +27,7 @@ from config import settings
 class CommissionPackValueService(BaseService):
     model = CommissionPackValue
 
-    @session_required(permissions=['commissions_packs'])
+    @session_required(permissions=['commissions_packs'], can_root=True)
     async def create_by_admin(
             self,
             session: Session,
