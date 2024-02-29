@@ -22,9 +22,9 @@ from .delete import router as router_delete
 
 router = Router(
     prefix='/images',
-    tags=['Images'],
     routes_included=[
         router_create,
         router_delete,
-    ]
+    ],
+    tags=['Images'],
 )
