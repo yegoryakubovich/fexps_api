@@ -29,7 +29,7 @@ class CommissionPackService(BaseService):
     model = CommissionPack
 
     @session_required(permissions=['commissions_packs'])
-    async def create(
+    async def create_by_admin(
             self,
             session: Session,
             name: str,
@@ -57,7 +57,7 @@ class CommissionPackService(BaseService):
         return {'id': commission_pack.id}
 
     @staticmethod
-    async def get_list() -> dict:
+    async def get_list_by_admin() -> dict:
         commissions_packs = []
         for commission_pack in await CommissionPackRepository().get_list():
             commission_pack_values = []
@@ -78,7 +78,7 @@ class CommissionPackService(BaseService):
         return {'commissions_packs': commissions_packs}
 
     @session_required(permissions=['commissions_packs'])
-    async def delete(
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,

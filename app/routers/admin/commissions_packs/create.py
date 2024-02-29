@@ -34,7 +34,7 @@ class CommissionPackCreateSchema(BaseModel):
 
 @router.post()
 async def route(schema: CommissionPackCreateSchema):
-    result = await CommissionPackService().create(
+    result = await CommissionPackService().create_by_admin(
         token=schema.token,
         name=schema.name,
         is_default=schema.is_default,

@@ -26,5 +26,5 @@ router = Router(
 
 @router.get()
 async def route():
-    result = await CommissionPackService().get_list()
+    result = await CommissionPackService().get_list_by_admin()
     return Response(**result)

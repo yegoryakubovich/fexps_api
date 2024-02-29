@@ -28,7 +28,7 @@ class CommissionPackValueService(BaseService):
     model = CommissionPackValue
 
     @session_required(permissions=['commissions_packs'])
-    async def create(
+    async def create_by_admin(
             self,
             session: Session,
             commission_pack_id: int,
