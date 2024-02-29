@@ -22,19 +22,19 @@ from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/delete',
+    prefix='/create',
 )
 
 
-class ContactDeleteSchema(BaseModel):
+class ContactCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
+    name: str = Field(min_length=1, max_length=1024)
 
 
 @router.post()
-async def route(schema: ContactDeleteSchema):
-    result = await ContactService().delete(
+async def route(schema: ContactCreateSchema):
+    result = await ContactService().create_by_admin(
         token=schema.token,
-        id_=schema.id_,
+        name=schema.name,
     )
     return Response(**result)
