@@ -36,7 +36,7 @@ class TransferSearchSchema(BaseModel):
 
 
 @router.post()
-async def route(schema: TransferSearchSchema = Depends()):
+async def route(schema: TransferSearchSchema):
     result = await TransferService().search(
         token=schema.token,
         wallet_id=schema.wallet_id,
