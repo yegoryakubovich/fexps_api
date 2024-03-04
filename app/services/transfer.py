@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from math import ceil
 
 from app.db.models import Transfer, Session, Actions, TransferTypes
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.service_addons.transfer import create_transfer
@@ -93,22 +92,25 @@ class TransferService(BaseService):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         await wallet_check_permission(account=account, wallets=[wallet])
-        transfers_db = await TransferRepository().search_by_wallet(
-            wallet=wallet, is_sender=is_sender, is_receiver=is_receiver, page=page
+        transfers, results = await TransferRepository().search_by_wallet(
+            wallet=wallet,
+            is_sender=is_sender,
+            is_receiver=is_receiver,
+            page=page,
         )
-
+        transfers = [
+            {
+                'id': transfer.id,
+                'wallet_from': transfer.wallet_from.id,
+                'wallet_to': transfer.wallet_to.id,
+                'value': transfer.value,
+            }
+            for transfer in transfers
+        ]
         return {
-            'transfers': [
-                {
-                    'id': transfer.id,
-                    'wallet_from': transfer.wallet_from.id,
-                    'wallet_to': transfer.wallet_to.id,
-                    'value': transfer.value,
-                }
-                for transfer in transfers_db[0]
-            ],
-            'results': transfers_db[1],
+            'transfers': transfers,
+            'results': results,
+            'pages': ceil(results / settings.items_per_page),
             'page': page,
-            'pages': transfers_db[2],
             'items_per_page': settings.items_per_page,
         }

@@ -16,7 +16,6 @@
 
 
 from decimal import Decimal
-from math import ceil
 from types import NoneType
 from typing import TypeVar, Generic, List, Optional, Any
 
@@ -26,7 +25,6 @@ from app.db.base_class import Base
 from app.db.models import Action, ActionParameter
 from app.db.session import SessionLocal
 from app.utils.exceptions import ModelDoesNotExist
-from config import settings
 
 ModelType = TypeVar('ModelType', bound=Base)
 
@@ -136,24 +134,6 @@ class BaseRepository(Generic[ModelType]):
                 filters['is_deleted'] = False
             result = await session.execute(custom_select.filter_by(**filters))
             return len(result.scalars().all())
-
-    async def _search(self, page: int, custom_where=None, **filters) -> tuple[List[ModelType], int, int]:
-        if custom_where is None:
-            custom_select = select(self.model)
-        else:
-            custom_select = select(self.model).where(custom_where)
-
-        async with self._get_session() as session:
-            items_per_page = settings.items_per_page
-            if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
-                filters['is_deleted'] = False
-            result = await session.execute(
-                custom_select.filter_by(**filters).order_by(
-                    self.model.id.desc()
-                ).limit(items_per_page).offset(items_per_page * (page - 1))
-            )
-            count = await self.count(custom_select, **filters)
-            return result.scalars().all(), count, ceil(count / items_per_page)
 
     @staticmethod
     def _get_session():

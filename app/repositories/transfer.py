@@ -19,6 +19,7 @@ from sqlalchemy.sql.operators import or_, and_
 
 from app.db.models import Transfer, Wallet
 from app.repositories.base import BaseRepository
+from config import settings
 
 
 class TransferRepository(BaseRepository[Transfer]):
@@ -30,7 +31,7 @@ class TransferRepository(BaseRepository[Transfer]):
             is_sender: bool,
             is_receiver: bool,
             page: int = 1,
-    ):
+    ) -> tuple[list[Transfer], int]:
         if is_sender and is_receiver:
             custom_where = or_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
         elif is_sender and not is_receiver:
@@ -39,5 +40,7 @@ class TransferRepository(BaseRepository[Transfer]):
             custom_where = self.model.wallet_to == wallet
         else:
             custom_where = and_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)
-        result = await self._search(page=page, custom_where=custom_where)
-        return result
+        custom_limit = settings.items_per_page
+        custom_offset = settings.items_per_page * (page - 1)
+        result = await self.get_list(custom_where=custom_where, custom_limit=custom_limit, custom_offset=custom_offset)
+        return result, len(result)
