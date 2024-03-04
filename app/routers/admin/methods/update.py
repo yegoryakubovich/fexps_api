@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, BaseModel
 
 from app.services import MethodService
@@ -30,8 +32,8 @@ router = Router(
 class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    currency_id_str: str = Field(default=None, min_length=2, max_length=32)
-    schema_fields: list[dict] = Field(default=None)
+    currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
+    schema_fields: Optional[list[dict]] = Field(default=None)
 
 
 @router.post()

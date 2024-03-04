@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.services import TextService
@@ -30,7 +32,7 @@ class TextCreateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=2, max_length=128)
     value_default: str = Field(min_length=1, max_length=1024)
-    create_text_pack: bool = Field(default=True)
+    create_text_pack: Optional[bool] = Field(default=True)
 
 
 @router.post()

@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, model_validator, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
@@ -32,7 +34,7 @@ class OrderRequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     order_id: int = Field()
     type_: str = Field(min_length=1, max_length=16)
-    value: int = Field(default=None)
+    value: Optional[int] = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':

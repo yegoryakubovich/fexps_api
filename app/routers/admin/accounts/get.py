@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.services import AccountService
@@ -29,7 +31,7 @@ router = Router(
 
 class AccountGetByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id: int = Field(default=1)
+    id: Optional[int] = Field(default=1)
 
 
 @router.post()

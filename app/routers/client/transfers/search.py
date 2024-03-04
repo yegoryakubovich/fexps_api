@@ -15,7 +15,8 @@
 #
 
 
-from fastapi import Depends
+from typing import Optional
+
 from pydantic import Field, BaseModel
 
 from app.services import TransferService
@@ -30,9 +31,9 @@ router = Router(
 class TransferSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
-    is_sender: bool = Field(default=True)
-    is_receiver: bool = Field(default=True)
-    page: int = Field(default=1)
+    is_sender: Optional[bool] = Field(default=True)
+    is_receiver: Optional[bool] = Field(default=True)
+    page: Optional[int] = Field(default=1)
 
 
 @router.post()

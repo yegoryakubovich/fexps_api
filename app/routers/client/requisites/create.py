@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, BaseModel, field_validator, model_validator
 from pydantic_core.core_schema import ValidationInfo
 
@@ -33,15 +35,15 @@ class RequisiteCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     type_: str = Field(min_length=1, max_length=8)
-    output_requisite_data_id: int = Field(default=None)
-    input_method_id: int = Field(default=None)
-    currency_value: int = Field(default=None)
-    currency_value_min: int = Field(default=None)
-    currency_value_max: int = Field(default=None)
-    rate: int = Field(default=None)
-    value: int = Field(default=None)
-    value_min: int = Field(default=None)
-    value_max: int = Field(default=None)
+    output_requisite_data_id: Optional[int] = Field(default=None)
+    input_method_id: Optional[int] = Field(default=None)
+    currency_value: Optional[int] = Field(default=None)
+    currency_value_min: Optional[int] = Field(default=None)
+    currency_value_max: Optional[int] = Field(default=None)
+    rate: Optional[int] = Field(default=None)
+    value: Optional[int] = Field(default=None)
+    value_min: Optional[int] = Field(default=None)
+    value_max: Optional[int] = Field(default=None)
 
     @field_validator('currency_value', 'rate', 'value')
     @classmethod

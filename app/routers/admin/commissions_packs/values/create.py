@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, model_validator, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
@@ -34,8 +36,8 @@ class CommissionPackValueCreateSchema(BaseModel):
     commission_pack_id: int = Field()
     value_from: int = Field()
     value_to: int = Field()
-    percent: int = Field(default=None)
-    value: int = Field(default=None)
+    percent: Optional[int] = Field(default=None)
+    value: Optional[int] = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'CommissionPackValueCreateSchema':

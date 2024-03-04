@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, BaseModel
 
 from app.services import TextService
@@ -30,7 +32,7 @@ class TextUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=2, max_length=128)
     new_key: str = Field(default=None, min_length=2, max_length=128)
-    value_default: str = Field(default=None, min_length=1, max_length=1024)
+    value_default: Optional[str] = Field(default=None, min_length=1, max_length=1024)
 
 
 @router.post()

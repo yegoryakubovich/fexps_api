@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, BaseModel
 
 from app.services import CommissionPackService
@@ -29,7 +31,7 @@ router = Router(
 class CommissionPackCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     name: str = Field(min_length=1, max_length=1024)
-    is_default: bool = Field(default=False)
+    is_default: Optional[bool] = Field(default=False)
 
 
 @router.post()

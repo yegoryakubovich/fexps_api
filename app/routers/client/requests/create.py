@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, field_validator, model_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
@@ -34,12 +36,12 @@ class RequestCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     type_: str = Field(min_length=1, max_length=8)
-    input_method_id: int = Field(default=None)
-    input_currency_value: int = Field(default=None)
-    input_value: int = Field(default=None)
-    output_requisite_data_id: int = Field(default=None)
-    output_currency_value: int = Field(default=None)
-    output_value: int = Field(default=None)
+    input_method_id: Optional[int] = Field(default=None)
+    input_currency_value: Optional[int] = Field(default=None)
+    input_value: Optional[int] = Field(default=None)
+    output_requisite_data_id: Optional[int] = Field(default=None)
+    output_currency_value: Optional[int] = Field(default=None)
+    output_value: Optional[int] = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':

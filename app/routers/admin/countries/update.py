@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import BaseModel, Field
 
 from app.services import CountryService
@@ -29,9 +31,9 @@ router = Router(
 class CountryUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=2, max_length=16)
-    language: str = Field(default=None, min_length=2, max_length=16)
-    timezone: str = Field(default=None, min_length=2, max_length=16)
-    currency: str = Field(default=None, min_length=2, max_length=16)
+    language: Optional[str] = Field(default=None, min_length=2, max_length=16)
+    timezone: Optional[str] = Field(default=None, min_length=2, max_length=16)
+    currency: Optional[str] = Field(default=None, min_length=2, max_length=16)
 
 
 @router.post()
