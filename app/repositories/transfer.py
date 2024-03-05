@@ -30,7 +30,7 @@ class TransferRepository(BaseRepository[Transfer]):
             wallet: Wallet,
             is_sender: bool,
             is_receiver: bool,
-            page: int = 1,
+            page: int,
     ) -> tuple[list[Transfer], int]:
         if is_sender and is_receiver:
             custom_where = or_(self.model.wallet_from == wallet, self.model.wallet_to == wallet)

@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     items_per_page: int = 10
     request_waiting_check: int = 5
     request_rate_confirmed_minutes: int = 60
+    datetime_format: str = '%d-%m-%y %H:%M'
 
     model_config = SettingsConfigDict(env_file='.env')
 

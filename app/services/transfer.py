@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes
+from app.db.models import Transfer, Session, Actions, TransferTypes, action
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
+from app.services import AccountService, ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.service_addons.transfer import create_transfer
@@ -77,6 +80,7 @@ class TransferService(BaseService):
                 'wallet_from': transfer.wallet_from.id,
                 'wallet_to': transfer.wallet_to.id,
                 'value': transfer.value,
+                'date': transfer.date.strftime(settings.datetime_format),
             }
         }
 
@@ -104,6 +108,7 @@ class TransferService(BaseService):
                 'wallet_from': transfer.wallet_from.id,
                 'wallet_to': transfer.wallet_to.id,
                 'value': transfer.value,
+                'date': transfer.date.strftime(settings.datetime_format),
             }
             for transfer in transfers
         ]
