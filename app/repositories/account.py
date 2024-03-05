@@ -35,7 +35,7 @@ class AccountRepository(BaseRepository[Account]):
         return result
 
     async def is_exist_by_username(self, username: str) -> bool:
-        return self.is_exist(username=username)
+        return await self.is_exist(username=username)
 
     async def search(self, id_, username: str, page: int) -> tuple[list[Account], int]:
         if not username:

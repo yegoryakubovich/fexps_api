@@ -266,7 +266,7 @@ class AccountService(BaseService):
 
     @staticmethod
     async def _is_valid_password(password: str):
-        register = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!#%*?&]{7,32}$"
+        register = "^(?=.*[a-zA-Z])[A-Za-z\d#$@!%&*?]{7,32}$"
         pattern = compile(register)
         if search(pattern, password):
             return True

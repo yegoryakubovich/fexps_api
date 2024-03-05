@@ -8,7 +8,7 @@ class WrongPassword(ApiException):
 
 class InvalidUsername(ApiException):
     code = 2001
-    message = 'Account with username "{username}" already exist'
+    message = 'Invalid username. The correct username starts with a letter and can contain numbers or underscores'
 
 
 class AccountWithUsernameDoeNotExist(ApiException):
