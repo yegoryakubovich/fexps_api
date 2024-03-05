@@ -2,7 +2,7 @@ fastapi==0.110.0
 uvicorn==0.27.1
 pytz==2024.1
 inflection~=0.5.1
-starlette==0.37.1
+starlette==0.36.3
 pydantic==2.6.3
 pydantic_settings
 sqlalchemy==2.0.27
