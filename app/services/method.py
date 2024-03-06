@@ -84,8 +84,8 @@ class MethodService(BaseService):
         return {
             'method': {
                 'id': method.id,
-                'currency_id_str': method.currency.id_str,
-                'name_text_key': method.name_text.key,
+                'currency': method.currency.id_str,
+                'name_text': method.name_text.key,
                 'schema_fields': method.schema_fields,
                 'schema_input_fields': method.schema_confirmation_fields,
                 'is_active': method.is_active,
@@ -98,8 +98,8 @@ class MethodService(BaseService):
             'methods': [
                 {
                     'id': method.id,
-                    'currency_id_str': method.currency.id_str,
-                    'name_text_key': method.name_text.key,
+                    'currency': method.currency.id_str,
+                    'name_text': method.name_text.key,
                     'schema_fields': method.schema_fields,
                     'schema_input_fields': method.schema_confirmation_fields,
                     'is_active': method.is_active,
