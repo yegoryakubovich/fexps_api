@@ -41,6 +41,7 @@ class RequestStates:
 
     choices = [WAITING, INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT, COMPLETED, CANCELED]
     choices_rate_confirm = [INPUT_RESERVATION, INPUT]
+    choices_finished = [COMPLETED, CANCELED]
 
 
 class RequestFirstLine:

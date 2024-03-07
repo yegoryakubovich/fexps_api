@@ -15,7 +15,10 @@
 #
 
 
+from math import ceil
+
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine
+from app.repositories import WalletAccountRepository
 from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -25,6 +28,7 @@ from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 from app.utils.service_addons.wallet import wallet_check_permission
+from config import settings
 
 
 class RequestService(BaseService):
@@ -96,6 +100,71 @@ class RequestService(BaseService):
             },
         )
         return {'id': request.id}
+
+    @session_required(permissions=['transfers'])
+    async def search(
+            self,
+            session: Session,
+            is_input: bool,
+            is_output: bool,
+            is_all: bool,
+            is_finish: bool,
+            page: int,
+    ) -> dict:
+        account = session.account
+        wallets = [
+            wallet_account.wallet
+            for wallet_account in await WalletAccountRepository().get_list(account=account)
+        ]
+        _requests, results = await RequestRepository().search(
+            wallets=wallets,
+            is_input=is_input,
+            is_output=is_output,
+            is_all=is_all,
+            is_finish=is_finish,
+            page=page,
+        )
+        requests = []
+        for _request in _requests:
+            if not is_finish and _request.state in RequestStates.choices_finished:
+                continue
+            if is_finish and _request.state not in RequestStates.choices_finished:
+                continue
+            requests.append({
+                'id': _request.id,
+                'wallet': _request.wallet_id,
+                'type': _request.type,
+                'state': _request.state,
+                'rate_decimal': _request.rate_decimal,
+                'rate_confirmed': _request.rate_confirmed,
+                'difference_confirmed': _request.difference_confirmed,
+                'first_line': _request.first_line,
+                'first_line_value': _request.first_line_value,
+                'input_currency_value_raw': _request.input_currency_value_raw,
+                'input_currency_value': _request.input_currency_value,
+                'input_value_raw': _request.input_value_raw,
+                'input_value': _request.input_value,
+                'input_rate_raw': _request.input_rate_raw,
+                'input_rate': _request.input_rate,
+                'commission_value': _request.input_rate,
+                'rate': _request.input_rate,
+                'output_currency_value_raw': _request.output_currency_value_raw,
+                'output_currency_value': _request.output_currency_value,
+                'output_value_raw': _request.output_value_raw,
+                'output_value': _request.output_value,
+                'output_rate_raw': _request.output_rate_raw,
+                'output_rate': _request.output_rate,
+                'input_method': _request.input_method_id,
+                'output_requisite_data': _request.output_requisite_data_id,
+                'output_method': _request.output_method_id,
+            })
+        return {
+            'requests': requests,
+            'results': results,
+            'pages': ceil(results / settings.items_per_page),
+            'page': page,
+            'items_per_page': settings.items_per_page,
+        }
 
     @session_required(permissions=['requests'])
     async def update_confirmation(

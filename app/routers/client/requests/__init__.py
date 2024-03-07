@@ -17,6 +17,7 @@
 
 from app.utils import Router
 from .create import router as router_create
+from .search import router as router_search
 from .update_confirmation import router as router_update_confirmation
 
 
@@ -24,6 +25,7 @@ router = Router(
     prefix='/requests',
     routes_included=[
         router_create,
+        router_search,
         router_update_confirmation,
     ],
     tags=['Requests'],
