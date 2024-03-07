@@ -18,6 +18,7 @@
 from math import ceil
 
 from app.db.models import Transfer, Session, Actions, TransferTypes
+from app.db.models.transfer import TransferOperations
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
@@ -100,23 +101,26 @@ class TransferService(BaseService):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         await wallet_check_permission(account=account, wallets=[wallet])
-        transfers, results = await TransferRepository().search_by_wallet(
+        _transfers, results = await TransferRepository().search_by_wallet(
             wallet=wallet,
             is_sender=is_sender,
             is_receiver=is_receiver,
             page=page,
         )
-        transfers = [
-            {
-                'id': transfer.id,
-                'type': TransactionTypes.send if transfer.wallet_from.id == wallet.id else TransactionTypes.receive,
-                'wallet_from': transfer.wallet_from.id,
-                'wallet_to': transfer.wallet_to.id,
-                'value': transfer.value,
-                'date': transfer.date.strftime(settings.datetime_format),
-            }
-            for transfer in transfers
-        ]
+        transfers = []
+        for transfer in _transfers:
+            operation = TransferOperations.SEND if transfer.wallet_from.id == wallet.id else TransferOperations.RECEIVE
+            transfers.append(
+                {
+                    'id': transfer.id,
+                    'type': transfer.type,
+                    'operation': operation,
+                    'wallet_from': transfer.wallet_from.id,
+                    'wallet_to': transfer.wallet_to.id,
+                    'value': transfer.value,
+                    'date': transfer.date.strftime(settings.datetime_format),
+                }
+            )
         return {
             'transfers': transfers,
             'results': results,

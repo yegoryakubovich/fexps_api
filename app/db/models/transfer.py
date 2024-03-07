@@ -30,6 +30,11 @@ class TransferTypes:
     choices = [IN_ORDER, PAYMENT]
 
 
+class TransferOperations:
+    SEND = 'send'
+    RECEIVE = 'receive'
+
+
 class Transfer(Base):
     __tablename__ = 'transfers'
 
