@@ -64,12 +64,7 @@ class RequisiteDataService(BaseService):
         account = session.account
         requisite_data = await RequisiteDataRepository().get_by_account_and_id(account=account, id_=id_)
         return {
-            'requisite_data': {
-                'id': requisite_data.id,
-                'method': requisite_data.method.id,
-                'currency': requisite_data.method.currency.id_str,
-                'fields': requisite_data.fields,
-            }
+            'requisite_data': self._generate_requisite_data_dict(requisite_data=requisite_data),
         }
 
     @session_required(permissions=['requisites_datas'])
@@ -78,17 +73,13 @@ class RequisiteDataService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
+        requisites_datas_list = []
+        for requisite_data in await RequisiteDataRepository().get_list(account=account):
+            requisites_datas_list.append(
+                self._generate_requisite_data_dict(requisite_data=requisite_data),
+            )
         return {
-            'requisite_datas': [
-                {
-                    'id': requisite_data.id,
-                    'account': requisite_data.account_id,
-                    'method': requisite_data.method.id,
-                    'currency': requisite_data.method.currency.id_str,
-                    'fields': requisite_data.fields,
-                }
-                for requisite_data in await RequisiteDataRepository().get_list(account=account)
-            ],
+            'requisite_datas': requisites_datas_list,
         }
 
     @session_required(permissions=['requisites_datas'])
@@ -109,3 +100,14 @@ class RequisiteDataService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    def _generate_requisite_data_dict(requisite_data: RequisiteData):
+        return {
+            'id': requisite_data.id,
+            'account': requisite_data.account_id,
+            'name': requisite_data.name,
+            'method': requisite_data.method.id,
+            'currency': requisite_data.method.currency.id_str,
+            'fields': requisite_data.fields,
+        }
