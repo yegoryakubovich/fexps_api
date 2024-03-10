@@ -10,7 +10,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific Requisite governing permissions and
+# See the License for the specific language governing permissions and
 # limitations under the License.
 #
 
@@ -22,19 +22,21 @@ from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/delete',
+    prefix='/create',
 )
 
 
-class RequisiteDataDeleteSchema(BaseModel):
+class RequisiteDataCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
+    method_id: int = Field()
+    fields: dict = Field()
 
 
 @router.post()
-async def route(schema: RequisiteDataDeleteSchema):
-    result = await RequisiteDataService().delete_by_admin(
+async def route(schema: RequisiteDataCreateSchema):
+    result = await RequisiteDataService().create(
         token=schema.token,
-        id_=schema.id_,
+        method_id=schema.method_id,
+        fields=schema.fields,
     )
     return Response(**result)

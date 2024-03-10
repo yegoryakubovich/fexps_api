@@ -10,21 +10,31 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific Requisite governing permissions and
 # limitations under the License.
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
+from pydantic import Field, BaseModel
+
+from app.services import RequisiteDataService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/requisites_datas',
-    routes_included=[
-        router_create,
-        router_delete,
-    ],
-    tags=['RequisitesDatas'],
+    prefix='/delete',
 )
+
+
+class RequisiteDataDeleteSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.post()
+async def route(schema: RequisiteDataDeleteSchema):
+    result = await RequisiteDataService().delete(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

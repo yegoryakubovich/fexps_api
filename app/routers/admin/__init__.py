@@ -26,7 +26,6 @@ from .languages import router as router_languages
 from .methods import router as router_methods
 from .orders import router as router_orders
 from .permissions import router as router_permissions
-from .requisites_datas import router as router_requisites_datas
 from .roles import router as router_roles
 from .texts import router as router_texts
 from .timezones import router as router_timezones
@@ -45,7 +44,6 @@ router = Router(
         router_methods,
         router_orders,
         router_permissions,
-        router_requisites_datas,
         router_roles,
         router_texts,
         router_timezones,
