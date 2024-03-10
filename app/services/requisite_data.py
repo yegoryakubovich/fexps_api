@@ -42,7 +42,7 @@ class RequisiteDataService(BaseService):
             fields=fields
         )
         await self.create_action(
-            model=method,
+            model=requisite_data,
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
@@ -79,6 +79,7 @@ class RequisiteDataService(BaseService):
             'requisite_datas': [
                 {
                     'id': requisite_data.id,
+                    'account': requisite_data.account_id,
                     'method': requisite_data.method.id,
                     'currency': requisite_data.method.currency.id_str,
                     'fields': requisite_data.fields,
