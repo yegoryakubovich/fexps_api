@@ -28,7 +28,7 @@ router = Router(
 
 class WalletCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    name: str = Field(min_length=1, max_length=1024, default='Wallet')
+    name: str = Field(min_length=1, max_length=32, default='Wallet')
 
 
 @router.post()

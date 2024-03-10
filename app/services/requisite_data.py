@@ -30,6 +30,7 @@ class RequisiteDataService(BaseService):
     async def create(
             self,
             session: Session,
+            name: str,
             method_id: int,
             fields: dict,
     ) -> dict:
@@ -38,6 +39,7 @@ class RequisiteDataService(BaseService):
         await method_check_validation_scheme(method=method, fields=fields)
         requisite_data = await RequisiteDataRepository().create(
             account=account,
+            name=name,
             method=method,
             fields=fields
         )
@@ -47,6 +49,7 @@ class RequisiteDataService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'id': requisite_data.id,
+                'name': name,
                 'method_id': method.id,
             },
         )

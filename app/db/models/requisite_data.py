@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -27,6 +27,7 @@ class RequisiteData(Base):
     id = Column(BigInteger, primary_key=True)
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
     account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
+    name = Column(String(32))
     method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     method = relationship('Method', foreign_keys=method_id, uselist=False, lazy='selectin')
     fields = Column(JSON())

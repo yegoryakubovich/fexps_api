@@ -28,6 +28,7 @@ router = Router(
 
 class RequisiteDataCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    name: str = Field(min_length=1, max_length=32)
     method_id: int = Field()
     fields: dict = Field()
 
@@ -36,6 +37,7 @@ class RequisiteDataCreateSchema(BaseModel):
 async def route(schema: RequisiteDataCreateSchema):
     result = await RequisiteDataService().create(
         token=schema.token,
+        name=schema.name,
         method_id=schema.method_id,
         fields=schema.fields,
     )
