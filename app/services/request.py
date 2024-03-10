@@ -23,6 +23,7 @@ from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
+from app.services import AccountService, ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
@@ -130,6 +131,7 @@ class RequestService(BaseService):
                 continue
             if is_finish and _request.state not in RequestStates.choices_finished:
                 continue
+            action = await ActionService().get_action(model=_request, action=Actions.CREATE)
             requests.append({
                 'id': _request.id,
                 'wallet': _request.wallet_id,
@@ -157,6 +159,7 @@ class RequestService(BaseService):
                 'input_method': _request.input_method_id,
                 'output_requisite_data': _request.output_requisite_data_id,
                 'output_method': _request.output_method_id,
+                'date': action.datetime.strftime(settings.datetime_format)
             })
         return {
             'requests': requests,
