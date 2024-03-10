@@ -63,7 +63,8 @@ class RequisiteDataService(BaseService):
         return {
             'requisite_data': {
                 'id': requisite_data.id,
-                'method_id': requisite_data.method.id,
+                'method': requisite_data.method.id,
+                'currency': requisite_data.method.currency.id_str,
                 'fields': requisite_data.fields,
             }
         }
@@ -78,7 +79,8 @@ class RequisiteDataService(BaseService):
             'requisite_datas': [
                 {
                     'id': requisite_data.id,
-                    'method_id': requisite_data.method.id,
+                    'method': requisite_data.method.id,
+                    'currency': requisite_data.method.currency.id_str,
                     'fields': requisite_data.fields,
                 }
                 for requisite_data in await RequisiteDataRepository().get_list(account=account)
