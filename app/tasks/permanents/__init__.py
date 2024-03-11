@@ -26,12 +26,11 @@ from app.tasks.permanents.requests.states.output import request_state_output_che
 from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
 from app.tasks.permanents.requests.waiting_check import request_waiting_check
 
-
 prefix = '[start_app]'
 
 
 async def start_app() -> None:
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]
         if 'request_new_order_check' not in tasks_names:
