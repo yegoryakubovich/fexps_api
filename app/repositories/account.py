@@ -46,4 +46,5 @@ class AccountRepository(BaseRepository[Account]):
         custom_limit = settings.items_per_page
         custom_offset = settings.items_per_page * (page - 1)
         result = await self.get_list(custom_where=custom_where, custom_limit=custom_limit, custom_offset=custom_offset)
-        return result, len(result)
+        result_count = len(await self.get_list(custom_where=custom_where))
+        return result, result_count
