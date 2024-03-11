@@ -19,17 +19,18 @@ import asyncio
 import logging
 
 from app.db.models import RequestStates, RequestTypes, OrderTypes, Actions
-from app.tasks.permanents.requests.states.loading.all import request_type_all
-from app.tasks.permanents.requests.states.loading.input import request_type_input
-from app.tasks.permanents.requests.states.loading.output import request_type_output
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
-from app.services.order import OrderService
+from app.tasks.permanents.requests.states.loading.all import request_type_all
+from app.tasks.permanents.requests.states.loading.input import request_type_input
+from app.tasks.permanents.requests.states.loading.output import request_type_output
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.commissions import get_commission
 from app.utils.calculations.request.rates import get_auto_rate
 from app.utils.calculations.schemes.loading import RequisiteTypeScheme, AllRequisiteTypeScheme
+from app.utils.service_addons.order import waited_order_by_scheme
+
 
 prefix = '[request_state_loading_check]'
 
@@ -52,7 +53,7 @@ async def run():
                 logging.debug(f'{prefix} request_{request.id} result not found')
                 continue
             for input_requisite_scheme in result.input_requisite_type.requisites_scheme_list:
-                await OrderService().waited_order_by_scheme(
+                await waited_order_by_scheme(
                     request=request, requisite_scheme=input_requisite_scheme, order_type=OrderTypes.INPUT,
                 )
             for output_requisite_scheme in result.output_requisites_type.requisites_scheme_list:
@@ -75,7 +76,7 @@ async def run():
                 logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) result not found')
                 continue
             for requisite_scheme in result.requisites_scheme_list:
-                await OrderService().waited_order_by_scheme(
+                await waited_order_by_scheme(
                     request=request,
                     requisite_scheme=requisite_scheme,
                     order_type=OrderTypes.INPUT,
@@ -104,7 +105,7 @@ async def run():
                 logging.debug(f'{prefix} request_{request.id} result not found')
                 continue
             for requisite_scheme in result.requisites_scheme_list:
-                await OrderService().waited_order_by_scheme(
+                await waited_order_by_scheme(
                     request=request,
                     requisite_scheme=requisite_scheme,
                     order_type=OrderTypes.OUTPUT,

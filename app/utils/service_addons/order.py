@@ -66,7 +66,7 @@ async def waited_order(
 async def waited_order_by_scheme(
         request: Request,
         requisite_scheme: RequisiteScheme,
-        order_type: OrderTypes,
+        order_type: str,
         order_state: str = OrderStates.WAITING,
 ) -> None:
     requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
