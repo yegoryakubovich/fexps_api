@@ -51,6 +51,7 @@ class RequisiteDataService(BaseService):
                 'id': requisite_data.id,
                 'name': name,
                 'method_id': method.id,
+                'fields': fields,
             },
         )
         return {'id': requisite_data.id}
@@ -81,6 +82,31 @@ class RequisiteDataService(BaseService):
         return {
             'requisite_datas': requisites_datas_list,
         }
+
+    @session_required(permissions=['requisites_datas'])
+    async def update(
+            self,
+            session: Session,
+            id_: int,
+            fields: dict,
+    ) -> dict:
+        account = session.account
+        requisite_data = await RequisiteDataRepository().get_by_id(id_=id_, account=account)
+        await method_check_validation_scheme(method=requisite_data.method, fields=fields)
+        await RequisiteDataRepository().update(
+            requisite_data,
+            fields=fields,
+        )
+        await self.create_action(
+            model=requisite_data,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'id': id_,
+                'fields': fields,
+            },
+        )
+        return {}
 
     @session_required(permissions=['requisites_datas'])
     async def delete(
