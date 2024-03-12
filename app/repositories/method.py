@@ -16,9 +16,9 @@
 
 
 from app.db.models import Method
-from app.repositories import TextRepository
 from app.repositories.base import BaseRepository
 from app.repositories.currency import CurrencyRepository
+from app.repositories.text import TextRepository
 from app.utils.crypto import create_id_str
 from app.utils.exceptions import NoRequiredParameters
 
