@@ -37,6 +37,7 @@ class MethodService(BaseService):
             fields: list[dict],
             input_fields: list[dict],
     ) -> dict:
+        # fields
         if isinstance(fields, str):
             raise MethodFieldsMissing(kwargs={'field_name': 'fields'})
         for field in fields:
@@ -46,15 +47,16 @@ class MethodService(BaseService):
             )
             field['name_text_key'] = name_text.key
             field.pop('name')
+        # input_fields
         if isinstance(input_fields, str):
-            raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
-        for confirmation_field in input_fields:
+            raise MethodFieldsMissing(kwargs={'field_name': 'input_fields'})
+        for input_field in input_fields:
             name_text = await TextRepository().create(
-                key=f'method_confirmation_field_{await create_id_str()}',
-                value_default=confirmation_field.get('name'),
+                key=f'method_input_fields_{await create_id_str()}',
+                value_default=input_field.get('name'),
             )
-            confirmation_field['name_text_key'] = name_text.key
-
+            input_field['name_text_key'] = name_text.key
+            input_field.pop('name')
         currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         name_text = await TextRepository().create(
             key=f'method_{await create_id_str()}',

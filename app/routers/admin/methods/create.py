@@ -34,7 +34,7 @@ class MethodCreateSchema(BaseModel):
     fields: list[dict] = Field(
         default='[{"key": "string", "type": "str/int", "name": "string", "optional": false}]'
     )
-    confirmation_fields: list[dict] = Field(
+    input_fields: list[dict] = Field(
         default='[{"key": "string", "type": "str/int/image", "name": "string", "optional": false}]'
     )
 
@@ -71,17 +71,15 @@ class MethodCreateSchema(BaseModel):
                 )
         return fields
 
-    @field_validator('confirmation_fields')
+    @field_validator('input_fields')
     @classmethod
-    def confirmation_fields_valid(cls, confirmation_fields):
-        if isinstance(confirmation_fields, str):
-            raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
-        for i, field in enumerate(confirmation_fields, start=1):
+    def input_fields_valid(cls, input_fields):
+        for i, field in enumerate(input_fields, start=1):
             for key in ['key', 'type', 'name', 'optional']:
                 if field.get(key) is None:
                     raise MethodParametersMissing(
                         kwargs={
-                            'field_name': 'confirmation_fields',
+                            'field_name': 'input_fields',
                             'number': i,
                             'parameter': key,
                         },
@@ -89,7 +87,7 @@ class MethodCreateSchema(BaseModel):
             if not isinstance(field.get('optional'), bool):
                 raise MethodParametersValidationError(
                     kwargs={
-                        'field_name': 'confirmation_fields',
+                        'field_name': 'input_fields',
                         'number': i,
                         'param_name': 'optional',
                         'parameters': ['true', 'false'],
@@ -98,14 +96,14 @@ class MethodCreateSchema(BaseModel):
             if field.get('type') not in MethodFieldTypes.choices:
                 raise MethodParametersValidationError(
                     kwargs={
-                        'field_name': 'confirmation_fields',
+                        'field_name': 'input_fields',
                         'number': i,
                         'param_name': 'type',
                         'parameters': MethodFieldTypes.choices,
                     },
                 )
 
-        return confirmation_fields
+        return input_fields
 
 
 @router.post()
@@ -115,6 +113,6 @@ async def route(schema: MethodCreateSchema):
         currency_id_str=schema.currency,
         name=schema.name,
         fields=schema.fields,
-        confirmation_fields=schema.confirmation_fields,
+        input_fields=schema.input_fields,
     )
     return Response(**result)
