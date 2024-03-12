@@ -46,7 +46,6 @@ class MethodService(BaseService):
                 value_default=field.get('name'),
             )
             field['name_text_key'] = name_text.key
-            field.pop('name')
         # input_fields
         if isinstance(input_fields, str):
             raise MethodFieldsMissing(kwargs={'field_name': 'input_fields'})
@@ -56,7 +55,6 @@ class MethodService(BaseService):
                 value_default=input_field.get('name'),
             )
             input_field['name_text_key'] = name_text.key
-            input_field.pop('name')
         currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
         name_text = await TextRepository().create(
             key=f'method_{await create_id_str()}',

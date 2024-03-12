@@ -44,7 +44,6 @@ class MethodRepository(BaseRepository[Method]):
                     value_default=field.get('name'),
                 )
                 field['name_text_key'] = name_text.key
-                field.pop('name')
             updates['schema_fields'] = schema_fields
         if schema_input_fields:
             for field in schema_fields:
@@ -53,7 +52,6 @@ class MethodRepository(BaseRepository[Method]):
                     value_default=field.get('name'),
                 )
                 field['name_text_key'] = name_text.key
-                field.pop('name')
             updates['schema_input_fields'] = schema_input_fields
         if not updates:
             raise NoRequiredParameters(
