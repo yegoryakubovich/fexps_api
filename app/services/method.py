@@ -45,6 +45,7 @@ class MethodService(BaseService):
                 value_default=field.get('name'),
             )
             field['name_text_key'] = name_text.key
+            field.pop('name')
         if isinstance(confirmation_fields, str):
             raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
         for confirmation_field in confirmation_fields:
@@ -116,9 +117,9 @@ class MethodService(BaseService):
             currency_id_str: str = None,
             schema_fields: list = None,
     ) -> dict:
-        text = await MethodRepository().get_by_id(id_=id_)
+        method = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
-            text,
+            method,
             currency_id_str=currency_id_str,
             schema_fields=schema_fields,
         )
@@ -131,7 +132,7 @@ class MethodService(BaseService):
         if schema_fields:
             action_parameters['schema_fields'] = schema_fields
         await self.create_action(
-            model=text,
+            model=method,
             action=Actions.UPDATE,
             parameters=action_parameters,
         )

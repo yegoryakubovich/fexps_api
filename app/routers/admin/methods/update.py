@@ -17,12 +17,13 @@
 
 from typing import Optional
 
-from pydantic import Field, BaseModel
+from pydantic import Field, BaseModel, field_validator
 
+from app.db.models import MethodFieldTypes
 from app.services import MethodService
 
 from app.utils import Response, Router
-
+from app.utils.exceptions import MethodParametersMissing, MethodParametersValidationError
 
 router = Router(
     prefix='/update',
@@ -35,7 +36,38 @@ class MethodUpdateSchema(BaseModel):
     currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
     schema_fields: Optional[list[dict]] = Field(default=None)
 
-
+    @field_validator('schema_fields')
+    @classmethod
+    def fields_valid(cls, fields):
+        for i, field in enumerate(fields, start=1):
+            for key in ['key', 'type', 'name', 'optional']:
+                if field.get(key) is None:
+                    raise MethodParametersMissing(
+                        kwargs={
+                            'field_name': 'fields',
+                            'number': i,
+                            'parameter': key,
+                        },
+                    )
+            if not isinstance(field.get('optional'), bool):
+                raise MethodParametersValidationError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'number': i,
+                        'param_name': 'optional',
+                        'parameters': ['true', 'false'],
+                    },
+                )
+            if field.get('type') not in MethodFieldTypes.choices_field:
+                raise MethodParametersValidationError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'number': i,
+                        'param_name': 'type',
+                        'parameters': MethodFieldTypes.choices_field,
+                    },
+                )
+        return fields
 @router.post()
 async def route(schema: MethodUpdateSchema):
     result = await MethodService().update_by_admin(

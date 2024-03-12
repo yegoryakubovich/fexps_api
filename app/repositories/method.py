@@ -16,24 +16,37 @@
 
 
 from app.db.models import Method
+from app.repositories import TextRepository
 from app.repositories.base import BaseRepository
 from app.repositories.currency import CurrencyRepository
+from app.utils.crypto import create_id_str
 from app.utils.exceptions import NoRequiredParameters
 
 
 class MethodRepository(BaseRepository[Method]):
     model = Method
 
-    async def update_method(self, db_obj: Method,
-                            currency_id_str: str = None, name_text_key: str = None, schema_fields: list = None):
+    async def update_method(
+            self,
+            db_obj: Method,
+            currency_id_str: str = None,
+            schema_fields: list = None,
+    ) -> None:
         if currency_id_str:
             currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
             await self.update(db_obj, currency=currency)
         if schema_fields:
+            for field in schema_fields:
+                name_text = await TextRepository().create(
+                    key=f'method_field_{await create_id_str()}',
+                    value_default=field.get('name'),
+                )
+                field['name_text_key'] = name_text.key
+                field.pop('name')
             await self.update(db_obj, schema_fields=schema_fields)
-        if not currency_id_str and not name_text_key and not schema_fields:
+        if not currency_id_str and not schema_fields:
             raise NoRequiredParameters(
                 kwargs={
-                    'parameters': ['currency_id_str', 'name_text_key', 'schema_fields'],
+                    'parameters': ['currency_id_str', 'schema_fields'],
                 },
             )
