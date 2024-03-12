@@ -45,6 +45,7 @@ class MethodRepository(BaseRepository[Method]):
                 )
                 field['name_text_key'] = name_text.key
                 field.pop('name')
+            updates['schema_fields'] = schema_fields
         if schema_input_fields:
             for field in schema_fields:
                 name_text = await TextRepository().create(
@@ -57,7 +58,7 @@ class MethodRepository(BaseRepository[Method]):
         if not updates:
             raise NoRequiredParameters(
                 kwargs={
-                    'parameters': ['currency_id_str', 'schema_fields'],
+                    'parameters': ['currency_id_str', 'schema_fields', 'schema_input_fields'],
                 },
             )
         await self.update(db_obj, **updates)
