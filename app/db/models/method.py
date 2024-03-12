@@ -39,7 +39,7 @@ class Method(Base):
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
     schema_fields = Column(JSON())
-    schema_confirmation_fields = Column(JSON())
+    schema_input_fields = Column(JSON())
     decimal = Column(Integer, default=2)
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

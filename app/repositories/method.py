@@ -30,11 +30,13 @@ class MethodRepository(BaseRepository[Method]):
             self,
             db_obj: Method,
             currency_id_str: str = None,
-            schema_fields: list = None,
+            schema_fields: list[dict] = None,
+            schema_input_fields: list[dict] = None,
     ) -> None:
+        updates = {}
         if currency_id_str:
             currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
-            await self.update(db_obj, currency=currency)
+            updates['currency'] = currency
         if schema_fields:
             for field in schema_fields:
                 name_text = await TextRepository().create(
@@ -43,10 +45,19 @@ class MethodRepository(BaseRepository[Method]):
                 )
                 field['name_text_key'] = name_text.key
                 field.pop('name')
-            await self.update(db_obj, schema_fields=schema_fields)
-        if not currency_id_str and not schema_fields:
+        if schema_input_fields:
+            for field in schema_fields:
+                name_text = await TextRepository().create(
+                    key=f'method_confirmation_field_{await create_id_str()}',
+                    value_default=field.get('name'),
+                )
+                field['name_text_key'] = name_text.key
+                field.pop('name')
+            updates['schema_input_fields'] = schema_input_fields
+        if not updates:
             raise NoRequiredParameters(
                 kwargs={
                     'parameters': ['currency_id_str', 'schema_fields'],
                 },
             )
+        await self.update(db_obj, **updates)

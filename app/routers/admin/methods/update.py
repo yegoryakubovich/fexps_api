@@ -21,9 +21,8 @@ from pydantic import Field, BaseModel, field_validator
 
 from app.db.models import MethodFieldTypes
 from app.services import MethodService
-
 from app.utils import Response, Router
-from app.utils.exceptions import MethodParametersMissing, MethodParametersValidationError
+from app.utils.exceptions import MethodParametersMissing, MethodParametersValidationError, MethodFieldsMissing
 
 router = Router(
     prefix='/update',
@@ -34,11 +33,14 @@ class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
     currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
-    schema_fields: Optional[list[dict]] = Field(default=None)
+    fields: Optional[list[dict]] = Field(default=None)
+    schema_input_fields: Optional[list[dict]] = Field(default=None)
 
-    @field_validator('schema_fields')
+    @field_validator('fields')
     @classmethod
     def fields_valid(cls, fields):
+        if isinstance(fields, str):
+            raise MethodFieldsMissing(kwargs={'field_name': 'fields'})
         for i, field in enumerate(fields, start=1):
             for key in ['key', 'type', 'name', 'optional']:
                 if field.get(key) is None:
@@ -68,12 +70,50 @@ class MethodUpdateSchema(BaseModel):
                     },
                 )
         return fields
+
+    @field_validator('input_fields')
+    @classmethod
+    def input_fields_valid(cls, input_fields):
+        if isinstance(input_fields, str):
+            raise MethodFieldsMissing(kwargs={'field_name': 'input_fields'})
+        for i, field in enumerate(input_fields, start=1):
+            for key in ['key', 'type', 'name', 'optional']:
+                if field.get(key) is None:
+                    raise MethodParametersMissing(
+                        kwargs={
+                            'field_name': 'input_fields',
+                            'number': i,
+                            'parameter': key,
+                        },
+                    )
+            if not isinstance(field.get('optional'), bool):
+                raise MethodParametersValidationError(
+                    kwargs={
+                        'field_name': 'input_fields',
+                        'number': i,
+                        'param_name': 'optional',
+                        'parameters': ['true', 'false'],
+                    },
+                )
+            if field.get('type') not in MethodFieldTypes.choices:
+                raise MethodParametersValidationError(
+                    kwargs={
+                        'field_name': 'input_fields',
+                        'number': i,
+                        'param_name': 'type',
+                        'parameters': MethodFieldTypes.choices,
+                    },
+                )
+        return input_fields
+
+
 @router.post()
 async def route(schema: MethodUpdateSchema):
     result = await MethodService().update_by_admin(
         token=schema.token,
         id_=schema.id_,
         currency_id_str=schema.currency_id_str or None,
-        schema_fields=schema.schema_fields or None,
+        fields=schema.fields or None,
+        input_fields=schema.input_fields or None,
     )
     return Response(**result)

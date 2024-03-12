@@ -35,7 +35,7 @@ class MethodService(BaseService):
             currency_id_str: str,
             name: str,
             fields: list[dict],
-            confirmation_fields: list[dict],
+            input_fields: list[dict],
     ) -> dict:
         if isinstance(fields, str):
             raise MethodFieldsMissing(kwargs={'field_name': 'fields'})
@@ -46,9 +46,9 @@ class MethodService(BaseService):
             )
             field['name_text_key'] = name_text.key
             field.pop('name')
-        if isinstance(confirmation_fields, str):
+        if isinstance(input_fields, str):
             raise MethodFieldsMissing(kwargs={'field_name': 'confirmation_fields'})
-        for confirmation_field in confirmation_fields:
+        for confirmation_field in input_fields:
             name_text = await TextRepository().create(
                 key=f'method_confirmation_field_{await create_id_str()}',
                 value_default=confirmation_field.get('name'),
@@ -64,7 +64,7 @@ class MethodService(BaseService):
             currency=currency,
             name_text=name_text,
             schema_fields=fields,
-            schema_confirmation_fields=confirmation_fields
+            schema_input_fields=input_fields
         )
         await self.create_action(
             model=method,
@@ -115,13 +115,15 @@ class MethodService(BaseService):
             session: Session,
             id_: int,
             currency_id_str: str = None,
-            schema_fields: list = None,
+            fields: list[dict] = None,
+            input_fields: list[dict] = None,
     ) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
             method,
             currency_id_str=currency_id_str,
-            schema_fields=schema_fields,
+            schema_fields=fields,
+            schema_input_fields=input_fields,
         )
         action_parameters = {
             'updater': f'session_{session.id}',
@@ -129,8 +131,10 @@ class MethodService(BaseService):
         }
         if currency_id_str:
             action_parameters['currency_id_str'] = currency_id_str
-        if schema_fields:
-            action_parameters['schema_fields'] = schema_fields
+        if fields:
+            action_parameters['schema_fields'] = fields
+        if input_fields:
+            action_parameters['schema_input_fields'] = input_fields
         await self.create_action(
             model=method,
             action=Actions.UPDATE,
