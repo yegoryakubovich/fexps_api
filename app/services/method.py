@@ -88,7 +88,7 @@ class MethodService(BaseService):
                 'currency': method.currency.id_str,
                 'name_text': method.name_text.key,
                 'schema_fields': method.schema_fields,
-                'schema_input_fields': method.schema_confirmation_fields,
+                'schema_input_fields': method.schema_input_fields,
                 'is_active': method.is_active,
             }
         }
@@ -102,7 +102,7 @@ class MethodService(BaseService):
                     'currency': method.currency.id_str,
                     'name_text': method.name_text.key,
                     'schema_fields': method.schema_fields,
-                    'schema_input_fields': method.schema_confirmation_fields,
+                    'schema_input_fields': method.schema_input_fields,
                     'is_active': method.is_active,
                 }
                 for method in await MethodRepository().get_list()
