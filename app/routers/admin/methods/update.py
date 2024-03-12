@@ -34,7 +34,7 @@ class MethodUpdateSchema(BaseModel):
     id_: int = Field()
     currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
     fields: Optional[list[dict]] = Field(default=None)
-    schema_input_fields: Optional[list[dict]] = Field(default=None)
+    input_fields: Optional[list[dict]] = Field(default=None)
 
     @field_validator('fields')
     @classmethod
