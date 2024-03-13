@@ -15,20 +15,27 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .get import router as router_get
-from .search import router as router_search
-from .update_confirmation import router as router_update_confirmation
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services import RequestService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/requests',
-    routes_included=[
-        router_create,
-        router_get,
-        router_search,
-        router_update_confirmation,
-    ],
-    tags=['Requests'],
+    prefix='/get',
 )
+
+
+class RequestGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.get()
+async def route(schema: RequestGetSchema = Depends()):
+    result = await RequestService().get(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

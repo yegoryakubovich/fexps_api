@@ -23,7 +23,7 @@ from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.services import AccountService, ActionService
+from app.services import ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
@@ -102,7 +102,29 @@ class RequestService(BaseService):
         )
         return {'id': request.id}
 
-    @session_required(permissions=['transfers'])
+    @session_required(permissions=['requests'])
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=id_)
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=RequestStateNotPermission(
+                kwargs={
+                    'id_value': request.id,
+                    'action': f'Get by id',
+                },
+            )
+        )
+        return {
+            'request': self._generate_country_dict(request=request)
+        }
+
+    @session_required(permissions=['requests'])
     async def search(
             self,
             session: Session,
@@ -131,36 +153,7 @@ class RequestService(BaseService):
                 continue
             if is_finish and _request.state not in RequestStates.choices_finished:
                 continue
-            action = await ActionService().get_action(model=_request, action=Actions.CREATE)
-            requests.append({
-                'id': _request.id,
-                'wallet': _request.wallet_id,
-                'type': _request.type,
-                'state': _request.state,
-                'rate_decimal': _request.rate_decimal,
-                'rate_confirmed': _request.rate_confirmed,
-                'difference_confirmed': _request.difference_confirmed,
-                'first_line': _request.first_line,
-                'first_line_value': _request.first_line_value,
-                'input_currency_value_raw': _request.input_currency_value_raw,
-                'input_currency_value': _request.input_currency_value,
-                'input_value_raw': _request.input_value_raw,
-                'input_value': _request.input_value,
-                'input_rate_raw': _request.input_rate_raw,
-                'input_rate': _request.input_rate,
-                'commission_value': _request.input_rate,
-                'rate': _request.input_rate,
-                'output_currency_value_raw': _request.output_currency_value_raw,
-                'output_currency_value': _request.output_currency_value,
-                'output_value_raw': _request.output_value_raw,
-                'output_value': _request.output_value,
-                'output_rate_raw': _request.output_rate_raw,
-                'output_rate': _request.output_rate,
-                'input_method': _request.input_method_id,
-                'output_requisite_data': _request.output_requisite_data_id,
-                'output_method': _request.output_method_id,
-                'date': action.datetime.strftime(settings.datetime_format)
-            })
+            requests.append(self._generate_country_dict(request=_request))
         return {
             'requests': requests,
             'results': results,
@@ -208,3 +201,36 @@ class RequestService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    async def _generate_country_dict(request: Request):
+        action = await ActionService().get_action(model=request, action=Actions.CREATE)
+        return {
+            'id': request.id,
+            'wallet': request.wallet_id,
+            'type': request.type,
+            'state': request.state,
+            'rate_decimal': request.rate_decimal,
+            'rate_confirmed': request.rate_confirmed,
+            'difference_confirmed': request.difference_confirmed,
+            'first_line': request.first_line,
+            'first_line_value': request.first_line_value,
+            'input_currency_value_raw': request.input_currency_value_raw,
+            'input_currency_value': request.input_currency_value,
+            'input_value_raw': request.input_value_raw,
+            'input_value': request.input_value,
+            'input_rate_raw': request.input_rate_raw,
+            'input_rate': request.input_rate,
+            'commission_value': request.input_rate,
+            'rate': request.input_rate,
+            'output_currency_value_raw': request.output_currency_value_raw,
+            'output_currency_value': request.output_currency_value,
+            'output_value_raw': request.output_value_raw,
+            'output_value': request.output_value,
+            'output_rate_raw': request.output_rate_raw,
+            'output_rate': request.output_rate,
+            'input_method': request.input_method_id,
+            'output_requisite_data': request.output_requisite_data_id,
+            'output_method': request.output_method_id,
+            'date': action.datetime.strftime(settings.datetime_format)
+        }
