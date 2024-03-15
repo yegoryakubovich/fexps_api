@@ -29,7 +29,7 @@ router = Router(
 class OrderUpdateConfirmationSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    confirmation_fields: dict = Field()
+    input_fields: dict = Field()
 
 
 @router.post()
@@ -37,6 +37,6 @@ async def route(schema: OrderUpdateConfirmationSchema):
     result = await OrderService().update_confirmation(
         token=schema.token,
         id_=schema.id_,
-        confirmation_fields=schema.confirmation_fields,
+        input_fields=schema.input_fields,
     )
     return Response(**result)

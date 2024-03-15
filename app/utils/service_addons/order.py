@@ -51,6 +51,14 @@ async def waited_order(
         value=round(requisite.value - value),
         in_process=False,
     )
+    requisite_fields = None
+    if requisite.output_requisite_data:
+        requisite_fields = requisite.output_requisite_data
+        requisite_scheme_fields = requisite.output_requisite_data.method.schema_fields
+        input_scheme_fields = requisite.output_requisite_data.method.schema_input_fields
+    else:
+        requisite_scheme_fields = requisite.input_method.schema_fields
+        input_scheme_fields = requisite.input_method.schema_input_fields
     return await OrderRepository().create(
         type=order_type,
         state=order_state,
@@ -59,7 +67,10 @@ async def waited_order(
         currency_value=currency_value,
         value=value,
         rate=rate,
-        requisite_fields=requisite.output_requisite_data.fields if requisite.output_requisite_data else None,
+        requisite_scheme_fields=requisite_scheme_fields,
+        requisite_fields=requisite_fields,
+        input_scheme_fields=input_scheme_fields,
+        input_fields=None,
     )
 
 

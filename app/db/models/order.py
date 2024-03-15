@@ -65,7 +65,9 @@ class Order(Base):
     value = Column(BigInteger())
     rate = Column(BigInteger)
 
+    requisite_scheme_fields = Column(JSON())
     requisite_fields = Column(JSON())
-    confirmation_fields = Column(JSON(), nullable=True)
+    input_scheme_fields = Column(JSON())
+    input_fields = Column(JSON(), nullable=True)
 
     is_deleted = Column(Boolean, default=False)

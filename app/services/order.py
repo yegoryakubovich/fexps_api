@@ -23,7 +23,7 @@ from app.services.base import BaseService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
-from app.utils.service_addons.method import method_check_confirmation_field
+from app.utils.service_addons.method import method_check_input_field
 from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
 
@@ -111,7 +111,7 @@ class OrderService(BaseService):
             'value': order.value,
             'rate': order.rate,
             'requisite_fields': order.requisite_fields,
-            'confirmation_fields': order.confirmation_fields,
+            'input_fields': order.input_fields,
         }
 
     @session_required(permissions=['orders'])
@@ -119,7 +119,7 @@ class OrderService(BaseService):
             self,
             session: Session,
             id_: int,
-            confirmation_fields: dict,
+            input_fields: dict,
     ) -> dict:
         account = session.account
         need_state = OrderStates.PAYMENT
@@ -157,18 +157,18 @@ class OrderService(BaseService):
             )
         await OrderRequestService().check_have_order_request(order=order)
         if order.type == OrderTypes.INPUT:
-            await method_check_confirmation_field(
+            await method_check_input_field(
                 method=order.requisite.output_requisite_data.method,
-                fields=confirmation_fields,
+                fields=input_fields,
             )
         elif order.type == OrderTypes.OUTPUT:
-            await method_check_confirmation_field(
+            await method_check_input_field(
                 method=order.requisite.input_method,
-                fields=confirmation_fields,
+                fields=input_fields,
             )
         await OrderRepository().update(
             order,
-            confirmation_fields=confirmation_fields,
+            input_fields=input_fields,
             state=next_state,
         )
         await self.create_action(
@@ -177,7 +177,7 @@ class OrderService(BaseService):
             parameters={
                 'updater': f'session_{session.id}',
                 'state': next_state,
-                'confirmation_fields': confirmation_fields,
+                'input_fields': input_fields,
             },
         )
         return {}

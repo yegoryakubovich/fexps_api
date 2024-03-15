@@ -48,7 +48,7 @@ class MethodRepository(BaseRepository[Method]):
         if schema_input_fields:
             for field in schema_fields:
                 name_text = await TextRepository().create(
-                    key=f'method_confirmation_field_{await create_id_str()}',
+                    key=f'method_input_field_{await create_id_str()}',
                     value_default=field.get('name'),
                 )
                 field['name_text_key'] = name_text.key

@@ -52,8 +52,8 @@ async def method_check_validation_scheme(method: Method, fields: dict):
             )
 
 
-async def method_check_confirmation_field(method: Method, fields: dict):
-    for field in method.schema_confirmation_fields:
+async def method_check_input_field(method: Method, fields: dict):
+    for field in method.schema_input_fields:
         field_key = field.get('key')
         field_type = field.get('type')
         field_optional = field.get('optional')
