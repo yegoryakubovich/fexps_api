@@ -127,19 +127,3 @@ async def order_compete_related(order: Order) -> None:
             value=order.value,
             order=order,
         )
-
-
-def get_order_dict(order: Order):
-    return {
-        'id': order.id,
-        'type': order.type,
-        'state': order.state,
-        'canceled_reason': order.canceled_reason,
-        'request': order.request_id,
-        'requisite': order.requisite_id,
-        'currency_value': order.currency_value,
-        'value': order.value,
-        'rate': order.rate,
-        'requisite_fields': order.requisite_fields,
-        'confirmation_fields': order.confirmation_fields,
-    }

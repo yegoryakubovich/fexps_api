@@ -24,7 +24,7 @@ from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.service_addons.method import method_check_confirmation_field
-from app.utils.service_addons.order import order_compete_related, get_order_dict
+from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
 
 
@@ -42,9 +42,16 @@ class OrderService(BaseService):
         await wallet_check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
-            exception=OrderNotPermission(kwargs={'field': 'Order', 'id_value': order.id}),
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id
+                },
+            ),
         )
-        return {'order': get_order_dict(order=order)}
+        return {
+            'order': self._generate_order_dict(order=order)
+        }
 
     @session_required(permissions=['orders'])
     async def get_all_by_request(
@@ -57,11 +64,16 @@ class OrderService(BaseService):
         await wallet_check_permission(
             account=account,
             wallets=[request.wallet],
-            exception=OrderNotPermission(kwargs={'field': 'Request', 'id_value': request.id}),
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Request',
+                    'id_value': request.id
+                },
+            ),
         )
         return {
             'orders': [
-                get_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+                self._generate_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
             ]
         }
 
@@ -80,8 +92,26 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                get_order_dict(order=order) for order in await OrderRepository().get_list(requisite=requisite)
+                self._generate_order_dict(order=order) for order in
+                await OrderRepository().get_list(requisite=requisite)
             ]
+        }
+
+    @staticmethod
+    def _generate_order_dict(order: Order):
+        return {
+            'id': order.id,
+            'type': order.type,
+            'state': order.state,
+            'canceled_reason': order.canceled_reason,
+            'request': order.request_id,
+            'requisite': order.requisite_id,
+            'currency': order.requisite.currency.id_str,
+            'currency_value': order.currency_value,
+            'value': order.value,
+            'rate': order.rate,
+            'requisite_fields': order.requisite_fields,
+            'confirmation_fields': order.confirmation_fields,
         }
 
     @session_required(permissions=['orders'])
