@@ -22,10 +22,10 @@ from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
-from app.services import OrderService
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.need_value import input_get_need_currency_value
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
+from app.utils.service_addons.order import waited_order
 
 prefix = '[request_state_input_reserved_check]'
 
@@ -113,7 +113,7 @@ async def get_new_requisite_by_currency_value(
         if not suitable_currency_value or not suitable_value:
             await RequisiteRepository().update(requisite, in_process=False)
             continue
-        await OrderService().waited_order(
+        await waited_order(
             request=request,
             requisite=requisite,
             currency_value=suitable_currency_value,
@@ -170,7 +170,7 @@ async def get_new_requisite_by_value(
         if not suitable_currency_value or not suitable_value:
             await RequisiteRepository().update(requisite, in_process=False)
             continue
-        await OrderService().waited_order(
+        await waited_order(
             request=request,
             requisite=requisite,
             currency_value=suitable_currency_value,
