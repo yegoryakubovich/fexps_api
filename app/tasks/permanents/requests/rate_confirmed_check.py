@@ -30,6 +30,7 @@ prefix = '[request_rate_confirmed_check]'
 
 
 async def request_rate_confirmed_check():
+    logging.critical('start request_rate_confirmed_check')
     while True:
         try:
             await run()

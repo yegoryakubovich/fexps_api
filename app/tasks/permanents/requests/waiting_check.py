@@ -30,6 +30,7 @@ prefix = '[request_waiting_check]'
 
 
 async def request_waiting_check():
+    logging.critical('start request_waiting_check')
     while True:
         try:
             await run()

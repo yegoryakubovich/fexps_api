@@ -31,6 +31,7 @@ prefix = '[request_state_input_reserved_check]'
 
 
 async def request_state_input_reserved_check():
+    logging.critical('start request_state_input_reserved_check')
     while True:
         try:
             await run()

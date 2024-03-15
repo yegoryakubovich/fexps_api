@@ -28,6 +28,7 @@ prefix = '[request_state_input_check]'
 
 
 async def request_state_input_check():
+    logging.critical('start request_state_input_check')
     while True:
         try:
             await run()

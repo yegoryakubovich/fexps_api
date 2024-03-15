@@ -36,6 +36,7 @@ prefix = '[request_state_loading_check]'
 
 
 async def request_state_loading_check():
+    logging.critical('start request_state_loading_check')
     while True:
         try:
             await run()

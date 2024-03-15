@@ -22,6 +22,7 @@ prefix = '[request_state_waiting_check]'
 
 
 async def request_state_waiting_check():
+    logging.critical('start request_state_waiting_check')
     while True:
         try:
             await run()
