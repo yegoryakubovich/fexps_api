@@ -14,10 +14,10 @@ async def request_type_input(
         request: Request,
 ) -> RequisiteTypeScheme:
     currency = request.input_method.currency
-    logging.debug(f'{prefix} req_{request.id} first_line={request.first_line}, currency={currency.id_str}')
+    logging.info(f'{prefix} req_{request.id} first_line={request.first_line}, currency={currency.id_str}')
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_currency_value = await input_get_need_currency_value(request=request)
-        logging.debug(f'req_{request.id} зашел в INPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}')
+        logging.info(f'req_{request.id} зашел в INPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}')
         return await request_type_input_currency_value(
             request=request,
             currency=currency,
@@ -25,7 +25,7 @@ async def request_type_input(
         )
     elif request.first_line == RequestFirstLine.INPUT_VALUE:
         need_value = await input_get_need_value(request=request)
-        logging.debug(f'req_{request.id} зашел в INPUT_VALUE, need_value={need_value}')
+        logging.info(f'req_{request.id} зашел в INPUT_VALUE, need_value={need_value}')
         return await request_type_input_value(
             request=request,
             currency=currency,

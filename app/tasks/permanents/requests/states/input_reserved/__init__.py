@@ -55,11 +55,11 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
-                logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
+                logging.info(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
                 await write_other(request=request)
-                logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT}')
+                logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT}')
                 await RequestRepository().update(request, state=RequestStates.INPUT)
             continue
         # create missing orders

@@ -47,11 +47,11 @@ async def request_state_loading_check():
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.LOADING):
         request = await RequestRepository().get_by_id(id_=request.id)
-        logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
+        logging.info(f'{prefix} request_{request.id} ({request.type}:{request.state}) start check')
         if request.type == RequestTypes.ALL:  # ALL
             result: AllRequisiteTypeScheme = await request_type_all(request=request)
             if not result:
-                logging.debug(f'{prefix} request_{request.id} result not found')
+                logging.info(f'{prefix} request_{request.id} result not found')
                 continue
             for input_requisite_scheme in result.input_requisite_type.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -74,7 +74,7 @@ async def run():
         elif request.type == RequestTypes.INPUT:  # INPUT
             result: RequisiteTypeScheme = await request_type_input(request=request)
             if not result:
-                logging.debug(f'{prefix} request_{request.id} ({request.type}:{request.state}) result not found')
+                logging.info(f'{prefix} request_{request.id} ({request.type}:{request.state}) result not found')
                 continue
             for requisite_scheme in result.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -103,7 +103,7 @@ async def run():
         elif request.type == RequestTypes.OUTPUT:  # OUTPUT
             result: RequisiteTypeScheme = await request_type_output(request=request)
             if not result:
-                logging.debug(f'{prefix} request_{request.id} result not found')
+                logging.info(f'{prefix} request_{request.id} result not found')
                 continue
             for requisite_scheme in result.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -125,7 +125,7 @@ async def run():
                 commission_value=0,
             )
         await write_other(request=request)
-        logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.WAITING}')
+        logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.WAITING}')
         await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
         await BaseService().create_action(
             model=request,

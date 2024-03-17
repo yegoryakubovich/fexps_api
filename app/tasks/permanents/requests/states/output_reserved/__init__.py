@@ -59,30 +59,30 @@ async def run():
             )
             for wait_order in waiting_orders:
                 if request.type == RequestTypes.OUTPUT:
-                    logging.debug(f'{prefix} order_{wait_order.id} banned value = {wait_order.value}')
+                    logging.info(f'{prefix} order_{wait_order.id} banned value = {wait_order.value}')
                     await order_banned_value(wallet=request.wallet, value=wait_order.value)
-                logging.debug(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
+                logging.info(f'{prefix} order_{wait_order.id} {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
                 await write_other(request=request)
-                logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT}')
+                logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT}')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue
         # create missing orders
         if request.rate_confirmed:
             _from_value = request.output_currency_value_raw
             need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
-            logging.debug(f'create missing orders request_{request.id} need_currency_value = {need_currency_value}')
+            logging.info(f'create missing orders request_{request.id} need_currency_value = {need_currency_value}')
             await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
         else:
             _from_value = request.input_value
             need_value = await output_get_need_value(request=request)
-            logging.debug(f'create missing orders request_{request.id} need_value = {need_value}')
+            logging.info(f'create missing orders request_{request.id} need_value = {need_value}')
             await get_new_requisite_by_value(request=request, need_value=need_value)
         await write_other(request=request)
         difference_value = get_difference(request=request)
         if request.difference_confirmed != difference_value:
-            logging.debug(f'{prefix} request_{request.id} '
+            logging.info(f'{prefix} request_{request.id} '
                           f'difference_value {difference_value} '
                           f'difference_confirmed= {request.difference_confirmed} ')
             await TransferSystemService().payment_difference(

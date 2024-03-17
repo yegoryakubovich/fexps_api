@@ -46,11 +46,11 @@ async def run():
         _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
         # check / change states
         if _need_currency_value:
-            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (1)')
+            logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (1)')
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
-            logging.debug(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (2)')
+            logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (2)')
             await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
             continue  # Found waiting orders
         if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
@@ -66,7 +66,7 @@ async def run():
                 reason=WalletBanReasons.BY_ORDER,
             )
             next_state = RequestStates.COMPLETED
-        logging.debug(f'{prefix} request_{request.id} {request.state}->{next_state}')
+        logging.info(f'{prefix} request_{request.id} {request.state}->{next_state}')
         await RequestRepository().update(request, state=next_state)
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)

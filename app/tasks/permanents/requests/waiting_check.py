@@ -48,7 +48,7 @@ async def run():
         if request_action_delta >= datetime.timedelta(minutes=settings.request_waiting_check):
             await orders_update_state_to_canceled(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
-            logging.debug(f'{prefix} Request.{request.id} state={RequestStates.CANCELED}')
+            logging.info(f'{prefix} Request.{request.id} state={RequestStates.CANCELED}')
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)
 
@@ -59,4 +59,4 @@ async def orders_update_state_to_canceled(request: Request) -> None:
             continue
         await order_cancel_related(order=order)
         await OrderRepository().update(order, state=OrderStates.CANCELED)
-        logging.debug(f'{prefix} Request.{request.id}, Order.{order.id} state={OrderStates.CANCELED}')
+        logging.info(f'{prefix} Request.{request.id}, Order.{order.id} state={OrderStates.CANCELED}')

@@ -36,7 +36,7 @@ async def request_type_all(
     logging.info(f'{prefix} start')
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_input_currency_value = await input_get_need_currency_value(request=request)
-        logging.debug(f'req_{request.id} INPUT_CV, need_input_currency_value={need_input_currency_value}')
+        logging.info(f'req_{request.id} INPUT_CV, need_input_currency_value={need_input_currency_value}')
         input_result = await request_type_input_currency_value(
             request=request,
             currency=request.input_method.currency,
@@ -57,7 +57,7 @@ async def request_type_all(
         )
         _output_from_value = input_result.sum_value - commission_value
         need_output_value = await output_get_need_value(request=request, from_value=_output_from_value)
-        logging.debug(f'req_{request.id} OUTPUT_V, need_output_value={need_output_value}')
+        logging.info(f'req_{request.id} OUTPUT_V, need_output_value={need_output_value}')
         output_result = await request_type_output_value(
             request=request,
             currency=request.output_method.currency,
@@ -83,7 +83,7 @@ async def request_type_all(
         )
     elif request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
         need_output_currency_value = await output_get_need_currency_value(request=request)
-        logging.debug(f'req_{request.id} OUTPUT_CV, need_output_currency_value={need_output_currency_value}')
+        logging.info(f'req_{request.id} OUTPUT_CV, need_output_currency_value={need_output_currency_value}')
         output_result = await request_type_output_currency_value(
             request=request,
             currency=request.output_method.currency,
@@ -104,7 +104,7 @@ async def request_type_all(
         )
         _input_from_value = output_result.sum_value + commission_value
         need_input_value = await input_get_need_value(request=request, from_value=_input_from_value)
-        logging.debug(f'req_{request.id} INPUT_V, need_input_value={need_input_value}')
+        logging.info(f'req_{request.id} INPUT_V, need_input_value={need_input_value}')
         input_result = await request_type_input_value(
             request=request,
             currency=request.input_method.currency,
