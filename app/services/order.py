@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Order, OrderTypes, OrderStates, Actions
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, Requisite
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -99,6 +99,11 @@ class OrderService(BaseService):
 
     @staticmethod
     def _generate_order_dict(order: Order):
+        method_id = None
+        if order.type == OrderTypes.INPUT:
+            method_id = order.requisite.output_requisite_data.method
+        elif order.type == OrderTypes.OUTPUT:
+            method_id = order.requisite.input_method
         return {
             'id': order.id,
             'type': order.type,
@@ -106,6 +111,7 @@ class OrderService(BaseService):
             'canceled_reason': order.canceled_reason,
             'request': order.request_id,
             'requisite': order.requisite_id,
+            'method': method_id,
             'currency': order.requisite.currency.id_str,
             'currency_value': order.currency_value,
             'value': order.value,
