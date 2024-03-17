@@ -99,11 +99,6 @@ class OrderService(BaseService):
 
     @staticmethod
     def _generate_order_dict(order: Order):
-        method_id = None
-        if order.type == OrderTypes.INPUT:
-            method_id = order.requisite.output_requisite_data.method
-        elif order.type == OrderTypes.OUTPUT:
-            method_id = order.requisite.input_method
         return {
             'id': order.id,
             'type': order.type,
@@ -111,12 +106,13 @@ class OrderService(BaseService):
             'canceled_reason': order.canceled_reason,
             'request': order.request_id,
             'requisite': order.requisite_id,
-            'method': method_id,
             'currency': order.requisite.currency.id_str,
             'currency_value': order.currency_value,
             'value': order.value,
             'rate': order.rate,
+            'requisite_scheme_fields': order.requisite_scheme_fields,
             'requisite_fields': order.requisite_fields,
+            'input_scheme_fields': order.input_scheme_fields,
             'input_fields': order.input_fields,
         }
 

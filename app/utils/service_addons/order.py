@@ -15,7 +15,8 @@
 #
 
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes
+from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes, \
+    RequisiteData
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.wallet_ban import WalletBanService
@@ -53,7 +54,7 @@ async def waited_order(
     )
     requisite_fields = None
     if requisite.output_requisite_data:
-        requisite_fields = requisite.output_requisite_data
+        requisite_fields = requisite.output_requisite_data.fields
         requisite_scheme_fields = requisite.output_requisite_data.method.schema_fields
         input_scheme_fields = requisite.output_requisite_data.method.schema_input_fields
     else:
