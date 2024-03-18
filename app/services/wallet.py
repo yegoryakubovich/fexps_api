@@ -28,6 +28,7 @@ from config import settings
 class WalletService(BaseService):
     model = Wallet
 
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -55,6 +56,7 @@ class WalletService(BaseService):
         )
         return {'id': wallet.id}
 
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -75,6 +77,7 @@ class WalletService(BaseService):
             }
         }
 
+    @session_required()
     async def get_list(
             self,
             session: Session,
@@ -94,6 +97,7 @@ class WalletService(BaseService):
         }
         return wallets
 
+    @session_required()
     async def update(
             self,
             session: Session,
@@ -119,6 +123,7 @@ class WalletService(BaseService):
         )
         return {}
 
+    @session_required()
     async def delete(
             self,
             session: Session,
