@@ -35,7 +35,7 @@ from config import settings
 class RequestService(BaseService):
     model = Request
 
-    @session_required(permissions=['requests'])
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -102,7 +102,7 @@ class RequestService(BaseService):
         )
         return {'id': request.id}
 
-    @session_required(permissions=['requests'])
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -124,7 +124,7 @@ class RequestService(BaseService):
             'request': await self._generate_country_dict(request=request)
         }
 
-    @session_required(permissions=['requests'])
+    @session_required()
     async def search(
             self,
             session: Session,
@@ -162,7 +162,7 @@ class RequestService(BaseService):
             'items_per_page': settings.items_per_page,
         }
 
-    @session_required(permissions=['requests'])
+    @session_required()
     async def update_confirmation(
             self,
             session: Session,

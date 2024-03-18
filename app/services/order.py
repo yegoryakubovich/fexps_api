@@ -31,7 +31,7 @@ from app.utils.service_addons.wallet import wallet_check_permission
 class OrderService(BaseService):
     model = Order
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -53,7 +53,7 @@ class OrderService(BaseService):
             'order': self._generate_order_dict(order=order)
         }
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def get_all_by_request(
             self,
             session: Session,
@@ -77,7 +77,7 @@ class OrderService(BaseService):
             ]
         }
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def get_all_by_requisite(
             self,
             session: Session,
@@ -116,7 +116,7 @@ class OrderService(BaseService):
             'input_fields': order.input_fields,
         }
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def update_confirmation(
             self,
             session: Session,
@@ -184,7 +184,7 @@ class OrderService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def update_completed(
             self,
             session: Session,
@@ -237,7 +237,7 @@ class OrderService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def update_payment(
             self,
             session: Session,

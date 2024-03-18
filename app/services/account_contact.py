@@ -26,7 +26,7 @@ from app.utils.exceptions import AccountContactsAlreadyExists
 class AccountContactService(BaseService):
     model = AccountContact
 
-    @session_required(permissions=['accounts'])
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -49,7 +49,7 @@ class AccountContactService(BaseService):
         )
         return {'id': account_contact.id}
 
-    @session_required(permissions=['accounts'])
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -67,7 +67,7 @@ class AccountContactService(BaseService):
             },
         }
 
-    @session_required(permissions=['accounts'])
+    @session_required()
     async def get_list(
             self,
             session: Session,
@@ -87,7 +87,7 @@ class AccountContactService(BaseService):
             )
         return {'account_contacts': account_contacts_list}
 
-    @session_required(permissions=['accounts'])
+    @session_required()
     async def update(
             self,
             session: Session,
@@ -110,7 +110,7 @@ class AccountContactService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['accounts'])
+    @session_required()
     async def delete(
             self,
             session: Session,

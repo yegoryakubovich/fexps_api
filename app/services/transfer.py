@@ -36,7 +36,7 @@ class TransactionTypes:
 class TransferService(BaseService):
     model = Transfer
 
-    @session_required(permissions=['transfers'])
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -67,7 +67,7 @@ class TransferService(BaseService):
         )
         return {'id': transfer.id}
 
-    @session_required(permissions=['transfers'])
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -89,7 +89,7 @@ class TransferService(BaseService):
             }
         }
 
-    @session_required(permissions=['transfers'])
+    @session_required()
     async def search(
             self,
             session: Session,

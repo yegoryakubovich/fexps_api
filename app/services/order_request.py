@@ -30,7 +30,7 @@ from app.utils.service_addons.order_request import order_request_update_type_can
 class OrderRequestService(BaseService):
     model = OrderRequest
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -83,7 +83,7 @@ class OrderRequestService(BaseService):
         )
         return {'id': order_request.id}
 
-    @session_required(permissions=['orders'])
+    @session_required()
     async def update(
             self,
             session: Session,

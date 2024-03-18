@@ -33,7 +33,7 @@ from config import settings
 class RequisiteService(BaseService):
     model = Requisite
 
-    @session_required(permissions=['requisites'])
+    @session_required()
     async def create(
             self,
             session: Session,
@@ -108,7 +108,7 @@ class RequisiteService(BaseService):
 
         return {'id': requisite.id}
 
-    @session_required(permissions=['requisites'])
+    @session_required()
     async def get(
             self,
             session: Session,
@@ -140,7 +140,7 @@ class RequisiteService(BaseService):
             }
         }
 
-    @session_required(permissions=['requisites'])  # FIXME (CHECKME)
+    @session_required()  # FIXME (CHECKME)
     async def update(
             self,
             session: Session,
