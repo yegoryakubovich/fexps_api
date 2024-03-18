@@ -27,8 +27,7 @@ class Country(Base):
     id = Column(BigInteger, primary_key=True)
 
     id_str = Column(String(16))
-    name_text_id = Column(BigInteger, ForeignKey('texts.id'))
-    name_text = relationship('Text', uselist=False, lazy='selectin')
+    name = Column(String(64))
     language_default_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)
     language_default = relationship('Language', uselist=False, lazy='selectin')
     timezone_default_id = Column(BigInteger, ForeignKey('timezones.id', ondelete='SET NULL'), nullable=True)
