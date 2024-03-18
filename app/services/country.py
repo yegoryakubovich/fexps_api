@@ -181,7 +181,7 @@ class CountryService(BaseService):
         return {
             'id': country.id,
             'id_str': country.id_str,
-            'name_text': country.name_text.key,
+            'name': country.name,
             'language': country.language_default.id_str,
             'timezone': country.timezone_default.id_str,
             'currency': country.currency_default.id_str,
