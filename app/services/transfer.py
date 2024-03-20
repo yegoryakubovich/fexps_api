@@ -17,8 +17,9 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes
+from app.db.models import Transfer, Session, Actions, TransferTypes, Account
 from app.db.models.transfer import TransferOperations
+from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
@@ -79,11 +80,27 @@ class TransferService(BaseService):
             account=account,
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
+        account_from: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
+        account_to: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
         return {
             'transfer': {
                 'id': transfer.id,
                 'wallet_from': transfer.wallet_from.id,
+                'account_from': {
+                    'id': account_from.id,
+                    'firstname': account_from.firstname,
+                    'lastname': account_from.lastname,
+                    'username': account_from.username,
+                    'short_name': f'{account_from.firstname} {account_from.lastname[0]}.',
+                },
                 'wallet_to': transfer.wallet_to.id,
+                'account_to': {
+                    'id': account_to.id,
+                    'firstname': account_to.firstname,
+                    'lastname': account_to.lastname,
+                    'username': account_to.username,
+                    'short_name': f'{account_to.firstname} {account_to.lastname[0]}.',
+                },
                 'value': transfer.value,
                 'date': transfer.date.strftime(settings.datetime_format),
             }
