@@ -48,5 +48,4 @@ class Transfer(Base):
     order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     value = Column(BigInteger, default=0)
-    date = Column(DateTime, default=datetime.utcnow)
     is_deleted = Column(Boolean, default=False)

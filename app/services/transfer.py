@@ -22,6 +22,7 @@ from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
+from app.services import ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.service_addons.transfer import create_transfer
@@ -80,30 +81,8 @@ class TransferService(BaseService):
             account=account,
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
-        account_from: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
-        account_to: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
         return {
-            'transfer': {
-                'id': transfer.id,
-                'wallet_from': transfer.wallet_from.id,
-                'account_from': {
-                    'id': account_from.id,
-                    'firstname': account_from.firstname,
-                    'lastname': account_from.lastname,
-                    'username': account_from.username,
-                    'short_name': f'{account_from.firstname} {account_from.lastname[0]}.',
-                },
-                'wallet_to': transfer.wallet_to.id,
-                'account_to': {
-                    'id': account_to.id,
-                    'firstname': account_to.firstname,
-                    'lastname': account_to.lastname,
-                    'username': account_to.username,
-                    'short_name': f'{account_to.firstname} {account_to.lastname[0]}.',
-                },
-                'value': transfer.value,
-                'date': transfer.date.strftime(settings.datetime_format),
-            }
+            'transfer': await self._generate_wallet_dict(account=account, transfer=transfer)
         }
 
     @session_required()
@@ -124,24 +103,43 @@ class TransferService(BaseService):
             is_receiver=is_receiver,
             page=page,
         )
-        transfers = []
-        for transfer in _transfers:
-            operation = TransferOperations.SEND if transfer.wallet_from.id == wallet.id else TransferOperations.RECEIVE
-            transfers.append(
-                {
-                    'id': transfer.id,
-                    'type': transfer.type,
-                    'operation': operation,
-                    'wallet_from': transfer.wallet_from.id,
-                    'wallet_to': transfer.wallet_to.id,
-                    'value': transfer.value,
-                    'date': transfer.date.strftime(settings.datetime_format),
-                }
-            )
         return {
-            'transfers': transfers,
+            'transfers': [
+                await self._generate_wallet_dict(account=account, transfer=transfer)
+                for transfer in _transfers
+            ],
             'results': results,
             'pages': ceil(results / settings.items_per_page),
             'page': page,
             'items_per_page': settings.items_per_page,
+        }
+
+    @staticmethod
+    async def _generate_wallet_dict(account: Account, transfer: Transfer) -> dict:
+        account_from: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
+        account_to: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
+        action = await ActionService().get_action(model=transfer, action=Actions.CREATE)
+        operation = TransferOperations.SEND if account_from.id == account.id else TransferOperations.RECEIVE
+        return {
+            'id': transfer.id,
+            'type': transfer.type,
+            'operation': operation,
+            'wallet_from': transfer.wallet_from.id,
+            'account_from': {
+                'id': account_from.id,
+                'firstname': account_from.firstname,
+                'lastname': account_from.lastname,
+                'username': account_from.username,
+                'short_name': f'{account_from.firstname} {account_from.lastname[0]}.',
+            },
+            'wallet_to': transfer.wallet_to.id,
+            'account_to': {
+                'id': account_to.id,
+                'firstname': account_to.firstname,
+                'lastname': account_to.lastname,
+                'username': account_to.username,
+                'short_name': f'{account_to.firstname} {account_to.lastname[0]}.',
+            },
+            'value': transfer.value,
+            'date': action.datetime.strftime(settings.datetime_format),
         }
