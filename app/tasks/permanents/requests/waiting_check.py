@@ -32,10 +32,12 @@ prefix = '[request_waiting_check]'
 async def request_waiting_check():
     logging.critical('start request_waiting_check')
     while True:
-        try:
-            await run()
-        except Exception as e:
-            logging.error(f'{prefix}  Exception \n {e}')
+        await run()
+
+        # try:
+        #     await run()
+        # except Exception as e:
+        #     logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():
@@ -44,7 +46,7 @@ async def run():
         request_action = await ActionService().get_action(request, action=Actions.UPDATE)
         if not request_action:
             continue
-        request_action_delta = time_now - request_action.datetime
+        request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.UTC)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_waiting_check):
             await orders_update_state_to_canceled(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
