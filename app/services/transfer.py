@@ -17,7 +17,7 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Account
+from app.db.models import Transfer, Session, Actions, TransferTypes, Account, Wallet
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
@@ -116,30 +116,41 @@ class TransferService(BaseService):
 
     @staticmethod
     async def _generate_wallet_dict(account: Account, transfer: Transfer) -> dict:
-        account_from: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
-        account_to: Account = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
+        account_from = account_to = {
+            'id': 0,
+            'firstname': 'System',
+            'lastname': '',
+            'username': '',
+            'short_name': f'System',
+        }
+        if not transfer.wallet_from.is_system:
+            account_temp = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
+            account_from = {
+                'id': account_temp.id,
+                'firstname': account_temp.firstname,
+                'lastname': account_temp.lastname,
+                'username': account_temp.username,
+                'short_name': f'{account_temp.firstname} {account_temp.lastname[0]}.',
+            }
+        if not transfer.wallet_to.is_system:
+            account_temp = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
+            account_from = {
+                'id': account_temp.id,
+                'firstname': account_temp.firstname,
+                'lastname': account_temp.lastname,
+                'username': account_temp.username,
+                'short_name': f'{account_temp.firstname} {account_temp.lastname[0]}.',
+            }
         action = await ActionService().get_action(model=transfer, action=Actions.CREATE)
-        operation = TransferOperations.SEND if account_from.id == account.id else TransferOperations.RECEIVE
+        operation = TransferOperations.SEND if account_from['id'] == account.id else TransferOperations.RECEIVE
         return {
             'id': transfer.id,
             'type': transfer.type,
             'operation': operation,
             'wallet_from': transfer.wallet_from.id,
-            'account_from': {
-                'id': account_from.id,
-                'firstname': account_from.firstname,
-                'lastname': account_from.lastname,
-                'username': account_from.username,
-                'short_name': f'{account_from.firstname} {account_from.lastname[0]}.',
-            },
+            'account_from': account_from,
             'wallet_to': transfer.wallet_to.id,
-            'account_to': {
-                'id': account_to.id,
-                'firstname': account_to.firstname,
-                'lastname': account_to.lastname,
-                'username': account_to.username,
-                'short_name': f'{account_to.firstname} {account_to.lastname[0]}.',
-            },
+            'account_to': account_to,
             'value': transfer.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
