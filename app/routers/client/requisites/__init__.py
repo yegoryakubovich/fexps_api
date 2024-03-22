@@ -18,6 +18,7 @@
 from app.utils import Router
 from .create import router as router_create
 from .get import router as router_get
+from .search import router as router_search
 from .update import router as router_update
 
 
@@ -26,6 +27,7 @@ router = Router(
     routes_included=[
         router_create,
         router_get,
+        router_search,
         router_update,
     ],
     tags=['Requisites'],

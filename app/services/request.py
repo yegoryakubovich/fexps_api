@@ -121,7 +121,7 @@ class RequestService(BaseService):
             )
         )
         return {
-            'request': await self._generate_country_dict(request=request)
+            'request': await self._generate_request_dict(request=request)
         }
 
     @session_required()
@@ -153,7 +153,7 @@ class RequestService(BaseService):
                 continue
             if is_finish and _request.state not in RequestStates.choices_finished:
                 continue
-            requests.append(await self._generate_country_dict(request=_request))
+            requests.append(await self._generate_request_dict(request=_request))
         return {
             'requests': requests,
             'results': results,
@@ -203,7 +203,7 @@ class RequestService(BaseService):
         return {}
 
     @staticmethod
-    async def _generate_country_dict(request: Request) -> dict:
+    async def _generate_request_dict(request: Request) -> dict:
         action = await ActionService().get_action(model=request, action=Actions.CREATE)
         return {
             'id': request.id,

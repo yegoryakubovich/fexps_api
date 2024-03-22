@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from math import ceil
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons
+from app.repositories import WalletAccountRepository
 from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -121,23 +122,38 @@ class RequisiteService(BaseService):
             if requisite.output_requisite_data.account.id != account.id:
                 raise WalletPermissionError()
         return {
-            'requisite': {
-                'id': requisite.id,
-                'type': requisite.type,
-                'wallet_id': requisite.wallet.id,
-                'input_method_id': requisite.input_method_id,
-                'output_requisite_data': requisite.output_requisite_data_id,
-                'currency': requisite.currency.id_str,
-                'currency_value': requisite.currency_value,
-                'total_currency_value': requisite.total_currency_value,
-                'currency_value_min': requisite.currency_value_min,
-                'currency_value_max': requisite.currency_value_max,
-                'rate': requisite.rate,
-                'value': requisite.value,
-                'total_value': requisite.total_value,
-                'value_min': requisite.value_min,
-                'value_max': requisite.value_max,
-            }
+            'requisite': self._generate_requisites_dict(requisite=requisite)
+        }
+
+    @session_required()
+    async def search(
+            self,
+            session: Session,
+            is_input: bool,
+            is_output: bool,
+            page: int,
+    ) -> dict:
+        account = session.account
+        wallets = [
+            wallet_account.wallet
+            for wallet_account in await WalletAccountRepository().get_list(account=account)
+        ]
+        requisites, results = await RequisiteRepository().search(
+            wallets=wallets,
+            is_input=is_input,
+            is_output=is_output,
+            page=page,
+        )
+        requisites = [
+            self._generate_requisites_dict(requisite=requisite)
+            for requisite in requisites
+        ]
+        return {
+            'requisites': requisites,
+            'results': results,
+            'pages': ceil(results / settings.items_per_page),
+            'page': page,
+            'items_per_page': settings.items_per_page,
         }
 
     @session_required()  # FIXME (CHECKME)
@@ -178,3 +194,23 @@ class RequisiteService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    def _generate_requisites_dict(requisite: Requisite):
+        return {
+            'id': requisite.id,
+            'type': requisite.type,
+            'wallet_id': requisite.wallet.id,
+            'input_method_id': requisite.input_method_id,
+            'output_requisite_data': requisite.output_requisite_data_id,
+            'currency': requisite.currency.id_str,
+            'currency_value': requisite.currency_value,
+            'total_currency_value': requisite.total_currency_value,
+            'currency_value_min': requisite.currency_value_min,
+            'currency_value_max': requisite.currency_value_max,
+            'rate': requisite.rate,
+            'value': requisite.value,
+            'total_value': requisite.total_value,
+            'value_min': requisite.value_min,
+            'value_max': requisite.value_max,
+        }
