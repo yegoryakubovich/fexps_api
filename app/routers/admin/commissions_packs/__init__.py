@@ -30,5 +30,5 @@ router = Router(
         router_get_list,
         router_delete,
     ],
-    tags=['AdminCommissionPack'],
+    tags=['AdminCommissionsPacks'],
 )

@@ -22,11 +22,11 @@ from .update import router as router_update
 
 
 router = Router(
-    prefix='/requisite',
+    prefix='/requisites',
     routes_included=[
         router_create,
         router_get,
         router_update,
     ],
-    tags=['Requisite'],
+    tags=['Requisites'],
 )

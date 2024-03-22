@@ -16,15 +16,15 @@
 
 
 from app.utils import Router
-from .get import router as router_get
 from .create import router as router_create
+from .get import router as router_get
 
 
 router = Router(
     prefix='/images',
-    tags=['Images'],
     routes_included=[
         router_get,
         router_create,
-    ]
+    ],
+    tags=['Images'],
 )
