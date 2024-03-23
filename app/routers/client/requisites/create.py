@@ -82,7 +82,7 @@ class RequisiteCreateSchema(BaseModel):
                 },
             )
         value_optional = [self.currency_value, self.value, self.rate]
-        value_optional_names = ['total_currency_value', 'total_value', 'rate']
+        value_optional_names = ['currency_value', 'value', 'rate']
         if (len(value_optional) - value_optional.count(None)) != 2:
             raise ParameterTwoContainError(kwargs={'parameters': value_optional_names})
         return self
