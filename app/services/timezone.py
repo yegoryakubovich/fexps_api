@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Timezone, Session
+from app.db.models import Timezone, Session, Actions
 from app.repositories.timezone import TimezoneRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -48,7 +48,7 @@ class TimezoneService(BaseService):
 
         await self.create_action(
             model=timezone,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': timezone.id_str,
@@ -71,7 +71,7 @@ class TimezoneService(BaseService):
 
         await self.create_action(
             model=timezone,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

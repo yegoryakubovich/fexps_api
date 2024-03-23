@@ -17,7 +17,7 @@
 
 from json import loads
 
-from app.db.models import TextPack, Session
+from app.db.models import TextPack, Session, Actions
 from app.repositories.language import LanguageRepository
 from app.repositories.text_pack import TextPackRepository
 from app.services.base import BaseService
@@ -58,7 +58,7 @@ class TextPackService(BaseService):
         text_pack = await TextPackRepository().create_by_language(language=language)
         await self.create_action(
             model=text_pack,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'by_admin': True,
@@ -83,7 +83,7 @@ class TextPackService(BaseService):
         await TextPackRepository().delete(model=text_pack)
         await self.create_action(
             model=text_pack,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'by_admin': True,

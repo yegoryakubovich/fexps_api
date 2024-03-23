@@ -15,11 +15,11 @@
 #
 
 
-from app.db.models import Session, Currency
+from app.db.models import Session, Currency, Actions
 from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions import ModelAlreadyExist
+from app.utils.exceptions import ModelAlreadyExist, NoRequiredParameters
 
 
 class CurrencyService(BaseService):
@@ -52,7 +52,7 @@ class CurrencyService(BaseService):
 
         await self.create_action(
             model=currency,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -65,6 +65,44 @@ class CurrencyService(BaseService):
 
         return {'id_str': currency.id_str}
 
+    @session_required(permissions=['countries'])
+    async def update_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+            decimal: str = None,
+            rate_decimal: str = None,
+            div: str = None,
+    ):
+        currency: Currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+
+        action_parameters = {
+            'updater': f'session_{session.id}',
+            'id_str': id_str,
+            'by_admin': True,
+            'decimal': decimal,
+            'rate_decimal': rate_decimal,
+            'div': div,
+        }
+        if not decimal and not rate_decimal and not div:
+            raise NoRequiredParameters(
+                kwargs={
+                    'parameters': ['decimal', 'rate_decimal', 'div']
+                }
+            )
+        await CurrencyRepository().update(
+            model=currency,
+            decimal=decimal,
+            rate_decimal=rate_decimal,
+            div=div,
+        )
+        await self.create_action(
+            model=currency,
+            action=Actions.UPDATE,
+            parameters=action_parameters,
+        )
+        return {}
+
     @session_required(permissions=['currencies'])
     async def delete_by_admin(
             self,
@@ -76,7 +114,7 @@ class CurrencyService(BaseService):
 
         await self.create_action(
             model=currency,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

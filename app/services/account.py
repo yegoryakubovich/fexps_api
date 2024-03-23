@@ -20,7 +20,7 @@ from random import sample
 from re import compile, search
 from string import ascii_letters, digits
 
-from app.db.models import Account, Session
+from app.db.models import Account, Session, Actions
 from app.repositories import AccountRepository, CountryRepository, LanguageRepository, TimezoneRepository, \
     CurrencyRepository, TextPackRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
@@ -85,7 +85,7 @@ class AccountService(BaseService):
         # Create action
         await self.create_action(
             model=account,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'username': username,
                 'firstname': firstname,

@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Country, Session
+from app.db.models import Country, Session, Actions
 from app.repositories import LanguageRepository, TimezoneRepository, CurrencyRepository, CountryRepository
 from app.services.base import BaseService
 from app.services.text import TextService
@@ -45,19 +45,13 @@ class CountryService(BaseService):
                 }
             )
 
-        name_text = await TextService().create_by_admin(
-            session=session,
-            key=f'country_{id_str}',
-            value_default=name,
-            return_model=True,
-        )
         language_default = await LanguageRepository().get_by_id_str(id_str=language)
         timezone_default = await TimezoneRepository().get_by_id_str(id_str=timezone)
         currency_default = await CurrencyRepository().get_by_id_str(id_str=currency)
 
         country = await CountryRepository().create(
             id_str=id_str,
-            name_text=name_text,
+            name=name,
             language_default=language_default,
             timezone_default=timezone_default,
             currency_default=currency_default,
@@ -65,7 +59,7 @@ class CountryService(BaseService):
 
         await self.create_action(
             model=country,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -84,6 +78,7 @@ class CountryService(BaseService):
             self,
             session: Session,
             id_str: str,
+            name: str = None,
             language: str = None,
             timezone: str = None,
             currency: str = None,
@@ -94,58 +89,38 @@ class CountryService(BaseService):
             'updater': f'session_{session.id}',
             'id_str': id_str,
             'by_admin': True,
+            'name': name,
         }
-
-        if not language and not timezone and not currency:
+        if not name and not language and not timezone and not currency:
             raise NoRequiredParameters(
                 kwargs={
                     'parameters': ['language', 'timezone', 'currency']
                 }
             )
-
+        language_default = None
         if language:
             language_default = await LanguageRepository().get_by_id_str(id_str=language)
-            action_parameters.update(
-                {
-                    'language': language,
-                }
-            )
-        else:
-            language_default = None
-
+            action_parameters.update(language=language)
+        timezone_default = None
         if timezone:
             timezone_default = await TimezoneRepository().get_by_id_str(id_str=timezone)
-            action_parameters.update(
-                {
-                    'timezone': timezone,
-                }
-            )
-        else:
-            timezone_default = None
-
+            action_parameters.update(timezone=timezone)
+        currency_default = None
         if currency:
             currency_default = await CurrencyRepository().get_by_id_str(id_str=currency)
-            action_parameters.update(
-                {
-                    'currency': currency,
-                }
-            )
-        else:
-            currency_default = None
-
+            action_parameters.update(currency=currency)
         await CountryRepository().update(
             model=country,
+            name=name,
             language_default=language_default,
             timezone_default=timezone_default,
             currency_default=currency_default,
         )
-
         await self.create_action(
             model=country,
-            action='update',
+            action=Actions.UPDATE,
             parameters=action_parameters,
         )
-
         return {}
 
     @session_required(permissions=['countries'])

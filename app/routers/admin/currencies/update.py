@@ -15,11 +15,9 @@
 #
 
 
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
-from app.services import CountryService
+from app.services import CurrencyService
 from app.utils import Router, Response
 
 
@@ -28,23 +26,21 @@ router = Router(
 )
 
 
-class CountryUpdateByAdminSchema(BaseModel):
+class CurrencyUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=2, max_length=16)
-    name: str = Field(min_length=1, max_length=1024)
-    language: Optional[str] = Field(default=None, min_length=2, max_length=16)
-    timezone: Optional[str] = Field(default=None, min_length=2, max_length=16)
-    currency: Optional[str] = Field(default=None, min_length=2, max_length=16)
+    id_str: str = Field(min_length=2, max_length=32)
+    decimal: int = Field(default=None)
+    rate_decimal: int = Field(default=None)
+    div: int = Field(default=None)
 
 
 @router.post()
-async def route(schema: CountryUpdateByAdminSchema):
-    result = await CountryService().update_by_admin(
+async def route(schema: CurrencyUpdateByAdminSchema):
+    result = await CurrencyService().update_by_admin(
         token=schema.token,
         id_str=schema.id_str,
-        name=schema.name,
-        language=schema.language,
-        timezone=schema.timezone,
-        currency=schema.currency,
+        decimal=schema.decimal,
+        rate_decimal=schema.rate_decimal,
+        div=schema.div,
     )
     return Response(**result)

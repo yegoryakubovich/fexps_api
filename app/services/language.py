@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Language, Session
+from app.db.models import Language, Session, Actions
 from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
 from app.services.text_pack import TextPackService
@@ -49,7 +49,7 @@ class LanguageService(BaseService):
 
         await self.create_action(
             model=language,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': language.id_str,
@@ -74,7 +74,7 @@ class LanguageService(BaseService):
 
         await self.create_action(
             model=language,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

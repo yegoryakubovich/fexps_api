@@ -17,7 +17,7 @@
 
 from app.services.base import BaseService
 from app.repositories import RolePermissionRepository, RoleRepository, PermissionRepository
-from app.db.models import RolePermission, Session
+from app.db.models import RolePermission, Session, Actions
 from app.utils.decorators import session_required
 
 
@@ -39,7 +39,7 @@ class RolePermissionService(BaseService):
 
         await self.create_action(
             model=role_permission,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'role_id': role_id,
@@ -62,7 +62,7 @@ class RolePermissionService(BaseService):
 
         await self.create_action(
             model=role_permission,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'delete': f'session_{session.id}',
                 'by_admin': True,

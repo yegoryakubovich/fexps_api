@@ -97,7 +97,7 @@ class ImageService(BaseService):
     #
     #     await self.create_action(
     #         model=image,
-    #         action='create',
+    #         action=Actions.CREATE,
     #         parameters=action_parameters
     #     )
     #
@@ -186,7 +186,7 @@ class ImageService(BaseService):
     #
     #     await self.create_action(
     #         model=image,
-    #         action='delete',
+    #         action=Actions.DELETE,
     #         parameters=action_parameters,
     #     )
     #

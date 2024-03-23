@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import AccountRole, Session
+from app.db.models import AccountRole, Session, Actions
 from app.repositories import AccountRoleRepository, AccountRepository, RoleRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -39,7 +39,7 @@ class AccountRoleService(BaseService):
         )
         await self.create_action(
             model=account_role,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'account_id': account.id,
@@ -59,7 +59,7 @@ class AccountRoleService(BaseService):
         await AccountRoleRepository().delete(model=account_role)
         await self.create_action(
             model=account_role,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'by_admin': True,
