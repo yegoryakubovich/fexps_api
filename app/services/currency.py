@@ -65,7 +65,7 @@ class CurrencyService(BaseService):
 
         return {'id_str': currency.id_str}
 
-    @session_required(permissions=['countries'])
+    @session_required(permissions=['currencies'])
     async def update_by_admin(
             self,
             session: Session,
@@ -75,7 +75,6 @@ class CurrencyService(BaseService):
             div: str = None,
     ):
         currency: Currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
-
         action_parameters = {
             'updater': f'session_{session.id}',
             'id_str': id_str,
