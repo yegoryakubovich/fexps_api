@@ -128,10 +128,8 @@ class RequestService(BaseService):
     async def search(
             self,
             session: Session,
-            is_input: bool,
-            is_output: bool,
-            is_all: bool,
-            is_finish: bool,
+            is_completed: bool,
+            is_canceled: bool,
             page: int,
     ) -> dict:
         account = session.account
@@ -141,18 +139,12 @@ class RequestService(BaseService):
         ]
         _requests, results = await RequestRepository().search(
             wallets=wallets,
-            is_input=is_input,
-            is_output=is_output,
-            is_all=is_all,
-            is_finish=is_finish,
+            is_completed=is_completed,
+            is_canceled=is_canceled,
             page=page,
         )
         requests = []
         for _request in _requests:
-            if not is_finish and _request.state in RequestStates.choices_finished:
-                continue
-            if is_finish and _request.state not in RequestStates.choices_finished:
-                continue
             requests.append(await self._generate_request_dict(request=_request))
         return {
             'requests': requests,
