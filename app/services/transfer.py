@@ -17,7 +17,7 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Account, Wallet
+from app.db.models import Transfer, Session, Actions, TransferTypes, Account
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
@@ -142,7 +142,11 @@ class TransferService(BaseService):
                 'short_name': f'{account_temp.firstname} {account_temp.lastname[0]}.',
             }
         action = await ActionService().get_action(model=transfer, action=Actions.CREATE)
-        operation = TransferOperations.SEND if account_from['id'] == account.id else TransferOperations.RECEIVE
+        operation = None
+        if account_from['id'] == account.id:
+            operation = TransferOperations.SEND
+        elif account_to['id'] == account.id:
+            operation = TransferOperations.RECEIVE
         return {
             'id': transfer.id,
             'type': transfer.type,
