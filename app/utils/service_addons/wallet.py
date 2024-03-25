@@ -36,10 +36,8 @@ async def wallet_check_permission(
         account: Account,
         wallets: List[Wallet],
         exception: ApiException = WalletPermissionError(),
-) -> None:
-    permission = False
+) -> Wallet:
     for wallet in wallets:
         if await WalletAccountRepository().get(account=account, wallet=wallet):
-            permission = True
-    if not permission:
-        raise exception
+            return wallet
+    raise exception

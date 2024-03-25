@@ -77,12 +77,12 @@ class TransferService(BaseService):
     ):
         account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        wallet = await wallet_check_permission(
             account=account,
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
         return {
-            'transfer': await self._generate_wallet_dict(account=account, transfer=transfer)
+            'transfer': await self._generate_wallet_dict(account=account, wallet=wallet, transfer=transfer)
         }
 
     @session_required()
