@@ -17,7 +17,7 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Account
+from app.db.models import Transfer, Session, Actions, TransferTypes, Account, Wallet
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
@@ -105,7 +105,7 @@ class TransferService(BaseService):
         )
         return {
             'transfers': [
-                await self._generate_wallet_dict(account=account, transfer=transfer)
+                await self._generate_wallet_dict(account=account, wallet=wallet, transfer=transfer)
                 for transfer in _transfers
             ],
             'results': results,
@@ -115,38 +115,33 @@ class TransferService(BaseService):
         }
 
     @staticmethod
-    async def _generate_wallet_dict(account: Account, transfer: Transfer) -> dict:
-        account_from = account_to = {
-            'id': 0,
-            'firstname': 'System',
-            'lastname': '',
-            'username': '',
-            'short_name': f'System',
-        }
-        if not transfer.wallet_from.is_system:
-            account_temp = (await WalletAccountRepository().get(wallet=transfer.wallet_from)).account
+    async def _generate_wallet_dict(account: Account, wallet: Wallet, transfer: Transfer) -> dict:
+        if transfer.wallet_from.is_system:
+            account_from = {'id': 0, 'firstname': 'System', 'lastname': '', 'username': '', 'short_name': f'System'}
+        else:
+            wallet_account_from = await WalletAccountRepository().get(wallet=transfer.wallet_from)
+            _account_from = wallet_account_from.account
             account_from = {
-                'id': account_temp.id,
-                'firstname': account_temp.firstname,
-                'lastname': account_temp.lastname,
-                'username': account_temp.username,
-                'short_name': f'{account_temp.firstname} {account_temp.lastname[0]}.',
+                'id': _account_from.id,
+                'firstname': _account_from.firstname,
+                'lastname': _account_from.lastname,
+                'username': _account_from.username,
+                'short_name': f'{_account_from.firstname} {_account_from.lastname[0]}.'.title(),
             }
-        if not transfer.wallet_to.is_system:
-            account_temp = (await WalletAccountRepository().get(wallet=transfer.wallet_to)).account
-            account_from = {
-                'id': account_temp.id,
-                'firstname': account_temp.firstname,
-                'lastname': account_temp.lastname,
-                'username': account_temp.username,
-                'short_name': f'{account_temp.firstname} {account_temp.lastname[0]}.',
+        if transfer.wallet_to.is_system:
+            account_to = {'id': 0, 'firstname': 'System', 'lastname': '', 'username': '', 'short_name': f'System'}
+        else:
+            wallet_account_to = await WalletAccountRepository().get(wallet_id=transfer.wallet_to_id)
+            _account_to = wallet_account_to.account
+            account_to = {
+                'id': _account_to.id,
+                'firstname': _account_to.firstname,
+                'lastname': _account_to.lastname,
+                'username': _account_to.username,
+                'short_name': f'{_account_to.firstname} {_account_to.lastname[0]}.'.title(),
             }
         action = await ActionService().get_action(model=transfer, action=Actions.CREATE)
-        operation = None
-        if account_from['id'] == account.id:
-            operation = TransferOperations.SEND
-        elif account_to['id'] == account.id:
-            operation = TransferOperations.RECEIVE
+        operation = TransferOperations.SEND if transfer.wallet_from_id == wallet.id else TransferOperations.RECEIVE
         return {
             'id': transfer.id,
             'type': transfer.type,
