@@ -20,7 +20,8 @@ from pydantic import Field, BaseModel, field_validator
 from app.db.models import MethodFieldTypes
 from app.services import MethodService
 from app.utils import Router, Response
-from app.utils.exceptions.method import MethodFieldsMissing, MethodParametersMissing, MethodParametersValidationError
+from app.utils.exceptions.method import MethodParametersMissing, MethodParametersValidationError
+
 
 router = Router(
     prefix='/create',
@@ -37,6 +38,8 @@ class MethodCreateSchema(BaseModel):
     input_fields: list[dict] = Field(
         default='[{"key": "string", "type": "str/int/image", "name": "string", "optional": false}]'
     )
+    color: str = Field(min_length=2, max_length=7, default='#1D1D1D')
+    bgcolor: str = Field(min_length=2, max_length=7, default='#FFFCEF')
 
     @field_validator('fields')
     @classmethod
@@ -114,5 +117,7 @@ async def route(schema: MethodCreateSchema):
         name=schema.name,
         fields=schema.fields,
         input_fields=schema.input_fields,
+        color=schema.color,
+        bgcolor=schema.bgcolor,
     )
     return Response(**result)

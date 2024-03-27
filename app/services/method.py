@@ -36,6 +36,8 @@ class MethodService(BaseService):
             name: str,
             fields: list[dict],
             input_fields: list[dict],
+            color: str,
+            bgcolor: str,
     ) -> dict:
         # fields
         if isinstance(fields, str):
@@ -64,7 +66,9 @@ class MethodService(BaseService):
             currency=currency,
             name_text=name_text,
             schema_fields=fields,
-            schema_input_fields=input_fields
+            schema_input_fields=input_fields,
+            color=color,
+            bgcolor=bgcolor,
         )
         await self.create_action(
             model=method,
@@ -72,41 +76,38 @@ class MethodService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'name_text': name_text.key,
-                'currency': currency.id_str
+                'currency': currency.id_str,
+                'color': color,
+                'bgcolor': bgcolor,
             },
         )
         return {'id': method.id}
 
-    @staticmethod
-    async def get(
-            id_: int,
-    ):
+    async def get(self, id_: int) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)
         return {
-            'method': {
-                'id': method.id,
-                'currency': method.currency.id_str,
-                'name_text': method.name_text.key,
-                'schema_fields': method.schema_fields,
-                'schema_input_fields': method.schema_input_fields,
-                'is_active': method.is_active,
-            }
+            'method': await self._generate_method_dict(method=method)
+        }
+
+    async def get_list(self) -> dict:
+        return {
+            'methods': [
+                await self._generate_method_dict(method=method)
+                for method in await MethodRepository().get_list()
+            ],
         }
 
     @staticmethod
-    async def get_list() -> dict:
+    async def _generate_method_dict(method: Method) -> dict:
         return {
-            'methods': [
-                {
-                    'id': method.id,
-                    'currency': method.currency.id_str,
-                    'name_text': method.name_text.key,
-                    'schema_fields': method.schema_fields,
-                    'schema_input_fields': method.schema_input_fields,
-                    'is_active': method.is_active,
-                }
-                for method in await MethodRepository().get_list()
-            ],
+            'id': method.id,
+            'currency': method.currency.id_str,
+            'name_text': method.name_text.key,
+            'schema_fields': method.schema_fields,
+            'schema_input_fields': method.schema_input_fields,
+            'color': method.color,
+            'bgcolor': method.bgcolor,
+            'is_active': method.is_active,
         }
 
     @session_required(permissions=['methods'], can_root=True)
@@ -117,6 +118,8 @@ class MethodService(BaseService):
             currency_id_str: str = None,
             fields: list[dict] = None,
             input_fields: list[dict] = None,
+            color: str = None,
+            bgcolor: str = None,
     ) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
@@ -124,6 +127,8 @@ class MethodService(BaseService):
             currency_id_str=currency_id_str,
             schema_fields=fields,
             schema_input_fields=input_fields,
+            color=color,
+            bgcolor=bgcolor,
         )
         action_parameters = {
             'updater': f'session_{session.id}',
@@ -135,6 +140,10 @@ class MethodService(BaseService):
             action_parameters['schema_fields'] = fields
         if input_fields:
             action_parameters['schema_input_fields'] = input_fields
+        if color:
+            action_parameters['color'] = color
+        if bgcolor:
+            action_parameters['bgcolor'] = bgcolor
         await self.create_action(
             model=method,
             action=Actions.UPDATE,

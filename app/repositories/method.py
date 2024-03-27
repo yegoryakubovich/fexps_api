@@ -32,6 +32,8 @@ class MethodRepository(BaseRepository[Method]):
             currency_id_str: str = None,
             schema_fields: list[dict] = None,
             schema_input_fields: list[dict] = None,
+            color: str = None,
+            bgcolor: str = None,
     ) -> None:
         updates = {}
         if currency_id_str:
@@ -53,6 +55,10 @@ class MethodRepository(BaseRepository[Method]):
                 )
                 field['name_text_key'] = name_text.key
             updates['schema_input_fields'] = schema_input_fields
+        if color:
+            updates['color'] = color
+        if bgcolor:
+            updates['bgcolor'] = bgcolor
         if not updates:
             raise NoRequiredParameters(
                 kwargs={

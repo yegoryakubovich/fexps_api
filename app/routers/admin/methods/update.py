@@ -35,6 +35,8 @@ class MethodUpdateSchema(BaseModel):
     currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
     fields: Optional[list[dict]] = Field(default=None)
     input_fields: Optional[list[dict]] = Field(default=None)
+    color: str = Field(min_length=2, max_length=7, default='#1D1D1D')
+    bgcolor: str = Field(min_length=2, max_length=7, default='#FFFCEF')
 
     @field_validator('fields')
     @classmethod
@@ -115,5 +117,7 @@ async def route(schema: MethodUpdateSchema):
         currency_id_str=schema.currency_id_str or None,
         fields=schema.fields or None,
         input_fields=schema.input_fields or None,
+        color=schema.color or None,
+        bgcolor=schema.bgcolor or None,
     )
     return Response(**result)

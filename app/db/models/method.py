@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON, Integer
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, JSON, Integer, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -41,5 +41,7 @@ class Method(Base):
     schema_fields = Column(JSON())
     schema_input_fields = Column(JSON())
     decimal = Column(Integer, default=2)
+    color = Column(String, default='#1D1D1D')
+    bgcolor = Column(String, default='#FFFCEF')
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
