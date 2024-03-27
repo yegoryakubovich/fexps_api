@@ -202,6 +202,7 @@ class RequisiteService(BaseService):
             'type': requisite.type,
             'wallet_id': requisite.wallet.id,
             'input_method_id': requisite.input_method_id,
+            'output_method_id': requisite.output_requisite_data.method_id if requisite.output_requisite_data else None,
             'output_requisite_data': requisite.output_requisite_data_id,
             'currency': requisite.currency.id_str,
             'currency_value': requisite.currency_value,
