@@ -64,37 +64,30 @@ class TextService(BaseService):
             new_key: str = None,
     ) -> dict:
         text = await TextRepository().get_by_key(key=key)
-        await TextRepository().update(
-            model=text,
-            value_default=value_default,
-            new_key=new_key,
-        )
-
         action_parameters = {
             'updater': f'session_{session.id}',
             'key': key,
             'by_admin': True,
         }
         if value_default:
-            action_parameters.update(
-                {
-                    'value_default': value_default,
-                }
-            )
+            action_parameters.update(value_default=value_default)
+        else:
+            value_default = text.value_default
         if new_key:
-            action_parameters.update(
-                {
-                    'new_key': new_key,
-                }
-            )
-
+            action_parameters.update(new_key=new_key)
+        else:
+            new_key = text.key
+        await TextRepository().update(
+            model=text,
+            key=new_key,
+            value_default=value_default,
+        )
         await self.create_action(
             model=text,
             action=Actions.UPDATE,
             parameters=action_parameters,
         )
         await TextPackService().create_all_by_admin(session=session)
-
         return {}
 
     @session_required(permissions=['texts'])
