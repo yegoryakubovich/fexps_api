@@ -17,7 +17,7 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Account, Wallet
+from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository
 from app.repositories.transfer import TransferRepository
@@ -71,7 +71,7 @@ class TransferService(BaseService):
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
         return {
-            'transfer': await self._generate_wallet_dict(account=account, wallet=wallet, transfer=transfer)
+            'transfer': await self._generate_wallet_dict( wallet=wallet, transfer=transfer)
         }
 
     @session_required()
@@ -94,7 +94,7 @@ class TransferService(BaseService):
         )
         return {
             'transfers': [
-                await self._generate_wallet_dict(account=account, wallet=wallet, transfer=transfer)
+                await self._generate_wallet_dict(wallet=wallet, transfer=transfer)
                 for transfer in _transfers
             ],
             'results': results,
@@ -104,7 +104,7 @@ class TransferService(BaseService):
         }
 
     @staticmethod
-    async def _generate_wallet_dict(account: Account, wallet: Wallet, transfer: Transfer) -> dict:
+    async def _generate_wallet_dict(wallet: Wallet, transfer: Transfer) -> dict:
         if transfer.wallet_from.is_system:
             account_from = {'id': 0, 'firstname': 'System', 'lastname': '', 'username': '', 'short_name': f'System'}
         else:
@@ -139,6 +139,7 @@ class TransferService(BaseService):
             'account_from': account_from,
             'wallet_to': transfer.wallet_to.id,
             'account_to': account_to,
+            'order': transfer.order_id,
             'value': transfer.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
