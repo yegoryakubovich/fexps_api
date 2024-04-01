@@ -91,13 +91,11 @@ class RequestService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': request.id,
                 'wallet_id': wallet_id,
                 'first_line': first_line,
                 'first_line_value': input_currency_value,
-                'input_method_id': input_method.id,
-                'output_requisite_data_id': output_requisite_data.id,
-                'output_method_id': output_method.id,
+                'input_method_id': input_method_id,
+                'output_requisite_data_id': output_requisite_data_id,
             },
         )
         return {'id': request.id}
@@ -197,6 +195,11 @@ class RequestService(BaseService):
     @staticmethod
     async def _generate_request_dict(request: Request) -> dict:
         action = await ActionService().get_action(model=request, action=Actions.CREATE)
+        date = action.datetime.strftime(settings.datetime_format)
+        update_action = await ActionService().get_action(model=request, action=Actions.UPDATE)
+        update_date = None
+        if update_action:
+            update_date = update_action.datetime.strftime(settings.datetime_format)
         return {
             'id': request.id,
             'wallet': request.wallet_id,
@@ -226,5 +229,6 @@ class RequestService(BaseService):
             'input_method': request.input_method_id,
             'output_requisite_data': request.output_requisite_data_id,
             'output_method': request.output_method_id,
-            'date': action.datetime.strftime(settings.datetime_format),
+            'date': date,
+            'update_date': update_date,
         }
