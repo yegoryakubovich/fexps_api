@@ -15,9 +15,10 @@
 #
 
 
-from app.db.models import Transfer, Wallet, Order
+from app.db.models import Transfer, Wallet, Order, Actions
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
+from app.services.base import BaseService
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
 from app.utils.service_addons.wallet import wallet_get_available_value
 from config import settings
@@ -44,6 +45,16 @@ async def create_transfer(
         wallet_to=wallet_to,
         value=value,
         order=order,
+    )
+    await BaseService().create_action(
+        model=transfer,
+        action=Actions.CREATE,
+        parameters={
+            'id': transfer.id,
+            'wallet_from_id': wallet_from.id,
+            'wallet_to_id': wallet_to.id,
+            'value': value
+        },
     )
     await WalletRepository().update(wallet_to, value=wallet_to.value + value)
     return transfer

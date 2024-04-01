@@ -56,17 +56,6 @@ class TransferService(BaseService):
             wallet_to=wallet_to,
             value=value
         )
-        await self.create_action(
-            model=transfer,
-            action=Actions.CREATE,
-            parameters={
-                'creator': f'session_{session.id}',
-                'id': transfer.id,
-                'wallet_from_id': wallet_from.id,
-                'wallet_to_id': wallet_to.id,
-                'value': value
-            },
-        )
         return {'id': transfer.id}
 
     @session_required()
