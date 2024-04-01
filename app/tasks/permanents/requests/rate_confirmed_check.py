@@ -45,7 +45,7 @@ async def run():
         if not request_action:
             logging.info(f'{prefix} Request.{request.id} not action')
             continue
-        request_action_delta = time_now - request_action.datetime
+        request_action_delta = time_now - request_action.datetime.replace(tzinfo=None)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):
             await RequestRepository().update(request, rate_confirmed=False)
             logging.info(f'{prefix} Request.{request.id} rate_confirmed=False')
