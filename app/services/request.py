@@ -199,8 +199,9 @@ class RequestService(BaseService):
         waiting_delta = None
         if request.state == RequestStates.WAITING and update_action:
             time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_delta = datetime.timedelta(minutes=settings.waiting_time_minutes)
-            waiting_delta = (time_now - update_action.datetime + time_delta).seconds
+            time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_delta = datetime.timedelta(minutes=settings.request_waiting_check)
+            waiting_delta = (time_delta - (time_now - time_update)).seconds
         return {
             'id': request.id,
             'wallet': request.wallet_id,
