@@ -15,8 +15,7 @@
 #
 
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes, \
-    RequisiteData
+from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.wallet_ban import WalletBanService
@@ -52,14 +51,15 @@ async def waited_order(
         value=round(requisite.value - value),
         in_process=False,
     )
-    requisite_fields = None
-    if requisite.output_requisite_data:
-        requisite_fields = requisite.output_requisite_data.fields
+    requisite_scheme_fields, requisite_fields, input_scheme_fields, input_fields = None, None, None, None
+    if order_type == OrderTypes.INPUT:
         requisite_scheme_fields = requisite.output_requisite_data.method.schema_fields
+        requisite_fields = requisite.output_requisite_data.fields
         input_scheme_fields = requisite.output_requisite_data.method.schema_input_fields
-    else:
-        requisite_scheme_fields = requisite.input_method.schema_fields
-        input_scheme_fields = requisite.input_method.schema_input_fields
+    elif order_type == OrderTypes.OUTPUT:
+        requisite_scheme_fields = request.output_requisite_data.method.schema_fields
+        requisite_fields = request.output_requisite_data.fields
+        input_scheme_fields = request.output_requisite_data.method.schema_input_fields
     return await OrderRepository().create(
         type=order_type,
         state=order_state,
@@ -71,7 +71,7 @@ async def waited_order(
         requisite_scheme_fields=requisite_scheme_fields,
         requisite_fields=requisite_fields,
         input_scheme_fields=input_scheme_fields,
-        input_fields=None,
+        input_fields=input_fields,
     )
 
 
