@@ -32,12 +32,10 @@ prefix = '[request_waiting_check]'
 async def request_waiting_check():
     logging.critical('start request_waiting_check')
     while True:
-        await run()
-
-        # try:
-        #     await run()
-        # except Exception as e:
-        #     logging.error(f'{prefix}  Exception \n {e}')
+        try:
+            await run()
+        except Exception as e:
+            logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():
