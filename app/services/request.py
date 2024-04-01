@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import datetime
 from math import ceil
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine
@@ -197,9 +196,11 @@ class RequestService(BaseService):
         action = await ActionService().get_action(model=request, action=Actions.CREATE)
         date = action.datetime.strftime(settings.datetime_format)
         update_action = await ActionService().get_action(model=request, action=Actions.UPDATE)
-        update_date = None
-        if update_action:
-            update_date = update_action.datetime.strftime(settings.datetime_format)
+        waiting_delta = None
+        if request.state == RequestStates.WAITING and update_action:
+            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
+            time_delta = datetime.timedelta(minutes=settings.waiting_time_minutes)
+            waiting_delta = (time_now - update_action.datetime + time_delta).seconds
         return {
             'id': request.id,
             'wallet': request.wallet_id,
@@ -230,5 +231,5 @@ class RequestService(BaseService):
             'output_requisite_data': request.output_requisite_data_id,
             'output_method': request.output_method_id,
             'date': date,
-            'update_date': update_date,
+            'waiting_delta': waiting_delta,
         }
