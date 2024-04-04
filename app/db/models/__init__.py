@@ -40,7 +40,7 @@ from .transfer import Transfer, TransferTypes
 
 from .account import Account
 from .request import Request, RequestTypes, RequestStates, RequestFirstLine
-from .requisite import Requisite, RequisiteTypes
+from .requisite import Requisite, RequisiteTypes, RequisiteStates
 from .transfer_system import TransferSystem, TransferSystemTypes
 
 from .account_contact import AccountContact

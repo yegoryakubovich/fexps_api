@@ -28,11 +28,20 @@ class RequisiteTypes:
     choices = [INPUT, OUTPUT]
 
 
+class RequisiteStates:
+    ENABLE = 'enable'
+    STOP = 'stop'
+    DISABLE = 'disable'
+
+    choices = [ENABLE, STOP, DISABLE]
+
+
 class Requisite(Base):
     __tablename__ = 'requisites'
 
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
+    state = Column(String(length=8))
 
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
