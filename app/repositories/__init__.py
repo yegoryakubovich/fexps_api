@@ -27,6 +27,7 @@ from .country import CountryRepository
 from .currency import CurrencyRepository
 from .image import ImageRepository
 from .language import LanguageRepository
+from .message import MessageRepository
 from .method import MethodRepository
 from .order import OrderRepository
 from .order_request import OrderRequestRepository

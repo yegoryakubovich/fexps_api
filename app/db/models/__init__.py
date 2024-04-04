@@ -51,3 +51,5 @@ from .wallet_ban import WalletBan, WalletBanReasons
 
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
 from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates
+
+from .message import Message

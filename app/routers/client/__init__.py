@@ -32,10 +32,12 @@ from .texts import router as router_texts
 from .timezones import router as router_timezones
 from .transfers import router as router_transfers
 from .wallets import router as router_wallets
+from .messages import router as router_messages
 
 
 router = Router(
     routes_included=[
+        router_messages,
         router_accounts,
         router_contacts,
         router_countries,

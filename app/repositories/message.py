@@ -15,17 +15,9 @@
 #
 
 
-from fastapi import Request, WebSocket
-
-from app.utils.client.device import Device
-
-
-host = None
-device = None
+from app.db.models import Message
+from app.repositories.base import BaseRepository
 
 
-async def init(request: Request = None, websocket: WebSocket = None):
-    global host, device
-    if request:
-        host = request.client.host
-        device = Device(headers=request.headers)
+class MessageRepository(BaseRepository[Message]):
+    model = Message

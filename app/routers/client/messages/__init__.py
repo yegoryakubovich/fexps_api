@@ -15,17 +15,14 @@
 #
 
 
-from fastapi import Request, WebSocket
-
-from app.utils.client.device import Device
-
-
-host = None
-device = None
+from app.utils import Router
+from .chat import router as router_chat
 
 
-async def init(request: Request = None, websocket: WebSocket = None):
-    global host, device
-    if request:
-        host = request.client.host
-        device = Device(headers=request.headers)
+router = Router(
+    prefix='/messages',
+    routes_included=[
+        # router_chat,
+    ],
+    tags=['Messages'],
+)

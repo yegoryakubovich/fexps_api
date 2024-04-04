@@ -28,6 +28,7 @@ from .country import CountryService
 from .currency import CurrencyService
 from .image import ImageService
 from .language import LanguageService
+from .message import MessageService
 from .method import MethodService
 from .order import OrderService
 from .order_request import OrderRequestService
