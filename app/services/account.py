@@ -103,57 +103,21 @@ class AccountService(BaseService):
     @session_required(return_model=False, permissions=['accounts'])
     async def get_by_admin(self, id_: int) -> dict:
         account = await AccountRepository().get_by_id(id_=id_)
-        permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
-
         return {
-            'account': {
-                'username': account.username,
-                'firstname': account.firstname,
-                'lastname': account.lastname,
-                'surname': account.surname,
-                'country': account.country.id_str,
-                'language': account.language.id_str,
-                'timezone': account.timezone.id_str,
-                'currency': account.currency.id_str,
-                'permissions': permissions,
-            },
+            'account': await self._generate_account_dict(account=account),
         }
 
     @session_required(return_account=True)
     async def get(self, account: Account) -> dict:
-        text_pack = await TextPackRepository().get_current(language=account.language)
-        permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
-
         return {
-            'account': {
-                'username': account.username,
-                'firstname': account.firstname,
-                'lastname': account.lastname,
-                'surname': account.surname,
-                'country': account.country.id_str,
-                'language': account.language.id_str,
-                'timezone': account.timezone.id_str,
-                'currency': account.currency.id_str,
-                'permissions': permissions,
-                'text_pack_id': text_pack.id,
-            },
+            'account': await self._generate_account_dict(account=account),
         }
 
     @session_required(return_model=False, permissions=['accounts'])
     async def search_by_admin(self, id_, username: str, page: int) -> dict:
         accounts, results = await AccountRepository().search(id_=id_, username=username, page=page)
         accounts = [
-            {
-                'id': account.id,
-                'username': account.username,
-                'firstname': account.firstname,
-                'lastname': account.lastname,
-                'surname': account.surname,
-                'country': account.country.id_str,
-                'language': account.language.id_str,
-                'timezone': account.timezone.id_str,
-                'currency': account.currency.id_str,
-            }
+            await self._generate_account_dict(account=account)
             for account in accounts
         ]
         return {
@@ -289,3 +253,20 @@ class AccountService(BaseService):
             return True
         else:
             raise WrongPassword()
+
+    @staticmethod
+    async def _generate_account_dict(account) -> dict:
+        text_pack = await TextPackRepository().get_current(language=account.language)
+        permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
+        return {
+            'username': account.username,
+            'firstname': account.firstname,
+            'lastname': account.lastname,
+            'surname': account.surname,
+            'country': account.country.id_str,
+            'language': account.language.id_str,
+            'timezone': account.timezone.id_str,
+            'currency': account.currency.id_str,
+            'permissions': permissions,
+            'text_pack_id': text_pack.id,
+        }
