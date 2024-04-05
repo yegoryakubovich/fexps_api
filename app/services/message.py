@@ -35,7 +35,7 @@ class MessageService(BaseService):
     model = Message
 
     @session_required()
-    async def create(
+    async def chat(
             self,
             session: Session,
             order_id: int,
@@ -57,7 +57,7 @@ class MessageService(BaseService):
                 'text': text,
             }
         )
-        return {'id': message.id}
+        return await self._generate_message_dict(message=message)
 
     @session_required()
     async def get(
