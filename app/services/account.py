@@ -259,6 +259,7 @@ class AccountService(BaseService):
         text_pack = await TextPackRepository().get_current(language=account.language)
         permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
         return {
+            'id': account.id,
             'username': account.username,
             'firstname': account.firstname,
             'lastname': account.lastname,
