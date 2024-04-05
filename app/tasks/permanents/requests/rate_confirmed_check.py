@@ -32,10 +32,11 @@ prefix = '[request_rate_confirmed_check]'
 async def request_rate_confirmed_check():
     logging.critical('start request_rate_confirmed_check')
     while True:
-        try:
-            await run()
-        except Exception as e:
-            logging.error(f'{prefix}  Exception \n {e}')
+        await run()
+        # try:
+        #     await run()
+        # except Exception as e:
+        #     logging.error(f'{prefix}  Exception \n {e}')
 
 
 async def run():
@@ -45,7 +46,7 @@ async def run():
         if not request_action:
             logging.info(f'{prefix} Request.{request.id} not action')
             continue
-        request_action_delta = time_now - request_action.datetime.replace(tzinfo=None)
+        request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):
             await RequestRepository().update(request, rate_confirmed=False)
             logging.info(f'{prefix} Request.{request.id} rate_confirmed=False')
