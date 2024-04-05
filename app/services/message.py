@@ -15,10 +15,20 @@
 #
 
 
-from app.db.models import Message, Session, Actions
-from app.repositories import MessageRepository, OrderRepository
+from app.db.models import Message, Session, Actions, OrderTypes
+from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository
+from app.services import ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exceptions import OrderNotPermission
+from app.utils.service_addons.wallet import wallet_check_permission
+from config import settings
+
+
+class AccountPosition:
+    UNKNOWN = 'unknown'
+    SENDER = 'sender'
+    RECEIVER = 'receiver'
 
 
 class MessageService(BaseService):
@@ -48,3 +58,76 @@ class MessageService(BaseService):
             }
         )
         return {'id': message.id}
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        message = await MessageRepository().get_by_id(id_=id_)
+        await wallet_check_permission(
+            account=account,
+            wallets=[message.order.request.wallet, message.order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': message.order.id,
+                },
+            ),
+        )
+        return {
+            'message': await self._generate_message_dict(message=message),
+        }
+
+    @session_required()
+    async def get_list(
+            self,
+            session: Session,
+            order_id: int,
+    ) -> dict:
+        account = session.account
+        order = await OrderRepository().get_by_id(id_=order_id)
+        await wallet_check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id,
+                },
+            ),
+        )
+        messages = await MessageRepository().get_list(order_id=order_id)
+        return {
+            'messages': [
+                await self._generate_message_dict(message=message)
+                for message in messages
+            ]
+        }
+
+    @staticmethod
+    async def _generate_message_dict(message: Message):
+        request_account = (await WalletAccountRepository().get(wallet=message.order.request.wallet)).account
+        requisite_account = (await WalletAccountRepository().get(wallet=message.order.requisite.wallet)).account
+        position = AccountPosition.UNKNOWN
+        if message.order.type == OrderTypes.INPUT:
+            if message.account.id == request_account.id:
+                position = AccountPosition.SENDER
+            elif message.account.id == requisite_account.id:
+                position = AccountPosition.RECEIVER
+        elif message.order.type == OrderTypes.OUTPUT:
+            if message.account.id == request_account.id:
+                position = AccountPosition.RECEIVER
+            elif message.account.id == requisite_account.id:
+                position = AccountPosition.SENDER
+        action = await ActionService().get_action(model=message, action=Actions.CREATE)
+        return {
+            'id': message.id,
+            'account': message.account.id,
+            'account_position': position,
+            'order': message.order.id,
+            'text': message.text,
+            'date': action.datetime.strftime(settings.datetime_format),
+        }

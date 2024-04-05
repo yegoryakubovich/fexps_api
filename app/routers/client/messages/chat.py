@@ -14,11 +14,11 @@
 # limitations under the License.
 #
 
+
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
 from starlette.responses import HTMLResponse
 
-from app.repositories import MessageRepository
 from app.services import MessageService
 from app.utils import Router
 
@@ -32,21 +32,20 @@ with open('app/routers/client/messages/html.html') as f:
 
 class ConnectionManager:
     def __init__(self):
-        self.active_connections: list[WebSocket] = []
+        self.active_connections: list[tuple[int, WebSocket]] = []
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, order_id: int):
         await websocket.accept()
-        self.active_connections.append(websocket)
+        self.active_connections.append((order_id, websocket))
 
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
+    def disconnect(self, websocket: WebSocket, order_id: int):
+        self.active_connections.remove((order_id, websocket))
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def send(self, data):
+    async def send(self, order_id: int, data):
         for connection in self.active_connections:
-            await connection.send_json(data=data)
+            if connection[0] != order_id:
+                continue
+            await connection[1].send_json(data=data)
 
 
 manager = ConnectionManager()
@@ -63,22 +62,11 @@ class ChatSchema(BaseModel):
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
-    await manager.connect(websocket)
+    await manager.connect(websocket, order_id=order_id)
     try:
         while True:
             data = await websocket.receive_text()
-            response = await MessageService().create(
-                token=token,
-                order_id=order_id,
-                text=data,
-            )
-            message = await MessageRepository().get_by_id(id_=response['id'])
-            await manager.send(
-                data={
-                    'account': message.account_id,
-                    'order': message.order_id,
-                    'text': message.text,
-                },
-            )
+            response = await MessageService().create(token=token, order_id=order_id, text=data)
+            await manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, order_id=order_id)

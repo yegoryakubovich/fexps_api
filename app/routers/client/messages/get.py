@@ -15,18 +15,28 @@
 #
 
 
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services import MessageService
 from app.utils import Router
-from .chat import router as router_chat
-from .get import router as router_get
-from .get_list import router as router_get_list
+from app.utils.response import Response
 
 
 router = Router(
-    prefix='/messages',
-    routes_included=[
-        router_chat,
-        router_get,
-        router_get_list,
-    ],
-    tags=['Messages'],
+    prefix='/get',
 )
+
+
+class MessageGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.get()
+async def route(schema: MessageGetSchema = Depends()):
+    result = await MessageService().get(
+        token=schema.token,
+        id_=schema.id_
+    )
+    return Response(**result)
