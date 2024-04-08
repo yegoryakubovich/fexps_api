@@ -119,7 +119,7 @@ class TextService(BaseService):
             'texts': texts_list,
         }
 
-    @session_required(permissions=['texts'])
+    @session_required(permissions=['texts'], can_root=True)
     async def update_by_admin(
             self,
             session: Session,

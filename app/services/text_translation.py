@@ -27,7 +27,7 @@ from app.utils.exceptions import ModelDoesNotExist, ModelAlreadyExist
 class TextTranslationService(BaseService):
     model = TextTranslation
 
-    @session_required(permissions=['texts'])
+    @session_required(permissions=['texts'], can_root=True)
     async def create_by_admin(
             self,
             session: Session,
@@ -38,7 +38,6 @@ class TextTranslationService(BaseService):
     ) -> dict | TextTranslation:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
-
         try:
             await TextTranslationRepository().get(text=text, language=language)
             raise ModelAlreadyExist(
@@ -54,7 +53,6 @@ class TextTranslationService(BaseService):
                 language=language,
                 value=value,
             )
-
         await self.create_action(
             model=text_translation,
             action=Actions.CREATE,
@@ -72,7 +70,7 @@ class TextTranslationService(BaseService):
             'id': text_translation.id,
         }
 
-    @session_required(permissions=['texts'])
+    @session_required(permissions=['texts'], can_root=True)
     async def update_by_admin(
             self,
             session: Session,
@@ -102,7 +100,7 @@ class TextTranslationService(BaseService):
 
         return {}
 
-    @session_required(permissions=['texts'])
+    @session_required(permissions=['texts'], can_root=True)
     async def delete_by_admin(
             self,
             session: Session,
@@ -125,5 +123,4 @@ class TextTranslationService(BaseService):
                 'by_admin': True,
             },
         )
-
         return {}
