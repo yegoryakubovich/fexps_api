@@ -19,7 +19,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_port: int
+    api_port: int
+    tasks_flower_port: int
 
     mysql_host: str
     mysql_port: int
@@ -36,6 +37,8 @@ class Settings(BaseSettings):
     flower_password: str
 
     root_token: str
+    sync_db_url: str
+    sync_db_table_name: str
     debug: int
     wallet_max_count: int
     wallet_max_value: int

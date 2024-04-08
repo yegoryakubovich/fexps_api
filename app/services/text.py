@@ -55,64 +55,6 @@ class TextService(BaseService):
             return text
         return {'key': text.key}
 
-    @session_required(permissions=['texts'])
-    async def update_by_admin(
-            self,
-            session: Session,
-            key: str,
-            value_default: str = None,
-            new_key: str = None,
-    ) -> dict:
-        text = await TextRepository().get_by_key(key=key)
-        action_parameters = {
-            'updater': f'session_{session.id}',
-            'key': key,
-            'by_admin': True,
-        }
-        if value_default:
-            action_parameters.update(value_default=value_default)
-        else:
-            value_default = text.value_default
-        if new_key:
-            action_parameters.update(new_key=new_key)
-        else:
-            new_key = text.key
-        await TextRepository().update(
-            model=text,
-            key=new_key,
-            value_default=value_default,
-        )
-        await self.create_action(
-            model=text,
-            action=Actions.UPDATE,
-            parameters=action_parameters,
-        )
-        await TextPackService().create_all_by_admin(session=session)
-        return {}
-
-    @session_required(permissions=['texts'])
-    async def delete_by_admin(
-            self,
-            session: Session,
-            key: str,
-    ) -> dict:
-        text = await TextRepository().get_by_key(key=key)
-        await TextRepository().delete(
-            model=text,
-        )
-        await self.create_action(
-            model=text,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'key': key,
-                'by_admin': True,
-            },
-        )
-        await TextPackService().create_all_by_admin(session=session)
-
-        return {}
-
     @session_required(return_model=False, permissions=['texts'])
     async def get(
             self,
@@ -163,3 +105,62 @@ class TextService(BaseService):
         return {
             'texts': texts_list,
         }
+
+    @session_required(permissions=['texts'])
+    async def update_by_admin(
+            self,
+            session: Session,
+            key: str,
+            value_default: str = None,
+            new_key: str = None,
+    ) -> dict:
+        text = await TextRepository().get_by_key(key=key)
+        action_parameters = {
+            'updater': f'session_{session.id}',
+            'key': key,
+            'by_admin': True,
+        }
+        if value_default:
+            action_parameters.update(value_default=value_default)
+        else:
+            value_default = text.value_default
+        if new_key:
+            action_parameters.update(new_key=new_key)
+        else:
+            new_key = text.key
+        await TextRepository().update(
+            model=text,
+            key=new_key,
+            value_default=value_default,
+        )
+        await self.create_action(
+            model=text,
+            action=Actions.UPDATE,
+            parameters=action_parameters,
+        )
+        await TextPackService().create_all_by_admin(session=session)
+        return {}
+
+    @session_required(permissions=['texts'], can_root=True)
+    async def delete_by_admin(
+            self,
+            session: Session,
+            key: str,
+            create_text_pack: bool = True,
+    ) -> dict:
+        text = await TextRepository().get_by_key(key=key)
+        await TextRepository().delete(
+            model=text,
+        )
+        await self.create_action(
+            model=text,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'key': key,
+                'by_admin': True,
+            },
+        )
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
+        return {}
