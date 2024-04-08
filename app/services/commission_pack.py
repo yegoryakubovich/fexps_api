@@ -36,7 +36,7 @@ class CommissionPackService(BaseService):
             is_default: bool,
     ) -> dict:
         name_text = await TextRepository().create(
-            key=f'method_{await create_id_str()}',
+            key=f'commission_pack_{await create_id_str()}',
             value_default=name,
         )
         commission_pack = await CommissionPackRepository().create(

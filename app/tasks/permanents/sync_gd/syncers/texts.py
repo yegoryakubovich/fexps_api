@@ -25,10 +25,9 @@ from ..utils.fexps_api_client import fexps_api_client
 PREFIXES = [
     'permission_',
     'role_',
-    'service_',
-    'product_',
-    'exercise_',
-    'article_',
+    'commission_pack_',
+    'contact_',
+    'method_',
 ]
 DEFAULT_LANGUAGE = 'eng'
 
