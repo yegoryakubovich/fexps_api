@@ -30,7 +30,7 @@ router = Router(
 class OrderListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     by_request: bool = Field(default=False)
-    is_requisite: bool = Field(default=False)
+    by_requisite: bool = Field(default=False)
     is_active: bool = Field(default=False)
     is_finished: bool = Field(default=False)
 
@@ -40,7 +40,7 @@ async def route(schema: OrderListGetSchema = Depends()):
     result = await OrderService().get_all(
         token=schema.token,
         by_request=schema.by_request,
-        by_requisite=schema.is_requisite,
+        by_requisite=schema.by_requisite,
         is_active=schema.is_active,
         is_finished=schema.is_finished,
     )
