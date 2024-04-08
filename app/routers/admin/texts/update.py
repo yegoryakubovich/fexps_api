@@ -28,9 +28,10 @@ router = Router(
 
 class TextUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    key: str = Field(min_length=2, max_length=128)
-    new_key: str = Field(default=None, min_length=2, max_length=128)
+    key: str = Field(min_length=1, max_length=128)
+    new_key: str | None = Field(default=None, min_length=1, max_length=128)
     value_default: str = Field(default=None, min_length=1, max_length=1024)
+    create_text_pack: bool = Field(default=True)
 
 
 @router.post()
@@ -40,5 +41,6 @@ async def route(schema: TextUpdateByAdminSchema):
         key=schema.key,
         value_default=schema.value_default or None,
         new_key=schema.new_key or None,
+        create_text_pack=schema.create_text_pack,
     )
     return Response(**result)

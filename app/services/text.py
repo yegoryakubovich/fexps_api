@@ -21,6 +21,7 @@ from app.repositories.text_translation import TextTranslationRepository
 from app.services.base import BaseService
 from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required
+from app.utils.exceptions import ModelDoesNotExist, ModelAlreadyExist
 
 
 class TextService(BaseService):
@@ -35,13 +36,25 @@ class TextService(BaseService):
             return_model: bool = False,
             create_text_pack: bool = True,
     ) -> dict | Text:
+        try:
+            await TextRepository().get_by_key(key=key)
+            raise ModelAlreadyExist(
+                kwargs={
+                    'model': 'Text',
+                    'id_type': 'key',
+                    'id_value': key,
+                },
+            )
+        except ModelDoesNotExist:
+            pass
+
         text = await TextRepository().create(
             key=key,
             value_default=value_default,
         )
         await self.create_action(
             model=text,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'key': key,
@@ -113,6 +126,7 @@ class TextService(BaseService):
             key: str,
             value_default: str = None,
             new_key: str = None,
+            create_text_pack: bool = True,
     ) -> dict:
         text = await TextRepository().get_by_key(key=key)
         action_parameters = {
@@ -138,7 +152,8 @@ class TextService(BaseService):
             action=Actions.UPDATE,
             parameters=action_parameters,
         )
-        await TextPackService().create_all_by_admin(session=session)
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
         return {}
 
     @session_required(permissions=['texts'], can_root=True)

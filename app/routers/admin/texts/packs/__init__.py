@@ -17,6 +17,7 @@
 
 from app.utils import Router
 from .create import router as router_create
+from .create_all import router as router_create_all
 from .delete import router as router_delete
 
 
@@ -24,6 +25,7 @@ router = Router(
     prefix='/packs',
     routes_included=[
         router_create,
+        router_create_all,
         router_delete,
     ],
 )
