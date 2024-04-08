@@ -197,7 +197,7 @@ class AccountService(BaseService):
 
     @staticmethod
     async def is_valid_username(username: str):
-        register = "^[a-zA-Z][a-zA-Z0-9_]{7,32}$"
+        register = "^[a-zA-Z][a-zA-Z0-9_]{6,32}$"
         pattern = compile(register)
         if search(pattern, username):
             return True
