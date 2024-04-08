@@ -16,13 +16,14 @@
 
 
 from app.utils import Router
+from .main import router as router_main
 from .request import router as router_request
 from .requisite import router as router_requisite
-
 
 router = Router(
     prefix='/list/get',
     routes_included=[
+        router_main,
         router_request,
         router_requisite,
     ],

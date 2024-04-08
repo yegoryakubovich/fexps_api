@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import logging
 
-
-from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, Requisite, Request
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions
+from app.repositories import WalletAccountRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -74,6 +75,48 @@ class OrderService(BaseService):
         return {
             'orders': [
                 self._generate_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+            ]
+        }
+
+    @session_required()
+    async def get_all(
+            self,
+            session: Session,
+            by_request: bool = False,
+            by_requisite: bool = False,
+            is_active: bool = False,
+            is_finished: bool = False,
+    ) -> dict:
+        account = session.account
+        wallets = [wa.wallet for wa in await WalletAccountRepository().get_list(account=account)]
+        orders = []
+        order_ids = []
+        for wallet in wallets:
+            if by_request:
+                for request in await RequestRepository().get_list(wallet=wallet):
+                    for order in await OrderRepository().get_list(request=request):
+                        if not is_active and order.state not in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                            continue
+                        if not is_finished and order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                            continue
+                        if order.id in order_ids:
+                            continue
+                        orders.append(order)
+                        order_ids.append(order.id)
+            if by_requisite:
+                for requisite in await RequisiteRepository().get_list(wallet=wallet):
+                    for order in await OrderRepository().get_list(requisite=requisite):
+                        if not is_active and order.state not in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                            continue
+                        if not is_finished and order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                            continue
+                        if order.id in order_ids:
+                            continue
+                        orders.append(order)
+                        order_ids.append(order.id)
+        return {
+            'orders': [
+                self._generate_order_dict(order=order) for order in orders
             ]
         }
 
