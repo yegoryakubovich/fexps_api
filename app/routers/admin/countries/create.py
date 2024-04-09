@@ -23,17 +23,16 @@ from app.utils import Router, Response
 
 router = Router(
     prefix='/create',
-    tags=['Root'],
 )
 
 
 class CountryCreateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=2, max_length=16)
-    name: str = Field(min_length=1, max_length=1024)
-    language: str = Field(min_length=2, max_length=16)
-    timezone: str = Field(min_length=2, max_length=16)
-    currency: str = Field(min_length=2, max_length=16)
+    id_str: str = Field(min_length=1, max_length=16)
+    name: str = Field(min_length=1, max_length=32)
+    language_default: str = Field(min_length=1, max_length=16)
+    timezone_default: str = Field(min_length=1, max_length=16)
+    currency_default: str = Field(min_length=1, max_length=16)
 
 
 @router.post()
@@ -42,8 +41,8 @@ async def route(schema: CountryCreateByAdminSchema):
         token=schema.token,
         id_str=schema.id_str,
         name=schema.name,
-        language=schema.language,
-        timezone=schema.timezone,
-        currency=schema.currency,
+        language_default_id_str=schema.language_default,
+        timezone_default_id_str=schema.timezone_default,
+        currency_default_id_str=schema.currency_default,
     )
     return Response(**result)

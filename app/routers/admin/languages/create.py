@@ -23,7 +23,6 @@ from app.utils import Router, Response
 
 router = Router(
     prefix='/create',
-    tags=['Root'],
 )
 
 

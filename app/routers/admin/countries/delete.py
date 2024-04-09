@@ -28,7 +28,7 @@ router = Router(
 
 class CountryDeleteByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=2, max_length=16)
+    id_str: str = Field(min_length=1, max_length=16)
 
 
 @router.post()

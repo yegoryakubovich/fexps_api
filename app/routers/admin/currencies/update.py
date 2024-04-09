@@ -28,7 +28,7 @@ router = Router(
 
 class CurrencyUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=2, max_length=32)
+    id_str: str = Field(min_length=1, max_length=32)
     decimal: int = Field(default=None)
     rate_decimal: int = Field(default=None)
     div: int = Field(default=None)

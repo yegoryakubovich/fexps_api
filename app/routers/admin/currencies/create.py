@@ -23,13 +23,12 @@ from app.utils import Router, Response
 
 router = Router(
     prefix='/create',
-    tags=['Root'],
 )
 
 
 class CurrencyCreateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_str: str = Field(min_length=2, max_length=32)
+    id_str: str = Field(min_length=1, max_length=32)
     decimal: int = Field()
     rate_decimal: int = Field()
     div: int = Field()
