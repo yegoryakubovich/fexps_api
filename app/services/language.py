@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Language, Session, Actions
+from app.db.models import Language, Session
 from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
 from app.services.text_pack import TextPackService
@@ -41,15 +41,13 @@ class LanguageService(BaseService):
                     'id_value': id_str,
                 }
             )
-
         language = await LanguageRepository().create(
             id_str=id_str,
             name=name,
         )
-
         await self.create_action(
             model=language,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': language.id_str,
@@ -61,28 +59,6 @@ class LanguageService(BaseService):
 
         await TextPackService().create_by_admin(session=session, language_id_str=language.id_str)
         return {'id_str': language.id_str}
-
-    @session_required(permissions=['languages'])
-    async def delete_by_admin(
-            self,
-            session: Session,
-            id_str: str,
-    ):
-        language = await LanguageRepository().get_by_id_str(id_str=id_str)
-
-        await LanguageRepository().delete(model=language)
-
-        await self.create_action(
-            model=language,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id_str': id_str,
-                'by_admin': True,
-            }
-        )
-
-        return {}
 
     @staticmethod
     async def get(
@@ -110,3 +86,25 @@ class LanguageService(BaseService):
             ],
         }
         return languages
+
+    @session_required(permissions=['languages'], can_root=True)
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        language = await LanguageRepository().get_by_id_str(id_str=id_str)
+
+        await LanguageRepository().delete(model=language)
+
+        await self.create_action(
+            model=language,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+                'by_admin': True,
+            }
+        )
+
+        return {}

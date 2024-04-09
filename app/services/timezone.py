@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Timezone, Session, Actions
+from app.db.models import Timezone, Session
 from app.repositories.timezone import TimezoneRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -40,15 +40,13 @@ class TimezoneService(BaseService):
                     'id_value': id_str,
                 }
             )
-
         timezone = await TimezoneRepository().create(
             id_str=id_str,
             deviation=deviation
         )
-
         await self.create_action(
             model=timezone,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': timezone.id_str,
@@ -57,29 +55,7 @@ class TimezoneService(BaseService):
             },
             with_client=True,
         )
-
         return {'id_str': timezone.id_str}
-
-    @session_required(permissions=['timezones'])
-    async def delete_by_admin(
-            self,
-            session: Session,
-            id_str: str,
-    ):
-        timezone = await TimezoneRepository().get_by_id_str(id_str=id_str)
-        await TimezoneRepository().delete(model=timezone)
-
-        await self.create_action(
-            model=timezone,
-            action=Actions.DELETE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'id_str': id_str,
-                'by_admin': True,
-            }
-        )
-
-        return {}
 
     @staticmethod
     async def get(
@@ -107,3 +83,22 @@ class TimezoneService(BaseService):
             ],
         }
         return timezones
+
+    @session_required(permissions=['timezones'], can_root=True)
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_str: str,
+    ):
+        timezone = await TimezoneRepository().get_by_id_str(id_str=id_str)
+        await TimezoneRepository().delete(model=timezone)
+        await self.create_action(
+            model=timezone,
+            action='delete',
+            parameters={
+                'deleter': f'session_{session.id}',
+                'id_str': id_str,
+                'by_admin': True,
+            }
+        )
+        return {}

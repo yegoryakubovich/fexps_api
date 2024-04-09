@@ -42,14 +42,12 @@ class CurrencyService(BaseService):
                     'id_value': id_str,
                 }
             )
-
         currency = await CurrencyRepository().create(
             id_str=id_str,
             decimal=decimal,
             rate_decimal=rate_decimal,
             div=div,
         )
-
         await self.create_action(
             model=currency,
             action=Actions.CREATE,
@@ -62,10 +60,40 @@ class CurrencyService(BaseService):
                 'by_admin': True,
             }
         )
-
         return {'id_str': currency.id_str}
 
-    @session_required(permissions=['currencies'])
+    @staticmethod
+    async def get(
+            id_str: str,
+    ):
+        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
+        return {
+            'currency': {
+                'id': currency.id,
+                'id_str': currency.id_str,
+                'decimal': currency.decimal,
+                'rate_decimal': currency.rate_decimal,
+                'div': currency.div,
+            }
+        }
+
+    @staticmethod
+    async def get_list() -> dict:
+        currencies = {
+            'currencies': [
+                {
+                    'id': currency.id,
+                    'id_str': currency.id_str,
+                    'decimal': currency.decimal,
+                    'rate_decimal': currency.rate_decimal,
+                    'div': currency.div,
+                }
+                for currency in await CurrencyRepository().get_list()
+            ],
+        }
+        return currencies
+
+    @session_required(permissions=['currencies'], can_root=True)
     async def update_by_admin(
             self,
             session: Session,
@@ -102,7 +130,7 @@ class CurrencyService(BaseService):
         )
         return {}
 
-    @session_required(permissions=['currencies'])
+    @session_required(permissions=['currencies'], can_root=True)
     async def delete_by_admin(
             self,
             session: Session,
@@ -110,46 +138,13 @@ class CurrencyService(BaseService):
     ):
         currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
         await CurrencyRepository().delete(model=currency)
-
         await self.create_action(
             model=currency,
-            action=Actions.DELETE,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,
                 'by_admin': True,
             }
         )
-
         return {}
-
-    @staticmethod
-    async def get(
-            id_str: str,
-    ):
-        currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
-        return {
-            'currency': {
-                'id': currency.id,
-                'id_str': currency.id_str,
-                'decimal': currency.decimal,
-                'rate_decimal': currency.rate_decimal,
-                'div': currency.div,
-            }
-        }
-
-    @staticmethod
-    async def get_list() -> dict:
-        currencies = {
-            'currencies': [
-                {
-                    'id': currency.id,
-                    'id_str': currency.id_str,
-                    'decimal': currency.decimal,
-                    'rate_decimal': currency.rate_decimal,
-                    'div': currency.div,
-                }
-                for currency in await CurrencyRepository().get_list()
-            ],
-        }
-        return currencies
