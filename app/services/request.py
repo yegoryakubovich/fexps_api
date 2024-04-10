@@ -234,6 +234,7 @@ class RequestService(BaseService):
             waiting_delta = (time_delta - (time_now - time_update)).seconds
         return {
             'id': request.id,
+            'name': request.name,
             'wallet': request.wallet_id,
             'type': request.type,
             'state': request.state,
