@@ -191,6 +191,36 @@ class RequestService(BaseService):
         )
         return {}
 
+    @session_required()
+    async def update_name(
+            self,
+            session: Session,
+            id_: int,
+            name: str,
+    ):
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=id_)
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=RequestStateNotPermission(
+                kwargs={
+                    'id_value': request.id,
+                    'action': f'Update name',
+                },
+            ),
+        )
+        await RequestRepository().update(request, name=name)
+        await self.create_action(
+            model=request,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'name': name,
+            },
+        )
+        return {}
+
     @staticmethod
     async def _generate_request_dict(request: Request) -> dict:
         action = await ActionService().get_action(model=request, action=Actions.CREATE)

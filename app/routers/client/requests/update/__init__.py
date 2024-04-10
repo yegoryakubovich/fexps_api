@@ -15,25 +15,14 @@
 #
 
 
-from pydantic import Field, BaseModel
-
-from app.services import RequestService
-from app.utils import Response, Router
+from app.utils import Router
+from .confirmation import router as router_confirmation
+from .name import router as router_name
 
 router = Router(
-    prefix='/update/confirmation',
+    prefix='/update',
+    routes_included=[
+        router_name,
+        router_confirmation,
+    ],
 )
-
-
-class RequestUpdateConfirmationSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
-
-
-@router.post()
-async def route(schema: RequestUpdateConfirmationSchema):
-    result = await RequestService().update_confirmation(
-        token=schema.token,
-        id_=schema.id_,
-    )
-    return Response(**result)

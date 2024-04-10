@@ -59,6 +59,7 @@ class Request(Base):
     __tablename__ = 'requests'
 
     id = Column(BigInteger, primary_key=True)
+    name = Column(String(length=32), nullable=True)
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     type = Column(String(length=8))
