@@ -15,13 +15,15 @@
 #
 
 
-from app.services.base import BaseService
-from app.repositories import RolePermissionRepository, RoleRepository, PermissionRepository
 from app.db.models import RolePermission, Session, Actions
+from app.repositories import RolePermissionRepository, RoleRepository, PermissionRepository
+from app.services.base import BaseService
 from app.utils.decorators import session_required
 
 
 class RolePermissionService(BaseService):
+    model = RolePermission
+
     @session_required(permissions=['roles'], can_root=True)
     async def create_by_admin(
             self,
@@ -50,27 +52,6 @@ class RolePermissionService(BaseService):
 
         return {'id': role_permission.id}
 
-    @session_required(permissions=['roles'])
-    async def delete_by_admin(
-            self,
-            session: Session,
-            id_: int,
-    ):
-        role_permission = await RolePermissionRepository().get_by_id(id_=id_)
-
-        await RolePermissionRepository().delete(model=role_permission)
-
-        await self.create_action(
-            model=role_permission,
-            action=Actions.DELETE,
-            parameters={
-                'delete': f'session_{session.id}',
-                'by_admin': True,
-            }
-        )
-
-        return {}
-
     @staticmethod
     async def get(
             id_: int
@@ -97,3 +78,24 @@ class RolePermissionService(BaseService):
                 } for role_permission in await RolePermissionRepository().get_list_by_role(role=role)
             ]
         }
+
+    @session_required(permissions=['roles'])
+    async def delete_by_admin(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        role_permission = await RolePermissionRepository().get_by_id(id_=id_)
+
+        await RolePermissionRepository().delete(model=role_permission)
+
+        await self.create_action(
+            model=role_permission,
+            action=Actions.DELETE,
+            parameters={
+                'delete': f'session_{session.id}',
+                'by_admin': True,
+            }
+        )
+
+        return {}

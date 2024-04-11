@@ -26,8 +26,8 @@ router = Router(
     prefix='/permissions',
     routes_included=[
         router_create,
-        router_delete,
         router_get,
         router_get_list,
+        router_delete,
     ]
 )

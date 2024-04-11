@@ -15,16 +15,18 @@
 #
 
 
-from app.services.base import BaseService
-from .text import TextService
+from app.db.models import Permission, Session
 from app.repositories import PermissionRepository
-from app.db.models import Permission, Session, Actions
+from app.services.base import BaseService
 from app.utils.crypto import create_id_str
-from app.utils.exceptions import ModelAlreadyExist
 from app.utils.decorators import session_required
+from app.utils.exceptions import ModelAlreadyExist
+from .text import TextService
 
 
 class PermissionService(BaseService):
+    model = Permission
+
     @session_required(permissions=['permissions'], can_root=True)
     async def create_by_admin(
             self,
@@ -54,7 +56,7 @@ class PermissionService(BaseService):
 
         await self.create_action(
             model=permission,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -65,7 +67,33 @@ class PermissionService(BaseService):
 
         return {'id': permission.id}
 
-    @session_required(permissions=['permissions'])
+    @session_required(permissions=['permissions'], return_model=False)
+    async def get_by_admin(
+            self,
+            id_str: str,
+    ):
+        permission: Permission = await PermissionRepository().get_by_id_str(id_str=id_str)
+        return {
+            'permission': {
+                'id': permission.id,
+                'id_str': permission.id_str,
+                'name_text': permission.name_text.key,
+            }
+        }
+
+    @session_required(permissions=['permissions'], return_model=False, can_root=True)
+    async def get_list_by_admin(self):
+        return {
+            'permissions': [
+                {
+                    'id': permission.id,
+                    'id_str': permission.id_str,
+                    'name_text': permission.name_text.key,
+                } for permission in await PermissionRepository().get_list()
+            ]
+        }
+
+    @session_required(permissions=['permissions'], can_root=True)
     async def delete_by_admin(
             self,
             session: Session,
@@ -82,7 +110,7 @@ class PermissionService(BaseService):
 
         await self.create_action(
             model=permission,
-            action=Actions.DELETE,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,
@@ -91,29 +119,3 @@ class PermissionService(BaseService):
         )
 
         return {}
-
-    @session_required(permissions=['permissions'], return_model=False)
-    async def get_by_admin(
-            self,
-            id_str: str,
-    ):
-        permission: Permission = await PermissionRepository().get_by_id_str(id_str=id_str)
-        return {
-            'permission': {
-                'id': permission.id,
-                'id_str': permission.id_str,
-                'name_text': permission.name_text.key,
-            }
-        }
-
-    @session_required(permissions=['permissions'], return_model=False)
-    async def get_list_by_admin(self):
-        return {
-            'permissions': [
-                {
-                    'id': permission.id,
-                    'id_str': permission.id_str,
-                    'name_text': permission.name_text.key,
-                } for permission in await PermissionRepository().get_list()
-            ]
-        }

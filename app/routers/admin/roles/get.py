@@ -28,10 +28,14 @@ router = Router(
 
 
 class RoleGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
     id: int = Field()
 
 
 @router.get()
 async def route(schema: RoleGetSchema = Depends()):
-    result = await RoleService().get(id_=schema.id)
+    result = await RoleService().get(
+        token=schema.token,
+        id_=schema.id,
+    )
     return Response(**result)

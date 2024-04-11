@@ -27,9 +27,9 @@ router = Router(
     prefix='/roles',
     routes_included=[
         router_create,
-        router_delete,
         router_get,
         router_get_list,
+        router_delete,
         router_permissions,
     ],
     tags=['Roles'],

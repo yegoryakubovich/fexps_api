@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 
 from app.tasks.permanents.sync_gd.syncers.texts import sync_texts
 from config import settings
@@ -51,6 +51,9 @@ async def sync():
     async def create_currency(obj):
         await fexps_api_client.admin.currencies.create(
             id_str=obj.get('id_str'),
+            decimal=obj.get('decimal'),
+            rate_decimal=obj.get('rate_decimal'),
+            div=obj.get('div'),
         )
 
     async def create_country(obj):
@@ -58,66 +61,66 @@ async def sync():
             id_str=obj.get('id_str'),
             name=obj.get('name'),
             language_default=obj.get('language_default'),
-            timezone_default=obj.get('timezone_default'),
             currency_default=obj.get('currency_default'),
+            timezone_default=obj.get('timezone_default'),
         )
 
     table = await google_sheets_api_client.get_table_by_name(name=settings.sync_db_table_name)
-    #
-    # # Permissions
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='permissions',
-    #     api_method_get_list=fexps_api_client.admin.permissions.get_list,
-    #     api_method_delete=fexps_api_client.admin.permissions.delete,
-    #     api_method_create=create_permission,
-    # )
-    #
-    # # Roles
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='roles',
-    #     api_method_get_list=fexps_api_client.admin.roles.get_list,
-    #     api_method_delete=fexps_api_client.admin.roles.delete,
-    #     api_method_create=create_roles,
-    #     key_name='name',
-    # )
-    #
-    # # Languages
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='languages',
-    #     api_method_get_list=fexps_api_client.client.languages.get_list,
-    #     api_method_delete=fexps_api_client.admin.languages.delete,
-    #     api_method_create=create_language,
-    # )
-    #
-    # # Timezones
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='timezones',
-    #     api_method_get_list=fexps_api_client.client.timezones.get_list,
-    #     api_method_delete=fexps_api_client.admin.timezones.delete,
-    #     api_method_create=create_timezone,
-    # )
-    #
-    # # Currencies
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='currencies',
-    #     api_method_get_list=fexps_api_client.client.currencies.get_list,
-    #     api_method_delete=fexps_api_client.admin.currencies.delete,
-    #     api_method_create=create_currency,
-    # )
-    #
-    # # Countries
-    # await sync_base(
-    #     table=table,
-    #     sheet_name='countries',
-    #     api_method_get_list=fexps_api_client.client.countries.get_list,
-    #     api_method_delete=fexps_api_client.admin.countries.delete,
-    #     api_method_create=create_country,
-    # )
+
+    # Permissions
+    await sync_base(
+        table=table,
+        sheet_name='permissions',
+        api_method_get_list=fexps_api_client.admin.permissions.get_list,
+        api_method_delete=fexps_api_client.admin.permissions.delete,
+        api_method_create=create_permission,
+    )
+
+    # Roles
+    await sync_base(
+        table=table,
+        sheet_name='roles',
+        api_method_get_list=fexps_api_client.admin.roles.get_list,
+        api_method_delete=fexps_api_client.admin.roles.delete,
+        api_method_create=create_roles,
+        key_name='name',
+    )
+
+    # Languages
+    await sync_base(
+        table=table,
+        sheet_name='languages',
+        api_method_get_list=fexps_api_client.client.languages.get_list,
+        api_method_delete=fexps_api_client.admin.languages.delete,
+        api_method_create=create_language,
+    )
+
+    # Timezones
+    await sync_base(
+        table=table,
+        sheet_name='timezones',
+        api_method_get_list=fexps_api_client.client.timezones.get_list,
+        api_method_delete=fexps_api_client.admin.timezones.delete,
+        api_method_create=create_timezone,
+    )
+
+    # Currencies
+    await sync_base(
+        table=table,
+        sheet_name='currencies',
+        api_method_get_list=fexps_api_client.client.currencies.get_list,
+        api_method_delete=fexps_api_client.admin.currencies.delete,
+        api_method_create=create_currency,
+    )
+
+    # Countries
+    await sync_base(
+        table=table,
+        sheet_name='countries',
+        api_method_get_list=fexps_api_client.client.countries.get_list,
+        api_method_delete=fexps_api_client.admin.countries.delete,
+        api_method_create=create_country,
+    )
 
     # Texts
     await sync_texts(table=table)

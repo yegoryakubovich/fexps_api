@@ -14,13 +14,11 @@
 # limitations under the License.
 #
 
-
 from addict import Dict
 from gspread import Spreadsheet
 
-from ..utils.google_sheets_api_client import google_sheets_api_client
 from ..utils.fexps_api_client import fexps_api_client
-
+from ..utils.google_sheets_api_client import google_sheets_api_client
 
 PREFIXES = [
     'permission_',
@@ -111,7 +109,8 @@ async def sync_texts(table: Spreadsheet):
 
         # Translations block
         current_translations = text_api.translations if text_api else {}
-        new_translations = text_table.copy(); new_translations.pop('key')
+        new_translations = text_table.copy();
+        new_translations.pop('key')
         match_translations = list(set(current_translations.keys()) & set(new_translations.keys()))
         need_create_translations = [key for key in new_translations.keys() if key not in match_translations]
         need_delete_translations = [key for key in current_translations.keys() if key not in match_translations]

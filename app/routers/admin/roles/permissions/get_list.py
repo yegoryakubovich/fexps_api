@@ -15,6 +15,9 @@
 #
 
 
+from fastapi import Depends
+from pydantic import BaseModel, Field
+
 from app.services import RolePermissionService
 from app.utils import Router, Response
 
@@ -24,7 +27,15 @@ router = Router(
 )
 
 
+class RolePermissionGetListSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    role_id: int = Field()
+
+
 @router.get()
-async def route(role_id: int):
-    result = await RolePermissionService().get_list(role_id=role_id)
+async def route(schema: RolePermissionGetListSchema = Depends()):
+    result = await RolePermissionService().get_list(
+        token=schema.token,
+        role_id=schema.role_id,
+    )
     return Response(**result)
