@@ -15,6 +15,7 @@
 #
 
 
+from fastapi import Depends
 from pydantic import BaseModel, Field
 
 from app.services import CommissionPackService
@@ -31,6 +32,6 @@ class CommissionListGetSchema(BaseModel):
 
 
 @router.get()
-async def route(schema: CommissionListGetSchema):
+async def route(schema: CommissionListGetSchema = Depends()):
     result = await CommissionPackService().get_list_by_admin(token=schema.token)
     return Response(**result)
