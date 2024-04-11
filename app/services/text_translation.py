@@ -36,8 +36,7 @@ class TextTranslationService(BaseService):
     ) -> dict | TextTranslation:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
-        try:
-            await TextTranslationRepository().get(text=text, language=language)
+        if await TextTranslationRepository().get(text=text, language=language):
             raise ModelAlreadyExist(
                 kwargs={
                     'model': 'TextTranslation',
@@ -45,12 +44,11 @@ class TextTranslationService(BaseService):
                     'id_value': language.id_str,
                 },
             )
-        except ModelDoesNotExist:
-            text_translation = await TextTranslationRepository().create(
-                text=text,
-                language=language,
-                value=value,
-            )
+        text_translation = await TextTranslationRepository().create(
+            text=text,
+            language=language,
+            value=value,
+        )
         await self.create_action(
             model=text_translation,
             action='create',
