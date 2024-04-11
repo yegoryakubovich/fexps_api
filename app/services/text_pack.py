@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from json import loads
 
 from app.db.models import TextPack, Session, Actions
@@ -61,6 +60,7 @@ class TextPackService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
+                'language': language_id_str,
                 'by_admin': True,
             },
         )
@@ -76,6 +76,7 @@ class TextPackService(BaseService):
         languages = await LanguageRepository().get_list()
         for language in languages:
             await self.create_by_admin(session=session, language_id_str=language.id_str)
+        return {}
 
     @session_required(permissions=['texts'])
     async def delete_by_admin(self, session: Session, id_: int):
