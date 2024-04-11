@@ -15,18 +15,15 @@
 #
 
 
-from app.db.models import Language, Session, Text, TextTranslation, Actions
-from app.repositories.language import LanguageRepository
-from app.repositories.text import TextRepository
-from app.repositories.text_translation import TextTranslationRepository
+from app.db.models import Language, Session, Text, TextTranslation
+from app.repositories import LanguageRepository, TextRepository, TextTranslationRepository
+from app.services import TextPackService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
-from app.utils.exceptions import ModelDoesNotExist, ModelAlreadyExist
+from app.utils.exceptions import ModelAlreadyExist, ModelDoesNotExist
 
 
 class TextTranslationService(BaseService):
-    model = TextTranslation
-
     @session_required(permissions=['texts'], can_root=True)
     async def create_by_admin(
             self,
@@ -34,7 +31,8 @@ class TextTranslationService(BaseService):
             text_key: str,
             language: str,
             value: str,
-            return_model: bool = False
+            return_model: bool = False,
+            create_text_pack: bool = True,
     ) -> dict | TextTranslation:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
@@ -55,7 +53,7 @@ class TextTranslationService(BaseService):
             )
         await self.create_action(
             model=text_translation,
-            action=Actions.CREATE,
+            action='create',
             parameters={
                 'creator': f'session_{session.id}',
                 'text_key': text_key,
@@ -64,6 +62,8 @@ class TextTranslationService(BaseService):
                 'by_admin': True,
             },
         )
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
         if return_model:
             return text_translation
         return {
@@ -77,6 +77,7 @@ class TextTranslationService(BaseService):
             text_key: str,
             language: str,
             value: str,
+            create_text_pack: bool = True,
     ) -> dict:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
@@ -88,7 +89,7 @@ class TextTranslationService(BaseService):
         )
         await self.create_action(
             model=text_translation,
-            action=Actions.UPDATE,
+            action='update',
             parameters={
                 'updater': f'session_{session.id}',
                 'text_key': text_key,
@@ -97,7 +98,8 @@ class TextTranslationService(BaseService):
                 'by_admin': True,
             },
         )
-
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
         return {}
 
     @session_required(permissions=['texts'], can_root=True)
@@ -106,6 +108,7 @@ class TextTranslationService(BaseService):
             session: Session,
             text_key: str,
             language: str,
+            create_text_pack: bool = True,
     ) -> dict:
         text: Text = await TextRepository().get_by_key(key=text_key)
         language: Language = await LanguageRepository().get_by_id_str(id_str=language)
@@ -115,7 +118,7 @@ class TextTranslationService(BaseService):
         )
         await self.create_action(
             model=text_translation,
-            action=Actions.DELETE,
+            action='delete',
             parameters={
                 'deleter': f'session_{session.id}',
                 'text_key': text_key,
@@ -123,4 +126,6 @@ class TextTranslationService(BaseService):
                 'by_admin': True,
             },
         )
+        if create_text_pack:
+            await TextPackService().create_all_by_admin(session=session)
         return {}
