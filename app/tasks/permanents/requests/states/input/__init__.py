@@ -43,20 +43,28 @@ async def run():
             _from_value = request.first_line_value
         else:
             _from_value = request.input_currency_value_raw
-        _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
-        # check / change states
-        if _need_currency_value:
-            logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (1)')
-            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
+        continue_ = False
+        for i in range(2):
+            _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
+            # check / change states
+            if _need_currency_value:
+                logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (1)')
+                await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
+                continue_ = True
+                break
+            if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
+                logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (2)')
+                await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
+                continue_ = True  # Found waiting orders
+                break
+            if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
+                continue_ = True  # Found payment orders
+                break
+            if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
+                continue_ = True  # Found confirmation orders
+                break
+        if continue_:
             continue
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
-            logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.INPUT_RESERVATION} (2)')
-            await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
-            continue  # Found waiting orders
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
-            continue  # Found payment orders
-        if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
-            continue  # Found confirmation orders
         await TransferSystemService().payment_commission(request=request, from_banned_value=True)
         next_state = RequestStates.OUTPUT_RESERVATION
         if request.type == RequestTypes.INPUT:
