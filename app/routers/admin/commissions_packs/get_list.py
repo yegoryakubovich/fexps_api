@@ -27,11 +27,11 @@ router = Router(
 )
 
 
-class CommissionListGetSchema(BaseModel):
+class CommissionPackListGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: CommissionListGetSchema = Depends()):
+async def route(schema: CommissionPackListGetSchema = Depends()):
     result = await CommissionPackService().get_list_by_admin(token=schema.token)
     return Response(**result)
