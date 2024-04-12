@@ -16,6 +16,7 @@
 
 
 from app.db.models import Session, CommissionPack, Actions
+from app.repositories import TextPackRepository
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.commission_pack_value import CommissionPackValueRepository
 from app.repositories.text import TextRepository
@@ -39,6 +40,7 @@ class CommissionPackService(BaseService):
             key=f'commission_pack_{await create_id_str()}',
             value_default=name,
         )
+        await TextPackRepository().create_all()
         commission_pack = await CommissionPackRepository().create(
             name_text=name_text,
             is_default=is_default,
@@ -87,6 +89,7 @@ class CommissionPackService(BaseService):
         commission_pack = await CommissionPackRepository().get_by_id(id_=id_)
         for pack_value in await CommissionPackValueRepository().get_list(commission_pack=commission_pack):
             await CommissionPackValueService().delete_by_admin(session=session, id_=pack_value.id)
+        await TextRepository().delete(commission_pack.name_text)
         await CommissionPackRepository().delete(commission_pack)
         await self.create_action(
             model=commission_pack,
