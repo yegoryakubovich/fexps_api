@@ -132,6 +132,6 @@ class MessageService(BaseService):
             'account_position': position,
             'order': message.order.id,
             'type': message.type,
-            'text': message.value,
+            'value': message.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
