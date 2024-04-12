@@ -217,4 +217,5 @@ class WalletService(BaseService):
             'value': wallet.value,
             'value_banned': wallet.value_banned,
             'value_can_minus': wallet.value_can_minus,
+            'system': wallet.is_system,
         }
