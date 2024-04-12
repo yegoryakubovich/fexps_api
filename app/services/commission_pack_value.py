@@ -63,11 +63,39 @@ class CommissionPackValueService(BaseService):
                 'value': value,
             },
         )
-
         return {'id': commission_pack_value.id}
 
     @session_required(permissions=['commissions_packs'])
-    async def delete(
+    async def get_by_admin(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        commission_pack_value = await CommissionPackValueRepository().get_by_id(id_=id_)
+        return {
+            'commission_pack_value': await self._generate_commission_pack_value_dict(
+                commission_pack_value=commission_pack_value,
+            ),
+        }
+
+    @session_required(permissions=['commissions_packs'])
+    async def get_list_by_admin(
+            self,
+            session: Session,
+            commission_pack_id: int,
+    ) -> dict:
+        commission_pack = await CommissionPackRepository().get_by_id(id_=commission_pack_id)
+        return {
+            'commissions_packs_values': [
+                await self._generate_commission_pack_value_dict(commission_pack_value=commission_pack_value)
+                for commission_pack_value in await CommissionPackValueRepository().get_list(
+                    commission_pack=commission_pack,
+                )
+            ],
+        }
+
+    @session_required(permissions=['commissions_packs'])
+    async def delete_by_admin(
             self,
             session: Session,
             id_: int,
@@ -94,3 +122,14 @@ class CommissionPackValueService(BaseService):
             pack_value_stop = pack_value.value_to if pack_value.value_to != 0 else settings.wallet_max_value
             if (new_start <= pack_value_stop) and (new_stop >= pack_value_start):
                 raise CommissionIntervalAlreadyTaken()
+
+    @staticmethod
+    async def _generate_commission_pack_value_dict(commission_pack_value: CommissionPackValue):
+        return {
+            'id': commission_pack_value.id,
+            'commission_pack_id': commission_pack_value.commission_pack_id,
+            'value_from': commission_pack_value.value_from,
+            'value_to': commission_pack_value.value_to,
+            'value': commission_pack_value.value,
+            'percent': commission_pack_value.percent,
+        }

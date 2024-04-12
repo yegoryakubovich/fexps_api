@@ -28,7 +28,7 @@ from app.utils.decorators import session_required
 class CommissionPackService(BaseService):
     model = CommissionPack
 
-    @session_required(permissions=['commissions_packs'], can_root=True)
+    @session_required(permissions=['commissions_packs'])
     async def create_by_admin(
             self,
             session: Session,
@@ -53,42 +53,40 @@ class CommissionPackService(BaseService):
                 'is_default': is_default,
             },
         )
-
         return {'id': commission_pack.id}
 
-    @session_required(permissions=['commissions_packs'], can_root=True)
+    @session_required(permissions=['commissions_packs'])
+    async def get_by_admin(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        commission_pack = await CommissionPackRepository().get_by_id(id_=id_)
+        return {
+            'commission_pack': await self._generate_commission_pack_dict(commission_pack=commission_pack),
+        }
+
+    @session_required(permissions=['commissions_packs'])
     async def get_list_by_admin(
             self,
             session: Session,
     ) -> dict:
-        commissions_packs = []
-        for commission_pack in await CommissionPackRepository().get_list():
-            commission_pack_values = []
-            for commission_pack_value in await CommissionPackValueRepository().get_list(
-                    commission_pack=commission_pack
-            ):
-                commission_pack_values.append({
-                    'value_from': commission_pack_value.value_from, 'value_to': commission_pack_value.value_to,
-                    'percent': commission_pack_value.percent, 'value': commission_pack_value.value,
-                })
-            commissions_packs.append({
-                'id': commission_pack.id,
-                'name_text': commission_pack.name_text.key,
-                'values': commission_pack_values,
-                'is_default': commission_pack.is_default,
-            })
+        return {
+            'commissions_packs': [
+                await self._generate_commission_pack_dict(commission_pack=commission_pack)
+                for commission_pack in await CommissionPackRepository().get_list()
+            ],
+        }
 
-        return {'commissions_packs': commissions_packs}
-
-    @session_required(permissions=['commissions_packs'], can_root=True)
+    @session_required(permissions=['commissions_packs'])
     async def delete_by_admin(
             self,
             session: Session,
             id_: int,
     ) -> dict:
-        commission_pack = await CommissionPackRepository().get(id=id_)
+        commission_pack = await CommissionPackRepository().get_by_id(id_=id_)
         for pack_value in await CommissionPackValueRepository().get_list(commission_pack=commission_pack):
-            await CommissionPackValueService().delete(session=session, id_=pack_value.id)
+            await CommissionPackValueService().delete_by_admin(session=session, id_=pack_value.id)
         await CommissionPackRepository().delete(commission_pack)
         await self.create_action(
             model=commission_pack,
@@ -98,5 +96,12 @@ class CommissionPackService(BaseService):
                 'id': id_,
             },
         )
-
         return {}
+
+    @staticmethod
+    async def _generate_commission_pack_dict(commission_pack: CommissionPack):
+        return {
+            'id': commission_pack.id,
+            'name_text': commission_pack.name_text.key,
+            'is_default': commission_pack.is_default,
+        }

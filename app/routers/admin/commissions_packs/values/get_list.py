@@ -15,19 +15,26 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .get import router as router_get
-from .get_list import router as router_get_list
-from .delete import router as router_delete
+from fastapi import Depends
+from pydantic import BaseModel, Field
 
+from app.services import CommissionPackValueService
+from app.utils import Router, Response
 
 router = Router(
-    prefix='/values',
-    routes_included=[
-        router_create,
-        router_get,
-        router_get_list,
-        router_delete,
-    ],
+    prefix='/list/get',
 )
+
+
+class CommissionPackValueListGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    commission_pack_id: int = Field()
+
+
+@router.get()
+async def route(schema: CommissionPackValueListGetSchema = Depends()):
+    result = await CommissionPackValueService().get_list_by_admin(
+        token=schema.token,
+        commission_pack_id=schema.commission_pack_id,
+    )
+    return Response(**result)
