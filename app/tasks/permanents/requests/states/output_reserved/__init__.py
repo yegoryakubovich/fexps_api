@@ -47,6 +47,8 @@ async def run():
         request = await RequestRepository().get_by_id(id_=request.id)
         if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE and not request.rate_confirmed:
             _from_value = request.first_line_value
+        elif request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
+            _from_value = request.input_value
         else:
             _from_value = request.output_currency_value_raw
         _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
@@ -76,15 +78,15 @@ async def run():
             await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
         else:
             _from_value = request.input_value
-            need_value = await output_get_need_value(request=request)
+            need_value = await output_get_need_value(request=request, from_value=_from_value)
             logging.info(f'create missing orders request_{request.id} need_value = {need_value}')
             await get_new_requisite_by_value(request=request, need_value=need_value)
         await write_other(request=request)
         difference_value = get_difference(request=request)
         if request.difference_confirmed != difference_value:
             logging.info(f'{prefix} request_{request.id} '
-                          f'difference_value {difference_value} '
-                          f'difference_confirmed= {request.difference_confirmed} ')
+                         f'difference_value {difference_value} '
+                         f'difference_confirmed= {request.difference_confirmed} ')
             await TransferSystemService().payment_difference(
                 request=request,
                 value=difference_value - request.difference_confirmed,
@@ -158,7 +160,7 @@ async def get_new_requisite_by_value(
 ) -> None:
     currency = request.output_method.currency
     for requisite in await RequisiteRepository().get_list_input_by_rate(
-            type=RequisiteTypes.OUTPUT,
+            type=RequisiteTypes.INPUT,
             currency=currency,
             in_process=False,
     ):
