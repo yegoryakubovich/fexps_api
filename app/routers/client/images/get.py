@@ -22,6 +22,7 @@ from starlette.responses import FileResponse
 from app.utils import Router
 from config import settings
 
+
 router = Router(
     prefix='/get',
 )
