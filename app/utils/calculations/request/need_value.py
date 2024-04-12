@@ -54,4 +54,6 @@ async def output_get_need_value(request: Request, from_value: int = None) -> int
         if order.state == OrderStates.CANCELED:
             continue
         result = round(result - order.value)
+    if result == request.difference_confirmed:
+        return 0
     return result

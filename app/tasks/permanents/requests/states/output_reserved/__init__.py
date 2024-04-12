@@ -45,15 +45,22 @@ async def request_state_output_reserved_check():
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
         request = await RequestRepository().get_by_id(id_=request.id)
-        if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE and not request.rate_confirmed:
-            _from_value = request.first_line_value
-        elif request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-            _from_value = request.input_value
+        _from_currency_value, _from_value = None, None
+        if request.rate_confirmed:
+            _from_currency_value = request.output_currency_value_raw
         else:
-            _from_value = request.output_currency_value_raw
-        _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
+            if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
+                _from_currency_value = request.first_line_value
+            elif request.first_line == RequestFirstLine.OUTPUT_VALUE:
+                _from_value = request.first_line_value
+            else:
+                _from_value = request.input_value
+        if _from_currency_value:
+            _need_value = await output_get_need_currency_value(request=request, from_value=_from_currency_value)
+        else:
+            _need_value = await output_get_need_value(request=request, from_value=_from_value)
         # check wait orders / complete state
-        if not _need_currency_value:
+        if not _need_value:
             waiting_orders = await OrderRepository().get_list(
                 request=request,
                 type=OrderTypes.OUTPUT,
@@ -159,7 +166,7 @@ async def get_new_requisite_by_value(
         need_value: int,
 ) -> None:
     currency = request.output_method.currency
-    for requisite in await RequisiteRepository().get_list_input_by_rate(
+    for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT,
             currency=currency,
             in_process=False,
