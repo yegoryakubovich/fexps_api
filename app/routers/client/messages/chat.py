@@ -18,6 +18,7 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
 
+from app.db.models.message import MessageTypes
 from app.services import MessageService
 from app.utils import Router
 
@@ -58,7 +59,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
     try:
         while True:
             data = await websocket.receive_text()
-            response = await MessageService().chat(token=token, order_id=order_id, text=data)
+            response = await MessageService().chat(token=token, order_id=order_id, type=MessageTypes.TEXT, value=data)
             await manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket, order_id=order_id)
