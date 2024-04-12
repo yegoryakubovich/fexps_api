@@ -96,9 +96,9 @@ class ImageService(BaseService):
         await self.check_file(file=file)
 
         if model_id.isnumeric():
-            await self.model_repositories[model].get_by_id(id_=model_id)
+            await self.model_repositories[model]().get_by_id(id_=model_id)
         else:
-            await self.model_repositories[model].get_by_id_str(id_str=model_id)
+            await self.model_repositories[model]().get_by_id_str(id_str=model_id)
 
         action_parameters = {
             'creator': f'session_{session.id}',
