@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -30,7 +30,7 @@ class WalletUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
     name: str = Field(min_length=1, max_length=1024, default=None)
-    commission_pack_id: int = Field(default=None)
+    commission_pack_id: Optional[int] = Field(default=None)
 
 
 @router.post()
