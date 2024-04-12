@@ -19,6 +19,7 @@ from .account import WrongPassword, InvalidUsername, AccountWithUsernameDoeNotEx
     AccountContactsAlreadyExists, InvalidPassword
 from .base import ApiException
 from .commission_pack import CommissionIntervalAlreadyTaken, CommissionIntervalValidationError, IntervalNotExistsError
+from .image import InvalidFileType, TooLargeFile
 from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters, ParameterContainError, \
     ParameterOneContainError, ParameterTwoContainError, ParametersAllContainError, ValueMustBePositive, WrongToken, \
     WrongTokenFormat, MethodNotSupportedRoot, ModelAlreadyExist

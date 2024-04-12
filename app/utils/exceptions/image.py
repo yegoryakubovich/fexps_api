@@ -18,11 +18,11 @@
 from .base import ApiException
 
 
-class RequestStateWrong(ApiException):
-    code = 10000
-    message = 'Request.{id_value} has state "{state}", but should have state "{need_state}"'
+class InvalidFileType(ApiException):
+    code = 11000
+    message = 'Invalid file type. Please upload an image'
 
 
-class RequestStateNotPermission(ApiException):
-    code = 10001
-    message = 'Request.{id_value} you dont have permission to execute "{action}"'
+class TooLargeFile(ApiException):
+    code = 11001
+    message = 'Uploaded file is too large. Available size up to 16MB'
