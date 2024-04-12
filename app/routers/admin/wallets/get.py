@@ -15,22 +15,27 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
-from .get import router as router_get
-from .get_list import router as router_get_list
-from .values import router as router_values
+from fastapi import Depends
+from pydantic import BaseModel, Field
+
+from app.services import WalletService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/commissions/packs',
-    routes_included=[
-        router_values,
-        router_create,
-        router_get,
-        router_get_list,
-        router_delete,
-    ],
-    tags=['CommissionsPacks'],
+    prefix='/get',
 )
+
+
+class WalletGetByAdminSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.get()
+async def route(schema: WalletGetByAdminSchema = Depends()):
+    result = await WalletService().get_by_admin(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

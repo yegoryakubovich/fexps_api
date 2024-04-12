@@ -17,12 +17,18 @@
 
 from app.utils import Router
 from .bans import router as router_bans
+from .get import router as router_get
+from .get_list import router as router_get_list
+from .update import router as router_update
 
 
 router = Router(
     prefix='/wallets',
     routes_included=[
+        router_get,
+        router_get_list,
+        router_update,
         router_bans,
     ],
-    tags=['AdminWallet'],
+    tags=['Wallets'],
 )

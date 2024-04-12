@@ -29,6 +29,7 @@ from .permissions import router as router_permissions
 from .roles import router as router_roles
 from .texts import router as router_texts
 from .timezones import router as router_timezones
+from .wallets import router as router_wallets
 
 
 router = Router(
@@ -47,5 +48,6 @@ router = Router(
         router_roles,
         router_texts,
         router_timezones,
+        router_wallets,
     ],
 )

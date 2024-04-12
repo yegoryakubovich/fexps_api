@@ -14,14 +14,16 @@
 # limitations under the License.
 #
 
+
 from app.db.models import Wallet, Session, WalletAccountRoles, Actions
-from app.repositories.commission_pack import CommissionPackRepository
+from app.repositories import CommissionPackRepository, AccountRepository
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
+from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -56,6 +58,17 @@ class WalletService(BaseService):
         )
         return {'id': wallet.id}
 
+    @session_required(permissions=['wallets'])
+    async def get_by_admin(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        return {
+            'wallet': await self._generate_wallet_dict(wallet=wallet)
+        }
+
     @session_required()
     async def get(
             self,
@@ -64,18 +77,36 @@ class WalletService(BaseService):
     ):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
-        wallet_account = await WalletAccountRepository().get(account=account, wallet=wallet)
-        if not wallet_account:
-            raise WalletPermissionError()
+        await wallet_check_permission(
+            account=account,
+            wallets=[wallet],
+        )
         return {
-            'wallet': {
-                'id': wallet_account.wallet.id,
-                'name': wallet_account.wallet.name,
-                'value': wallet_account.wallet.value,
-                'value_banned': wallet_account.wallet.value_banned,
-                'value_can_minus': wallet_account.wallet.value_can_minus,
-            }
+            'wallet': await self._generate_wallet_dict(wallet=wallet)
         }
+
+    @session_required(permissions=['wallets'])
+    async def get_list_by_admin(
+            self,
+            session: Session,
+            account_id: int = None,
+    ) -> dict:
+        if account_id:
+            account = await AccountRepository().get_by_id(id_=account_id)
+            result = {
+                'wallets': [
+                    await self._generate_wallet_dict(wallet=wallet_account.wallet)
+                    for wallet_account in await WalletAccountRepository().get_list(account=account)
+                ],
+            }
+        else:
+            result = {
+                'wallets': [
+                    await self._generate_wallet_dict(wallet=wallet)
+                    for wallet in await WalletRepository().get_list()
+                ],
+            }
+        return result
 
     @session_required()
     async def get_list(
@@ -83,19 +114,47 @@ class WalletService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
-        wallets = {
+        return {
             'wallets': [
-                {
-                    'id': wallet_account.wallet.id,
-                    'name': wallet_account.wallet.name,
-                    'value': wallet_account.wallet.value,
-                    'value_banned': wallet_account.wallet.value_banned,
-                    'value_can_minus': wallet_account.wallet.value_can_minus,
-                }
+                await self._generate_wallet_dict(wallet=wallet_account.wallet)
                 for wallet_account in await WalletAccountRepository().get_list(account=account)
             ],
         }
-        return wallets
+
+    @session_required(permissions=['wallets'])
+    async def update_by_admin(
+            self,
+            session: Session,
+            id_: int,
+            name: str = None,
+            commission_pack_id: int = None,
+    ):
+        wallet = await WalletRepository().get_by_id(id_=id_)
+        updates = {}
+        action_parameters = {
+            'updater': f'session_{session.id}',
+            'id_': id_,
+            'by_admin': True,
+        }
+        if name is not None:
+            updates.update(name=name)
+            action_parameters.update(name=name)
+        if commission_pack_id is not None:
+            commission_pack = await CommissionPackRepository().get_by_id(id_=commission_pack_id)
+            updates.update(commission_pack=commission_pack)
+            action_parameters.update(commission_pack_id=commission_pack_id)
+
+        if updates:
+            await WalletRepository().update(
+                wallet,
+                **updates,
+            )
+            await self.create_action(
+                model=wallet,
+                action=Actions.UPDATE,
+                parameters=action_parameters,
+            )
+        return {}
 
     @session_required()
     async def update(
@@ -148,3 +207,14 @@ class WalletService(BaseService):
             id_=wallet_account.id,
         )
         return {}
+
+    @staticmethod
+    async def _generate_wallet_dict(wallet: Wallet):
+        return {
+            'id': wallet.id,
+            'name': wallet.name,
+            'commission_pack': wallet.commission_pack_id,
+            'value': wallet.value,
+            'value_banned': wallet.value_banned,
+            'value_can_minus': wallet.value_can_minus,
+        }
