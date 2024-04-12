@@ -17,17 +17,14 @@
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
-from starlette.responses import HTMLResponse
 
 from app.services import MessageService
 from app.utils import Router
 
+
 router = Router(
     prefix='/chat',
 )
-
-with open('app/routers/client/messages/html.html') as f:
-    html = f.read()
 
 
 class ConnectionManager:
@@ -49,11 +46,6 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
-
-
-@router.get("/")
-async def get():
-    return HTMLResponse(html)
 
 
 class ChatSchema(BaseModel):

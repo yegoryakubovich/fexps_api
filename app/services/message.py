@@ -39,14 +39,16 @@ class MessageService(BaseService):
             self,
             session: Session,
             order_id: int,
-            text: str,
+            type_: str,
+            value: str,
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
         message = await MessageRepository().create(
             account=account,
             order=order,
-            text=text,
+            type=type_,
+            value=value,
         )
         await self.create_action(
             model=message,
@@ -54,7 +56,8 @@ class MessageService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'order_id': order_id,
-                'text': text,
+                'type_': type_,
+                'value': value,
             }
         )
         return await self._generate_message_dict(message=message)
@@ -128,6 +131,7 @@ class MessageService(BaseService):
             'account': message.account.id,
             'account_position': position,
             'order': message.order.id,
-            'text': message.text,
+            'type': message.type,
+            'text': message.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
