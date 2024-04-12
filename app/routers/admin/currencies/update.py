@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -29,9 +29,9 @@ router = Router(
 class CurrencyUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_str: str = Field(min_length=1, max_length=32)
-    decimal: int = Field(default=None)
-    rate_decimal: int = Field(default=None)
-    div: int = Field(default=None)
+    decimal: Optional[int] = Field(default=None)
+    rate_decimal: Optional[int] = Field(default=None)
+    div: Optional[int] = Field(default=None)
 
 
 @router.post()

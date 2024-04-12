@@ -29,7 +29,7 @@ router = Router(
 class WalletUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    name: str = Field(min_length=1, max_length=1024, default=None)
+    name: Optional[str] = Field(min_length=1, max_length=1024, default=None)
     commission_pack_id: Optional[int] = Field(default=None)
 
 

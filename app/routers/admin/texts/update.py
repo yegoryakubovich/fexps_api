@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -29,8 +29,8 @@ router = Router(
 class TextUpdateByAdminSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     key: str = Field(min_length=1, max_length=128)
-    new_key: str | None = Field(default=None, min_length=1, max_length=128)
-    value_default: str = Field(default=None, min_length=1, max_length=1024)
+    new_key: Optional[str] = Field(default=None, min_length=1, max_length=128)
+    value_default: Optional[str] = Field(default=None, min_length=1, max_length=1024)
     create_text_pack: bool = Field(default=True)
 
 
@@ -39,8 +39,8 @@ async def route(schema: TextUpdateByAdminSchema):
     result = await TextService().update_by_admin(
         token=schema.token,
         key=schema.key,
-        value_default=schema.value_default or None,
-        new_key=schema.new_key or None,
+        value_default=schema.value_default,
+        new_key=schema.new_key,
         create_text_pack=schema.create_text_pack,
     )
     return Response(**result)
