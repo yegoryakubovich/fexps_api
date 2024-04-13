@@ -15,7 +15,8 @@
 #
 
 
-from app.db.models import Session, Contact, Actions
+from app.db.models import Session, Contact, Actions, TextPack
+from app.repositories import TextPackRepository
 from app.repositories.contact import ContactRepository
 from app.repositories.text import TextRepository
 from app.services.base import BaseService
@@ -37,6 +38,7 @@ class ContactService(BaseService):
             value_default=name,
         )
         contact = await ContactRepository().create(name_text=name_text)
+        await TextPackRepository().create_all()
         await self.create_action(
             model=contact,
             action=Actions.CREATE,

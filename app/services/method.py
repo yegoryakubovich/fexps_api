@@ -70,6 +70,7 @@ class MethodService(BaseService):
             color=color,
             bgcolor=bgcolor,
         )
+        await TextPackRepository().create_all()
         await self.create_action(
             model=method,
             action=Actions.CREATE,
