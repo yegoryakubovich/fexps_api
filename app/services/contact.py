@@ -45,31 +45,22 @@ class ContactService(BaseService):
                 'name_text_id': name_text.id,
             },
         )
-
         return {'id': contact.id}
 
-    @staticmethod
     async def get(
+            self,
             id_: int,
     ):
         contact = await ContactRepository().get_by_id(id_=id_)
 
         return {
-            'contact': {
-                'id': contact.id,
-                'text_key': contact.name_text.key,
-            }
+            'contact': await self._generate_contact_dict(contact=contact)
         }
 
-    @staticmethod
-    async def get_list() -> dict:
-
+    async def get_list(self) -> dict:
         return {
             'contacts': [
-                {
-                    'id': contact.id,
-                    'id_str': contact.name_text.key,
-                }
+                await self._generate_contact_dict(contact=contact)
                 for contact in await ContactRepository().get_list()
             ],
         }
@@ -90,5 +81,11 @@ class ContactService(BaseService):
                 'id': id_,
             },
         )
-
         return {}
+
+    @staticmethod
+    async def _generate_contact_dict(contact: Contact):
+        return {
+            'id': contact.id,
+            'name_text': contact.name_text.key,
+        }
