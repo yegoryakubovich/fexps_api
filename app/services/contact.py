@@ -33,7 +33,7 @@ class ContactService(BaseService):
             name: str,
     ) -> dict:
         name_text = await TextRepository().create(
-            key=f'commission_pack_{await create_id_str()}',
+            key=f'contact_{await create_id_str()}',
             value_default=name,
         )
         contact = await ContactRepository().create(name_text=name_text)
