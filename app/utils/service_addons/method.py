@@ -67,27 +67,16 @@ async def method_check_input_field(method: Method, fields: dict):
                     'parameter': field_key,
                 },
             )
-        if field_type == MethodFieldTypes.STR and not isinstance(field_result, str):
-            raise MethodFieldsTypeError(
-                kwargs={
-                    'field_name': 'fields',
-                    'param_name': field_key,
-                    'type_name': field_type,
-                },
-            )
-        if field_type == MethodFieldTypes.INT and not isinstance(field_result, int):
-            raise MethodFieldsTypeError(
-                kwargs={
-                    'field_name': 'fields',
-                    'param_name': field_key,
-                    'type_name': field_type,
-                },
-            )
-        if field_type == MethodFieldTypes.IMAGE:  # FIXME
-            raise MethodFieldsTypeError(
-                kwargs={
-                    'field_name': 'fields',
-                    'param_name': field_key,
-                    'type_name': field_type,
-                },
-            )
+        for type_, python_type in [
+            (MethodFieldTypes.STR, str),
+            (MethodFieldTypes.INT, int),
+            (MethodFieldTypes.IMAGE, str),
+        ]:
+            if field_type == type_ and not isinstance(field_result, python_type):
+                raise MethodFieldsTypeError(
+                    kwargs={
+                        'field_name': 'fields',
+                        'param_name': field_key,
+                        'type_name': field_type,
+                    },
+                )
