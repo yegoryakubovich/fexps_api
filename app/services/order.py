@@ -15,7 +15,7 @@
 #
 import logging
 
-from app.db.models import Session, Order, OrderTypes, OrderStates, Actions
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes
 from app.repositories import WalletAccountRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -218,6 +218,13 @@ class OrderService(BaseService):
             input_fields=input_fields,
             state=next_state,
         )
+        for field_scheme in order.input_scheme_fields:
+            if not input_fields.get(field_scheme['key']):
+                continue
+            if field_scheme['type'] == MethodFieldTypes.IMAGE:
+                pass
+            else:
+                pass
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

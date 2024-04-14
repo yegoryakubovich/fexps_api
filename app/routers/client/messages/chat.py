@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
 
-from app.db.models.message import MessageTypes
 from app.services import MessageService
 from app.utils import Router
-
 
 router = Router(
     prefix='/chat',
@@ -58,8 +56,13 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
     await manager.connect(websocket, order_id=order_id)
     try:
         while True:
-            data = await websocket.receive_text()
-            response = await MessageService().chat(token=token, order_id=order_id, type_=MessageTypes.TEXT, value=data)
+            data = await websocket.receive_json()
+            response = await MessageService().chat(
+                token=token,
+                order_id=order_id,
+                type_=data['type_'],
+                value=data['value'],
+            )
             await manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:
         manager.disconnect(websocket, order_id=order_id)
