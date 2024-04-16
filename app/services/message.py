@@ -129,12 +129,15 @@ class MessageService(BaseService):
             elif message.account.id == requisite_account.id:
                 position = AccountPosition.SENDER
         action = await ActionService().get_action(model=message, action=Actions.CREATE)
+        image_id_str = None
+        if message.image:
+            image_id_str = message.image.id_str
         return {
             'id': message.id,
             'account': message.account.id,
             'account_position': position,
             'order': message.order.id,
-            'image': message.image.id_str,
+            'image': image_id_str,
             'text': message.text,
             'date': action.datetime.strftime(settings.datetime_format),
         }
