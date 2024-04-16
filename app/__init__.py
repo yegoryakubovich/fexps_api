@@ -24,6 +24,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.db.init_db import init_db
 from app.routers import routers
 from app.utils.client import init
+from app.utils.logger import config_logger
 from app.utils.middleware import Middleware
 from app.utils.validation_error import validation_error
 from config import settings
@@ -62,6 +63,6 @@ app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=Middleware())
 
 
 def create_app():
-    logging.basicConfig(level=logging.DEBUG)
+    config_logger()
     logging.info(msg='Application starting...')
     return app
