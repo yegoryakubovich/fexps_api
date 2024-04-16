@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Optional
 
 from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine
 from app.repositories.requisite import RequisiteRepository
@@ -37,7 +37,7 @@ async def request_type_input_currency_value(
         request: Request,
         currency: Currency,
         need_currency_value: int,
-) -> RequisiteTypeScheme:
+) -> Optional[RequisiteTypeScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     sum_currency_value, sum_value = 0, 0
     for requisite in await RequisiteRepository().get_list_input_by_rate(
@@ -78,6 +78,8 @@ async def request_type_input_currency_value(
             rate_decimal=rate_decimal,
             order_type=OrderTypes.INPUT,
         )
+        if 0 in [suitable_currency_value, suitable_value]:
+            continue
         requisites_scheme_list.append(RequisiteScheme(  # Add to list
             requisite_id=requisite.id,
             currency_value=suitable_currency_value,

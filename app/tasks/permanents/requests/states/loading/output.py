@@ -149,6 +149,8 @@ async def request_type_output_value(
             rate_decimal=rate_decimal,
             type_=OrderTypes.OUTPUT,
         )
+        if 0 in [suitable_currency_value, suitable_value]:
+            continue
         requisites_scheme_list.append(RequisiteScheme(  # Add to list
             requisite_id=requisite.id,
             currency_value=suitable_currency_value,
