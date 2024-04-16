@@ -21,10 +21,6 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class MessageTypes:
-    TEXT = 'text'
-    IMAGE = 'image'
-
 class Message(Base):
     __tablename__ = 'messages'
 
@@ -33,6 +29,7 @@ class Message(Base):
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
     account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
-    type = Column(Text(length=16))
-    value = Column(Text)
+    image_id = Column(BigInteger, ForeignKey('images.id', ondelete='SET NULL'), nullable=True)
+    image = relationship('Image', foreign_keys=image_id, uselist=False, lazy='selectin')
+    text = Column(Text)
     is_deleted = Column(Boolean, default=False)

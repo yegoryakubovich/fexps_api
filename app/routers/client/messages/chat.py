@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
 
 from fastapi import WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
@@ -60,8 +60,8 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
             response = await MessageService().chat(
                 token=token,
                 order_id=order_id,
-                type_=data['type_'],
-                value=data['value'],
+                image_id_str=data.get('image_id_str'),
+                text=data['value'],
             )
             await manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:

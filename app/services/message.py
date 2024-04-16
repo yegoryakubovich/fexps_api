@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from app.db.models import Message, Session, Actions, OrderTypes
-from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository
+from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, ImageRepository
 from app.services import ActionService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -39,16 +39,19 @@ class MessageService(BaseService):
             self,
             session: Session,
             order_id: int,
-            type_: str,
-            value: str,
+            image_id_str: Optional[str] = None,
+            text: Optional[str] = None,
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
+        image = None
+        if image_id_str:
+            image = await ImageRepository().get_by_id_str(id_str=image_id_str)
         message = await MessageRepository().create(
             account=account,
             order=order,
-            type=type_,
-            value=value,
+            image=image,
+            text=text,
         )
         await self.create_action(
             model=message,
@@ -56,8 +59,8 @@ class MessageService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'order_id': order_id,
-                'type_': type_,
-                'value': value,
+                'image': image,
+                'text': text,
             }
         )
         return await self._generate_message_dict(message=message)
@@ -131,7 +134,7 @@ class MessageService(BaseService):
             'account': message.account.id,
             'account_position': position,
             'order': message.order.id,
-            'type': message.type,
-            'value': message.value,
+            'image': message.image.id_str,
+            'text': message.text,
             'date': action.datetime.strftime(settings.datetime_format),
         }
