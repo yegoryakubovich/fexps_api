@@ -61,7 +61,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 token=token,
                 order_id=order_id,
                 image_id_str=data.get('image_id_str'),
-                text=data['value'],
+                text=data['text'],
             )
             await manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes
 from app.repositories import WalletAccountRepository
@@ -221,7 +220,7 @@ class OrderService(BaseService):
         for field_scheme in order.input_scheme_fields:
             if not input_fields.get(field_scheme['key']):
                 continue
-            if field_scheme['type'] == MethodFieldTypes.IMAGE:
+            if field_scheme['type'] == MethodFieldTypes.IMAGE:  # FIXME
                 pass
             else:
                 pass
