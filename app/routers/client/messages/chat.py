@@ -16,44 +16,20 @@
 
 
 from fastapi import WebSocket, WebSocketDisconnect
-from pydantic import Field, BaseModel
 
 from app.services import MessageService
 from app.utils import Router
+from app.utils.websockets import connections_manager
+
 
 router = Router(
     prefix='/chat',
 )
 
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: list[tuple[int, WebSocket]] = []
-
-    async def connect(self, websocket: WebSocket, order_id: int):
-        await websocket.accept()
-        self.active_connections.append((order_id, websocket))
-
-    def disconnect(self, websocket: WebSocket, order_id: int):
-        self.active_connections.remove((order_id, websocket))
-
-    async def send(self, order_id: int, data):
-        for connection in self.active_connections:
-            if connection[0] != order_id:
-                continue
-            await connection[1].send_json(data=data)
-
-
-manager = ConnectionManager()
-
-
-class ChatSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-
-
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
-    await manager.connect(websocket, order_id=order_id)
+    await connections_manager.connect(websocket, order_id=order_id)
     try:
         while True:
             data = await websocket.receive_json()
@@ -63,6 +39,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 image_id_str=data.get('image_id_str'),
                 text=data['text'],
             )
-            await manager.send(data=response, order_id=order_id)
+            await connections_manager.send(data=response, order_id=order_id)
     except WebSocketDisconnect:
-        manager.disconnect(websocket, order_id=order_id)
+        connections_manager.disconnect(websocket, order_id=order_id)
