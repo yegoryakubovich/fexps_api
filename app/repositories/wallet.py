@@ -17,7 +17,6 @@
 
 from app.db.models import Wallet
 from app.repositories.base import BaseRepository
-from app.utils.exceptions import SystemWalletNotExists
 
 
 class WalletRepository(BaseRepository[Wallet]):
@@ -26,5 +25,5 @@ class WalletRepository(BaseRepository[Wallet]):
     async def get_system_wallet(self) -> Wallet:
         result = await self.get(is_system=True)
         if not result:
-            raise SystemWalletNotExists()
+            result = await self.create(name='System', is_system=True)
         return result
