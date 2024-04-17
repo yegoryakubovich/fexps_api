@@ -15,4 +15,4 @@
 #
 
 
-from .fastapi import connections_manager
+from .fastapi import connections_manager_fastapi

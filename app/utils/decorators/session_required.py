@@ -23,6 +23,7 @@ from app.utils.exceptions.main import MethodNotSupportedRoot
 def session_required(
         return_model: bool = True,
         return_account: bool = False,
+        return_token: bool = False,
         permissions: list[str] = None,
         can_guest: bool = False,
         can_root: bool = False,
@@ -47,11 +48,15 @@ def session_required(
                     kwargs['account'] = session.account
                 else:
                     kwargs['session'] = session
+            if return_token:
+                kwargs['token'] = token
 
             # Check permissions
             for permission in permissions or []:
                 await AccountRoleCheckPermissionService().check_permission(account=session.account, id_str=permission)
 
             return await function(*args, **kwargs)
+
         return wrapper
+
     return inner

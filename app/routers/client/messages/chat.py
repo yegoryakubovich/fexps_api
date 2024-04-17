@@ -19,7 +19,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from app.services import MessageService
 from app.utils import Router
-from app.utils.websockets import connections_manager
+from app.utils.websockets import connections_manager_fastapi
 
 
 router = Router(
@@ -29,7 +29,7 @@ router = Router(
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
-    await connections_manager.connect(websocket, order_id=order_id)
+    await connections_manager_fastapi.connect(websocket, order_id=order_id)
     try:
         while True:
             data = await websocket.receive_json()
@@ -39,6 +39,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 image_id_str=data.get('image_id_str'),
                 text=data['text'],
             )
-            await connections_manager.send(data=response, order_id=order_id)
+            await connections_manager_fastapi.send(data=response, order_id=order_id)
     except WebSocketDisconnect:
-        connections_manager.disconnect(websocket, order_id=order_id)
+        connections_manager_fastapi.disconnect(websocket, order_id=order_id)

@@ -18,7 +18,7 @@
 from fastapi import WebSocket
 
 
-class ConnectionManager:
+class ConnectionManagerFastApi:
     def __init__(self):
         self.active_connections: list[tuple[int, WebSocket]] = []
 
@@ -36,4 +36,4 @@ class ConnectionManager:
             await connection[1].send_json(data=data)
 
 
-connections_manager = ConnectionManager()
+connections_manager_fastapi = ConnectionManagerFastApi()

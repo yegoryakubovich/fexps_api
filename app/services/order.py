@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes
-from app.repositories import WalletAccountRepository
+from app.repositories import WalletAccountRepository, TextRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -27,6 +27,7 @@ from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, Orde
 from app.utils.service_addons.method import method_check_input_field
 from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
+from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
 
 class OrderService(BaseService):
@@ -161,10 +162,11 @@ class OrderService(BaseService):
             'input_fields': order.input_fields,
         }
 
-    @session_required()
+    @session_required(return_token=True)
     async def update_confirmation(
             self,
             session: Session,
+            token: str,
             id_: int,
             input_fields: dict,
     ) -> dict:
@@ -218,13 +220,17 @@ class OrderService(BaseService):
             input_fields=input_fields,
             state=next_state,
         )
+        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
-            if not input_fields.get(field_scheme['key']):
+            field_key = field_scheme['key']
+            field_value = input_fields.get(field_key)
+            if not field_value:
                 continue
-            if field_scheme['type'] == MethodFieldTypes.IMAGE:  # FIXME
-                pass
+            text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
+            if field_scheme['type'] == MethodFieldTypes.IMAGE:
+                await connections_manager_aiohttp.send(image_id_str=field_value, text=text.value_default)
             else:
-                pass
+                await connections_manager_aiohttp.send(text=f'{text.value_default}: {field_value}')
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

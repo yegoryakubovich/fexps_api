@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     flower_password: str
 
     root_token: str
+    chat_url: str
     sync_db_url: str
     sync_db_table_name: str
     debug: int
