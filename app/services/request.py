@@ -24,7 +24,7 @@ from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.services import ActionService
+from app.services import ActionService, CurrencyService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
@@ -120,7 +120,7 @@ class RequestService(BaseService):
             )
         )
         return {
-            'request': await self._generate_request_dict(request=request)
+            'request': await self.generate_request_dict(request=request)
         }
 
     @session_required()
@@ -144,7 +144,7 @@ class RequestService(BaseService):
         )
         requests = []
         for _request in _requests:
-            requests.append(await self._generate_request_dict(request=_request))
+            requests.append(await self.generate_request_dict(request=_request))
         return {
             'requests': requests,
             'results': results,
@@ -224,7 +224,7 @@ class RequestService(BaseService):
         return {}
 
     @staticmethod
-    async def _generate_request_dict(request: Request) -> dict:
+    async def generate_request_dict(request: Request) -> dict:
         action = await ActionService().get_action(model=request, action=Actions.CREATE)
         date = action.datetime.strftime(settings.datetime_format)
         update_action = await ActionService().get_action(model=request, action=Actions.UPDATE)
@@ -234,6 +234,12 @@ class RequestService(BaseService):
             time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
             time_delta = datetime.timedelta(minutes=settings.request_waiting_check)
             waiting_delta = (time_delta - (time_now - time_update)).seconds
+        input_currency = None
+        if request.input_method:
+            input_currency = await CurrencyService().generate_currency_dict(currency=request.input_method.currency)
+        output_currency = None
+        if request.output_method:
+            output_currency = await CurrencyService().generate_currency_dict(currency=request.output_method.currency)
         return {
             'id': request.id,
             'name': request.name,
@@ -245,7 +251,7 @@ class RequestService(BaseService):
             'difference_confirmed': request.difference_confirmed,
             'first_line': request.first_line,
             'first_line_value': request.first_line_value,
-            'input_currency': request.input_method.currency.id_str if request.input_method else None,
+            'input_currency': input_currency,
             'input_currency_value_raw': request.input_currency_value_raw,
             'input_currency_value': request.input_currency_value,
             'input_value_raw': request.input_value_raw,
@@ -254,7 +260,7 @@ class RequestService(BaseService):
             'input_rate': request.input_rate,
             'commission_value': request.input_rate,
             'rate': request.input_rate,
-            'output_currency': request.output_method.currency.id_str if request.output_method else None,
+            'output_currency': output_currency,
             'output_currency_value_raw': request.output_currency_value_raw,
             'output_currency_value': request.output_currency_value,
             'output_value_raw': request.output_value_raw,

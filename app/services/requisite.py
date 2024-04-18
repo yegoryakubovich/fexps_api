@@ -23,6 +23,7 @@ from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
+from app.services import CurrencyService
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.requisite import all_value_calc
@@ -125,7 +126,7 @@ class RequisiteService(BaseService):
             if requisite.output_requisite_data.account.id != account.id:
                 raise WalletPermissionError()
         return {
-            'requisite': self._generate_requisites_dict(requisite=requisite)
+            'requisite': await self.generate_requisites_dict(requisite=requisite)
         }
 
     @session_required()
@@ -148,7 +149,7 @@ class RequisiteService(BaseService):
             page=page,
         )
         requisites = [
-            self._generate_requisites_dict(requisite=requisite)
+            await self.generate_requisites_dict(requisite=requisite)
             for requisite in requisites
         ]
         return {
@@ -297,7 +298,7 @@ class RequisiteService(BaseService):
         return {}
 
     @staticmethod
-    def _generate_requisites_dict(requisite: Requisite):
+    async def generate_requisites_dict(requisite: Requisite):
         return {
             'id': requisite.id,
             'type': requisite.type,
@@ -306,7 +307,7 @@ class RequisiteService(BaseService):
             'input_method': requisite.input_method_id,
             'output_method': requisite.output_requisite_data.method_id if requisite.output_requisite_data else None,
             'output_requisite_data': requisite.output_requisite_data_id,
-            'currency': requisite.currency.id_str,
+            'currency': await CurrencyService().generate_currency_dict(currency=requisite.currency),
             'currency_value': requisite.currency_value,
             'total_currency_value': requisite.total_currency_value,
             'currency_value_min': requisite.currency_value_min,

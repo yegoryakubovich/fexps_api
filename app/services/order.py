@@ -20,6 +20,7 @@ from app.repositories import WalletAccountRepository, TextRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
+from app.services import CurrencyService
 from app.services.base import BaseService
 from app.services.order_request import OrderRequestService
 from app.utils.decorators import session_required
@@ -52,7 +53,7 @@ class OrderService(BaseService):
             ),
         )
         return {
-            'order': self._generate_order_dict(order=order)
+            'order': await self.generate_order_dict(order=order)
         }
 
     @session_required()
@@ -75,7 +76,7 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                self._generate_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+                await self.generate_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
             ]
         }
 
@@ -117,7 +118,7 @@ class OrderService(BaseService):
                         order_ids.append(order.id)
         return {
             'orders': [
-                self._generate_order_dict(order=order) for order in orders
+                await self.generate_order_dict(order=order) for order in orders
             ]
         }
 
@@ -136,7 +137,7 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                self._generate_order_dict(order=order) for order in
+                await self.generate_order_dict(order=order) for order in
                 await OrderRepository().get_list(requisite=requisite)
             ]
         }
@@ -327,7 +328,7 @@ class OrderService(BaseService):
         return {}
 
     @staticmethod
-    def _generate_order_dict(order: Order):
+    async def generate_order_dict(order: Order):
         method_id = order.request.input_method_id if order.type == OrderTypes.INPUT else order.request.output_method_id
         return {
             'id': order.id,
@@ -336,7 +337,7 @@ class OrderService(BaseService):
             'canceled_reason': order.canceled_reason,
             'request': order.request_id,
             'requisite': order.requisite_id,
-            'currency': order.requisite.currency.id_str,
+            'currency': await CurrencyService().generate_currency_dict(currency=order.requisite.currency),
             'currency_value': order.currency_value,
             'value': order.value,
             'rate': order.rate,

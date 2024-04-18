@@ -19,6 +19,7 @@ from app.db.models import Method, Session, Actions
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
+from app.services import CurrencyService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -87,28 +88,15 @@ class MethodService(BaseService):
     async def get(self, id_: int) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)
         return {
-            'method': await self._generate_method_dict(method=method)
+            'method': await self.generate_method_dict(method=method)
         }
 
     async def get_list(self) -> dict:
         return {
             'methods': [
-                await self._generate_method_dict(method=method)
+                await self.generate_method_dict(method=method)
                 for method in await MethodRepository().get_list()
             ],
-        }
-
-    @staticmethod
-    async def _generate_method_dict(method: Method) -> dict:
-        return {
-            'id': method.id,
-            'currency': method.currency.id_str,
-            'name_text': method.name_text.key,
-            'schema_fields': method.schema_fields,
-            'schema_input_fields': method.schema_input_fields,
-            'color': method.color,
-            'bgcolor': method.bgcolor,
-            'is_active': method.is_active,
         }
 
     @session_required(permissions=['methods'], can_root=True)
@@ -169,3 +157,16 @@ class MethodService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    async def generate_method_dict(method: Method) -> dict:
+        return {
+            'id': method.id,
+            'currency': await CurrencyService().generate_currency_dict(currency=method.currency),
+            'name_text': method.name_text.key,
+            'schema_fields': method.schema_fields,
+            'schema_input_fields': method.schema_input_fields,
+            'color': method.color,
+            'bgcolor': method.bgcolor,
+            'is_active': method.is_active,
+        }

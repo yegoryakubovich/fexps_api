@@ -62,32 +62,16 @@ class CurrencyService(BaseService):
         )
         return {'id_str': currency.id_str}
 
-    @staticmethod
-    async def get(
-            id_str: str,
-    ):
+    async def get(self, id_str: str):
         currency = await CurrencyRepository().get_by_id_str(id_str=id_str)
         return {
-            'currency': {
-                'id': currency.id,
-                'id_str': currency.id_str,
-                'decimal': currency.decimal,
-                'rate_decimal': currency.rate_decimal,
-                'div': currency.div,
-            }
+            'currency': await self.generate_currency_dict(currency=currency)
         }
 
-    @staticmethod
-    async def get_list() -> dict:
+    async def get_list(self) -> dict:
         currencies = {
             'currencies': [
-                {
-                    'id': currency.id,
-                    'id_str': currency.id_str,
-                    'decimal': currency.decimal,
-                    'rate_decimal': currency.rate_decimal,
-                    'div': currency.div,
-                }
+                await self.generate_currency_dict(currency=currency)
                 for currency in await CurrencyRepository().get_list()
             ],
         }
@@ -148,3 +132,13 @@ class CurrencyService(BaseService):
             }
         )
         return {}
+
+    @staticmethod
+    async def generate_currency_dict(currency: Currency) -> dict:
+        return {
+            'id': currency.id,
+            'id_str': currency.id_str,
+            'decimal': currency.decimal,
+            'rate_decimal': currency.rate_decimal,
+            'div': currency.div,
+        }
