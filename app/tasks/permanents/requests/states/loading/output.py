@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine
+from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.request.need_value import output_get_need_currency_value, output_get_need_value
 from app.utils.calculations.schemes.loading import RequisiteScheme, RequisiteTypeScheme
@@ -42,6 +42,7 @@ async def request_type_output_currency_value(
     sum_currency_value, sum_value = 0, 0
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT,
+            state=RequisiteStates.ENABLE,
             currency=currency,
             in_process=False,
     ):
@@ -113,6 +114,7 @@ async def request_type_output_value(
     sum_currency_value, sum_value, rates_list = 0, 0, []
     for requisite in await RequisiteRepository().get_list_output_by_rate(
             type=RequisiteTypes.INPUT,
+            state=RequisiteStates.ENABLE,
             currency=currency,
             in_process=False,
     ):

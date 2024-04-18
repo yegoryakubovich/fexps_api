@@ -18,7 +18,8 @@
 import asyncio
 import logging
 
-from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates, RequestFirstLine, Request
+from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates, RequestFirstLine, Request, \
+    RequisiteStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -75,6 +76,7 @@ async def get_new_requisite_by_currency_value(
     currency = request.input_method.currency
     for requisite in await RequisiteRepository().get_list_input_by_rate(
             type=RequisiteTypes.OUTPUT,
+            state=RequisiteStates.ENABLE,
             currency=currency,
             in_process=False,
     ):

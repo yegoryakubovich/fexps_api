@@ -16,6 +16,7 @@
 
 
 import logging
+from typing import Optional
 
 from app.db.models import Request, RequestFirstLine
 from app.tasks.permanents.requests.states.loading.input import request_type_input_currency_value, request_type_input_value
@@ -32,7 +33,7 @@ prefix = '[request_type_all]'
 
 async def request_type_all(
         request: Request,
-) -> AllRequisiteTypeScheme:
+) -> Optional[AllRequisiteTypeScheme]:
     logging.info(f'{prefix} start')
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_input_currency_value = await input_get_need_currency_value(request=request)
