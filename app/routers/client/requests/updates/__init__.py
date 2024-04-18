@@ -19,8 +19,9 @@ from app.utils import Router
 from .confirmation import router as router_confirmation
 from .name import router as router_name
 
+
 router = Router(
-    prefix='/update',
+    prefix='/updates',
     routes_included=[
         router_name,
         router_confirmation,

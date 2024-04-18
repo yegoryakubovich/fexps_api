@@ -18,24 +18,23 @@
 from pydantic import Field, BaseModel
 
 from app.services import RequestService
-from app.utils import Router, Response
+from app.utils import Response, Router
+
 
 router = Router(
-    prefix='/name',
+    prefix='/confirmation',
 )
 
 
-class RequestUpdateSchema(BaseModel):
+class RequestUpdateConfirmationSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    name: str = Field(min_length=1, max_length=32)
 
 
 @router.post()
-async def route(schema: RequestUpdateSchema):
-    result = await RequestService().update_name(
+async def route(schema: RequestUpdateConfirmationSchema):
+    result = await RequestService().update_confirmation(
         token=schema.token,
         id_=schema.id_,
-        name=schema.name,
     )
     return Response(**result)
