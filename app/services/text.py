@@ -54,7 +54,7 @@ class TextService(BaseService):
         )
         await self.create_action(
             model=text,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'key': key,
@@ -169,7 +169,7 @@ class TextService(BaseService):
         )
         await self.create_action(
             model=text,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'key': key,

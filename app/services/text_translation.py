@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Language, Session, Text, TextTranslation
+from app.db.models import Language, Session, Text, TextTranslation, Actions
 from app.repositories import LanguageRepository, TextRepository, TextTranslationRepository
 from app.services import TextPackService
 from app.services.base import BaseService
@@ -51,7 +51,7 @@ class TextTranslationService(BaseService):
         )
         await self.create_action(
             model=text_translation,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'text_key': text_key,
@@ -87,7 +87,7 @@ class TextTranslationService(BaseService):
         )
         await self.create_action(
             model=text_translation,
-            action='update',
+            action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
                 'text_key': text_key,
@@ -116,7 +116,7 @@ class TextTranslationService(BaseService):
         )
         await self.create_action(
             model=text_translation,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'text_key': text_key,

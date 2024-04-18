@@ -141,27 +141,6 @@ class OrderService(BaseService):
             ]
         }
 
-    @staticmethod
-    def _generate_order_dict(order: Order):
-        method_id = order.request.input_method_id if order.type == OrderTypes.INPUT else order.request.output_method_id
-        return {
-            'id': order.id,
-            'type': order.type,
-            'state': order.state,
-            'canceled_reason': order.canceled_reason,
-            'request': order.request_id,
-            'requisite': order.requisite_id,
-            'currency': order.requisite.currency.id_str,
-            'currency_value': order.currency_value,
-            'value': order.value,
-            'rate': order.rate,
-            'method': method_id,
-            'requisite_scheme_fields': order.requisite_scheme_fields,
-            'requisite_fields': order.requisite_fields,
-            'input_scheme_fields': order.input_scheme_fields,
-            'input_fields': order.input_fields,
-        }
-
     @session_required(return_token=True)
     async def update_confirmation(
             self,
@@ -346,3 +325,24 @@ class OrderService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    def _generate_order_dict(order: Order):
+        method_id = order.request.input_method_id if order.type == OrderTypes.INPUT else order.request.output_method_id
+        return {
+            'id': order.id,
+            'type': order.type,
+            'state': order.state,
+            'canceled_reason': order.canceled_reason,
+            'request': order.request_id,
+            'requisite': order.requisite_id,
+            'currency': order.requisite.currency.id_str,
+            'currency_value': order.currency_value,
+            'value': order.value,
+            'rate': order.rate,
+            'method': method_id,
+            'requisite_scheme_fields': order.requisite_scheme_fields,
+            'requisite_fields': order.requisite_fields,
+            'input_scheme_fields': order.input_scheme_fields,
+            'input_fields': order.input_fields,
+        }

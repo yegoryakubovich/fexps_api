@@ -199,7 +199,7 @@ class ImageService(BaseService):
 
         await self.create_action(
             model=image,
-            action='delete',
+            action=Actions.DELETE,
             parameters=action_parameters,
         )
 

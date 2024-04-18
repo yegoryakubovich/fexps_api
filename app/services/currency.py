@@ -140,7 +140,7 @@ class CurrencyService(BaseService):
         await CurrencyRepository().delete(model=currency)
         await self.create_action(
             model=currency,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

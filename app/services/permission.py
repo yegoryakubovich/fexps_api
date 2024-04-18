@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Permission, Session
+from app.db.models import Permission, Session, Actions
 from app.repositories import PermissionRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
@@ -56,7 +56,7 @@ class PermissionService(BaseService):
 
         await self.create_action(
             model=permission,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -110,7 +110,7 @@ class PermissionService(BaseService):
 
         await self.create_action(
             model=permission,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,

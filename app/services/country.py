@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Country, Session
+from app.db.models import Country, Session, Actions
 from app.repositories import CountryRepository, CurrencyRepository, LanguageRepository, TimezoneRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -53,7 +53,7 @@ class CountryService(BaseService):
         )
         await self.create_action(
             model=country,
-            action='create',
+            action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
                 'id_str': id_str,
@@ -107,7 +107,7 @@ class CountryService(BaseService):
         )
         await self.create_action(
             model=country,
-            action='update',
+            action=Actions.UPDATE,
             parameters=action_parameters,
         )
         return {}
@@ -122,7 +122,7 @@ class CountryService(BaseService):
         await CountryRepository().delete(model=country)
         await self.create_action(
             model=country,
-            action='delete',
+            action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
                 'id_str': id_str,
