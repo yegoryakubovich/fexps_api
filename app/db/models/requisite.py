@@ -41,7 +41,7 @@ class Requisite(Base):
 
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
-    state = Column(String(length=8))
+    state = Column(String(length=8), default=RequisiteStates.ENABLE)
 
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
