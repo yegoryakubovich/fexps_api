@@ -28,7 +28,7 @@ from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodPar
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
     OrderNotPermission
 from .request import RequestStateWrong, RequestStateNotPermission
-from .requisite import RequisiteMinimumValueError
+from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong
 from .role import RoleAlreadyExist
 from .text import TextDoesNotExist, TextAlreadyExist, TextPackDoesNotExist, TextTranslationDoesNotExist, \
     TextTranslationAlreadyExist

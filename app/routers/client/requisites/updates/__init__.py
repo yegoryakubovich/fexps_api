@@ -15,19 +15,20 @@
 #
 
 
-from .base import ApiException
+from app.utils import Router
+from .disable import router as router_disable
+from .enable import router as router_enable
+from .stop import router as router_stop
+from .value import router as router_confirmation
+from .value import router as router_value
 
 
-class RequisiteMinimumValueError(ApiException):
-    code = 7000
-    message = 'Minimum value = {access_change_balance}'
-
-
-class RequisiteActiveOrdersExistsError(ApiException):
-    code = 7001
-    message = 'Requisite.{id_value} has active orders, unable to execute "{action}"'
-
-
-class RequisiteStateWrong(ApiException):
-    code = 7002
-    message = 'Requisite.{id_value} has state "{state}", but should have state "{need_state}"'
+router = Router(
+    prefix='/updates',
+    routes_included=[
+        router_stop,
+        router_enable,
+        router_disable,
+        router_value,
+    ],
+)

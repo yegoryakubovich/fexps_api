@@ -15,38 +15,26 @@
 #
 
 
-from pydantic import Field, BaseModel, field_validator
-from pydantic_core.core_schema import ValidationInfo
+from pydantic import Field, BaseModel
 
 from app.services import RequisiteService
 from app.utils import Router, Response
-from app.utils.exceptions.main import ValueMustBePositive
+
 
 router = Router(
-    prefix='/update',
+    prefix='/disable',
 )
 
 
-class RequisiteUpdateSchema(BaseModel):
+class RequisiteUpdateDisableSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    total_value: int = Field()
-
-    @field_validator('total_value')
-    @classmethod
-    def requisite_check_values(cls, value: int, info: ValidationInfo):
-        if value is None:
-            return
-        if value <= 0:
-            raise ValueMustBePositive(kwargs={'field_name': info.field_name})
-        return value
 
 
 @router.post()
-async def route(schema: RequisiteUpdateSchema):
-    result = await RequisiteService().update(
+async def route(schema: RequisiteUpdateDisableSchema):
+    result = await RequisiteService().update_disable(
         token=schema.token,
         id_=schema.id_,
-        total_value=schema.total_value,
     )
     return Response(**result)

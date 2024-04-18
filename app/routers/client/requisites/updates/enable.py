@@ -15,19 +15,26 @@
 #
 
 
-from .base import ApiException
+from pydantic import Field, BaseModel
+
+from app.services import RequisiteService
+from app.utils import Router, Response
 
 
-class RequisiteMinimumValueError(ApiException):
-    code = 7000
-    message = 'Minimum value = {access_change_balance}'
+router = Router(
+    prefix='/enable',
+)
 
 
-class RequisiteActiveOrdersExistsError(ApiException):
-    code = 7001
-    message = 'Requisite.{id_value} has active orders, unable to execute "{action}"'
+class RequisiteUpdateEnableSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
 
 
-class RequisiteStateWrong(ApiException):
-    code = 7002
-    message = 'Requisite.{id_value} has state "{state}", but should have state "{need_state}"'
+@router.post()
+async def route(schema: RequisiteUpdateEnableSchema):
+    result = await RequisiteService().update_enable(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

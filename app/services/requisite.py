@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from math import ceil
 
-from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons
-from app.repositories import WalletAccountRepository
+from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates
+from app.repositories import WalletAccountRepository, OrderRepository
 from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -25,6 +27,7 @@ from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
+from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
 from app.utils.exceptions.wallet import WalletPermissionError
 from app.utils.service_addons.wallet import wallet_check_permission
@@ -156,8 +159,106 @@ class RequisiteService(BaseService):
             'items_per_page': settings.items_per_page,
         }
 
+    @session_required()
+    async def update_stop(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = RequisiteStates.ENABLE
+        next_state = RequisiteStates.STOP
+        requisite = await RequisiteRepository().get_by_id(id_=id_)
+        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        if requisite.state != need_state:
+            raise RequisiteStateWrong(
+                kwargs={
+                    'id_value': requisite.id,
+                    'state': requisite.state,
+                    'need_state': need_state,
+                },
+            )
+        await RequisiteRepository().update(requisite, state=next_state)
+        await self.create_action(
+            model=requisite,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
+
+    @session_required()
+    async def update_enable(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = RequisiteStates.STOP
+        next_state = RequisiteStates.ENABLE
+        requisite = await RequisiteRepository().get_by_id(id_=id_)
+        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        if requisite.state != need_state:
+            raise RequisiteStateWrong(
+                kwargs={
+                    'id_value': requisite.id,
+                    'state': requisite.state,
+                    'need_state': need_state,
+                },
+            )
+        await RequisiteRepository().update(requisite, state=next_state)
+        await self.create_action(
+            model=requisite,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
+
+    @session_required()
+    async def update_disable(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = RequisiteStates.STOP
+        next_state = RequisiteStates.DISABLE
+        requisite = await RequisiteRepository().get_by_id(id_=id_)
+        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        if requisite.state != need_state:
+            raise RequisiteStateWrong(
+                kwargs={
+                    'id_value': requisite.id,
+                    'state': requisite.state,
+                    'need_state': need_state,
+                },
+            )
+        for order_state in [OrderStates.WAITING, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+            if await OrderRepository().get_list(requisite=requisite, state=order_state):
+                raise RequisiteActiveOrdersExistsError(
+                    kwargs={
+                        'id_value': requisite.id,
+                        'action': f'Change state to {next_state}',
+                    },
+                )
+        await RequisiteRepository().update(requisite, state=next_state)
+        await self.create_action(
+            model=requisite,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
+
     @session_required()  # FIXME (CHECKME)
-    async def update(
+    async def update_value(
             self,
             session: Session,
             id_: int,
@@ -200,6 +301,7 @@ class RequisiteService(BaseService):
         return {
             'id': requisite.id,
             'type': requisite.type,
+            'state': requisite.state,
             'wallet_id': requisite.wallet.id,
             'input_method': requisite.input_method_id,
             'output_method': requisite.output_requisite_data.method_id if requisite.output_requisite_data else None,
