@@ -18,6 +18,7 @@
 from app.db.models import Session, RequisiteData, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.requisite_data import RequisiteDataRepository
+from app.services import CurrencyService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.service_addons.method import method_check_validation_scheme
@@ -65,7 +66,7 @@ class RequisiteDataService(BaseService):
         account = session.account
         requisite_data = await RequisiteDataRepository().get_by_account_and_id(account=account, id_=id_)
         return {
-            'requisite_data': self._generate_requisite_data_dict(requisite_data=requisite_data),
+            'requisite_data': await self.generate_requisite_data_dict(requisite_data=requisite_data),
         }
 
     @session_required()
@@ -77,10 +78,13 @@ class RequisiteDataService(BaseService):
         requisites_datas_list = []
         for requisite_data in await RequisiteDataRepository().get_list(account=account):
             requisites_datas_list.append(
-                self._generate_requisite_data_dict(requisite_data=requisite_data),
+                await self.generate_requisite_data_dict(requisite_data=requisite_data),
             )
         return {
-            'requisite_datas': requisites_datas_list,
+            'requisite_datas': [
+                await self.generate_requisite_data_dict(requisite_data=requisite_data)
+                for requisite_data in await RequisiteDataRepository().get_list(account=account)
+            ],
         }
 
     @session_required()
@@ -128,12 +132,12 @@ class RequisiteDataService(BaseService):
         return {}
 
     @staticmethod
-    def _generate_requisite_data_dict(requisite_data: RequisiteData):
+    async def generate_requisite_data_dict(requisite_data: RequisiteData):
         return {
             'id': requisite_data.id,
             'account': requisite_data.account_id,
             'name': requisite_data.name,
             'method': requisite_data.method.id,
-            'currency': requisite_data.method.currency.id_str,
+            'currency': await CurrencyService().generate_currency_dict(currency=requisite_data.method.currency),
             'fields': requisite_data.fields,
         }
