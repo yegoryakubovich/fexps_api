@@ -16,6 +16,7 @@
 
 
 from app.db.models import Method, Session, Actions
+from app.repositories import TextPackRepository
 from app.repositories.currency import CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.text import TextRepository
@@ -119,6 +120,7 @@ class MethodService(BaseService):
             color=color,
             bgcolor=bgcolor,
         )
+        await TextPackRepository().create_all()
         action_parameters = {
             'updater': f'session_{session.id}',
             'id': id_,
