@@ -60,28 +60,19 @@ class LanguageService(BaseService):
         await TextPackService().create_by_admin(session=session, language_id_str=language.id_str)
         return {'id_str': language.id_str}
 
-    @staticmethod
     async def get(
+            self,
             id_str: str,
     ):
         language = await LanguageRepository().get_by_id_str(id_str=id_str)
         return {
-            'language': {
-                'id': language.id,
-                'id_str': language.id_str,
-                'name': language.name,
-            }
+            'language': await self.generate_language_dict(language=language),
         }
 
-    @staticmethod
-    async def get_list() -> dict:
+    async def get_list(self) -> dict:
         languages = {
             'languages': [
-                {
-                    'id': language.id,
-                    'id_str': language.id_str,
-                    'name': language.name,
-                }
+                await self.generate_language_dict(language=language)
                 for language in await LanguageRepository().get_list()
             ],
         }
@@ -94,9 +85,7 @@ class LanguageService(BaseService):
             id_str: str,
     ):
         language = await LanguageRepository().get_by_id_str(id_str=id_str)
-
         await LanguageRepository().delete(model=language)
-
         await self.create_action(
             model=language,
             action=Actions.DELETE,
@@ -106,5 +95,12 @@ class LanguageService(BaseService):
                 'by_admin': True,
             }
         )
-
         return {}
+
+    @staticmethod
+    async def generate_language_dict(language: Language):
+        return {
+            'id': language.id,
+            'id_str': language.id_str,
+            'name': language.name,
+        }

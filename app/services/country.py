@@ -137,19 +137,19 @@ class CountryService(BaseService):
     ):
         country: Country = await CountryRepository().get_by_id_str(id_str=id_str)
         return {
-            'country': await self._generate_country_dict(country=country)
+            'country': await self.generate_country_dict(country=country)
         }
 
     async def get_list(self) -> dict:
         return {
             'countries': [
-                await self._generate_country_dict(country=country)
+                await self.generate_country_dict(country=country)
                 for country in await CountryRepository().get_list()
             ]
         }
 
     @staticmethod
-    async def _generate_country_dict(country: Country):
+    async def generate_country_dict(country: Country):
         return {
             'id': country.id,
             'id_str': country.id_str,

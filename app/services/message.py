@@ -63,7 +63,7 @@ class MessageService(BaseService):
                 'text': text,
             }
         )
-        return await self._generate_message_dict(message=message)
+        return await self.generate_message_dict(message=message)
 
     @session_required()
     async def get(
@@ -84,7 +84,7 @@ class MessageService(BaseService):
             ),
         )
         return {
-            'message': await self._generate_message_dict(message=message),
+            'message': await self.generate_message_dict(message=message),
         }
 
     @session_required()
@@ -108,13 +108,13 @@ class MessageService(BaseService):
         messages = await MessageRepository().get_list(order_id=order_id)
         return {
             'messages': [
-                await self._generate_message_dict(message=message)
+                await self.generate_message_dict(message=message)
                 for message in messages
             ]
         }
 
     @staticmethod
-    async def _generate_message_dict(message: Message):
+    async def generate_message_dict(message: Message):
         request_account = (await WalletAccountRepository().get(wallet=message.order.request.wallet)).account
         requisite_account = (await WalletAccountRepository().get(wallet=message.order.requisite.wallet)).account
         position = AccountPosition.UNKNOWN
