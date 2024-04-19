@@ -18,7 +18,7 @@
 from app.db.models import Session, RequisiteData, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.requisite_data import RequisiteDataRepository
-from app.services import CurrencyService
+from app.services import CurrencyService, MethodService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.service_addons.method import method_check_validation_scheme
@@ -137,7 +137,7 @@ class RequisiteDataService(BaseService):
             'id': requisite_data.id,
             'account': requisite_data.account_id,
             'name': requisite_data.name,
-            'method': requisite_data.method.id,
+            'method': await MethodService().generate_method_dict(method=requisite_data.method),
             'currency': await CurrencyService().generate_currency_dict(currency=requisite_data.method.currency),
             'fields': requisite_data.fields,
         }

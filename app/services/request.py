@@ -24,8 +24,12 @@ from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.services import ActionService, CurrencyService
+from app.services.action import ActionService
 from app.services.base import BaseService
+from app.services.currency import CurrencyService
+from app.services.method import MethodService
+from app.services.requisite_data import RequisiteDataService
+from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
@@ -234,16 +238,24 @@ class RequestService(BaseService):
             time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
             time_delta = datetime.timedelta(minutes=settings.request_waiting_check)
             waiting_delta = (time_delta - (time_now - time_update)).seconds
-        input_currency = None
+
+        input_method, input_currency = None, None
         if request.input_method:
+            input_method = await MethodService().generate_method_dict(method=request.input_method)
             input_currency = await CurrencyService().generate_currency_dict(currency=request.input_method.currency)
-        output_currency = None
+        output_method, output_currency = None, None
         if request.output_method:
+            output_method = await MethodService().generate_method_dict(method=request.output_method)
             output_currency = await CurrencyService().generate_currency_dict(currency=request.output_method.currency)
+        output_requisite_data = None
+        if request.output_requisite_data:
+            output_requisite_data = await RequisiteDataService().generate_requisite_data_dict(
+                requisite_data=request.output_requisite_data,
+            )
         return {
             'id': request.id,
             'name': request.name,
-            'wallet': request.wallet_id,
+            'wallet': await WalletService().generate_wallet_dict(wallet=request.wallet),
             'type': request.type,
             'state': request.state,
             'rate_decimal': request.rate_decimal,
@@ -267,9 +279,9 @@ class RequestService(BaseService):
             'output_value': request.output_value,
             'output_rate_raw': request.output_rate_raw,
             'output_rate': request.output_rate,
-            'input_method': request.input_method_id,
-            'output_requisite_data': request.output_requisite_data_id,
-            'output_method': request.output_method_id,
+            'input_method': input_method,
+            'output_requisite_data': output_requisite_data,
+            'output_method': output_method,
             'date': date,
             'waiting_delta': waiting_delta,
         }

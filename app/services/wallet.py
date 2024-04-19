@@ -66,7 +66,7 @@ class WalletService(BaseService):
     ):
         wallet = await WalletRepository().get_by_id(id_=id_)
         return {
-            'wallet': await self._generate_wallet_dict(wallet=wallet)
+            'wallet': await self.generate_wallet_dict(wallet=wallet)
         }
 
     @session_required()
@@ -82,7 +82,7 @@ class WalletService(BaseService):
             wallets=[wallet],
         )
         return {
-            'wallet': await self._generate_wallet_dict(wallet=wallet)
+            'wallet': await self.generate_wallet_dict(wallet=wallet)
         }
 
     @session_required(permissions=['wallets'])
@@ -95,14 +95,14 @@ class WalletService(BaseService):
             account = await AccountRepository().get_by_id(id_=account_id)
             result = {
                 'wallets': [
-                    await self._generate_wallet_dict(wallet=wallet_account.wallet)
+                    await self.generate_wallet_dict(wallet=wallet_account.wallet)
                     for wallet_account in await WalletAccountRepository().get_list(account=account)
                 ],
             }
         else:
             result = {
                 'wallets': [
-                    await self._generate_wallet_dict(wallet=wallet)
+                    await self.generate_wallet_dict(wallet=wallet)
                     for wallet in await WalletRepository().get_list()
                 ],
             }
@@ -116,7 +116,7 @@ class WalletService(BaseService):
         account = session.account
         return {
             'wallets': [
-                await self._generate_wallet_dict(wallet=wallet_account.wallet)
+                await self.generate_wallet_dict(wallet=wallet_account.wallet)
                 for wallet_account in await WalletAccountRepository().get_list(account=account)
             ],
         }
@@ -209,7 +209,7 @@ class WalletService(BaseService):
         return {}
 
     @staticmethod
-    async def _generate_wallet_dict(wallet: Wallet):
+    async def generate_wallet_dict(wallet: Wallet):
         return {
             'id': wallet.id,
             'name': wallet.name,

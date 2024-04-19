@@ -23,8 +23,11 @@ from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
 from app.repositories.requisite_data import RequisiteDataRepository
 from app.repositories.wallet import WalletRepository
-from app.services import CurrencyService
 from app.services.base import BaseService
+from app.services.currency import CurrencyService
+from app.services.method import MethodService
+from app.services.requisite_data import RequisiteDataService
+from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
@@ -299,14 +302,25 @@ class RequisiteService(BaseService):
 
     @staticmethod
     async def generate_requisites_dict(requisite: Requisite):
+        input_method = None
+        if requisite.input_method:
+            input_method = await MethodService().generate_method_dict(method=requisite.input_method)
+        output_requisite_data, output_method = None, None
+        if requisite.output_requisite_data:
+            output_requisite_data = await RequisiteDataService().generate_requisite_data_dict(
+                requisite_data=requisite.output_requisite_data,
+            )
+            output_method = await MethodService().generate_method_dict(
+                method=requisite.output_requisite_data.method,
+            )
         return {
             'id': requisite.id,
             'type': requisite.type,
             'state': requisite.state,
-            'wallet_id': requisite.wallet.id,
-            'input_method': requisite.input_method_id,
-            'output_method': requisite.output_requisite_data.method_id if requisite.output_requisite_data else None,
-            'output_requisite_data': requisite.output_requisite_data_id,
+            'wallet_id': await WalletService().generate_wallet_dict(wallet=requisite.wallet),
+            'input_method': input_method,
+            'output_method': output_method,
+            'output_requisite_data': output_requisite_data,
             'currency': await CurrencyService().generate_currency_dict(currency=requisite.currency),
             'currency_value': requisite.currency_value,
             'total_currency_value': requisite.total_currency_value,

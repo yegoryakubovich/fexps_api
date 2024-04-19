@@ -20,9 +20,12 @@ from app.repositories import WalletAccountRepository, TextRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
-from app.services import CurrencyService
 from app.services.base import BaseService
+from app.services.currency import CurrencyService
+from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
+from app.services.request import RequestService
+from app.services.requisite import RequisiteService
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.service_addons.method import method_check_input_field
@@ -76,7 +79,8 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                await self.generate_order_dict(order=order) for order in await OrderRepository().get_list(request=request)
+                await self.generate_order_dict(order=order) for order in
+                await OrderRepository().get_list(request=request)
             ]
         }
 
@@ -329,19 +333,19 @@ class OrderService(BaseService):
 
     @staticmethod
     async def generate_order_dict(order: Order):
-        method_id = order.request.input_method_id if order.type == OrderTypes.INPUT else order.request.output_method_id
+        method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
         return {
             'id': order.id,
             'type': order.type,
             'state': order.state,
             'canceled_reason': order.canceled_reason,
-            'request': order.request_id,
-            'requisite': order.requisite_id,
+            'request': await RequestService().generate_request_dict(request=order.request),
+            'requisite': await RequisiteService().generate_requisites_dict(requisite=order.requisite),
             'currency': await CurrencyService().generate_currency_dict(currency=order.requisite.currency),
             'currency_value': order.currency_value,
             'value': order.value,
             'rate': order.rate,
-            'method': method_id,
+            'method': await MethodService().generate_method_dict(method=method),
             'requisite_scheme_fields': order.requisite_scheme_fields,
             'requisite_fields': order.requisite_fields,
             'input_scheme_fields': order.input_scheme_fields,
