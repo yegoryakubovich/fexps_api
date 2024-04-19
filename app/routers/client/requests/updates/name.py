@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from pydantic import Field, BaseModel
 
@@ -29,7 +29,7 @@ router = Router(
 class RequestUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    name: str = Field(min_length=1, max_length=32)
+    name: Optional[str] = Field(default=None, min_length=1, max_length=32)
 
 
 @router.post()
