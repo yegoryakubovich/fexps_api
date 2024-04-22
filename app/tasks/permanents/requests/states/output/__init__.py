@@ -21,7 +21,7 @@ import logging
 from app.db.models import RequestStates, OrderTypes, OrderStates, RequestFirstLine, RequestTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.utils.calculations.request.need_value import output_get_need_currency_value
+from app.utils.calculations.request.need_value import output_get_need_currency_value, output_get_need_value
 
 prefix = '[request_state_output_check]'
 
@@ -47,10 +47,9 @@ async def run():
             _from_value = request.output_value_raw
         continue_ = False
         for i in range(2):
-            _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
+            _need_value = await output_get_need_value(request=request, from_value=_from_value)
             # check wait orders / complete state
-            if _need_currency_value:
-                logging.critical(f'need_currency_value: {_need_currency_value}')
+            if _need_value:
                 logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION} (1)')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
