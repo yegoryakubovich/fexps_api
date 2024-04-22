@@ -50,6 +50,7 @@ async def run():
             _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
             # check wait orders / complete state
             if _need_currency_value:
+                logging.critical(f'need_currency_value: {_need_currency_value}')
                 logging.info(f'{prefix} request_{request.id} {request.state}->{RequestStates.OUTPUT_RESERVATION} (1)')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
