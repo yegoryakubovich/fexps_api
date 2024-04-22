@@ -226,7 +226,10 @@ class RequisiteService(BaseService):
                     'need_state': need_state,
                 },
             )
-        await RequisiteRepository().update(requisite, state=next_state)
+        await RequisiteRepository().update(
+            requisite,
+            state=next_state,
+        )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -266,7 +269,7 @@ class RequisiteService(BaseService):
                 )
         await self.update_value_related(
             requisite=requisite,
-            value=requisite.value,
+            value=-requisite.value,
         )
         await RequisiteRepository().update(
             requisite,
@@ -325,7 +328,10 @@ class RequisiteService(BaseService):
         new_value = requisite.value + value
         new_total_currency_value = round(new_total_value * requisite.rate / 10 ** currency.rate_decimal)
         new_currency_value = round(new_value * requisite.rate / 10 ** currency.rate_decimal)
+        logging.critical(f'new_value {new_value}')
+        logging.critical(f'new_total_value {new_total_value}')
         if requisite.type == RequisiteTypes.OUTPUT:
+            logging.critical(f'minus {value}')
             await WalletBanService().create_related(
                 wallet=wallet,
                 value=value,
