@@ -26,6 +26,8 @@ PREFIXES = [
     'commission_pack_',
     'contact_',
     'method_',
+    'method_field_',
+    'method_input_field_',
 ]
 DEFAULT_LANGUAGE = 'eng'
 
