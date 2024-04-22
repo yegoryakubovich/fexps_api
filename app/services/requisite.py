@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from math import ceil
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates
@@ -59,7 +58,10 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        await wallet_check_permission(account=account, wallets=[wallet])
+        await wallet_check_permission(
+            account=account,
+            wallets=[wallet],
+        )
         input_method, output_requisite_data, currency = None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
@@ -68,11 +70,17 @@ class RequisiteService(BaseService):
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             currency = output_requisite_data.method.currency
         currency_value_result, value_result, rate_result = await all_value_calc(
-            type_=type_, rate_decimal=currency.rate_decimal, currency_value=currency_value, value=value, rate=rate,
+            type_=type_,
+            rate_decimal=currency.rate_decimal,
+            currency_value=currency_value,
+            value=value,
+            rate=rate,
         )
         if type_ == RequisiteTypes.OUTPUT:
             await WalletBanService().create_related(
-                wallet=wallet, value=value_result, reason=WalletBanReasons.BY_REQUISITE,
+                wallet=wallet,
+                value=value_result,
+                reason=WalletBanReasons.BY_REQUISITE,
             )
         requisite = await RequisiteRepository().create(
             type=type_,
@@ -124,7 +132,10 @@ class RequisiteService(BaseService):
     ):
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        await wallet_check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+        )
         if requisite.type == RequisiteTypes.OUTPUT:
             if requisite.output_requisite_data.account.id != account.id:
                 raise WalletPermissionError()
@@ -203,7 +214,10 @@ class RequisiteService(BaseService):
         need_state = RequisiteStates.STOP
         next_state = RequisiteStates.ENABLE
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        await wallet_check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+        )
         if requisite.state != need_state:
             raise RequisiteStateWrong(
                 kwargs={
@@ -250,7 +264,14 @@ class RequisiteService(BaseService):
                         'action': f'Change state to {next_state}',
                     },
                 )
-        await RequisiteRepository().update(requisite, state=next_state)
+        await self.update_value_related(
+            requisite=requisite,
+            value=requisite.value,
+        )
+        await RequisiteRepository().update(
+            requisite,
+            state=next_state,
+        )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -261,7 +282,7 @@ class RequisiteService(BaseService):
         )
         return {}
 
-    @session_required()  # FIXME (CHECKME)
+    @session_required()
     async def update_value(
             self,
             session: Session,
@@ -270,21 +291,21 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        await wallet_check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+        )
         access_change_balance = requisite.total_value - requisite.value
         if total_value < access_change_balance:
-            raise RequisiteMinimumValueError(kwargs={'access_change_balance': access_change_balance})
-
-        new_value = round(total_value - (requisite.total_value - requisite.value))
-        new_currency_value = round(new_value * requisite.rate / 10 ** settings.rate_decimal)
-        new_total_value = total_value
-        new_currency_total_value = round(new_total_value * requisite.rate / 10 ** settings.rate_decimal)
-        await RequisiteRepository().update(
-            requisite,
-            value=new_value,
-            total_value=new_total_value,
-            currency_value=new_currency_value,
-            total_currency_value=new_currency_total_value,
+            raise RequisiteMinimumValueError(
+                kwargs={
+                    'access_change_balance': access_change_balance,
+                },
+            )
+        value = total_value - requisite.total_value
+        await self.update_value_related(
+            requisite=requisite,
+            value=value,
         )
         await self.create_action(
             model=requisite,
@@ -292,13 +313,31 @@ class RequisiteService(BaseService):
             parameters={
                 'updater': f'session_{session.id}',
                 'total_value': total_value,
-                'new_value': new_value,
-                'new_currency_value': new_currency_value,
-                'new_total_value': new_total_value,
-                'new_currency_total_value': new_currency_total_value,
             },
         )
         return {}
+
+    @staticmethod
+    async def update_value_related(requisite: Requisite, value: int):
+        wallet = requisite.wallet
+        currency = requisite.currency
+        new_total_value = requisite.total_value + value
+        new_value = requisite.value + value
+        new_total_currency_value = round(new_total_value * requisite.rate / 10 ** currency.rate_decimal)
+        new_currency_value = round(new_value * requisite.rate / 10 ** currency.rate_decimal)
+        if requisite.type == RequisiteTypes.OUTPUT:
+            await WalletBanService().create_related(
+                wallet=wallet,
+                value=value,
+                reason=WalletBanReasons.BY_REQUISITE,
+            )
+        await RequisiteRepository().update(
+            requisite,
+            total_value=new_total_value,
+            value=new_value,
+            total_currency_value=new_total_currency_value,
+            currency_value=new_currency_value,
+        )
 
     @staticmethod
     async def generate_requisites_dict(requisite: Requisite):

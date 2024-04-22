@@ -4,7 +4,11 @@ from app.db.models import RequisiteTypes
 
 
 async def all_value_calc(
-        type_: [RequisiteTypes, str], rate_decimal: int, currency_value: int, value: int, rate: int,
+        type_: [RequisiteTypes, str],
+        rate_decimal: int,
+        currency_value: int,
+        value: int,
+        rate: int,
 ) -> tuple[int, int, int]:
     rate_currency_value_method = math.ceil if type_ == RequisiteTypes.OUTPUT else math.floor
     value_method = math.floor if type_ == RequisiteTypes.OUTPUT else math.ceil
