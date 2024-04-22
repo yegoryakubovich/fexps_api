@@ -21,7 +21,7 @@ from app.repositories.order import OrderRepository
 
 # INPUT
 async def input_get_need_currency_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value else request.first_line_value
+    result = from_value if from_value is not None else request.first_line_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -30,7 +30,7 @@ async def input_get_need_currency_value(request: Request, from_value: int = None
 
 
 async def input_get_need_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value else request.first_line_value
+    result = from_value if from_value is not None else request.first_line_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -40,7 +40,7 @@ async def input_get_need_value(request: Request, from_value: int = None) -> int:
 
 # OUTPUT
 async def output_get_need_currency_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value else request.first_line_value
+    result = from_value if from_value is not None else request.first_line_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -49,7 +49,7 @@ async def output_get_need_currency_value(request: Request, from_value: int = Non
 
 
 async def output_get_need_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value else request.first_line_value
+    result = from_value if from_value is not None else request.first_line_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
             continue
