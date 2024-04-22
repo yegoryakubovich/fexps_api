@@ -48,15 +48,16 @@ async def run():
         _from_value = None
         if request.type == RequestTypes.ALL:
             if request.rate_confirmed:
-                logging.critical(f'{_from_value} (1)')
                 _from_value = request.output_value_raw
+                logging.critical(f'{_from_value} (1)')
             else:
-                logging.critical(f'{_from_value} (2)')
                 _from_value = request.input_value
+                logging.critical(f'{_from_value} (2)')
         else:
-            logging.critical(f'{_from_value} (3)')
             _from_value = request.output_value_raw
+            logging.critical(f'{_from_value} (3)')
         _need_value = await output_get_need_value(request=request, from_value=_from_value)
+        logging.critical(f'need_value: {_need_value}')
         # check wait orders / complete state
         if not _need_value:
             waiting_orders = await OrderRepository().get_list(
