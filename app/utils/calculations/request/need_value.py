@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 
 from app.db.models import Request, OrderStates, OrderTypes
 from app.repositories.order import OrderRepository
@@ -49,7 +49,9 @@ async def output_get_need_currency_value(request: Request, from_value: int = Non
 
 
 async def output_get_need_value(request: Request, from_value: int = None) -> int:
+    logging.critical(from_value)
     result = from_value if from_value is not None else request.first_line_value
+    logging.critical(result)
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
             continue
