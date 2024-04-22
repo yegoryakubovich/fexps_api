@@ -18,7 +18,7 @@
 import asyncio
 import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestFirstLine
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestFirstLine, RequestTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.utils.calculations.request.need_value import output_get_need_currency_value
@@ -38,10 +38,13 @@ async def request_state_output_check():
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT):
         request = await RequestRepository().get_by_id(id_=request.id)
-        if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-            _from_value = request.first_line_value
+        if request.type == RequestTypes.ALL:
+            if request.rate_confirmed:
+                _from_value = request.output_value_raw
+            else:
+                _from_value = request.input_value
         else:
-            _from_value = request.output_currency_value_raw
+            _from_value = request.output_value_raw
         continue_ = False
         for i in range(2):
             _need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)

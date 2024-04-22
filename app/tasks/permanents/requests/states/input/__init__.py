@@ -39,10 +39,7 @@ async def request_state_input_check():
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT):
         request = await RequestRepository().get_by_id(id_=request.id)
-        if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-            _from_value = request.first_line_value
-        else:
-            _from_value = request.input_currency_value_raw
+        _from_value = request.input_currency_value_raw
         continue_ = False
         for i in range(2):
             _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
