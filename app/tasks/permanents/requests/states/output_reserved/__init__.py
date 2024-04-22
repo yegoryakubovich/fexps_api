@@ -46,10 +46,13 @@ async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
         request = await RequestRepository().get_by_id(id_=request.id)
         _from_value = None
-        if request.rate_confirmed:
-            _from_currency_value = request.output_currency_value_raw
+        if request.type == RequestTypes.ALL:
+            if request.rate_confirmed:
+                _from_value = request.output_value_raw
+            else:
+                _from_value = request.input_value
         else:
-            _from_value = request.input_value
+            _from_value = request.output_value_raw
         _need_value = await output_get_need_value(request=request, from_value=_from_value)
         # check wait orders / complete state
         if not _need_value:
