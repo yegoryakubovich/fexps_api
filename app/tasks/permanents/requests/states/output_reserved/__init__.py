@@ -45,20 +45,12 @@ async def request_state_output_reserved_check():
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
         request = await RequestRepository().get_by_id(id_=request.id)
-        _from_currency_value, _from_value = None, None
+        _from_value = None
         if request.rate_confirmed:
             _from_currency_value = request.output_currency_value_raw
         else:
-            if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-                _from_currency_value = request.first_line_value
-            elif request.first_line == RequestFirstLine.OUTPUT_VALUE:
-                _from_value = request.first_line_value
-            else:
-                _from_value = request.input_value
-        if _from_currency_value:
-            _need_value = await output_get_need_currency_value(request=request, from_value=_from_currency_value)
-        else:
-            _need_value = await output_get_need_value(request=request, from_value=_from_value)
+            _from_value = request.input_value
+        _need_value = await output_get_need_value(request=request, from_value=_from_value)
         # check wait orders / complete state
         if not _need_value:
             waiting_orders = await OrderRepository().get_list(
@@ -78,16 +70,16 @@ async def run():
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue
         # create missing orders
-        if request.rate_confirmed:
-            _from_value = request.output_currency_value_raw
-            need_currency_value = await output_get_need_currency_value(request=request, from_value=_from_value)
-            logging.info(f'create missing orders request_{request.id} need_currency_value = {need_currency_value}')
-            await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
+        if request.type == RequestTypes.ALL:
+            if request.rate_confirmed:
+                _from_value = request.output_value_raw
+            else:
+                _from_value = request.input_value
         else:
-            _from_value = request.input_value
-            need_value = await output_get_need_value(request=request, from_value=_from_value)
-            logging.info(f'create missing orders request_{request.id} need_value = {need_value}')
-            await get_new_requisite_by_value(request=request, need_value=need_value)
+            _from_value = request.output_value_raw
+        need_value = await output_get_need_value(request=request, from_value=_from_value)
+        logging.info(f'create missing orders request_{request.id} need_value = {need_value}')
+        await get_new_requisite_by_value(request=request, need_value=need_value)
         await write_other(request=request)
         difference_value = get_difference(request=request)
         if request.difference_confirmed != difference_value:

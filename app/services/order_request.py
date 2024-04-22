@@ -22,9 +22,11 @@ from app.repositories.order_request import OrderRequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
+from app.utils.exceptions import OrderStateWrong, OrderNotPermission
 from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAlreadyExists
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value
+from app.utils.service_addons.wallet import wallet_check_permission
 
 
 class OrderRequestService(BaseService):
@@ -38,7 +40,26 @@ class OrderRequestService(BaseService):
             type_: str,
             value: int,
     ) -> dict:
+        account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
+        await wallet_check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id
+                },
+            ),
+        )
+        if order.state in [OrderStates.WAITING, OrderStates.CANCELED, OrderStates.COMPLETED]:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': f'{OrderStates.PAYMENT}/{OrderStates.CONFIRMATION}',
+                },
+            )
         order_request = None
         await self.check_have_order_request(order=order)
         data = {}
@@ -62,7 +83,11 @@ class OrderRequestService(BaseService):
                     )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
-                raise OrderRequestFieldsMissing(kwargs={'field_name': 'value'})
+                raise OrderRequestFieldsMissing(
+                    kwargs={
+                        'field_name': 'value',
+                    },
+                )
             data['value'] = value
         if not order_request:
             order_request = await OrderRequestRepository().create(

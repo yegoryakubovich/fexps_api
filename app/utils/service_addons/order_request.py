@@ -15,23 +15,37 @@
 #
 
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes, \
-    OrderRequest, OrderRequestStates
+from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
-from app.repositories.requisite import RequisiteRepository
-from app.services.wallet_ban import WalletBanService
-from app.utils.calculations.schemes.loading import RequisiteScheme
 from app.utils.service_addons.order import order_cancel_related
-from app.utils.service_addons.transfer import create_transfer
 
 
 async def order_request_update_type_cancel(order_request: OrderRequest, state: str, canceled_reason: str):
+    order: Order = order_request.order
+    request: Request = order.request
     if state == OrderRequestStates.COMPLETED:
-        await order_cancel_related(order=order_request.order)
+        if order.type == OrderTypes.INPUT:
+            await RequestRepository().update(
+                request,
+                input_currency_value_raw=request.input_currency_value_raw - order.currency_value,
+                input_currency_value=request.input_currency_value - order.currency_value,
+                input_value_raw=request.input_value_raw - order.value,
+                input_value=request.input_value - order.value,
+            )
+            pass
+        elif order.type == OrderTypes.OUTPUT:
+            await RequestRepository().update(
+                request,
+                output_currency_value_raw=request.output_currency_value_raw - order.currency_value,
+                output_currency_value=request.output_currency_value - order.currency_value,
+                output_value_raw=request.output_value_raw - order.value,
+                output_value=request.output_value - order.value,
+            )
+        await order_cancel_related(order=order)
         await OrderRepository().update(
-            order_request.order,
+            order,
             state=OrderStates.CANCELED,
             canceled_reason=canceled_reason,
         )
