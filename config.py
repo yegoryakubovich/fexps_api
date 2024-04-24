@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     flower_user: str
     flower_password: str
 
+    test: bool
     root_token: str
     chat_url: str
     sync_db_url: str
@@ -46,7 +47,7 @@ class Settings(BaseSettings):
 
     version: str = '0.1'
     path_texts_packs: str = 'assets/texts_packs'
-    path_images: str = 'assets/images'
+    path_files: str = 'assets/files'
 
     items_per_page: int = 10
     request_waiting_check: int = 5
@@ -54,6 +55,11 @@ class Settings(BaseSettings):
     datetime_format: str = '%d-%m-%y %H:%M'
 
     model_config = SettingsConfigDict(env_file='.env')
+
+    def get_mysql_host(self) -> str:
+        if self.test:
+            return '127.0.0.1'
+        return self.mysql_host
 
 
 settings = Settings()

@@ -15,28 +15,16 @@
 #
 
 
-from fastapi import UploadFile
-
-from app.services import ImageService
-from app.utils import Response, Router
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
 
 
 router = Router(
-    prefix='/create',
+    prefix='/files',
+    routes_included=[
+        router_create,
+        router_delete,
+    ],
+    tags=['Files'],
 )
-
-
-@router.post()
-async def route(
-        token: str,
-        model: str,
-        model_id: int | str,
-        file: UploadFile,
-):
-    result = await ImageService().create(
-        token=token,
-        model=model,
-        model_id=model_id,
-        file=file,
-    )
-    return Response(**result)

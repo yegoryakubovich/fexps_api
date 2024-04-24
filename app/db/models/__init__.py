@@ -17,7 +17,7 @@
 
 from .action import Action, Actions
 from .commission_pack import CommissionPack
-from .image import Image
+from .file import File
 from .language import Language
 from .text import Text
 from .timezone import Timezone

@@ -15,9 +15,16 @@
 #
 
 
-from app.db.models import Image
-from app.repositories.base import BaseRepository
+from app.utils import Router
+from .create import router as router_create
+from .get import router as router_get
 
 
-class ImageRepository(BaseRepository[Image]):
-    model = Image
+router = Router(
+    prefix='/files',
+    routes_included=[
+        router_get,
+        router_create,
+    ],
+    tags=['Files'],
+)

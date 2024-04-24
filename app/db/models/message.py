@@ -29,7 +29,5 @@ class Message(Base):
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
     account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
-    image_id = Column(BigInteger, ForeignKey('images.id', ondelete='SET NULL'), nullable=True)
-    image = relationship('Image', foreign_keys=image_id, uselist=False, lazy='selectin')
     text = Column(Text)
     is_deleted = Column(Boolean, default=False)

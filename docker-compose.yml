@@ -28,7 +28,7 @@ services:
       - "${API_PORT}:80"
     volumes:
       - ./assets/texts_packs:/app/assets/texts_packs
-      - ./assets/images:/app/assets/images
+      - ./assets/files:/app/assets/files
     env_file:
       - .env
   tasks_permanents:
@@ -36,7 +36,7 @@ services:
       dockerfile: tasks_permanents.dockerfile
     volumes:
       - ./assets/texts_packs:/app/assets/texts_packs
-      - ./assets/images:/app/assets/images
+      - ./assets/files:/app/assets/files
     env_file:
       - .env
   tasks_celery:

@@ -21,9 +21,10 @@ from sqlalchemy.orm import sessionmaker
 
 from config import settings
 
+
 MYSQL_USER = settings.mysql_user
 MYSQL_PASSWORD = settings.mysql_password
-MYSQL_HOST = settings.mysql_host
+MYSQL_HOST = settings.get_mysql_host()
 MYSQL_PORT = settings.mysql_port
 MYSQL_NAME = settings.mysql_name
 

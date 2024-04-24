@@ -15,23 +15,28 @@
 #
 
 
-from fastapi import Depends
-from pydantic import BaseModel, Field
-from starlette.responses import FileResponse
+from fastapi import UploadFile
 
-from app.utils import Router
-from config import settings
+from app.services import FileService
+from app.utils import Response, Router
 
 
 router = Router(
-    prefix='/get',
+    prefix='/create',
 )
 
 
-class ImageGetSchema(BaseModel):
-    id_str: str = Field()
-
-
-@router.get()
-async def route(schema: ImageGetSchema = Depends()):
-    return FileResponse(path=f'{settings.path_images}/{schema.id_str}.jpg')
+@router.post()
+async def route(
+        token: str,
+        model: str,
+        model_id: int | str,
+        file: UploadFile,
+):
+    result = await FileService().create(
+        token=token,
+        model=model,
+        model_id=model_id,
+        file=file,
+    )
+    return Response(**result)

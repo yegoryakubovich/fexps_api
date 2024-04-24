@@ -15,16 +15,27 @@
 #
 
 
+from fastapi import Depends
+from pydantic import BaseModel, Field
+from starlette.responses import FileResponse
+
+from app.repositories import FileRepository
+from app.services import FileService
 from app.utils import Router
-from .create import router as router_create
-from .delete import router as router_delete
+from config import settings
 
 
 router = Router(
-    prefix='/images',
-    routes_included=[
-        router_create,
-        router_delete,
-    ],
-    tags=['Images'],
+    prefix='/get',
 )
+
+
+class FileGetSchema(BaseModel):
+    id_str: str = Field()
+
+
+@router.get()
+async def route(schema: FileGetSchema = Depends()):
+    return await FileService().get(
+        id_str=schema.id_str,
+    )

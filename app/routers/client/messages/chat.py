@@ -13,14 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import io
+import logging
 
-
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect, UploadFile
 
 from app.services import MessageService
 from app.utils import Router
 from app.utils.websockets import connections_manager_fastapi
-
 
 router = Router(
     prefix='/chat',
@@ -33,12 +33,19 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
     try:
         while True:
             data = await websocket.receive_json()
-            response = await MessageService().chat(
+            message = await MessageService().chat(
                 token=token,
                 order_id=order_id,
-                image_id_str=data.get('image_id_str'),
                 text=data['text'],
+                files=[
+                    UploadFile(
+                        file=io.BytesIO(file_dict['data'].encode('ISO-8859-1')),
+                        filename=file_dict['filename'],
+                        size=len(file_dict['data'].encode('ISO-8859-1')),
+                    )
+                    for file_dict in data["files"]
+                ],
             )
-            await connections_manager_fastapi.send(data=response, order_id=order_id)
+            await connections_manager_fastapi.send(data=message, order_id=order_id)
     except WebSocketDisconnect:
         connections_manager_fastapi.disconnect(websocket, order_id=order_id)

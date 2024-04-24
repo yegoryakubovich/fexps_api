@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import logging
 from typing import Optional
 
+from fastapi import UploadFile
+
 from app.db.models import Message, Session, Actions, OrderTypes
-from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, ImageRepository
-from app.services import ActionService
+from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, FileRepository
+from app.services import ActionService, FileService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
@@ -39,18 +42,14 @@ class MessageService(BaseService):
             self,
             session: Session,
             order_id: int,
-            image_id_str: Optional[str] = None,
             text: Optional[str] = None,
+            files: Optional[list[UploadFile]] = None,
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
-        image = None
-        if image_id_str:
-            image = await ImageRepository().get_by_id_str(id_str=image_id_str)
         message = await MessageRepository().create(
             account=account,
             order=order,
-            image=image,
             text=text,
         )
         await self.create_action(
@@ -59,10 +58,17 @@ class MessageService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'order_id': order_id,
-                'image': image,
                 'text': text,
             }
         )
+        for file in files:
+            file = await FileService().create(
+                session=session,
+                file=file,
+                model='message',
+                model_id=str(message.id),
+            )
+            logging.critical(file)
         return await self.generate_message_dict(message=message)
 
     @session_required()
@@ -129,15 +135,22 @@ class MessageService(BaseService):
             elif message.account.id == requisite_account.id:
                 position = AccountPosition.SENDER
         action = await ActionService().get_action(model=message, action=Actions.CREATE)
-        image_id_str = None
-        if message.image:
-            image_id_str = message.image.id_str
+        files = []
+        for file in await FileRepository().get_list(model='message', model_id=message.id):
+            with open(f'{settings.path_files}/{file.id_str}.{file.extension}', 'rb') as f:
+                file_byte = f.read()
+            files += [{
+                'id_str': file.id_str,
+                'extension': file.extension,
+                'url': f'http://127.0.0.1:5050/files/get?id_str={file.id_str}',
+                'value': file_byte.decode('ISO-8859-1'),
+            }]
         return {
             'id': message.id,
             'account': message.account.id,
             'account_position': position,
             'order': message.order.id,
-            'image': image_id_str,
+            'files': files,
             'text': message.text,
             'date': action.datetime.strftime(settings.datetime_format),
         }

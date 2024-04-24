@@ -20,7 +20,7 @@ from .accounts import router as router_accounts
 from .contacts import router as router_contacts
 from .countries import router as router_countries
 from .currencies import router as router_currencies
-from .images import router as router_images
+from .files import router as router_files
 from .languages import router as router_languages
 from .messages import router as router_messages
 from .methods import router as router_methods
@@ -43,7 +43,7 @@ router = Router(
         router_contacts,
         router_countries,
         router_currencies,
-        router_images,
+        router_files,
         router_languages,
         router_methods,
         router_orders,

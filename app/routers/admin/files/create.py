@@ -15,16 +15,28 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String
+from fastapi import UploadFile
 
-from app.db.base_class import Base
+from app.services import FileService
+from app.utils import Response, Router
 
 
-class Image(Base):
-    __tablename__ = 'images'
+router = Router(
+    prefix='/create',
+)
 
-    id = Column(BigInteger, primary_key=True)
-    id_str = Column(String(16))
-    model = Column(String(64))
-    model_id = Column(BigInteger)
-    is_deleted = Column(Boolean, default=False)
+
+@router.post()
+async def route(
+        token: str,
+        model: str,
+        model_id: int | str,
+        file: UploadFile,
+):
+    result = await FileService().create_by_admin(
+        token=token,
+        model=model,
+        model_id=model_id,
+        file=file,
+    )
+    return Response(**result)

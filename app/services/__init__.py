@@ -26,7 +26,7 @@ from .commission_pack_value import CommissionPackValueService
 from .contact import ContactService
 from .country import CountryService
 from .currency import CurrencyService
-from .image import ImageService
+from .file import FileService
 from .language import LanguageService
 from .message import MessageService
 from .method import MethodService

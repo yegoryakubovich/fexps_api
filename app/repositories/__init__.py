@@ -25,7 +25,7 @@ from .commission_pack_value import CommissionPackValueRepository
 from .contact import ContactRepository
 from .country import CountryRepository
 from .currency import CurrencyRepository
-from .image import ImageRepository
+from .file import FileRepository
 from .language import LanguageRepository
 from .message import MessageRepository
 from .method import MethodRepository

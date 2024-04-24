@@ -17,7 +17,7 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import ImageService
+from app.services import FileService
 from app.utils import Response, Router
 
 
@@ -26,14 +26,14 @@ router = Router(
 )
 
 
-class ImageDeleteByAdminSchema(BaseModel):
+class FileDeleteByAdminSchema(BaseModel):
     token: str = Field()
     id_str: str = Field()
 
 
 @router.post()
-async def route(schema: ImageDeleteByAdminSchema):
-    result = await ImageService().delete_by_admin(
+async def route(schema: FileDeleteByAdminSchema):
+    result = await FileService().delete_by_admin(
         token=schema.token,
         id_str=schema.id_str,
     )

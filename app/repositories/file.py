@@ -15,16 +15,9 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .get import router as router_get
+from app.db.models import File
+from app.repositories.base import BaseRepository
 
 
-router = Router(
-    prefix='/images',
-    routes_included=[
-        router_get,
-        router_create,
-    ],
-    tags=['Images'],
-)
+class FileRepository(BaseRepository[File]):
+    model = File
