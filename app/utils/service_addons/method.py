@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 
 from app.db.models import Method, MethodFieldTypes
 from app.utils.exceptions.method import MethodFieldsParameterMissing, MethodFieldsTypeError
@@ -70,7 +70,7 @@ async def method_check_input_field(method: Method, fields: dict):
         for type_, python_type in [
             (MethodFieldTypes.STR, str),
             (MethodFieldTypes.INT, int),
-            (MethodFieldTypes.IMAGE, str),
+            (MethodFieldTypes.IMAGE, list),
         ]:
             if field_type == type_ and not isinstance(field_result, python_type):
                 raise MethodFieldsTypeError(

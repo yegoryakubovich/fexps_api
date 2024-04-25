@@ -199,11 +199,7 @@ class OrderService(BaseService):
                 method=order.requisite.input_method,
                 fields=input_fields,
             )
-        await OrderRepository().update(
-            order,
-            input_fields=input_fields,
-            state=next_state,
-        )
+        await OrderRepository().update(order, state=next_state)
         connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
             field_key = field_scheme['key']
@@ -212,9 +208,14 @@ class OrderService(BaseService):
                 continue
             text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
             if field_scheme['type'] == MethodFieldTypes.IMAGE:
-                await connections_manager_aiohttp.send(image_id_str=field_value, text=text.value_default)
+                await connections_manager_aiohttp.send(
+                    text=text.value_default,
+                    files=field_value,
+                )
+                input_fields[field_key] = 'added'
             else:
                 await connections_manager_aiohttp.send(text=f'{text.value_default}: {field_value}')
+        await OrderRepository().update(order, input_fields=input_fields)
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

@@ -62,13 +62,12 @@ class MessageService(BaseService):
             }
         )
         for file in files:
-            file = await FileService().create(
+            await FileService().create(
                 session=session,
                 file=file,
                 model='message',
                 model_id=str(message.id),
             )
-            logging.critical(file)
         return await self.generate_message_dict(message=message)
 
     @session_required()

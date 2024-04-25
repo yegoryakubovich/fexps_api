@@ -36,7 +36,6 @@ class Settings(BaseSettings):
     flower_user: str
     flower_password: str
 
-    test: bool
     root_token: str
     chat_url: str
     sync_db_url: str
@@ -44,6 +43,9 @@ class Settings(BaseSettings):
     debug: int
     wallet_max_count: int
     wallet_max_value: int
+
+    test: bool
+    test_chat_url: str
 
     version: str = '0.1'
     path_texts_packs: str = 'assets/texts_packs'
@@ -60,6 +62,11 @@ class Settings(BaseSettings):
         if self.test:
             return '127.0.0.1'
         return self.mysql_host
+
+    def get_chat_url(self):
+        if self.test:
+            return self.test_chat_url
+        return self.chat_url
 
 
 settings = Settings()
