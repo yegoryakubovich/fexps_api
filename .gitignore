@@ -15,11 +15,17 @@
 #
 
 
-.env
-
-/data
-/.idea
-*__pycache__
-/assets/articles/*
-/assets/texts_packs/*
 *.rar
+*__pycache__
+
+/.idea
+/data
+/uploads/*
+/assets/texts_packs/*
+/assets/files/*
+/assets/images/*
+/fexps_api_client.egg-info
+/fexps_api_client
+
+.env
+test.py
