@@ -43,7 +43,7 @@ def send_log(
 
 
 async def run():
-    await asyncio.sleep(10)
+    await asyncio.sleep(5)
 
 
 async def request_state_waiting_check():

@@ -88,7 +88,7 @@ async def run():
         send_log(text=f'{request.state}->{RequestStates.COMPLETED}', request=request)
         await RequestRepository().update(request, state=RequestStates.COMPLETED)
         await asyncio.sleep(0.25)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(5)
 
 
 async def request_state_output_check():

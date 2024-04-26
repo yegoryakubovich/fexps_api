@@ -105,7 +105,7 @@ async def run():
             )
             await RequestRepository().update(request, difference_confirmed=difference_value)
         await asyncio.sleep(0.25)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(5)
 
 
 async def get_new_requisite_by_currency_value(

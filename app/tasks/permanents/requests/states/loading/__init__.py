@@ -142,7 +142,7 @@ async def run():
             parameters={'state': RequestStates.WAITING},
         )
         await asyncio.sleep(0.25)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(5)
 
 
 async def request_state_loading_check():
