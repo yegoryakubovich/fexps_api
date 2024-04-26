@@ -18,18 +18,38 @@
 import asyncio
 import logging
 
-prefix = '[request_state_waiting_check]'
+from app.db.models import Request, Order
 
 
-async def request_state_waiting_check():
-    logging.critical('start request_state_waiting_check')
-    while True:
-        try:
-            await run()
-        except Exception as e:
-            logging.error(f'{prefix}  Exception \n {e}')
+def send_log(
+        text: str,
+        prefix: str = 'request_state_waiting_check',
+        func: callable = logging.info,
+        request: Request = None,
+        order: Order = None,
+) -> None:
+    log_list = [f'[{prefix}]']
+    if order:
+        log_list += [
+            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
+            f'order.{order.id} ({order.type}:{order.state})',
+        ]
+    elif request:
+        log_list += [
+            f'request.{request.id} ({request.type}:{request.state})'
+        ]
+    log_list += [text]
+    func(f' '.join(log_list))
 
 
 async def run():
-    # request_state_waiting_check.apply_async()
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(10)
+
+
+async def request_state_waiting_check():
+    send_log(text=f'started...')
+    while True:
+        try:
+            await run()
+        except ValueError as e:
+            send_log(text=f'Exception \n {e}', func=logging.critical)

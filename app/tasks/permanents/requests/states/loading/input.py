@@ -1,23 +1,48 @@
 import logging
 from typing import List, Optional
 
-from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates
+from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates, Order
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.request.need_value import input_get_need_currency_value, input_get_need_value
 from app.utils.calculations.schemes.loading import RequisiteTypeScheme, RequisiteScheme
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
 
-prefix = '[request_type_input]'
+
+def send_log(
+        text: str,
+        prefix: str = 'request_state_loading_check',
+        func: callable = logging.info,
+        request: Request = None,
+        order: Order = None,
+) -> None:
+    log_list = [f'[{prefix}]']
+    if order:
+        log_list += [
+            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
+            f'order.{order.id} ({order.type}:{order.state})',
+        ]
+    elif request:
+        log_list += [
+            f'request.{request.id} ({request.type}:{request.state})'
+        ]
+    log_list += [text]
+    func(f' '.join(log_list))
 
 
 async def request_type_input(
         request: Request,
 ) -> RequisiteTypeScheme:
     currency = request.input_method.currency
-    logging.info(f'{prefix} req_{request.id} first_line={request.first_line}, currency={currency.id_str}')
+    send_log(
+        text=f'first_line={request.first_line}, currency={currency.id_str}',
+        request=request,
+    )
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_currency_value = await input_get_need_currency_value(request=request)
-        logging.info(f'req_{request.id} зашел в INPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}')
+        send_log(
+            text=f'INPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}',
+            request=request,
+        )
         return await request_type_input_currency_value(
             request=request,
             currency=currency,
@@ -25,7 +50,10 @@ async def request_type_input(
         )
     elif request.first_line == RequestFirstLine.INPUT_VALUE:
         need_value = await input_get_need_value(request=request)
-        logging.info(f'req_{request.id} зашел в INPUT_VALUE, need_value={need_value}')
+        send_log(
+            text=f'INPUT_VALUE, need_value={need_value}',
+            request=request,
+        )
         return await request_type_input_value(
             request=request,
             currency=currency,

@@ -16,27 +16,35 @@
 
 
 import asyncio
+import datetime
 import logging
 
-import datetime
-
-from app.db.models import RequestStates, Actions, Request
+from app.db.models import RequestStates, Actions, Request, Order
 from app.repositories.action_parameter import ActionParameterRepository
 from app.repositories.request import RequestRepository
 from app.services import ActionService
 from config import settings
 
-prefix = '[request_rate_confirmed_check]'
 
-
-async def request_rate_confirmed_check():
-    logging.critical('start request_rate_confirmed_check')
-    while True:
-        await run()
-        # try:
-        #     await run()
-        # except Exception as e:
-        #     logging.error(f'{prefix}  Exception \n {e}')
+def send_log(
+        text: str,
+        prefix: str = 'request_rate_confirmed_check',
+        func: callable = logging.info,
+        request: Request = None,
+        order: Order = None,
+) -> None:
+    log_list = [f'[{prefix}]']
+    if order:
+        log_list += [
+            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
+            f'order.{order.id} ({order.type}:{order.state})',
+        ]
+    elif request:
+        log_list += [
+            f'request.{request.id} ({request.type}:{request.state})'
+        ]
+    log_list += [text]
+    func(f' '.join(log_list))
 
 
 async def run():
@@ -44,12 +52,12 @@ async def run():
     for request in await RequestRepository().get_list_not_finished(rate_confirmed=True):
         request_action = await get_action_by_state(request, state=RequestStates.WAITING)
         if not request_action:
-            logging.info(f'{prefix} Request.{request.id} not action')
+            send_log(text=f'not action', request=request)
             continue
         request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):
+            send_log(text=f'rate_confirmed=False', request=request)
             await RequestRepository().update(request, rate_confirmed=False)
-            logging.info(f'{prefix} Request.{request.id} rate_confirmed=False')
         await asyncio.sleep(0.25)
     await asyncio.sleep(0.5)
 
@@ -63,3 +71,12 @@ async def get_action_by_state(request: Request, state: str):
         if not action_param:
             continue
         return action
+
+
+async def request_rate_confirmed_check():
+    send_log(text=f'started...')
+    while True:
+        try:
+            await run()
+        except ValueError as e:
+            send_log(text=f'Exception \n {e}', func=logging.critical)
