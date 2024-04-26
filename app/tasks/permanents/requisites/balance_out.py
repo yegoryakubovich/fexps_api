@@ -18,6 +18,8 @@
 import asyncio
 import logging
 
+from app.db.models import Request, Order
+
 
 def send_log(
         text: str,
