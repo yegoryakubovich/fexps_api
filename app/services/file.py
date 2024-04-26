@@ -40,15 +40,11 @@ class FileService(BaseService):
             self,
             session: Session,
             file: UploadFile,
-            model: str,
-            model_id: int | str,
             return_model: bool = False,
     ):
         file = await self._create(
             file=file,
             session=session,
-            model=model,
-            model_id=model_id,
             by_admin=True
         )
 
@@ -64,16 +60,9 @@ class FileService(BaseService):
             self,
             session: Session,
             file: UploadFile,
-            model: str,
-            model_id: int | str,
             return_model: bool = False,
     ):
-        image = await self._create(
-            file=file,
-            session=session,
-            model=model,
-            model_id=model_id
-        )
+        image = await self._create(file=file, session=session)
 
         if return_model:
             return image
@@ -86,18 +75,10 @@ class FileService(BaseService):
             self,
             session: Session,
             file: UploadFile,
-            model: str,
-            model_id: int | str,
             by_admin: bool = False,
     ) -> File:
         id_str = await create_id_str()
 
-        # await self.check_file(file=file)
-
-        if model_id.isnumeric():
-            await self.model_repositories[model]().get_by_id(id_=model_id)
-        else:
-            await self.model_repositories[model]().get_by_id_str(id_str=model_id)
         extension = file.filename.split('.')[-1]
 
         action_parameters = {
@@ -114,36 +95,24 @@ class FileService(BaseService):
             image.write(file_content)
             image.close()
 
-        image = await FileRepository().create(
-            id_str=id_str,
-            model=model,
-            model_id=model_id,
-            extension=extension,
-        )
-
+        image = await FileRepository().create(id_str=id_str, filename=file.filename, extension=extension)
         await self.create_action(
             model=image,
             action=Actions.CREATE,
             parameters=action_parameters
         )
-
         return image
 
     @staticmethod
-    async def get(
-            id_str: str,
-    ):
+    async def get(id_str: str):
         file = await FileRepository().get_by_id_str(id_str=id_str)
-        filename = f'{file.id_str}.{file.extension}'
-        logging.critical(filename)
         if file.extension in ['jpg', 'jpeg', 'png', 'pdf']:
             return FileResponse(
-                path=f'{settings.path_files}/{filename}',
+                path=f'{settings.path_files}/{file.id_str}.{file.extension}',
             )
         return FileResponse(
-            path=f'{settings.path_files}/{filename}',
-            media_type='multipart/form-data',
-            filename=filename,
+            path=f'{settings.path_files}/{file.id_str}.{file.extension}',
+            filename=file.filename,
         )
 
     @session_required(permissions=['files'])

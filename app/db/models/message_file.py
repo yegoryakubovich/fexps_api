@@ -15,19 +15,18 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Text
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class Message(Base):
-    __tablename__ = 'messages'
+class MessageFile(Base):
+    __tablename__ = 'messages_files'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
-    order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
-    order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
-    text = Column(Text)
+    message_id = Column(BigInteger, ForeignKey('messages.id', ondelete='SET NULL'), nullable=True)
+    message = relationship('Message', foreign_keys=message_id, uselist=False, lazy='selectin')
+    file_id = Column(BigInteger, ForeignKey('files.id', ondelete='SET NULL'), nullable=True)
+    file = relationship('File', foreign_keys=file_id, uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

@@ -19,7 +19,7 @@ from math import ceil
 
 from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet
 from app.db.models.transfer import TransferOperations
-from app.repositories import WalletAccountRepository
+from app.repositories import WalletAccountRepository, OrderTransferRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services import ActionService
@@ -130,6 +130,7 @@ class TransferService(BaseService):
                 'short_name': f'{_account_to.firstname} {_account_to.lastname[0]}.'.title(),
             }
         action = await ActionService().get_action(model=transfer, action=Actions.CREATE)
+        order = await OrderTransferRepository().get(transfer=transfer)
         operation = TransferOperations.SEND if transfer.wallet_from_id == wallet.id else TransferOperations.RECEIVE
         return {
             'id': transfer.id,
@@ -139,7 +140,7 @@ class TransferService(BaseService):
             'account_from': account_from,
             'wallet_to': transfer.wallet_to.id,
             'account_to': account_to,
-            'order': transfer.order_id,
+            'order': order,
             'value': transfer.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }

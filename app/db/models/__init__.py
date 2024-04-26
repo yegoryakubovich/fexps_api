@@ -17,6 +17,7 @@
 
 from .action import Action, Actions
 from .commission_pack import CommissionPack
+from .currency import Currency
 from .file import File
 from .language import Language
 from .text import Text
@@ -25,7 +26,7 @@ from .timezone import Timezone
 from .action_parameter import ActionParameter
 from .commission_pack_value import CommissionPackValue
 from .contact import Contact
-from .currency import Currency
+from .country import Country
 from .method import Method, MethodFieldTypes
 from .permission import Permission
 from .role import Role
@@ -33,23 +34,26 @@ from .text_pack import TextPack
 from .text_translation import TextTranslation
 from .wallet import Wallet
 
-from .country import Country
-from .requisite_data import RequisiteData
+from .account import Account
 from .role_permission import RolePermission
 from .transfer import Transfer, TransferTypes
-
-from .account import Account
-from .request import Request, RequestTypes, RequestStates, RequestFirstLine
-from .requisite import Requisite, RequisiteTypes, RequisiteStates
-from .transfer_system import TransferSystem, TransferSystemTypes
+from .wallet_ban import WalletBan, WalletBanReasons
 
 from .account_contact import AccountContact
 from .account_role import AccountRole
+from .requisite_data import RequisiteData
 from .session import Session
+from .transfer_system import TransferSystem, TransferSystemTypes
 from .wallet_account import WalletAccount, WalletAccountRoles
-from .wallet_ban import WalletBan, WalletBanReasons
+
+from .request import Request, RequestTypes, RequestStates, RequestFirstLine
+from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
-from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates
 
 from .message import Message
+from .order_file import OrderFile
+from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates
+from .order_transfer import OrderTransfer
+
+from .message_file import MessageFile

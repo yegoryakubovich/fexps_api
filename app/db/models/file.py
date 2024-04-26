@@ -25,7 +25,6 @@ class File(Base):
 
     id = Column(BigInteger, primary_key=True)
     id_str = Column(String(16))
+    filename = Column(String(128))
     extension = Column(String(8))
-    model = Column(String(64))
-    model_id = Column(BigInteger)
     is_deleted = Column(Boolean, default=False)

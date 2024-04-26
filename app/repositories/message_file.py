@@ -14,32 +14,10 @@
 # limitations under the License.
 #
 
-API_PORT=8000
-TASKS_FLOWER_PORT=
 
-MYSQL_HOST=
-MYSQL_PORT=
-MYSQL_USER=
-MYSQL_PASSWORD=
-MYSQL_NAME=
+from app.db.models import MessageFile
+from app.repositories.base import BaseRepository
 
-REDIS_HOST=
-REDIS_PORT=6379
-REDIS_USER=
-REDIS_PASSWORD=
 
-FLOWER_USER=
-FLOWER_PASSWORD=
-
-ROOT_TOKEN=
-FILE_URL=
-CHAT_URL=
-SYNC_DB_URL=
-SYNC_DB_TABLE_NAME=
-DEBUG=1
-WALLET_MAX_COUNT=
-WALLET_MAX_VALUE=
-
-TEST=False
-TEST_FILE_URL=
-TEST_CHAT_URL=
+class MessageFileRepository(BaseRepository[MessageFile]):
+    model = MessageFile

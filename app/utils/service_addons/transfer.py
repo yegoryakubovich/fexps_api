@@ -16,6 +16,7 @@
 
 
 from app.db.models import Transfer, Wallet, Order, Actions
+from app.repositories import OrderTransferRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
@@ -44,16 +45,20 @@ async def create_transfer(
         wallet_from=wallet_from,
         wallet_to=wallet_to,
         value=value,
-        order=order,
     )
+    if order:
+        await OrderTransferRepository().create(order=order, transfer=transfer)
     await BaseService().create_action(
         model=transfer,
         action=Actions.CREATE,
         parameters={
             'id': transfer.id,
+            'type': type_,
             'wallet_from_id': wallet_from.id,
             'wallet_to_id': wallet_to.id,
-            'value': value
+            'value': value,
+            'order': order,
+            'ignore_bal': ignore_bal,
         },
     )
     await WalletRepository().update(wallet_to, value=wallet_to.value + value)

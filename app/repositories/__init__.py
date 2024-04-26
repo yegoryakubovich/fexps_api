@@ -28,9 +28,12 @@ from .currency import CurrencyRepository
 from .file import FileRepository
 from .language import LanguageRepository
 from .message import MessageRepository
+from .message_file import MessageFileRepository
 from .method import MethodRepository
 from .order import OrderRepository
+from .order_file import OrderFileRepository
 from .order_request import OrderRequestRepository
+from .order_transfer import OrderTransferRepository
 from .permission import PermissionRepository
 from .request import RequestRepository
 from .requisite import RequisiteRepository

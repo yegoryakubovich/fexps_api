@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     flower_password: str
 
     root_token: str
+    file_url: str
     chat_url: str
     sync_db_url: str
     sync_db_table_name: str
@@ -45,6 +46,7 @@ class Settings(BaseSettings):
     wallet_max_value: int
 
     test: bool
+    test_file_url: str
     test_chat_url: str
 
     version: str = '0.1'
@@ -60,9 +62,13 @@ class Settings(BaseSettings):
 
     def get_mysql_host(self) -> str:
         if self.test:
+            return '192.168.31.40'
             return '127.0.0.1'
         return self.mysql_host
-
+    def get_file_url(self):
+        if self.test:
+            return self.test_file_url
+        return self.file_url
     def get_chat_url(self):
         if self.test:
             return self.test_chat_url

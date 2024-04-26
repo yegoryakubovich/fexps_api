@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
 from typing import Optional
 
 from fastapi import UploadFile
 
 from app.db.models import Message, Session, Actions, OrderTypes
-from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, FileRepository
+from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, FileRepository, \
+    MessageFileRepository, OrderFileRepository
 from app.services import ActionService, FileService
 from app.services.base import BaseService
 from app.utils.decorators import session_required
@@ -62,12 +62,9 @@ class MessageService(BaseService):
             }
         )
         for file in files:
-            await FileService().create(
-                session=session,
-                file=file,
-                model='message',
-                model_id=str(message.id),
-            )
+            file = await FileService().create(session=session, file=file, return_model=True)
+            await OrderFileRepository().create(order=order, file=file)
+            await MessageFileRepository().create(message=message, file=file)
         return await self.generate_message_dict(message=message)
 
     @session_required()
@@ -135,13 +132,14 @@ class MessageService(BaseService):
                 position = AccountPosition.SENDER
         action = await ActionService().get_action(model=message, action=Actions.CREATE)
         files = []
-        for file in await FileRepository().get_list(model='message', model_id=message.id):
-            with open(f'{settings.path_files}/{file.id_str}.{file.extension}', 'rb') as f:
+        for message_file in await MessageFileRepository().get_list(message=message):
+            with open(f'{settings.path_files}/{message_file.file.id_str}.{message_file.file.extension}', 'rb') as f:
                 file_byte = f.read()
             files += [{
-                'id_str': file.id_str,
-                'extension': file.extension,
-                'url': f'http://127.0.0.1:5050/files/get?id_str={file.id_str}',
+                'id_str': message_file.file.id_str,
+                'filename': message_file.file.filename,
+                'extension': message_file.file.extension,
+                'url': f'{settings.get_file_url()}?id_str={message_file.file.id_str}',
                 'value': file_byte.decode('ISO-8859-1'),
             }]
         return {
