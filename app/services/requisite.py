@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
+
 from math import ceil
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates
@@ -147,8 +148,11 @@ class RequisiteService(BaseService):
     async def search(
             self,
             session: Session,
-            is_input: bool,
-            is_output: bool,
+            is_type_input: bool,
+            is_type_output: bool,
+            is_state_enable: bool,
+            is_state_stop: bool,
+            is_state_disable: bool,
             page: int,
     ) -> dict:
         account = session.account
@@ -158,8 +162,11 @@ class RequisiteService(BaseService):
         ]
         requisites, results = await RequisiteRepository().search(
             wallets=wallets,
-            is_input=is_input,
-            is_output=is_output,
+            is_type_input=is_type_input,
+            is_type_output=is_type_output,
+            is_state_enable=is_state_enable,
+            is_state_stop=is_state_stop,
+            is_state_disable=is_state_disable,
             page=page,
         )
         requisites = [
@@ -328,10 +335,7 @@ class RequisiteService(BaseService):
         new_value = requisite.value + value
         new_total_currency_value = round(new_total_value * requisite.rate / 10 ** currency.rate_decimal)
         new_currency_value = round(new_value * requisite.rate / 10 ** currency.rate_decimal)
-        logging.critical(f'new_value {new_value}')
-        logging.critical(f'new_total_value {new_total_value}')
         if requisite.type == RequisiteTypes.OUTPUT:
-            logging.critical(f'minus {value}')
             await WalletBanService().create_related(
                 wallet=wallet,
                 value=value,

@@ -20,7 +20,7 @@ from typing import List
 from sqlalchemy import select
 from sqlalchemy.sql.operators import or_, and_
 
-from app.db.models import Requisite, RequestTypes, Wallet
+from app.db.models import Requisite, RequestTypes, Wallet, RequisiteStates
 from app.repositories.base import BaseRepository
 from config import settings
 
@@ -45,29 +45,50 @@ class RequisiteRepository(BaseRepository[Requisite]):
     async def search(
             self,
             wallets: List[Wallet],
-            is_input: bool,
-            is_output: bool,
+            is_type_input: bool,
+            is_type_output: bool,
+            is_state_enable: bool,
+            is_state_stop: bool,
+            is_state_disable: bool,
             page: int,
     ) -> tuple[list[Requisite], int]:
         types = []
-        if is_input:
+        if is_type_input:
             types.append(RequestTypes.INPUT)
-        if is_output:
+        if is_type_output:
             types.append(RequestTypes.OUTPUT)
-        if types:
-            types_where = self.model.type == types.pop()
-            for type_ in types:
-                types_where = or_(types_where, self.model.type == type_)
-        else:
+        if not types:
             return [], 0
-        if wallets:
-            wallets_where = self.model.wallet_id == wallets.pop().id
-            for wallet in wallets:
-                wallets_where = or_(wallets_where, self.model.wallet_id == wallet.id)
-        else:
+        types_where = self.model.type == types.pop()
+        for type_ in types:
+            types_where = or_(types_where, self.model.type == type_)
+        states = []
+        if is_state_enable:
+            states.append(RequisiteStates.ENABLE)
+        if is_state_stop:
+            states.append(RequisiteStates.STOP)
+        if is_state_disable:
+            states.append(RequisiteStates.DISABLE)
+        if not states:
             return [], 0
-        custom_where = and_(types_where, wallets_where)
+        states_where = self.model.state == states.pop()
+        for state in states:
+            states_where = or_(states_where, self.model.state == state)
+        if not wallets:
+            return [], 0
+        wallets_where = self.model.wallet_id == wallets.pop().id
+        for wallet in wallets:
+            wallets_where = or_(wallets_where, self.model.wallet_id == wallet.id)
+        custom_where = and_(
+            and_(types_where, states_where),
+            wallets_where,
+        )
         custom_limit = settings.items_per_page
         custom_offset = settings.items_per_page * (page - 1)
-        result = await self.get_list(custom_where=custom_where, custom_limit=custom_limit, custom_offset=custom_offset)
-        return result, len(result)
+        result = await self.get_list(
+            custom_where=custom_where,
+            custom_limit=custom_limit,
+            custom_offset=custom_offset,
+        )
+        result_count = len(await self.get_list(custom_where=custom_where))
+        return result, result_count

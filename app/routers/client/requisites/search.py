@@ -22,6 +22,7 @@ from pydantic import Field, BaseModel
 from app.services import RequisiteService
 from app.utils import Response, Router
 
+
 router = Router(
     prefix='/search',
 )
@@ -29,8 +30,11 @@ router = Router(
 
 class RequisiteSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    is_input: Optional[bool] = Field(default=True)
-    is_output: Optional[bool] = Field(default=True)
+    is_type_input: Optional[bool] = Field(default=True)
+    is_type_output: Optional[bool] = Field(default=True)
+    is_state_enable: Optional[bool] = Field(default=True)
+    is_state_stop: Optional[bool] = Field(default=False)
+    is_state_disable: Optional[bool] = Field(default=False)
     page: Optional[int] = Field(default=1)
 
 
@@ -38,8 +42,11 @@ class RequisiteSearchSchema(BaseModel):
 async def route(schema: RequisiteSearchSchema):
     result = await RequisiteService().search(
         token=schema.token,
-        is_input=schema.is_input,
-        is_output=schema.is_output,
+        is_type_input=schema.is_type_input,
+        is_type_output=schema.is_type_output,
+        is_state_enable=schema.is_state_enable,
+        is_state_stop=schema.is_state_stop,
+        is_state_disable=schema.is_state_disable,
         page=schema.page,
     )
     return Response(**result)
