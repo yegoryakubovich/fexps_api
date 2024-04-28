@@ -56,9 +56,7 @@ class TransferService(BaseService):
             wallet_to=wallet_to,
             value=value
         )
-        return {
-            'id': transfer.id,
-        }
+        return {'id': transfer.id}
 
     @session_required()
     async def get(
@@ -73,7 +71,7 @@ class TransferService(BaseService):
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
         return {
-            'transfer': await self.generate_transfer_dict(wallet=wallet, transfer=transfer)
+            'transfer': await self._generate_wallet_dict( wallet=wallet, transfer=transfer)
         }
 
     @session_required()
@@ -96,7 +94,7 @@ class TransferService(BaseService):
         )
         return {
             'transfers': [
-                await self.generate_transfer_dict(wallet=wallet, transfer=transfer)
+                await self._generate_wallet_dict(wallet=wallet, transfer=transfer)
                 for transfer in _transfers
             ],
             'results': results,
@@ -106,7 +104,7 @@ class TransferService(BaseService):
         }
 
     @staticmethod
-    async def generate_transfer_dict(wallet: Wallet, transfer: Transfer) -> dict:
+    async def _generate_wallet_dict(wallet: Wallet, transfer: Transfer) -> dict:
         if transfer.wallet_from.is_system:
             account_from = {'id': 0, 'firstname': 'System', 'lastname': '', 'username': '', 'short_name': f'System'}
         else:
