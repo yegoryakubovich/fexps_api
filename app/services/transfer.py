@@ -140,7 +140,7 @@ class TransferService(BaseService):
             'account_from': account_from,
             'wallet_to': transfer.wallet_to.id,
             'account_to': account_to,
-            'order': order,
+            'order': order.id,
             'value': transfer.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
