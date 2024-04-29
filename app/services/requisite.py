@@ -366,7 +366,7 @@ class RequisiteService(BaseService):
             'id': requisite.id,
             'type': requisite.type,
             'state': requisite.state,
-            'wallet_id': await WalletService().generate_wallet_dict(wallet=requisite.wallet),
+            'wallet': await WalletService().generate_wallet_dict(wallet=requisite.wallet),
             'input_method': input_method,
             'output_method': output_method,
             'output_requisite_data': output_requisite_data,
