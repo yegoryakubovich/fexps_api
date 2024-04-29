@@ -17,6 +17,8 @@
 
 from app.utils import Router
 from .create import router as router_create
+from .get import router as router_get
+from .get_list import router as router_get_list
 from .update import router as router_update
 
 
@@ -24,6 +26,8 @@ router = Router(
     prefix='/requests',
     routes_included=[
         router_create,
+        router_get,
+        router_get_list,
         router_update,
     ],
 )

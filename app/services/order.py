@@ -15,8 +15,8 @@
 #
 
 
-from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes
-from app.repositories import WalletAccountRepository, TextRepository
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates
+from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -57,31 +57,6 @@ class OrderService(BaseService):
         )
         return {
             'order': await self.generate_order_dict(order=order)
-        }
-
-    @session_required()
-    async def get_all_by_request(
-            self,
-            session: Session,
-            request_id: int,
-    ) -> dict:
-        account = session.account
-        request = await RequestRepository().get_by_id(id_=request_id)
-        await wallet_check_permission(
-            account=account,
-            wallets=[request.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Request',
-                    'id_value': request.id
-                },
-            ),
-        )
-        return {
-            'orders': [
-                await self.generate_order_dict(order=order) for order in
-                await OrderRepository().get_list(request=request)
-            ]
         }
 
     @session_required()
@@ -127,6 +102,31 @@ class OrderService(BaseService):
         }
 
     @session_required()
+    async def get_all_by_request(
+            self,
+            session: Session,
+            request_id: int,
+    ) -> dict:
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=request_id)
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Request',
+                    'id_value': request.id
+                },
+            ),
+        )
+        return {
+            'orders': [
+                await self.generate_order_dict(order=order)
+                for order in await OrderRepository().get_list(request=request)
+            ]
+        }
+
+    @session_required()
     async def get_all_by_requisite(
             self,
             session: Session,
@@ -141,8 +141,8 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                await self.generate_order_dict(order=order) for order in
-                await OrderRepository().get_list(requisite=requisite)
+                await self.generate_order_dict(order=order)
+                for order in await OrderRepository().get_list(requisite=requisite)
             ]
         }
 
@@ -335,6 +335,9 @@ class OrderService(BaseService):
     @staticmethod
     async def generate_order_dict(order: Order):
         method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
+        order_request = await OrderRequestRepository().get(order=order, state=OrderRequestStates.WAIT)
+        if order_request:
+            order_request = await OrderRequestService().generate_order_request_dict(order_request=order_request)
         return {
             'id': order.id,
             'type': order.type,
@@ -351,4 +354,5 @@ class OrderService(BaseService):
             'requisite_fields': order.requisite_fields,
             'input_scheme_fields': order.input_scheme_fields,
             'input_fields': order.input_fields,
+            'order_request': order_request,
         }

@@ -41,6 +41,8 @@ class OrderRequest(Base):
     __tablename__ = 'orders_requests'
 
     id = Column(BigInteger, primary_key=True)
+    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
+    wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
     order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))

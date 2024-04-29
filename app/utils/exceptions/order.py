@@ -25,7 +25,7 @@ class OrderRequestFieldsMissing(ApiException):
 
 class OrderRequestAlreadyExists(ApiException):
     code = 5001
-    message = 'Order request already exists. order_request.{id_} in state "{state}"'
+    message = 'OrderRequest already exists. OrderRequest.{id_} in state "{state}"'
 
 
 class OrderStateWrong(ApiException):
@@ -41,3 +41,8 @@ class OrderStateNotPermission(ApiException):
 class OrderNotPermission(ApiException):
     code = 5004
     message = '{field}.{id_value} you dont have permission'
+
+
+class OrderRequestStateNotPermission(ApiException):
+    code = 5005
+    message = 'OrderRequest.{id_value} you dont have permission to execute "{action}"'

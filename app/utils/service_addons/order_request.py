@@ -34,7 +34,6 @@ async def order_request_update_type_cancel(order_request: OrderRequest, state: s
                 input_value_raw=request.input_value_raw - order.value,
                 input_value=request.input_value - order.value,
             )
-            pass
         elif order.type == OrderTypes.OUTPUT:
             await RequestRepository().update(
                 request,

@@ -21,8 +21,9 @@ from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
+from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exceptions import OrderStateWrong, OrderNotPermission
+from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission
 from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAlreadyExists
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value
@@ -52,35 +53,36 @@ class OrderRequestService(BaseService):
                 },
             ),
         )
-        if order.state in [OrderStates.WAITING, OrderStates.CANCELED, OrderStates.COMPLETED]:
+        if await WalletAccountRepository().get(account=account, wallet=order.request.wallet):
+            wallet = order.request.wallet
+        else:
+            wallet = order.requisite.wallet
+        need_states = [OrderStates.PAYMENT, OrderStates.CONFIRMATION]
+        if order.state not in need_states:
             raise OrderStateWrong(
                 kwargs={
                     'id_value': order.id,
                     'state': order.state,
-                    'need_state': f'{OrderStates.PAYMENT}/{OrderStates.CONFIRMATION}',
+                    'need_state': f'/'.join(need_states),
                 },
             )
         order_request = None
         await self.check_have_order_request(order=order)
         data = {}
         if type_ == OrderRequestTypes.CANCEL:
-            if order.state in OrderStates.choices_one_side_cancel:
-                wallet_account = await WalletAccountRepository().get(
-                    wallet=order.request.wallet,
-                    account=session.account,
+            if order.state in OrderStates.choices_one_side_cancel and wallet.id == order.request.wallet.id:
+                order_request = await OrderRequestRepository().create(
+                    wallet=wallet,
+                    order=order,
+                    type=type_,
+                    state=OrderRequestStates.WAIT,
+                    data=data,
                 )
-                if wallet_account:
-                    order_request = await OrderRequestRepository().create(
-                        order=order,
-                        type=type_,
-                        state=OrderRequestStates.WAIT,
-                        data=data,
-                    )
-                    await order_request_update_type_cancel(
-                        order_request=order_request,
-                        state=OrderRequestStates.COMPLETED,
-                        canceled_reason=OrderCanceledReasons.ONE_SIDED,
-                    )
+                await order_request_update_type_cancel(
+                    order_request=order_request,
+                    state=OrderRequestStates.COMPLETED,
+                    canceled_reason=OrderCanceledReasons.ONE_SIDED,
+                )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
                 raise OrderRequestFieldsMissing(
@@ -91,6 +93,7 @@ class OrderRequestService(BaseService):
             data['value'] = value
         if not order_request:
             order_request = await OrderRequestRepository().create(
+                wallet=wallet,
                 order=order,
                 type=type_,
                 state=OrderRequestStates.WAIT,
@@ -106,7 +109,57 @@ class OrderRequestService(BaseService):
                 'value': value,
             },
         )
-        return {'id': order_request.id}
+        return {
+            'id': order_request.id,
+        }
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        account = session.account
+        order_request = await OrderRequestRepository().get_by_id(id_=id_)
+        order = order_request.order
+        await wallet_check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'OrderRequest',
+                    'id_value': order_request.id
+                },
+            ),
+        )
+        return {
+            'order_request': await self.generate_order_request_dict(order_request=order_request),
+        }
+
+    @session_required()
+    async def get_list(
+            self,
+            session: Session,
+            order_id: int,
+    ) -> dict:
+        account = session.account
+        order = await OrderRepository().get_by_id(id_=order_id)
+        await wallet_check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id
+                },
+            ),
+        )
+        return {
+            'orders_requests': [
+                await self.generate_order_request_dict(order_request=order_request)
+                for order_request in await OrderRequestRepository().get_list(order=order)
+            ]
+        }
 
     @session_required()
     async def update(
@@ -115,7 +168,30 @@ class OrderRequestService(BaseService):
             id_: int,
             state: str
     ) -> dict:
+        account = session.account
         order_request = await OrderRequestRepository().get_by_id(id_=id_, state=OrderRequestStates.WAIT)
+        order = order_request.order
+        await wallet_check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'OrderRequest',
+                    'id_value': order_request.id
+                },
+            ),
+        )
+        if await WalletAccountRepository().get(account=account, wallet=order.request.wallet):
+            wallet = order.request.wallet
+        else:
+            wallet = order.requisite.wallet
+        if wallet.id == order_request.wallet.id:
+            raise OrderRequestStateNotPermission(
+                kwargs={
+                    'id_value': order_request.id,
+                    'action': f'Change OrderRequest to state "{state}"',
+                },
+            )
         if order_request.type == OrderRequestTypes.CANCEL:
             await order_request_update_type_cancel(
                 order_request=order_request, state=state, canceled_reason=OrderCanceledReasons.TWO_SIDED,
@@ -162,3 +238,13 @@ class OrderRequestService(BaseService):
                     'state': order_request.state,
                 },
             )
+
+    @staticmethod
+    async def generate_order_request_dict(order_request: OrderRequest):
+        return {
+            'id': order_request.id,
+            'wallet': await WalletService().generate_wallet_dict(wallet=order_request.wallet),
+            'type': order_request.type,
+            'state': order_request.state,
+            'data': order_request.data,
+        }

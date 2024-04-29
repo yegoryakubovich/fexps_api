@@ -53,7 +53,11 @@ class OrderRequestCreateSchema(BaseModel):
         if value is None:
             return
         if value <= 0:
-            raise ValueMustBePositive(kwargs={'field_name': info.field_name})
+            raise ValueMustBePositive(
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
 

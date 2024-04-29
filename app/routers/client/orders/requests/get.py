@@ -15,41 +15,27 @@
 #
 
 
-from pydantic import Field, BaseModel, model_validator
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
-from app.db.models import OrderRequestStates
 from app.services import OrderRequestService
-from app.utils import Response, Router
-from app.utils.exceptions.main import ParameterContainError
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/update',
+    prefix='/get',
 )
 
 
-class OrderRequestUpdateSchema(BaseModel):
+class OrderRequestGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    state: str = Field()
-
-    @model_validator(mode='after')
-    def check_type(self) -> 'OrderRequestUpdateSchema':
-        if self.state not in OrderRequestStates.choices_update:
-            raise ParameterContainError(
-                kwargs={
-                    'field_name': 'state',
-                    'parameters': OrderRequestStates.choices_update,
-                },
-            )
-        return self
 
 
-@router.post()
-async def route(schema: OrderRequestUpdateSchema):
-    result = await OrderRequestService().update(
+@router.get()
+async def route(schema: OrderRequestGetSchema = Depends()):
+    result = await OrderRequestService().get(
         token=schema.token,
         id_=schema.id_,
-        state=schema.state,
     )
     return Response(**result)
