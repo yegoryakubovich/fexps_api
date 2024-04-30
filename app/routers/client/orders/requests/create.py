@@ -17,8 +17,7 @@
 
 from typing import Optional
 
-from pydantic import Field, model_validator, field_validator, BaseModel
-from pydantic_core.core_schema import ValidationInfo
+from pydantic import Field, model_validator, BaseModel
 
 from app.db.models import OrderRequestTypes
 from app.services import OrderRequestService
@@ -45,20 +44,14 @@ class OrderRequestCreateSchema(BaseModel):
                     'parameters': OrderRequestTypes.choices,
                 },
             )
+        if self.type_ == OrderRequestTypes.UPDATE_VALUE:
+            if self.value <= 0:
+                raise ValueMustBePositive(
+                    kwargs={
+                        'field_name': 'value',
+                    },
+                )
         return self
-
-    @field_validator('value')
-    @classmethod
-    def check_values(cls, value: int, info: ValidationInfo):
-        if value is None:
-            return
-        if value <= 0:
-            raise ValueMustBePositive(
-                kwargs={
-                    'field_name': info.field_name,
-                },
-            )
-        return value
 
 
 @router.post()

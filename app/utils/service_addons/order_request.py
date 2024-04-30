@@ -15,11 +15,13 @@
 #
 
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates
+import math
+
+from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, RequisiteTypes
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
-from app.utils.service_addons.order import order_cancel_related
+from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
 from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
 
@@ -66,8 +68,37 @@ async def order_request_update_type_update_value(
         state: str,
         connections_manager_aiohttp: ConnectionManagerAiohttp,
 ):
+    order: Order = order_request.order
+    request: Request = order.request
     if state == OrderRequestStates.COMPLETED:
-        """CHANGE VALUE LOGIC"""
+        value = int(order_request.data['value'])
+        rate_currency_value_method = math.ceil if order.type == OrderTypes.INPUT else math.floor
+        delta_value = order.value - value
+        delta_currency_value = rate_currency_value_method(
+            delta_value * order.rate / 10 ** order.request.rate_decimal,
+        )
+        if order.type == OrderTypes.INPUT:
+            await RequestRepository().update(
+                request,
+                input_currency_value_raw=request.input_currency_value_raw - delta_currency_value,
+                input_currency_value=request.input_currency_value - delta_currency_value,
+                input_value_raw=request.input_value_raw - delta_value,
+                input_value=request.input_value - delta_value,
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await RequestRepository().update(
+                request,
+                output_currency_value_raw=request.output_currency_value_raw - delta_currency_value,
+                output_currency_value=request.output_currency_value - delta_currency_value,
+                output_value_raw=request.output_value_raw - delta_value,
+                output_value=request.output_value - delta_value,
+            )
+        await order_edit_value_related(order=order, delta_value=delta_value, delta_currency_value=delta_currency_value)
+        await OrderRepository().update(
+            order,
+            value=value,
+            currency_value=float(value * order.rate / 10 ** order.request.rate_decimal),
+        )
         await OrderRequestRepository().update(order_request, state=state)
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:

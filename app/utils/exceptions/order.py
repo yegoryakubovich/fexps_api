@@ -46,3 +46,8 @@ class OrderNotPermission(ApiException):
 class OrderRequestStateNotPermission(ApiException):
     code = 5005
     message = 'OrderRequest.{id_value} you dont have permission to execute "{action}"'
+
+
+class OrderRequestMaxValueError(ApiException):
+    code = 5006
+    message = 'The value must be less than {max_value}'
