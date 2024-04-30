@@ -23,8 +23,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission
-from app.utils.exceptions.order import OrderRequestAlreadyExists, OrderRequestMaxValueError
+from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, OrderRequestAlreadyExists, OrderRequestMaxValueError
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value
 from app.utils.service_addons.wallet import wallet_check_permission

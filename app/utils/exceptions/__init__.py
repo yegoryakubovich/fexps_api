@@ -26,7 +26,7 @@ from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters,
 from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodParametersMissing, \
     MethodParametersValidationError, MethodFieldsTypeError
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
-    OrderNotPermission, OrderRequestStateNotPermission
+    OrderNotPermission, OrderRequestStateNotPermission, OrderRequestMaxValueError
 from .request import RequestStateWrong, RequestStateNotPermission
 from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong
 from .role import RoleAlreadyExist
