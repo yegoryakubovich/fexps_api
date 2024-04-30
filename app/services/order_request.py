@@ -91,6 +91,8 @@ class OrderRequestService(BaseService):
                     },
                 )
             data['value'] = value
+        elif type_ == OrderRequestTypes.RECREATE:
+            pass  # FIXME
         if not order_request:
             order_request = await OrderRequestRepository().create(
                 wallet=wallet,

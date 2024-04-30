@@ -24,8 +24,9 @@ from app.db.base_class import Base
 class OrderRequestTypes:
     UPDATE_VALUE = 'update_value'
     CANCEL = 'cancel'
+    RECREATE = 'recreate'
 
-    choices = [UPDATE_VALUE, CANCEL]
+    choices = [UPDATE_VALUE, CANCEL, RECREATE]
 
 
 class OrderRequestStates:
