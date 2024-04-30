@@ -28,15 +28,17 @@ from app.utils.exceptions.order import OrderRequestFieldsMissing, OrderRequestAl
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value
 from app.utils.service_addons.wallet import wallet_check_permission
+from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
 
 class OrderRequestService(BaseService):
     model = OrderRequest
 
-    @session_required()
+    @session_required(return_token=True)
     async def create(
             self,
             session: Session,
+            token: str,
             order_id: int,
             type_: str,
             value: int,
@@ -69,6 +71,7 @@ class OrderRequestService(BaseService):
         order_request = None
         await self.check_have_order_request(order=order)
         data = {}
+        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         if type_ == OrderRequestTypes.CANCEL:
             if order.state in OrderStates.choices_one_side_cancel and wallet.id == order.request.wallet.id:
                 order_request = await OrderRequestRepository().create(
@@ -78,10 +81,12 @@ class OrderRequestService(BaseService):
                     state=OrderRequestStates.WAIT,
                     data=data,
                 )
+                await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
                 await order_request_update_type_cancel(
                     order_request=order_request,
                     state=OrderRequestStates.COMPLETED,
                     canceled_reason=OrderCanceledReasons.ONE_SIDED,
+                    connections_manager_aiohttp=connections_manager_aiohttp,
                 )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
             if not value:
@@ -101,6 +106,7 @@ class OrderRequestService(BaseService):
                 state=OrderRequestStates.WAIT,
                 data=data,
             )
+            await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,
@@ -163,10 +169,11 @@ class OrderRequestService(BaseService):
             ]
         }
 
-    @session_required()
+    @session_required(return_token=True)
     async def update(
             self,
             session: Session,
+            token: str,
             id_: int,
             state: str
     ) -> dict:
@@ -194,12 +201,20 @@ class OrderRequestService(BaseService):
                     'action': f'Change OrderRequest to state "{state}"',
                 },
             )
+        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         if order_request.type == OrderRequestTypes.CANCEL:
             await order_request_update_type_cancel(
-                order_request=order_request, state=state, canceled_reason=OrderCanceledReasons.TWO_SIDED,
+                order_request=order_request,
+                state=state,
+                canceled_reason=OrderCanceledReasons.TWO_SIDED,
+                connections_manager_aiohttp=connections_manager_aiohttp,
             )
         elif order_request.type == OrderRequestTypes.UPDATE_VALUE:
-            await order_request_update_type_update_value(order_request=order_request, state=state)
+            await order_request_update_type_update_value(
+                order_request=order_request,
+                state=state,
+                connections_manager_aiohttp=connections_manager_aiohttp,
+            )
         await OrderRequestRepository().update(order_request, state=state)
         await self.create_action(
             model=order_request,

@@ -20,9 +20,15 @@ from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
 from app.utils.service_addons.order import order_cancel_related
+from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
 
-async def order_request_update_type_cancel(order_request: OrderRequest, state: str, canceled_reason: str):
+async def order_request_update_type_cancel(
+        order_request: OrderRequest,
+        state: str,
+        canceled_reason: str,
+        connections_manager_aiohttp: ConnectionManagerAiohttp,
+):
     order: Order = order_request.order
     request: Request = order.request
     if state == OrderRequestStates.COMPLETED:
@@ -52,12 +58,18 @@ async def order_request_update_type_cancel(order_request: OrderRequest, state: s
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
+    await connections_manager_aiohttp.send(text=f'OrderRequest finished in {state} ({canceled_reason})')
 
 
-async def order_request_update_type_update_value(order_request: OrderRequest, state: str):
+async def order_request_update_type_update_value(
+        order_request: OrderRequest,
+        state: str,
+        connections_manager_aiohttp: ConnectionManagerAiohttp,
+):
     if state == OrderRequestStates.COMPLETED:
         """CHANGE VALUE LOGIC"""
         await OrderRequestRepository().update(order_request, state=state)
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
+    await connections_manager_aiohttp.send(text=f'OrderRequest finished in {state}')
