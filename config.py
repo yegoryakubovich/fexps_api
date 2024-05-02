@@ -65,10 +65,12 @@ class Settings(BaseSettings):
             # return '192.168.31.40'
             return '127.0.0.1'
         return self.mysql_host
+
     def get_file_url(self):
         if self.test:
             return self.test_file_url
         return self.file_url
+
     def get_chat_url(self):
         if self.test:
             return self.test_chat_url

@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 from typing import Optional
 
 from fastapi import UploadFile
 
-from app.db.models import Message, Session, Actions, OrderTypes
+from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, FileRepository, \
     MessageFileRepository, OrderFileRepository
 from app.services import ActionService, FileService
@@ -26,12 +28,6 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
 from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
-
-
-class AccountPosition:
-    UNKNOWN = 'unknown'
-    SENDER = 'sender'
-    RECEIVER = 'receiver'
 
 
 class MessageService(BaseService):
@@ -43,6 +39,7 @@ class MessageService(BaseService):
             session: Session,
             order_id: int,
             text: Optional[str] = None,
+            role: Optional[str] = None,
             files: Optional[list[UploadFile]] = None,
     ):
         account = session.account
@@ -51,6 +48,7 @@ class MessageService(BaseService):
             account=account,
             order=order,
             text=text,
+            role=role,
         )
         await self.create_action(
             model=message,
@@ -119,17 +117,17 @@ class MessageService(BaseService):
     async def generate_message_dict(message: Message):
         request_account = (await WalletAccountRepository().get(wallet=message.order.request.wallet)).account
         requisite_account = (await WalletAccountRepository().get(wallet=message.order.requisite.wallet)).account
-        position = AccountPosition.UNKNOWN
+        position = MessageUserPositions.UNKNOWN
         if message.order.type == OrderTypes.INPUT:
             if message.account.id == request_account.id:
-                position = AccountPosition.SENDER
+                position = MessageUserPositions.SENDER
             elif message.account.id == requisite_account.id:
-                position = AccountPosition.RECEIVER
+                position = MessageUserPositions.RECEIVER
         elif message.order.type == OrderTypes.OUTPUT:
             if message.account.id == request_account.id:
-                position = AccountPosition.RECEIVER
+                position = MessageUserPositions.RECEIVER
             elif message.account.id == requisite_account.id:
-                position = AccountPosition.SENDER
+                position = MessageUserPositions.SENDER
         action = await ActionService().get_action(model=message, action=Actions.CREATE)
         files = []
         for message_file in await MessageFileRepository().get_list(message=message):
@@ -145,7 +143,8 @@ class MessageService(BaseService):
         return {
             'id': message.id,
             'account': message.account.id,
-            'account_position': position,
+            'role': message.role,
+            'position': position,
             'order': message.order.id,
             'files': files,
             'text': message.text,

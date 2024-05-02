@@ -13,14 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import io
-import logging
 
 from fastapi import WebSocket, WebSocketDisconnect, UploadFile
 
 from app.services import MessageService
 from app.utils import Router
 from app.utils.websockets import connections_manager_fastapi
+
 
 router = Router(
     prefix='/chat',
@@ -37,6 +39,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 token=token,
                 order_id=order_id,
                 text=data['text'],
+                role=data['role'],
                 files=[
                     UploadFile(
                         file=io.BytesIO(file_dict['data'].encode('ISO-8859-1')),

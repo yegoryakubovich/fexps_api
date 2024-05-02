@@ -51,7 +51,7 @@ from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
 
-from .message import Message
+from .message import Message, MessageRoles, MessageUserPositions
 from .order_file import OrderFile
 from .order_request import OrderRequest, OrderRequestTypes, OrderRequestStates
 from .order_transfer import OrderTransfer

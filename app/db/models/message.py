@@ -15,10 +15,23 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Text
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, Text, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
+
+
+class MessageRoles:
+    USER = 'user'
+    MODERATOR = 'moderator'
+    SYSTEM = 'system'
+
+
+class MessageUserPositions:
+    UNKNOWN = 'unknown'
+    YOU = 'you'
+    SENDER = 'sender'
+    RECEIVER = 'receiver'
 
 
 class Message(Base):
@@ -29,5 +42,6 @@ class Message(Base):
     account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
     order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
+    role = Column(String(32))
     text = Column(Text)
     is_deleted = Column(Boolean, default=False)
