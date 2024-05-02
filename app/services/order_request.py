@@ -23,7 +23,8 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
-from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, OrderRequestAlreadyExists, OrderRequestMaxValueError
+from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
+    OrderRequestAlreadyExists, OrderRequestMaxValueError
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value
 from app.utils.service_addons.wallet import wallet_check_permission
@@ -67,11 +68,26 @@ class OrderRequestService(BaseService):
                     'need_state': f'/'.join(need_states),
                 },
             )
-        order_request = None
+        order_request, data = None, {}
         await self.check_have_order_request(order=order)
-        data = {}
         connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         if type_ == OrderRequestTypes.CANCEL:
+            if order.state in OrderStates.choices_one_side_cancel and wallet.id == order.request.wallet.id:
+                order_request = await OrderRequestRepository().create(
+                    wallet=wallet,
+                    order=order,
+                    type=type_,
+                    state=OrderRequestStates.WAIT,
+                    data=data,
+                )
+                await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
+                await order_request_update_type_cancel(
+                    order_request=order_request,
+                    state=OrderRequestStates.COMPLETED,
+                    canceled_reason=OrderCanceledReasons.ONE_SIDED,
+                    connections_manager_aiohttp=connections_manager_aiohttp,
+                )
+        elif type_ == OrderRequestTypes.RECREATE:
             if order.state in OrderStates.choices_one_side_cancel and wallet.id == order.request.wallet.id:
                 order_request = await OrderRequestRepository().create(
                     wallet=wallet,
@@ -95,8 +111,6 @@ class OrderRequestService(BaseService):
                     },
                 )
             data['currency_value'] = value
-        elif type_ == OrderRequestTypes.RECREATE:
-            pass  # FIXME
         if not order_request:
             order_request = await OrderRequestRepository().create(
                 wallet=wallet,
@@ -105,7 +119,7 @@ class OrderRequestService(BaseService):
                 state=OrderRequestStates.WAIT,
                 data=data,
             )
-            await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
+            await connections_manager_aiohttp.send(text=f'Create OrderReques to {type_}')
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,

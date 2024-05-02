@@ -17,7 +17,7 @@
 
 import math
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, RequisiteTypes
+from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
@@ -60,7 +60,28 @@ async def order_request_update_type_cancel(
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(text=f'OrderRequest finished in {state} ({canceled_reason})')
+    await connections_manager_aiohttp.send(text=f'OrderRequest Cancel finished in {state} ({canceled_reason})')
+
+
+async def order_request_update_type_recreate(
+        order_request: OrderRequest,
+        state: str,
+        canceled_reason: str,
+        connections_manager_aiohttp: ConnectionManagerAiohttp,
+):
+    order: Order = order_request.order
+    if state == OrderRequestStates.COMPLETED:
+        await order_cancel_related(order=order)
+        await OrderRepository().update(
+            order,
+            state=OrderStates.CANCELED,
+            canceled_reason=canceled_reason,
+        )
+        await OrderRequestRepository().update(order_request, state=state)
+        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
+    elif state == OrderRequestStates.CANCELED:
+        await OrderRequestRepository().update(order_request, state=state)
+    await connections_manager_aiohttp.send(text=f'OrderRequest Recreate finished in {state} ({canceled_reason})')
 
 
 async def order_request_update_type_update_value(
@@ -102,4 +123,4 @@ async def order_request_update_type_update_value(
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(text=f'OrderRequest finished in {state}')
+    await connections_manager_aiohttp.send(text=f'OrderRequest Update value finished in {state}')
