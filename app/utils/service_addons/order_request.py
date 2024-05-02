@@ -71,12 +71,11 @@ async def order_request_update_type_update_value(
     order: Order = order_request.order
     request: Request = order.request
     if state == OrderRequestStates.COMPLETED:
-        value = int(order_request.data['value'])
-        rate_currency_value_method = math.ceil if order.type == OrderTypes.INPUT else math.floor
-        delta_value = order.value - value
-        delta_currency_value = rate_currency_value_method(
-            delta_value * order.rate / 10 ** order.request.rate_decimal,
-        )
+        currency_value = int(order_request.data['currency_value'])
+        value = float(currency_value / order.rate * 10 ** order.request.rate_decimal)
+        delta_currency_value = order.currency_value - currency_value
+        value_method = math.floor if order.type == OrderTypes.INPUT else math.ceil
+        delta_value = value_method(delta_currency_value / order.rate * 10 ** order.request.rate_decimal)
         if order.type == OrderTypes.INPUT:
             await RequestRepository().update(
                 request,
@@ -97,7 +96,7 @@ async def order_request_update_type_update_value(
         await OrderRepository().update(
             order,
             value=value,
-            currency_value=float(value * order.rate / 10 ** order.request.rate_decimal),
+            currency_value=currency_value,
         )
         await OrderRequestRepository().update(order_request, state=state)
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)

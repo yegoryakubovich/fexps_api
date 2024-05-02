@@ -88,13 +88,13 @@ class OrderRequestService(BaseService):
                     connections_manager_aiohttp=connections_manager_aiohttp,
                 )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
-            if value >= order.value:
+            if value >= order.currency_value:
                 raise OrderRequestMaxValueError(
                     kwargs={
-                        'max_value': order.value,
+                        'max_value': order.currency_value,
                     },
                 )
-            data['value'] = value
+            data['currency_value'] = value
         elif type_ == OrderRequestTypes.RECREATE:
             pass  # FIXME
         if not order_request:
