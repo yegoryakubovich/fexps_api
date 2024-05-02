@@ -34,7 +34,7 @@ class RolePermissionGetListSchema(BaseModel):
 
 @router.get()
 async def route(schema: RolePermissionGetListSchema = Depends()):
-    result = await RolePermissionService().get_list(
+    result = await RolePermissionService().get_list_by_admin(
         token=schema.token,
         role_id=schema.role_id,
     )

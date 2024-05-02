@@ -33,7 +33,7 @@ class TextListGetSchema(BaseModel):
 
 @router.get()
 async def route(schema: TextListGetSchema = Depends()):
-    result = await TextService().get_list(
+    result = await TextService().get_list_by_admin(
         token=schema.token,
     )
     return Response(**result)

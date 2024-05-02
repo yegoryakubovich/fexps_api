@@ -92,11 +92,10 @@ class TextService(BaseService):
         }
 
     @session_required(return_model=False, permissions=['texts'], can_root=True)
-    async def get_list(
+    async def get_list_by_admin(
             self,
     ) -> dict:
         texts_list = []
-
         texts = await TextRepository().get_list()
         for text in texts:
             text: Text

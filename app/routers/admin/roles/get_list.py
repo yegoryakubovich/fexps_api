@@ -33,7 +33,7 @@ class RoleGetListByAdminSchema(BaseModel):
 
 @router.get()
 async def route(schema: RoleGetListByAdminSchema = Depends()):
-    result = await RoleService().get_list(
+    result = await RoleService().get_list_by_admin(
         token=schema.token,
     )
     return Response(**result)
