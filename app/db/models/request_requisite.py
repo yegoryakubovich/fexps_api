@@ -32,8 +32,8 @@ class RequestRequisite(Base):
 
     id = Column(BigInteger, primary_key=True)
     request_id = Column(BigInteger, ForeignKey('requests.id', ondelete='SET NULL'), nullable=True)
-    request = relationship('request', foreign_keys=request_id, uselist=False, lazy='selectin')
+    request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     requisite_id = Column(BigInteger, ForeignKey('requisites.id', ondelete='SET NULL'), nullable=True)
-    requisite = relationship('requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
+    requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))
     is_deleted = Column(Boolean, default=False)
