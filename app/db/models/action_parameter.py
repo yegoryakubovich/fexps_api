@@ -29,4 +29,4 @@ class ActionParameter(Base):
     action_id = Column(BigInteger, ForeignKey('actions.id', ondelete='SET NULL'))
     action = relationship(argument='Action', uselist=False, lazy='selectin')
     key = Column(String(length=256))
-    value = Column(String(length=256), nullable=True)
+    value = Column(String(length=1024), nullable=True)
