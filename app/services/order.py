@@ -207,17 +207,18 @@ class OrderService(BaseService):
             field_value = input_fields.get(field_key)
             if not field_value:
                 continue
+            text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
             if field_scheme['type'] == MethodFieldTypes.IMAGE:
                 await connections_manager_aiohttp.send(
-                    role=MessageRoles.SYSTEM,
-                    text=field_scheme['name_text_key'],
+                    role=MessageRoles.USER,
+                    text=text.value_default,
                     files=field_value,
                 )
                 input_fields[field_key] = 'added'
             else:
                 await connections_manager_aiohttp.send(
-                    role=MessageRoles.SYSTEM,
-                    text=field_scheme['name_text_key'],
+                    role=MessageRoles.USER,
+                    text=f'{text.value_default}: {field_value}',
                 )
         await OrderRepository().update(order, input_fields=input_fields)
         await self.create_action(
