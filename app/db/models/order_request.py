@@ -31,7 +31,7 @@ class OrderRequestTypes:
 
 class OrderRequestStates:
     WAIT = 'wait'
-    COMPLETED = 'competed'
+    COMPLETED = 'completed'
     CANCELED = 'canceled'
 
     choices = [WAIT, COMPLETED, CANCELED]
