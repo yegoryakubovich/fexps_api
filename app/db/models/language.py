@@ -25,6 +25,6 @@ class Language(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    id_str = Column(String(16))
-    name = Column(String(32))
+    id_str = Column(String(length=16))
+    name = Column(String(length=32))
     is_deleted = Column(Boolean, default=False)

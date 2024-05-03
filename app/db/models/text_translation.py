@@ -31,5 +31,5 @@ class TextTranslation(Base):
     language_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)
     language = relationship('Language', uselist=False, lazy='selectin')
 
-    value = Column(String(1024))
+    value = Column(String(length=1024))
     is_deleted = Column(Boolean, default=False)

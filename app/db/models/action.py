@@ -35,6 +35,6 @@ class Action(Base):
     id = Column(BigInteger, primary_key=True)
 
     datetime = Column(DateTime, default=datetime.utcnow)
-    model = Column(String(64))
+    model = Column(String(length=64))
     model_id = Column(BigInteger)
-    action = Column(String(256))
+    action = Column(String(length=256))

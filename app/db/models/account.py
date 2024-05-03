@@ -26,12 +26,12 @@ class Account(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    username = Column(String(32))
-    password_salt = Column(String(32))
-    password_hash = Column(String(32))
-    firstname = Column(String(32))
-    lastname = Column(String(32))
-    surname = Column(String(32), nullable=True)
+    username = Column(String(length=32))
+    password_salt = Column(String(length=32))
+    password_hash = Column(String(length=32))
+    firstname = Column(String(length=32))
+    lastname = Column(String(length=32))
+    surname = Column(String(length=32), nullable=True)
     country_id = Column(BigInteger, ForeignKey('countries.id', ondelete='SET NULL'), nullable=True)
     country = relationship('Country', uselist=False, lazy='selectin')
     language_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)

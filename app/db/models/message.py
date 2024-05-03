@@ -42,6 +42,6 @@ class Message(Base):
     account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
     order_id = Column(BigInteger, ForeignKey('orders.id', ondelete='SET NULL'), nullable=True)
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
-    role = Column(String(32))
+    role = Column(String(length=32))
     text = Column(Text)
     is_deleted = Column(Boolean, default=False)

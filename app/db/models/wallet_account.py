@@ -37,5 +37,5 @@ class WalletAccount(Base):
     wallet = relationship('Wallet', backref='accounts', uselist=False, lazy='selectin')
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
     account = relationship('Account', backref='wallets', uselist=False, lazy='selectin')
-    role = Column(String(32), default=WalletAccountRoles.OWNER)
+    role = Column(String(length=32), default=WalletAccountRoles.OWNER)
     is_deleted = Column(Boolean, default=False)

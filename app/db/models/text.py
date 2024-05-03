@@ -25,6 +25,6 @@ class Text(Base):
 
     id = Column(BigInteger, primary_key=True)
 
-    key = Column(String(128))
-    value_default = Column(String(1024))
+    key = Column(String(length=128))
+    value_default = Column(String(length=1024))
     is_deleted = Column(Boolean, default=False)

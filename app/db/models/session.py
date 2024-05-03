@@ -28,6 +28,6 @@ class Session(Base):
 
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
     account = relationship('Account', backref='parameters', uselist=False, lazy='selectin')
-    token_salt = Column(String(32))
-    token_hash = Column(String(32))
+    token_salt = Column(String(length=32))
+    token_hash = Column(String(length=32))
     is_deleted = Column(Boolean, default=False)

@@ -29,5 +29,5 @@ class AccountContact(Base):
     account = relationship('Account', uselist=False, lazy='selectin')
     contact_id = Column(BigInteger, ForeignKey('contacts.id', ondelete='SET NULL'), nullable=True)
     contact = relationship('Contact', uselist=False, lazy='selectin')
-    value = Column(String(256))
+    value = Column(String(length=256))
     is_deleted = Column(Boolean, default=False)
