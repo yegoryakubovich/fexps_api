@@ -28,7 +28,7 @@ class InvalidUsername(ApiException):
     message = 'Invalid username. The correct username starts with a letter and can contain numbers or underscores'
 
 
-class AccountWithUsernameDoeNotExist(ApiException):
+class AccountWithUsernameDoesNotExist(ApiException):
     code = 2002
     message = 'Account @{username} does not exist'
 

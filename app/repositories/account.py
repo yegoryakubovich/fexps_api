@@ -21,7 +21,7 @@ from sqlalchemy.sql.operators import and_
 
 from app.db.models import Account
 from app.repositories.base import BaseRepository
-from app.utils.exceptions import AccountWithUsernameDoeNotExist
+from app.utils.exceptions import AccountWithUsernameDoesNotExist
 from config import settings
 
 
@@ -31,7 +31,7 @@ class AccountRepository(BaseRepository[Account]):
     async def get_by_username(self, username: str) -> Optional[Account]:
         result = await self.get(username=username)
         if not result:
-            raise AccountWithUsernameDoeNotExist(kwargs={'username': username})
+            raise AccountWithUsernameDoesNotExist(kwargs={'username': username})
         return result
 
     async def is_exist_by_username(self, username: str) -> bool:
