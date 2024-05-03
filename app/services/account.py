@@ -230,12 +230,9 @@ class AccountService(BaseService):
 
     @staticmethod
     async def _is_valid_password(password: str):
-        register = "^(?=.*[a-zA-Z])[A-Za-z\d#$@!%&*?]{7,32}$"
-        pattern = compile(register)
-        if search(pattern, password):
-            return True
-        else:
+        if len(password) < 6:
             return False
+        return True
 
     async def check_password(
             self,
