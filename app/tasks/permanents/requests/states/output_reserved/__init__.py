@@ -19,7 +19,8 @@ import asyncio
 import logging
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, RequisiteTypes, \
-    RequestTypes, RequisiteStates, Order
+    RequestTypes, RequisiteStates, Order, RequestRequisiteTypes
+from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -27,7 +28,7 @@ from app.services import TransferSystemService
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.difference import get_difference
 from app.utils.calculations.request.need_value import output_get_need_value
-from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
+from app.utils.calculations.simples import get_div_by_value
 from app.utils.service_addons.order import order_banned_value, waited_order
 
 
@@ -108,62 +109,63 @@ async def run():
     await asyncio.sleep(5)
 
 
-async def get_new_requisite_by_currency_value(
-        request: Request,
-        need_currency_value: int,
-) -> None:
-    currency = request.output_method.currency
-    for requisite in await RequisiteRepository().get_list_output_by_rate(
-            type=RequisiteTypes.INPUT,
-            state=RequisiteStates.ENABLE,
-            currency=currency,
-            in_process=False,
-    ):
-        await RequisiteRepository().update(requisite, in_process=True)
-        rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
-        requisite_rate = requisite.rate
-        if rate_decimal != requisite_rate_decimal:
-            requisite_rate = round(requisite.rate / 10 ** requisite_rate_decimal * 10 ** rate_decimal)
-        _need_currency_value = need_currency_value
-        # Zero check
-        if 0 in [_need_currency_value, requisite.currency_value]:
-            await RequisiteRepository().update(requisite, in_process=False)
-            continue
-        # Min/Max check
-        if requisite.currency_value_min and _need_currency_value < requisite.currency_value_min:
-            await RequisiteRepository().update(requisite, in_process=False)
-            continue
-        if requisite.currency_value_max and _need_currency_value > requisite.currency_value_max:
-            _need_currency_value = requisite.currency_value_max
-        # Div check
-        if _need_currency_value < currency.div:
-            await RequisiteRepository().update(requisite, in_process=False)
-            continue
-        # Check max possible value
-        if requisite.currency_value >= _need_currency_value:
-            suitable_currency_value = _need_currency_value
-        else:
-            suitable_currency_value = requisite.currency_value
-        # Check TRUE
-        suitable_currency_value, suitable_value = get_div_by_currency_value(  # Rounded value
-            currency_value=suitable_currency_value,
-            div=currency.div,
-            rate=requisite_rate,
-            rate_decimal=rate_decimal,
-            order_type=OrderTypes.OUTPUT,
-        )
-        if not suitable_currency_value or not suitable_value:
-            await RequisiteRepository().update(requisite, in_process=False)
-            continue
-        await waited_order(
-            request=request,
-            requisite=requisite,
-            currency_value=suitable_currency_value,
-            value=suitable_value,
-            rate=requisite.rate,
-            order_type=OrderTypes.OUTPUT,
-        )
-        need_currency_value = round(need_currency_value - suitable_currency_value)
+#
+# async def get_new_requisite_by_currency_value(
+#         request: Request,
+#         need_currency_value: int,
+# ) -> None:
+#     currency = request.output_method.currency
+#     for requisite in await RequisiteRepository().get_list_output_by_rate(
+#             type=RequisiteTypes.INPUT,
+#             state=RequisiteStates.ENABLE,
+#             currency=currency,
+#             in_process=False,
+#     ):
+#         await RequisiteRepository().update(requisite, in_process=True)
+#         rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
+#         requisite_rate = requisite.rate
+#         if rate_decimal != requisite_rate_decimal:
+#             requisite_rate = round(requisite.rate / 10 ** requisite_rate_decimal * 10 ** rate_decimal)
+#         _need_currency_value = need_currency_value
+#         # Zero check
+#         if 0 in [_need_currency_value, requisite.currency_value]:
+#             await RequisiteRepository().update(requisite, in_process=False)
+#             continue
+#         # Min/Max check
+#         if requisite.currency_value_min and _need_currency_value < requisite.currency_value_min:
+#             await RequisiteRepository().update(requisite, in_process=False)
+#             continue
+#         if requisite.currency_value_max and _need_currency_value > requisite.currency_value_max:
+#             _need_currency_value = requisite.currency_value_max
+#         # Div check
+#         if _need_currency_value < currency.div:
+#             await RequisiteRepository().update(requisite, in_process=False)
+#             continue
+#         # Check max possible value
+#         if requisite.currency_value >= _need_currency_value:
+#             suitable_currency_value = _need_currency_value
+#         else:
+#             suitable_currency_value = requisite.currency_value
+#         # Check TRUE
+#         suitable_currency_value, suitable_value = get_div_by_currency_value(  # Rounded value
+#             currency_value=suitable_currency_value,
+#             div=currency.div,
+#             rate=requisite_rate,
+#             rate_decimal=rate_decimal,
+#             order_type=OrderTypes.OUTPUT,
+#         )
+#         if not suitable_currency_value or not suitable_value:
+#             await RequisiteRepository().update(requisite, in_process=False)
+#             continue
+#         await waited_order(
+#             request=request,
+#             requisite=requisite,
+#             currency_value=suitable_currency_value,
+#             value=suitable_value,
+#             rate=requisite.rate,
+#             order_type=OrderTypes.OUTPUT,
+#         )
+#         need_currency_value = round(need_currency_value - suitable_currency_value)
 
 
 async def get_new_requisite_by_value(
@@ -178,6 +180,9 @@ async def get_new_requisite_by_value(
             in_process=False,
     ):
         await RequisiteRepository().update(requisite, in_process=True)
+        if await RequestRequisiteRepository().check_blacklist(request=request, requisite=requisite):
+            await RequisiteRepository().update(requisite, in_process=False)
+            continue
         rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
         requisite_rate = requisite.rate
         if rate_decimal != requisite_rate_decimal:

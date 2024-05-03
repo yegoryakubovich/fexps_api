@@ -19,7 +19,8 @@ import asyncio
 import logging
 
 from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates, Request, \
-    RequisiteStates, Order
+    RequisiteStates, Order, RequestRequisiteTypes
+from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -44,7 +45,7 @@ def send_log(
         ]
     elif request:
         log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
+            f'request.{request.id} ({request.type}:{request.state})',
         ]
     log_list += [text]
     func(f' '.join(log_list))
@@ -88,6 +89,9 @@ async def get_new_requisite_by_currency_value(
             in_process=False,
     ):
         await RequisiteRepository().update(requisite, in_process=True)
+        if await RequestRequisiteRepository().check_blacklist(request=request, requisite=requisite):
+            await RequisiteRepository().update(requisite, in_process=False)
+            continue
         rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
         requisite_rate = requisite.rate
         if rate_decimal != requisite_rate_decimal:

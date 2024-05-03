@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional
 
 from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates, Order
+from app.repositories import RequestRequisiteRepository
 from app.repositories.requisite import RequisiteRepository
 from app.utils.calculations.request.need_value import input_get_need_currency_value, input_get_need_value
 from app.utils.calculations.schemes.loading import RequisiteTypeScheme, RequisiteScheme
@@ -75,6 +76,9 @@ async def request_type_input_currency_value(
             in_process=False,
     ):
         await RequisiteRepository().update(requisite, in_process=True)
+        if await RequestRequisiteRepository().check_blacklist(request=request, requisite=requisite):
+            await RequisiteRepository().update(requisite, in_process=False)
+            continue
         rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
         requisite_rate = requisite.rate
         if rate_decimal != requisite_rate_decimal:
@@ -139,7 +143,7 @@ async def request_type_input_value(
         request: Request,
         currency: Currency,
         need_value: int,
-) -> RequisiteTypeScheme:
+) -> Optional[RequisiteTypeScheme]:
     requisites_scheme_list: List[RequisiteScheme] = []
     sum_currency_value, sum_value, rates_list = 0, 0, []
     for requisite in await RequisiteRepository().get_list_input_by_rate(
@@ -149,6 +153,9 @@ async def request_type_input_value(
             in_process=False,
     ):
         await RequisiteRepository().update(requisite, in_process=True)
+        if await RequestRequisiteRepository().check_blacklist(request=request, requisite=requisite):
+            await RequisiteRepository().update(requisite, in_process=False)
+            continue
         rate_decimal, requisite_rate_decimal = request.rate_decimal, requisite.currency.rate_decimal
         requisite_rate = requisite.rate
         if rate_decimal != requisite_rate_decimal:

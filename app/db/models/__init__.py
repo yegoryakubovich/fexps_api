@@ -50,6 +50,7 @@ from .request import Request, RequestTypes, RequestStates, RequestFirstLine
 from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
+from .request_requisite import RequestRequisite, RequestRequisiteTypes
 
 from .message import Message, MessageRoles, MessageUserPositions
 from .order_file import OrderFile

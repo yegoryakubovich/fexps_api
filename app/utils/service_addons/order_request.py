@@ -17,7 +17,9 @@
 
 import math
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles
+from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
+    RequestRequisiteTypes
+from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
@@ -51,6 +53,11 @@ async def order_request_update_type_cancel(
                 output_value=request.output_value - order.value,
             )
         await order_cancel_related(order=order)
+        await RequestRequisiteRepository().create(
+            request=order.request,
+            requisite=order.requisite,
+            type=RequestRequisiteTypes.BLACKLIST,
+        )
         await OrderRepository().update(
             order,
             state=OrderStates.CANCELED,

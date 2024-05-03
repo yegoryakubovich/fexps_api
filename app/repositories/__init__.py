@@ -36,6 +36,7 @@ from .order_request import OrderRequestRepository
 from .order_transfer import OrderTransferRepository
 from .permission import PermissionRepository
 from .request import RequestRepository
+from .request_requisite import RequestRequisiteRepository
 from .requisite import RequisiteRepository
 from .requisite_data import RequisiteDataRepository
 from .role import RoleRepository

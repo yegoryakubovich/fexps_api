@@ -70,7 +70,7 @@ class TransferSystemService(BaseService):
         if from_banned_value:
             await WalletBanService().create_related(
                 wallet=request.wallet,
-                value=-request.commission_value,
+                value=request.commission_value,
                 reason=WalletBanReasons.BY_ORDER,
                 ignore_bal=True,
             )
