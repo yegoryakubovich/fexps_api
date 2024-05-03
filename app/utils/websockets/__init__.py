@@ -15,4 +15,5 @@
 #
 
 
+from .aiohttp import ConnectionManagerAiohttp
 from .fastapi import connections_manager_fastapi

@@ -14,6 +14,9 @@
 # limitations under the License.
 #
 
+
+import logging
+
 from addict import Dict
 from gspread import Spreadsheet
 
@@ -33,6 +36,7 @@ DEFAULT_LANGUAGE = 'eng'
 
 
 async def sync_texts(table: Spreadsheet):
+    logging.info(f'start update texts')
     is_changed = False
 
     languages = [language.id_str for language in await fexps_api_client.client.languages.get_list()]
@@ -111,7 +115,7 @@ async def sync_texts(table: Spreadsheet):
 
         # Translations block
         current_translations = text_api.translations if text_api else {}
-        new_translations = text_table.copy();
+        new_translations = text_table.copy()
         new_translations.pop('key')
         match_translations = list(set(current_translations.keys()) & set(new_translations.keys()))
         need_create_translations = [key for key in new_translations.keys() if key not in match_translations]
@@ -153,3 +157,4 @@ async def sync_texts(table: Spreadsheet):
 
     if is_changed:
         await fexps_api_client.admin.texts.packs.create_all()
+    logging.info(f'end update texts')

@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
-    OrderCanceledReasons
+    OrderCanceledReasons, MessageRoles
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
@@ -80,7 +80,10 @@ class OrderRequestService(BaseService):
                     state=OrderRequestStates.WAIT,
                     data=data,
                 )
-                await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
+                await connections_manager_aiohttp.send(
+                    role=MessageRoles.SYSTEM,
+                    text=f'order_request_create_{type_}',
+                )
                 await order_request_update_type_cancel(
                     order_request=order_request,
                     state=OrderRequestStates.COMPLETED,
@@ -96,7 +99,10 @@ class OrderRequestService(BaseService):
                     state=OrderRequestStates.WAIT,
                     data=data,
                 )
-                await connections_manager_aiohttp.send(text=f'Create OrderRequest to {type_}')
+                await connections_manager_aiohttp.send(
+                    role=MessageRoles.SYSTEM,
+                    text=f'order_request_create_{type_}',
+                )
                 await order_request_update_type_cancel(
                     order_request=order_request,
                     state=OrderRequestStates.COMPLETED,
@@ -119,7 +125,10 @@ class OrderRequestService(BaseService):
                 state=OrderRequestStates.WAIT,
                 data=data,
             )
-            await connections_manager_aiohttp.send(text=f'Create OrderReques to {type_}')
+            await connections_manager_aiohttp.send(
+                role=MessageRoles.SYSTEM,
+                text=f'order_request_create_{type_}',
+            )
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,

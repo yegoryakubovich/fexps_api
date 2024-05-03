@@ -15,7 +15,8 @@
 #
 
 
-from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates
+from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
+    MessageRoles
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -206,15 +207,18 @@ class OrderService(BaseService):
             field_value = input_fields.get(field_key)
             if not field_value:
                 continue
-            text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
             if field_scheme['type'] == MethodFieldTypes.IMAGE:
                 await connections_manager_aiohttp.send(
-                    text=text.value_default,
+                    role=MessageRoles.SYSTEM,
+                    text=field_scheme['name_text_key'],
                     files=field_value,
                 )
                 input_fields[field_key] = 'added'
             else:
-                await connections_manager_aiohttp.send(text=f'{text.value_default}: {field_value}')
+                await connections_manager_aiohttp.send(
+                    role=MessageRoles.SYSTEM,
+                    text=field_scheme['name_text_key'],
+                )
         await OrderRepository().update(order, input_fields=input_fields)
         await self.create_action(
             model=order,

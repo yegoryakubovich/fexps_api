@@ -23,6 +23,7 @@ from ..utils import google_sheets_api_client, fexps_api_client
 
 
 async def sync():
+    logging.info(f'Start sync')
     async def create_permission(obj):
         await fexps_api_client.admin.permissions.create(
             id_str=obj.get('id_str'),
@@ -123,4 +124,6 @@ async def sync():
     )
 
     # Texts
-    await sync_texts(table=table)
+    await sync_texts(
+        table=table,
+    )

@@ -17,7 +17,7 @@
 
 import math
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates
+from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
@@ -60,7 +60,10 @@ async def order_request_update_type_cancel(
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(text=f'OrderRequest Cancel finished in {state} ({canceled_reason})')
+    await connections_manager_aiohttp.send(
+        role=MessageRoles.SYSTEM,
+        text=f'order_request_finished_{state}_{canceled_reason}',
+    )
 
 
 async def order_request_update_type_recreate(
@@ -81,7 +84,10 @@ async def order_request_update_type_recreate(
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(text=f'OrderRequest Recreate finished in {state} ({canceled_reason})')
+    await connections_manager_aiohttp.send(
+        role=MessageRoles.SYSTEM,
+        text=f'order_request_finished_{state}_{canceled_reason}',
+    )
 
 
 async def order_request_update_type_update_value(
@@ -123,4 +129,7 @@ async def order_request_update_type_update_value(
         await RequestRepository().update(order_request.order.request, rate_confirmed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(text=f'OrderRequest Update value finished in {state}')
+    await connections_manager_aiohttp.send(
+        role=MessageRoles.SYSTEM,
+        text=f'order_request_finished_{state}',
+    )
