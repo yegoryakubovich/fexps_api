@@ -79,11 +79,11 @@ async def run():
         await TransferSystemService().payment_commission(request=request, from_banned_value=True)
         next_state = RequestStates.OUTPUT_RESERVATION
         if request.type == RequestTypes.INPUT:
-            # await WalletBanService().create_related(
-            #     wallet=request.wallet,
-            #     value=-(request.input_value + request.commission_value),
-            #     reason=WalletBanReasons.BY_ORDER,
-            # )
+            await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-(request.input_value - request.commission_value),
+                reason=WalletBanReasons.BY_ORDER,
+            )
             next_state = RequestStates.COMPLETED
         send_log(text=f'{request.state}->{next_state}', request=request)
         await RequestRepository().update(request, state=next_state)
