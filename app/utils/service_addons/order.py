@@ -116,7 +116,7 @@ async def order_edit_value_related(
     if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
         await WalletBanService().create_related(
             wallet=order.request.wallet,
-            value=delta_value,
+            value=-delta_value,
             reason=WalletBanReasons.BY_ORDER,
         )
     await RequisiteRepository().update(
