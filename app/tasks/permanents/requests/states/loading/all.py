@@ -33,7 +33,7 @@ from app.utils.calculations.schemes.loading import AllRequisiteTypeScheme
 
 def send_log(
         text: str,
-        prefix: str = 'request_state_loading_check',
+        prefix: str = 'request_state_loading_all_check',
         func: callable = logging.info,
         request: Request = None,
         order: Order = None,

@@ -11,7 +11,7 @@ from app.utils.calculations.simples import get_div_by_value, get_div_by_currency
 
 def send_log(
         text: str,
-        prefix: str = 'request_state_loading_check',
+        prefix: str = 'request_state_loading_output_check',
         func: callable = logging.info,
         request: Request = None,
         order: Order = None,

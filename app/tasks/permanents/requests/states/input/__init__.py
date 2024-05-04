@@ -27,7 +27,7 @@ from app.utils.calculations.request.need_value import input_get_need_currency_va
 
 def send_log(
         text: str,
-        prefix: str = 'request_state_loading_check',
+        prefix: str = 'request_state_input_check',
         func: callable = logging.info,
         request: Request = None,
         order: Order = None,

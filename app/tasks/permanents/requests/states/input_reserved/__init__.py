@@ -32,7 +32,7 @@ from app.utils.service_addons.order import waited_order
 
 def send_log(
         text: str,
-        prefix: str = 'request_state_loading_check',
+        prefix: str = 'request_state_input_reserved_check',
         func: callable = logging.info,
         request: Request = None,
         order: Order = None,
