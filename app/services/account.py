@@ -230,7 +230,7 @@ class AccountService(BaseService):
 
     @staticmethod
     async def _is_valid_password(password: str):
-        if len(password) < 6:
+        if len(password) <= 6:
             return False
         return True
 

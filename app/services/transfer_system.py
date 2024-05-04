@@ -79,6 +79,7 @@ class TransferSystemService(BaseService):
             wallet_id=request.wallet_id,
             value=request.commission_value,
             reason=TransferSystemReasons.COMMISSION,
+            ignore_bal=True,
         )
 
     async def payment_difference(
