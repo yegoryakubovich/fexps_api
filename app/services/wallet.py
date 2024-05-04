@@ -77,6 +77,10 @@ class WalletService(BaseService):
     ):
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=id_)
+        if not wallet.commission_pack:
+            commission_pack = await CommissionPackRepository().get(is_default=True)
+            if commission_pack:
+                await WalletRepository().update(wallet, commission_pack=commission_pack)
         await wallet_check_permission(
             account=account,
             wallets=[wallet],
