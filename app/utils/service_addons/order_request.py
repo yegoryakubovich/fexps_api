@@ -18,7 +18,7 @@
 import math
 
 from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
-    RequestRequisiteTypes
+    RequestRequisiteTypes, RequestTypes
 from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
@@ -119,12 +119,20 @@ async def order_request_update_type_update_value(
                 input_value=request.input_value - delta_value,
             )
         elif order.type == OrderTypes.OUTPUT:
-            await RequestRepository().update(
-                request,
+            params = dict(
                 output_currency_value_raw=request.output_currency_value_raw - delta_currency_value,
                 output_currency_value=request.output_currency_value - delta_currency_value,
                 output_value_raw=request.output_value_raw - delta_value,
                 output_value=request.output_value - delta_value,
+            )
+            if order.request.type == RequestTypes.ALL:
+                params.update(
+                    input_value_raw=request.input_value_raw - delta_value,
+                    input_value=request.input_value - delta_value,
+                )
+            await RequestRepository().update(
+                request,
+                **params,
             )
         await order_edit_value_related(
             order=order,
