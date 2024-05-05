@@ -39,7 +39,7 @@ async def request_type_output(
         request=request,
     )
     if request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-        need_currency_value = await output_get_need_currency_value(request=request)
+        need_currency_value = await output_get_need_currency_value(request=request, from_value=request.first_line_value)
         send_log(
             text=f'OUTPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}',
             request=request,
@@ -50,7 +50,7 @@ async def request_type_output(
             need_currency_value=need_currency_value,
         )
     elif request.first_line == RequestFirstLine.OUTPUT_VALUE:
-        need_value = await output_get_need_value(request=request)
+        need_value = await output_get_need_value(request=request, from_value=request.first_line_value)
         send_log(
             text=f'OUTPUT_VALUE, need_value={need_value}',
             request=request,

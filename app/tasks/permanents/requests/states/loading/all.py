@@ -57,7 +57,10 @@ async def request_type_all(
 ) -> Optional[AllRequisiteTypeScheme]:
     send_log(text='start check', request=request)
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-        need_input_currency_value = await input_get_need_currency_value(request=request)
+        need_input_currency_value = await input_get_need_currency_value(
+            request=request,
+            from_value=request.first_line_value,
+        )
         send_log(text=f'input currency value, need_input_currency_value={need_input_currency_value}', request=request)
         input_result = await request_type_input_currency_value(
             request=request,
@@ -104,7 +107,10 @@ async def request_type_all(
             commission_value=commission_value
         )
     elif request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-        need_output_currency_value = await output_get_need_currency_value(request=request)
+        need_output_currency_value = await output_get_need_currency_value(
+            request=request,
+            from_value=request.first_line_value,
+        )
         send_log(
             text=f'output currency value, need_output_currency_value={need_output_currency_value}',
             request=request,

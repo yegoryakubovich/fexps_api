@@ -132,7 +132,7 @@ async def get_new_requisite_by_currency_value(
             requisite=requisite,
             currency_value=suitable_currency_value,
             value=suitable_value,
-            rate=requisite.rate,
+            rate=requisite_rate,
             order_type=OrderTypes.INPUT,
         )
         need_currency_value = round(need_currency_value - suitable_currency_value)

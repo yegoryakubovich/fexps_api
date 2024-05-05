@@ -13,15 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
 
 from app.db.models import Request, OrderStates, OrderTypes
 from app.repositories.order import OrderRepository
 
 
 # INPUT
-async def input_get_need_currency_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value is not None else request.first_line_value
+async def input_get_need_currency_value(request: Request, from_value: int) -> int:
+    result = from_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -29,8 +29,8 @@ async def input_get_need_currency_value(request: Request, from_value: int = None
     return result
 
 
-async def input_get_need_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value is not None else request.first_line_value
+async def input_get_need_value(request: Request, from_value: int) -> int:
+    result = from_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -39,8 +39,8 @@ async def input_get_need_value(request: Request, from_value: int = None) -> int:
 
 
 # OUTPUT
-async def output_get_need_currency_value(request: Request, from_value: int = None) -> int:
-    result = from_value if from_value is not None else request.first_line_value
+async def output_get_need_currency_value(request: Request, from_value: int) -> int:
+    result = from_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
             continue
@@ -48,10 +48,8 @@ async def output_get_need_currency_value(request: Request, from_value: int = Non
     return result
 
 
-async def output_get_need_value(request: Request, from_value: int = None) -> int:
-    logging.critical(from_value)
-    result = from_value if from_value is not None else request.first_line_value
-    logging.critical(result)
+async def output_get_need_value(request: Request, from_value: int) -> int:
+    result = from_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
             continue
