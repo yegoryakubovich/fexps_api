@@ -26,7 +26,7 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
     OrderRequestAlreadyExists, OrderRequestMaxValueError
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
-    order_request_update_type_update_value
+    order_request_update_type_update_value, order_request_update_type_recreate
 from app.utils.service_addons.wallet import wallet_check_permission
 from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
@@ -103,7 +103,7 @@ class OrderRequestService(BaseService):
                     role=MessageRoles.SYSTEM,
                     text=f'order_request_create_{type_}',
                 )
-                await order_request_update_type_cancel(
+                await order_request_update_type_recreate(
                     order_request=order_request,
                     state=OrderRequestStates.COMPLETED,
                     canceled_reason=OrderCanceledReasons.ONE_SIDED,
@@ -226,6 +226,13 @@ class OrderRequestService(BaseService):
         connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         if order_request.type == OrderRequestTypes.CANCEL:
             await order_request_update_type_cancel(
+                order_request=order_request,
+                state=state,
+                canceled_reason=OrderCanceledReasons.TWO_SIDED,
+                connections_manager_aiohttp=connections_manager_aiohttp,
+            )
+        elif order_request.type == OrderRequestTypes.RECREATE:
+            await order_request_update_type_recreate(
                 order_request=order_request,
                 state=state,
                 canceled_reason=OrderCanceledReasons.TWO_SIDED,

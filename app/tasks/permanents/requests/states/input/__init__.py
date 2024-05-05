@@ -76,21 +76,13 @@ async def run():
                 break
         if continue_:
             continue
-        logging.critical(f'payment_commission 1. value = {request.wallet.value} value_ban = {request.wallet.value_ban}')
         await TransferSystemService().payment_commission(request=request, from_banned_value=True)
-        logging.critical(f'payment_commission 2. value = {request.wallet.value} value_ban = {request.wallet.value_ban}')
         next_state = RequestStates.OUTPUT_RESERVATION
         if request.type == RequestTypes.INPUT:
-            logging.critical(
-                f'WalletBan create_related 2. value = {request.wallet.value} value_ban = {request.wallet.value_ban}'
-            )
             await WalletBanService().create_related(
                 wallet=request.wallet,
                 value=-(request.input_value - request.commission_value),
                 reason=WalletBanReasons.BY_ORDER,
-            )
-            logging.critical(
-                f'WalletBan create_related 2. value = {request.wallet.value} value_ban = {request.wallet.value_ban}'
             )
             next_state = RequestStates.COMPLETED
         send_log(text=f'{request.state}->{next_state}', request=request)

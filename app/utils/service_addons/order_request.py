@@ -53,6 +53,30 @@ async def order_request_update_type_cancel(
                 output_value=request.output_value - order.value,
             )
         await order_cancel_related(order=order)
+        await OrderRepository().update(
+            order,
+            state=OrderStates.CANCELED,
+            canceled_reason=canceled_reason,
+        )
+        await OrderRequestRepository().update(order_request, state=state)
+        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
+    elif state == OrderRequestStates.CANCELED:
+        await OrderRequestRepository().update(order_request, state=state)
+    await connections_manager_aiohttp.send(
+        role=MessageRoles.SYSTEM,
+        text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+    )
+
+
+async def order_request_update_type_recreate(
+        order_request: OrderRequest,
+        state: str,
+        canceled_reason: str,
+        connections_manager_aiohttp: ConnectionManagerAiohttp,
+):
+    order: Order = order_request.order
+    if state == OrderRequestStates.COMPLETED:
+        await order_cancel_related(order=order)
         await RequestRequisiteRepository().create(
             request=order.request,
             requisite=order.requisite,
@@ -69,31 +93,7 @@ async def order_request_update_type_cancel(
         await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
-        text=f'order_request_finished_{state}_{canceled_reason}',
-    )
-
-
-async def order_request_update_type_recreate(
-        order_request: OrderRequest,
-        state: str,
-        canceled_reason: str,
-        connections_manager_aiohttp: ConnectionManagerAiohttp,
-):
-    order: Order = order_request.order
-    if state == OrderRequestStates.COMPLETED:
-        await order_cancel_related(order=order)
-        await OrderRepository().update(
-            order,
-            state=OrderStates.CANCELED,
-            canceled_reason=canceled_reason,
-        )
-        await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
-    elif state == OrderRequestStates.CANCELED:
-        await OrderRequestRepository().update(order_request, state=state)
-    await connections_manager_aiohttp.send(
-        role=MessageRoles.SYSTEM,
-        text=f'order_request_finished_{state}_{canceled_reason}',
+        text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
     )
 
 
@@ -106,7 +106,7 @@ async def order_request_update_type_update_value(
     request: Request = order.request
     if state == OrderRequestStates.COMPLETED:
         currency_value = int(order_request.data['currency_value'])
-        value = float(currency_value / order.rate * 10 ** order.request.rate_decimal)
+        value = round(currency_value / order.rate * 10 ** order.request.rate_decimal)
         delta_currency_value = order.currency_value - currency_value
         value_method = math.floor if order.type == OrderTypes.INPUT else math.ceil
         delta_value = value_method(delta_currency_value / order.rate * 10 ** order.request.rate_decimal)
@@ -126,7 +126,11 @@ async def order_request_update_type_update_value(
                 output_value_raw=request.output_value_raw - delta_value,
                 output_value=request.output_value - delta_value,
             )
-        await order_edit_value_related(order=order, delta_value=delta_value, delta_currency_value=delta_currency_value)
+        await order_edit_value_related(
+            order=order,
+            delta_value=delta_value,
+            delta_currency_value=delta_currency_value,
+        )
         await OrderRepository().update(
             order,
             value=value,
@@ -138,5 +142,5 @@ async def order_request_update_type_update_value(
         await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
-        text=f'order_request_finished_{state}',
+        text=f'order_request_finished_{order_request.type}_{state}',
     )
