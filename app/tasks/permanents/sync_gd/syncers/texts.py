@@ -15,6 +15,7 @@
 #
 
 
+import asyncio
 import logging
 
 from addict import Dict
@@ -158,3 +159,4 @@ async def sync_texts(table: Spreadsheet):
     if is_changed:
         await fexps_api_client.admin.texts.packs.create_all()
     logging.info(f'end update texts')
+    await asyncio.sleep(0.5)

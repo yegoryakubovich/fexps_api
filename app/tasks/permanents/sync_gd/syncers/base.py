@@ -15,6 +15,7 @@
 #
 
 
+import asyncio
 import logging
 
 from gspread import Spreadsheet
@@ -58,3 +59,4 @@ async def sync_base(
                 break
             await api_method_create(obj=obj)
     logging.info(f'end update {sheet_name}')
+    await asyncio.sleep(0.5)
