@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import logging
 
 from fastapi import WebSocket
 
@@ -30,9 +30,12 @@ class ConnectionManagerFastApi:
         self.active_connections.remove((order_id, websocket))
 
     async def send(self, order_id: int, data):
+        logging.critical(self.active_connections)
         for connection in self.active_connections:
             if connection[0] != order_id:
+                logging.critical(f'NOT {connection}')
                 continue
+            logging.critical(f'YES {connection}')
             await connection[1].send_json(data=data)
 
 
