@@ -297,7 +297,7 @@ class RequisiteService(BaseService):
             self,
             session: Session,
             id_: int,
-            total_value: int,
+            total_currency_value: int,
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
@@ -305,6 +305,7 @@ class RequisiteService(BaseService):
             account=account,
             wallets=[requisite.wallet],
         )
+        total_value = round(total_currency_value / requisite.rate * 10 ** requisite.currency.rate_decimal)
         access_change_balance = requisite.total_value - requisite.value
         if total_value < access_change_balance:
             raise RequisiteMinimumValueError(

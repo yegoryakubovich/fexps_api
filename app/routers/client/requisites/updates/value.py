@@ -22,6 +22,7 @@ from app.services import RequisiteService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ValueMustBePositive
 
+
 router = Router(
     prefix='/value',
 )
@@ -30,9 +31,9 @@ router = Router(
 class RequisiteUpdateValueSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    value: int = Field()
+    currency_value: int = Field()
 
-    @field_validator('value')
+    @field_validator('currency_value')
     @classmethod
     def requisite_check_values(cls, value: int, info: ValidationInfo):
         if value is None:
@@ -47,6 +48,6 @@ async def route(schema: RequisiteUpdateValueSchema):
     result = await RequisiteService().update_value(
         token=schema.token,
         id_=schema.id_,
-        total_value=schema.value,
+        total_currency_value=schema.currency_value,
     )
     return Response(**result)
