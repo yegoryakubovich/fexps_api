@@ -147,6 +147,61 @@ class OrderService(BaseService):
             ]
         }
 
+    @session_required()
+    async def update_payment(
+            self,
+            session: Session,
+            token: str,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        need_state = OrderStates.CONFIRMATION
+        next_state = OrderStates.PAYMENT
+        order = await OrderRepository().get_by_id(id_=id_)
+        if order.type == OrderTypes.INPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.requisite.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await wallet_check_permission(
+                account=account,
+                wallets=[order.request.wallet],
+                exception=OrderStateNotPermission(
+                    kwargs={
+                        'id_value': order.id,
+                        'action': f'Update state to {next_state}',
+                    }
+                )
+            )
+        if order.state != need_state:
+            raise OrderStateWrong(
+                kwargs={
+                    'id_value': order.id,
+                    'state': order.state,
+                    'need_state': need_state,
+                },
+            )
+        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        await OrderRequestService().check_have_order_request(order=order)
+        await OrderRepository().update(order, state=next_state)
+        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        await self.create_action(
+            model=order,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'state': next_state,
+            },
+        )
+        return {}
+
     @session_required(return_token=True)
     async def update_confirmation(
             self,
@@ -221,6 +276,7 @@ class OrderService(BaseService):
                     text=f'{text.value_default}: {field_value}',
                 )
         await OrderRepository().update(order, input_fields=input_fields)
+        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -232,10 +288,11 @@ class OrderService(BaseService):
         )
         return {}
 
-    @session_required()
+    @session_required(return_token=True)
     async def update_completed(
             self,
             session: Session,
+            token: str,
             id_: int,
     ) -> dict:
         account = session.account
@@ -272,61 +329,11 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
+        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
         await order_compete_related(order=order)
         await OrderRepository().update(order, state=next_state)
-        await self.create_action(
-            model=order,
-            action=Actions.UPDATE,
-            parameters={
-                'updater': f'session_{session.id}',
-                'state': next_state,
-            },
-        )
-        return {}
-
-    @session_required()
-    async def update_payment(
-            self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        account = session.account
-        need_state = OrderStates.CONFIRMATION
-        next_state = OrderStates.PAYMENT
-        order = await OrderRepository().get_by_id(id_=id_)
-        if order.type == OrderTypes.INPUT:
-            await wallet_check_permission(
-                account=account,
-                wallets=[order.requisite.wallet],
-                exception=OrderStateNotPermission(
-                    kwargs={
-                        'id_value': order.id,
-                        'action': f'Update state to {next_state}',
-                    }
-                )
-            )
-        elif order.type == OrderTypes.OUTPUT:
-            await wallet_check_permission(
-                account=account,
-                wallets=[order.request.wallet],
-                exception=OrderStateNotPermission(
-                    kwargs={
-                        'id_value': order.id,
-                        'action': f'Update state to {next_state}',
-                    }
-                )
-            )
-        if order.state != need_state:
-            raise OrderStateWrong(
-                kwargs={
-                    'id_value': order.id,
-                    'state': order.state,
-                    'need_state': need_state,
-                },
-            )
-        await OrderRequestService().check_have_order_request(order=order)
-        await OrderRepository().update(order, state=next_state)
+        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
