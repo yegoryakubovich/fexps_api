@@ -111,17 +111,21 @@ async def request_type_output_currency_value(
             rate_decimal=rate_decimal,
             order_type=OrderTypes.OUTPUT,
         )
-        requisites_scheme_list.append(RequisiteScheme(  # Add to list
-            requisite_id=requisite.id,
-            currency_value=suitable_currency_value,
-            value=suitable_value,
-            rate=requisite_rate,
-        ))
+        # Add to list
+        requisites_scheme_list += [
+            RequisiteScheme(
+                requisite_id=requisite.id,
+                currency_value=suitable_currency_value,
+                value=suitable_value,
+                rate=requisite_rate,
+            ),
+        ]
         # Write summary
         sum_currency_value = round(sum_currency_value + suitable_currency_value)
         sum_value = round(sum_value + suitable_value)
         # Edit need_value
         need_currency_value = round(need_currency_value - suitable_currency_value)
+    send_log(f'requisites_scheme_list={requisites_scheme_list}', request=request)
     if not requisites_scheme_list:
         return
     if need_currency_value >= currency.div:  # Check complement
@@ -188,18 +192,21 @@ async def request_type_output_value(
         )
         if 0 in [suitable_currency_value, suitable_value]:
             continue
-        requisites_scheme_list.append(RequisiteScheme(  # Add to list
-            requisite_id=requisite.id,
-            currency_value=suitable_currency_value,
-            value=suitable_value,
-            rate=requisite_rate,
-        ))
+        requisites_scheme_list += [  # Add to list
+            RequisiteScheme(
+                requisite_id=requisite.id,
+                currency_value=suitable_currency_value,
+                value=suitable_value,
+                rate=requisite_rate,
+            )
+        ]
         # Write summary and rate
         sum_currency_value = round(sum_currency_value + suitable_currency_value)
         sum_value = round(sum_value + suitable_value)
         rates_list.append(requisite_rate)
         # Edit need_value
         need_value = round(need_value - suitable_value)
+    send_log(f'requisites_scheme_list={requisites_scheme_list}', request=request)
     if not requisites_scheme_list:
         return
     mean_rate = round(sum(rates_list) / len(rates_list))

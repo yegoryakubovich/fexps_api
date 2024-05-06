@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     test: bool
     test_file_url: str
     test_chat_url: str
+    test_sync_db_url: str
 
     version: str = '0.1'
     path_texts_packs: str = 'assets/texts_packs'
@@ -75,6 +76,11 @@ class Settings(BaseSettings):
         if self.test:
             return self.test_chat_url
         return self.chat_url
+
+    def get_sync_db_url(self):
+        if self.test:
+            return self.test_sync_db_url
+        return self.sync_db_url
 
 
 settings = Settings()

@@ -23,6 +23,6 @@ TOKEN = f'0:{settings.root_token}'
 logging.critical(TOKEN)
 
 fexps_api_client = FexpsApiClient(
-    url=settings.sync_db_url,
+    url=settings.get_sync_db_url(),
     token=TOKEN,
 )
