@@ -28,4 +28,5 @@
 /fexps_api_client
 
 .env
-test.py
+/test.py
+google_creds.json

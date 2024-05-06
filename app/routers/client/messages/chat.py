@@ -16,7 +16,6 @@
 
 
 import io
-import logging
 
 from fastapi import WebSocket, WebSocketDisconnect, UploadFile
 
@@ -36,7 +35,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
     try:
         while True:
             data = await websocket.receive_json()
-            logging.critical(data)
             message = await MessageService().chat(
                 token=token,
                 order_id=order_id,
@@ -51,7 +49,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                     for file_dict in data["files"]
                 ],
             )
-            logging.critical(message)
             await connections_manager_fastapi.send(data=message, order_id=order_id)
     except WebSocketDisconnect:
         connections_manager_fastapi.disconnect(websocket, order_id=order_id)
