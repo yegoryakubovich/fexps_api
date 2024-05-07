@@ -31,3 +31,8 @@ class RequisiteActiveOrdersExistsError(ApiException):
 class RequisiteStateWrong(ApiException):
     code = 7002
     message = 'Requisite.{id_value} has state "{state}", but should have state "{need_state}"'
+
+
+class RequisiteNotEnough(ApiException):
+    code = 7003
+    message = 'Requisite.{id_value} insufficient funds, max value = {value}'

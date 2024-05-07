@@ -19,7 +19,6 @@ from .account import WrongPassword, InvalidUsername, AccountWithUsernameDoesNotE
     AccountContactsAlreadyExists, InvalidPassword
 from .base import ApiException
 from .commission_pack import CommissionIntervalAlreadyTaken, CommissionIntervalValidationError, IntervalNotExistsError
-from .image import InvalidFileType, TooLargeFile
 from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters, ParameterContainError, \
     ParameterOneContainError, ParameterTwoContainError, ParametersAllContainError, ValueMustBePositive, WrongToken, \
     WrongTokenFormat, MethodNotSupportedRoot, ModelAlreadyExist
@@ -28,7 +27,8 @@ from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodPar
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
     OrderNotPermission, OrderRequestStateNotPermission, OrderRequestMaxValueError
 from .request import RequestStateWrong, RequestStateNotPermission
-from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong
+from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong, \
+    RequisiteNotEnough
 from .role import RoleAlreadyExist
 from .text import TextDoesNotExist, TextAlreadyExist, TextPackDoesNotExist, TextTranslationDoesNotExist, \
     TextTranslationAlreadyExist

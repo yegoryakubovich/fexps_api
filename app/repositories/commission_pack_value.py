@@ -19,6 +19,7 @@ from operator import and_
 
 from app.db.models import CommissionPackValue, CommissionPack
 from app.repositories.base import BaseRepository
+from app.utils.exceptions import IntervalNotExistsError
 
 
 class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
@@ -30,4 +31,10 @@ class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
         if not result:
             custom_where = and_(self.model.value_from <= value, self.model.value_to == 0)
             result = await self.get(custom_where=custom_where, commission_pack=commission_pack)
+        if not result:
+            raise IntervalNotExistsError(
+                kwargs={
+                    'value': value,
+                },
+            )
         return result

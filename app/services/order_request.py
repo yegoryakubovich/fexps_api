@@ -24,7 +24,7 @@ from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
-    OrderRequestAlreadyExists, OrderRequestMaxValueError
+    OrderRequestAlreadyExists
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value, order_request_update_type_recreate
 from app.utils.service_addons.wallet import wallet_check_permission
@@ -110,12 +110,6 @@ class OrderRequestService(BaseService):
                     connections_manager_aiohttp=connections_manager_aiohttp,
                 )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
-            if value >= order.currency_value:
-                raise OrderRequestMaxValueError(
-                    kwargs={
-                        'max_value': order.currency_value,
-                    },
-                )
             data['currency_value'] = value
         if not order_request:
             order_request = await OrderRequestRepository().create(

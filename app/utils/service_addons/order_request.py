@@ -18,12 +18,15 @@
 import math
 
 from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
-    RequestRequisiteTypes, RequestTypes
-from app.repositories import RequestRequisiteRepository
+    RequestRequisiteTypes, RequestTypes, Requisite
+from app.repositories import RequestRequisiteRepository, CommissionPackValueRepository
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
+from app.utils.calculations.request.commissions import get_commission_value_input
+from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
+from app.utils.value import value_to_float
 from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
 
 
@@ -104,22 +107,48 @@ async def order_request_update_type_update_value(
 ):
     order: Order = order_request.order
     request: Request = order.request
+    requisite: Requisite = order.requisite
     if state == OrderRequestStates.COMPLETED:
         currency_value = int(order_request.data['currency_value'])
         value = round(currency_value / order.rate * 10 ** order.request.rate_decimal)
         delta_currency_value = order.currency_value - currency_value
-        value_method = math.floor if order.type == OrderTypes.INPUT else math.ceil
-        delta_value = value_method(delta_currency_value / order.rate * 10 ** order.request.rate_decimal)
+        delta_value = 0
         if order.type == OrderTypes.INPUT:
-            await RequestRepository().update(
-                request,
+            delta_value = math.floor(delta_currency_value / order.rate * 10 ** order.request.rate_decimal)
+        elif order.type == OrderTypes.OUTPUT:
+            delta_value = math.ceil(delta_currency_value / order.rate * 10 ** order.request.rate_decimal)
+        if requisite.currency_value < delta_currency_value:
+            raise RequisiteNotEnough(
+                kwargs={
+                    'id_value': requisite.id,
+                    'value': value_to_float(value=requisite.currency_value, decimal=requisite.currency.decimal),
+                },
+            )
+        params = {}
+        if order.type == OrderTypes.INPUT:
+            commission_pack_value = await CommissionPackValueRepository().get_by_value(
+                commission_pack=request.wallet.commission_pack,
+                value=value,
+            )
+            if delta_value > 0:
+                delta_commission = get_commission_value_input(
+                    value=delta_value,
+                    commission_pack_value=commission_pack_value,
+                )
+            else:
+                delta_commission = -get_commission_value_input(
+                    value=delta_value * -1,
+                    commission_pack_value=commission_pack_value,
+                )
+            params.update(
                 input_currency_value_raw=request.input_currency_value_raw - delta_currency_value,
                 input_currency_value=request.input_currency_value - delta_currency_value,
                 input_value_raw=request.input_value_raw - delta_value,
-                input_value=request.input_value - delta_value,
+                input_value=request.input_value - delta_value + delta_commission,
+                commission_value=request.commission_value - delta_commission,
             )
         elif order.type == OrderTypes.OUTPUT:
-            params = dict(
+            params.update(
                 output_currency_value_raw=request.output_currency_value_raw - delta_currency_value,
                 output_currency_value=request.output_currency_value - delta_currency_value,
                 output_value_raw=request.output_value_raw - delta_value,
@@ -130,10 +159,10 @@ async def order_request_update_type_update_value(
                     input_value_raw=request.input_value_raw - delta_value,
                     input_value=request.input_value - delta_value,
                 )
-            await RequestRepository().update(
-                request,
-                **params,
-            )
+        await RequestRepository().update(
+            request,
+            **params,
+        )
         await order_edit_value_related(
             order=order,
             delta_value=delta_value,
