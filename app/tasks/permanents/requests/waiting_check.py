@@ -21,7 +21,7 @@ import datetime
 from app.db.models import RequestStates, Actions, Request, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
-from app.services import ActionService
+from app.services import ActionService, RequestService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.service_addons.order import order_cancel_related
 from config import settings
@@ -38,19 +38,10 @@ async def run():
         request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.UTC)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_waiting_check):
             custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
-            await orders_update_state_to_canceled(request=request)
+            await RequestService().cancel_related(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
         await asyncio.sleep(1)
     await asyncio.sleep(5)
-
-
-async def orders_update_state_to_canceled(request: Request) -> None:
-    for order in await OrderRepository().get_list(request=request):
-        if order.state == OrderStates.CANCELED:
-            continue
-        custom_logger.info(text=f'{order.state}->{OrderStates.CANCELED}', order=order)
-        await order_cancel_related(order=order)
-        await OrderRepository().update(order, state=OrderStates.CANCELED)
 
 
 async def request_waiting_check():

@@ -18,8 +18,8 @@
 import datetime
 from math import ceil
 
-from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine
-from app.repositories import WalletAccountRepository
+from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine, OrderStates
+from app.repositories import WalletAccountRepository, OrderRepository
 from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -33,6 +33,7 @@ from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
+from app.utils.service_addons.order import order_cancel_related
 from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
@@ -162,12 +163,17 @@ class RequestService(BaseService):
             self,
             session: Session,
             id_: int,
+            answer: bool,
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        next_state = RequestStates.INPUT_RESERVATION
-        if request.type == RequestTypes.OUTPUT:
-            next_state = RequestStates.OUTPUT_RESERVATION
+        if answer:
+            next_state = RequestStates.INPUT_RESERVATION
+            if request.type == RequestTypes.OUTPUT:
+                next_state = RequestStates.OUTPUT_RESERVATION
+        else:
+            await self.cancel_related(request=request)
+            next_state = RequestStates.CANCELED
         await wallet_check_permission(
             account=account,
             wallets=[request.wallet],
@@ -192,6 +198,7 @@ class RequestService(BaseService):
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
+                'answer': answer,
                 'state': next_state,
             },
         )
@@ -226,6 +233,14 @@ class RequestService(BaseService):
             },
         )
         return {}
+
+    @staticmethod
+    async def cancel_related(request: Request) -> None:
+        for order in await OrderRepository().get_list(request=request):
+            if order.state == OrderStates.CANCELED:
+                continue
+            await order_cancel_related(order=order)
+            await OrderRepository().update(order, state=OrderStates.CANCELED)
 
     @staticmethod
     async def generate_request_dict(request: Request) -> dict:
