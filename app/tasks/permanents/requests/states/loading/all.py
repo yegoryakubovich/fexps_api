@@ -15,11 +15,11 @@
 #
 
 
-import logging
 from typing import Optional
 
-from app.db.models import Request, RequestFirstLine, Order
+from app.db.models import Request, RequestFirstLine
 from app.repositories.requisite import RequisiteRepository
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.tasks.permanents.requests.states.loading.input import request_type_input_currency_value, \
     request_type_input_value
 from app.tasks.permanents.requests.states.loading.output import request_type_output_value, \
@@ -30,38 +30,20 @@ from app.utils.calculations.request.need_value import input_get_need_currency_va
 from app.utils.calculations.request.rates import get_auto_rate
 from app.utils.calculations.schemes.loading import AllRequisiteTypeScheme
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_loading_all_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_loading_all_check')
 
 
 async def request_type_all(
         request: Request,
 ) -> Optional[AllRequisiteTypeScheme]:
-    send_log(text='start check', request=request)
+    custom_logger.info(text='start check', request=request)
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_input_currency_value = await input_get_need_currency_value(
             request=request,
             from_value=request.first_line_value,
         )
-        send_log(text=f'input currency value, need_input_currency_value={need_input_currency_value}', request=request)
+        custom_logger.info(text=f'input currency value, need_input_currency_value={need_input_currency_value}',
+                           request=request)
         input_result = await request_type_input_currency_value(
             request=request,
             currency=request.input_method.currency,
@@ -82,7 +64,7 @@ async def request_type_all(
         )
         _output_from_value = input_result.sum_value - commission_value
         need_output_value = await output_get_need_value(request=request, from_value=_output_from_value)
-        send_log(text=f'output value, need_output_value={need_output_value}', request=request)
+        custom_logger.info(text=f'output value, need_output_value={need_output_value}', request=request)
         output_result = await request_type_output_value(
             request=request,
             currency=request.output_method.currency,
@@ -111,7 +93,7 @@ async def request_type_all(
             request=request,
             from_value=request.first_line_value,
         )
-        send_log(
+        custom_logger.info(
             text=f'output currency value, need_output_currency_value={need_output_currency_value}',
             request=request,
         )
@@ -135,7 +117,7 @@ async def request_type_all(
         )
         _input_from_value = output_result.sum_value + commission_value
         need_input_value = await input_get_need_value(request=request, from_value=_input_from_value)
-        send_log(
+        custom_logger.info(
             text=f'input value, need_input_value={need_input_value}',
             request=request,
         )

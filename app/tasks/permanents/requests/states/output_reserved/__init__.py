@@ -16,41 +16,22 @@
 
 
 import asyncio
-import logging
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, RequisiteTypes, \
-    RequestTypes, RequisiteStates, Order
+    RequestTypes, RequisiteStates
 from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import TransferSystemService
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.difference import get_difference
 from app.utils.calculations.request.need_value import output_get_need_value
 from app.utils.calculations.simples import get_div_by_value
 from app.utils.service_addons.order import order_banned_value, waited_order
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_output_reserved_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_output_reserved_check')
 
 
 async def run():
@@ -74,13 +55,13 @@ async def run():
             )
             for wait_order in waiting_orders:
                 if request.type == RequestTypes.OUTPUT:
-                    send_log(text=f'banned value = {wait_order.value}', order=wait_order)
+                    custom_logger.info(text=f'banned value = {wait_order.value}', order=wait_order)
                     await order_banned_value(wallet=request.wallet, value=wait_order.value)
-                send_log(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
+                custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
                 await write_other(request=request)
-                send_log(text=f'{request.state}->{RequestStates.OUTPUT}', request=request)
+                custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
             continue
         # create missing orders
@@ -92,13 +73,13 @@ async def run():
         else:
             _from_value = request.output_value_raw
         need_value = await output_get_need_value(request=request, from_value=_from_value)
-        send_log(text=f'create missing orders need_value = {need_value}', request=request)
+        custom_logger.info(text=f'create missing orders need_value = {need_value}', request=request)
         await get_new_requisite_by_value(request=request, need_value=need_value)
         await write_other(request=request)
         difference_value = get_difference(request=request)
         if request.difference_confirmed != difference_value:
-            send_log(text=f'difference_value={difference_value}', request=request)
-            send_log(text=f'difference_confirmed={request.difference_confirmed}', request=request)
+            custom_logger.info(text=f'difference_value={difference_value}', request=request)
+            custom_logger.info(text=f'difference_confirmed={request.difference_confirmed}', request=request)
             await TransferSystemService().payment_difference(
                 request=request,
                 value=difference_value - request.difference_confirmed,
@@ -171,9 +152,9 @@ async def get_new_requisite_by_value(
 
 
 async def request_state_output_reserved_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

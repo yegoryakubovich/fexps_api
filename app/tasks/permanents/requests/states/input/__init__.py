@@ -16,34 +16,15 @@
 
 
 import asyncio
-import logging
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons, Request, Order
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import TransferSystemService, WalletBanService
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.calculations.request.need_value import input_get_need_currency_value
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_input_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_input_check')
 
 
 async def run():
@@ -55,23 +36,23 @@ async def run():
             _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
             # check / change states
             if _need_currency_value:
-                send_log(text=f'found _need_currency_value = {_need_currency_value}', request=request)
-                send_log(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
+                custom_logger.info(text=f'found _need_currency_value = {_need_currency_value}', request=request)
+                custom_logger.info(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
                 continue_ = True
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
-                send_log(text=f'found waiting orders', request=request)
-                send_log(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
+                custom_logger.info(text=f'found waiting orders', request=request)
+                custom_logger.info(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
                 continue_ = True  # Found waiting orders
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
-                send_log(text=f'found payment orders', request=request)
+                custom_logger.info(text=f'found payment orders', request=request)
                 continue_ = True  # Found payment orders
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
-                send_log(text=f'found confirmation orders', request=request)
+                custom_logger.info(text=f'found confirmation orders', request=request)
                 continue_ = True  # Found confirmation orders
                 break
         if continue_:
@@ -85,16 +66,16 @@ async def run():
                 reason=WalletBanReasons.BY_ORDER,
             )
             next_state = RequestStates.COMPLETED
-        send_log(text=f'{request.state}->{next_state}', request=request)
+        custom_logger.info(text=f'{request.state}->{next_state}', request=request)
         await RequestRepository().update(request, state=next_state)
         await asyncio.sleep(0.25)
     await asyncio.sleep(5)
 
 
 async def request_state_input_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

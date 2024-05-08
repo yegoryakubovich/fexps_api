@@ -16,12 +16,12 @@
 
 
 import asyncio
-import logging
 
-from app.db.models import RequestStates, RequestTypes, OrderTypes, Actions, Request, Order
+from app.db.models import RequestStates, RequestTypes, OrderTypes, Actions
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.base import BaseService
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.tasks.permanents.requests.states.loading.all import request_type_all
 from app.tasks.permanents.requests.states.loading.input import request_type_input
 from app.tasks.permanents.requests.states.loading.output import request_type_output
@@ -31,36 +31,17 @@ from app.utils.calculations.request.rates import get_auto_rate
 from app.utils.calculations.schemes.loading import RequisiteTypeScheme, AllRequisiteTypeScheme
 from app.utils.service_addons.order import waited_order_by_scheme
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_loading_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_loading_check')
 
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.LOADING):
         request = await RequestRepository().get_by_id(id_=request.id)
-        send_log(text='start check', request=request)
+        custom_logger.info(text='start check', request=request)
         if request.type == RequestTypes.ALL:  # ALL
             result: AllRequisiteTypeScheme = await request_type_all(request=request)
             if not result:
-                send_log(text='result not found', request=request)
+                custom_logger.info(text='result not found', request=request)
                 continue
             for input_requisite_scheme in result.input_requisite_type.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -83,7 +64,7 @@ async def run():
         elif request.type == RequestTypes.INPUT:  # INPUT
             result: RequisiteTypeScheme = await request_type_input(request=request)
             if not result:
-                send_log(text='result not found', request=request)
+                custom_logger.info(text='result not found', request=request)
                 continue
             for requisite_scheme in result.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -112,7 +93,7 @@ async def run():
         elif request.type == RequestTypes.OUTPUT:  # OUTPUT
             result: RequisiteTypeScheme = await request_type_output(request=request)
             if not result:
-                send_log(text='result not found', request=request)
+                custom_logger.info(text='result not found', request=request)
                 continue
             for requisite_scheme in result.requisites_scheme_list:
                 await waited_order_by_scheme(
@@ -134,7 +115,7 @@ async def run():
                 commission_value=0,
             )
         await write_other(request=request)
-        send_log(text=f'{request.state}->{RequestStates.WAITING}', request=request)
+        custom_logger.info(text=f'{request.state}->{RequestStates.WAITING}', request=request)
         await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
         await BaseService().create_action(
             model=request,
@@ -146,9 +127,9 @@ async def run():
 
 
 async def request_state_loading_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

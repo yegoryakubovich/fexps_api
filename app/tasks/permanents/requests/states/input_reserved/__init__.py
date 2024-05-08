@@ -16,39 +16,20 @@
 
 
 import asyncio
-import logging
 
 from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates, Request, \
-    RequisiteStates, Order, RequestRequisiteTypes
+    RequisiteStates
 from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.need_value import input_get_need_currency_value
 from app.utils.calculations.simples import get_div_by_currency_value
 from app.utils.service_addons.order import waited_order
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_input_reserved_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})',
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_input_reserved_check')
 
 
 async def run():
@@ -64,10 +45,10 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
-                send_log(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
+                custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
             if not waiting_orders:
-                send_log(text=f'{request.state}->{RequestStates.INPUT}', request=request)
+                custom_logger.info(text=f'{request.state}->{RequestStates.INPUT}', request=request)
                 await write_other(request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT)
             continue
@@ -139,9 +120,9 @@ async def get_new_requisite_by_currency_value(
 
 
 async def request_state_input_reserved_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

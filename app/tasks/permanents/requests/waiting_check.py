@@ -17,35 +17,16 @@
 
 import asyncio
 import datetime
-import logging
 
-from app.db.models import RequestStates, Actions, Request, OrderStates, Order
+from app.db.models import RequestStates, Actions, Request, OrderStates
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import ActionService
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.service_addons.order import order_cancel_related
 from config import settings
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_waiting_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_waiting_check')
 
 
 async def run():
@@ -56,7 +37,7 @@ async def run():
             continue
         request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.UTC)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_waiting_check):
-            send_log(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
+            custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
             await orders_update_state_to_canceled(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
         await asyncio.sleep(0.25)
@@ -67,15 +48,15 @@ async def orders_update_state_to_canceled(request: Request) -> None:
     for order in await OrderRepository().get_list(request=request):
         if order.state == OrderStates.CANCELED:
             continue
-        send_log(text=f'{order.state}->{OrderStates.CANCELED}', order=order)
+        custom_logger.info(text=f'{order.state}->{OrderStates.CANCELED}', order=order)
         await order_cancel_related(order=order)
         await OrderRepository().update(order, state=OrderStates.CANCELED)
 
 
 async def request_waiting_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

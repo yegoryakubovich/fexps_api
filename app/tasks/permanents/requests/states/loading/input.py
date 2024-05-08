@@ -1,46 +1,27 @@
-import logging
 from typing import List, Optional
 
-from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates, Order
+from app.db.models import OrderTypes, Request, Currency, RequisiteTypes, RequestFirstLine, RequisiteStates
 from app.repositories import RequestRequisiteRepository
 from app.repositories.requisite import RequisiteRepository
+from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.calculations.request.need_value import input_get_need_currency_value, input_get_need_value
 from app.utils.calculations.schemes.loading import RequisiteTypeScheme, RequisiteScheme
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
 
-
-def send_log(
-        text: str,
-        prefix: str = 'request_state_loading_input_check',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequestLogger(prefix='request_state_loading_input_check')
 
 
 async def request_type_input(
         request: Request,
 ) -> RequisiteTypeScheme:
     currency = request.input_method.currency
-    send_log(
+    custom_logger.info(
         text=f'first_line={request.first_line}, currency={currency.id_str}',
         request=request,
     )
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         need_currency_value = await input_get_need_currency_value(request=request, from_value=request.first_line_value)
-        send_log(
+        custom_logger.info(
             text=f'INPUT_CURRENCY_VALUE, need_currency_value={need_currency_value}',
             request=request,
         )
@@ -51,7 +32,7 @@ async def request_type_input(
         )
     elif request.first_line == RequestFirstLine.INPUT_VALUE:
         need_value = await input_get_need_value(request=request, from_value=request.first_line_value)
-        send_log(
+        custom_logger.info(
             text=f'INPUT_VALUE, need_value={need_value}',
             request=request,
         )
@@ -127,7 +108,7 @@ async def request_type_input_currency_value(
         sum_value = round(sum_value + suitable_value)
         # Edit need_value
         need_currency_value = round(need_currency_value - suitable_currency_value)
-    send_log(f'requisites_scheme_list={requisites_scheme_list}', request=request)
+    custom_logger.info(f'requisites_scheme_list={requisites_scheme_list}', request=request)
     if not requisites_scheme_list:
         return
     if need_currency_value >= currency.div:  # Check complement
@@ -207,7 +188,7 @@ async def request_type_input_value(
         rates_list.append(requisite_rate)
         # Edit need_value
         need_value = round(need_value - suitable_value)
-    send_log(f'requisites_scheme_list={requisites_scheme_list}', request=request)
+    custom_logger.info(f'requisites_scheme_list={requisites_scheme_list}', request=request)
     if not requisites_scheme_list:
         return
     mean_rate = round(sum(rates_list) / len(rates_list))
