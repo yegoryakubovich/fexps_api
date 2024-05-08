@@ -47,10 +47,10 @@ async def update_rate(currency: Currency, rate_type: str):
     if not requisites:
         return
     rate_value = requisites[0].rate
-    last_rate = await RateRepository().get(currency=currency, type=rate_type)
-    if last_rate:
-        if last_rate.value == rate_value:
-            return
+    # last_rate = await RateRepository().get(currency=currency, type=rate_type)
+    # if last_rate:
+    #     if last_rate.value == rate_value:
+    #         return
     await RateRepository().create(
         currency=currency,
         type=rate_type,
