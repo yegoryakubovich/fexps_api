@@ -68,7 +68,7 @@ async def run():
             next_state = RequestStates.COMPLETED
         custom_logger.info(text=f'{request.state}->{next_state}', request=request)
         await RequestRepository().update(request, state=next_state)
-        await asyncio.sleep(0.25)
+        await asyncio.sleep(1)
     await asyncio.sleep(5)
 
 

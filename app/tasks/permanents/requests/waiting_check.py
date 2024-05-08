@@ -40,8 +40,8 @@ async def run():
             custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
             await orders_update_state_to_canceled(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
-        await asyncio.sleep(0.25)
-    await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
+    await asyncio.sleep(5)
 
 
 async def orders_update_state_to_canceled(request: Request) -> None:

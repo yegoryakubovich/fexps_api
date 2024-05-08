@@ -16,28 +16,37 @@
 
 
 import asyncio
-import logging
 
 from app import config_logger
+from app.tasks.permanents.rates import rate_keep
 from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
     request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
     request_state_output_reserved_check, request_state_output_check
 from app.tasks.permanents.requisites import requisite_balance_out_check
 from app.tasks.permanents.sync_gd import sync_gd
 
-
-TASKS = [
-    request_waiting_check,
-    request_rate_confirmed_check,
-    request_state_loading_check,
-    request_state_input_reserved_check,
-    request_state_input_check,
-    request_state_output_reserved_check,
-    request_state_output_check,
-
-    requisite_balance_out_check,
-
-    sync_gd,
+TASKS = []
+# Request
+TASKS += [
+    # request_waiting_check,
+    # request_rate_confirmed_check,
+    # request_state_loading_check,
+    # request_state_input_reserved_check,
+    # request_state_input_check,
+    # request_state_output_reserved_check,
+    # request_state_output_check,
+]
+# Requisite
+TASKS += [
+    # requisite_balance_out_check,
+]
+# Rate
+TASKS += [
+    rate_keep,
+]
+# Google Drive
+TASKS += [
+    # sync_gd,
 ]
 
 

@@ -86,7 +86,7 @@ async def run():
                 from_banned_value=True,
             )
             await RequestRepository().update(request, difference_confirmed=difference_value)
-        await asyncio.sleep(0.25)
+        await asyncio.sleep(1)
     await asyncio.sleep(5)
 
 

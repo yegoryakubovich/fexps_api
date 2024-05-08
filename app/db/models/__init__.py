@@ -29,6 +29,7 @@ from .contact import Contact
 from .country import Country
 from .method import Method, MethodFieldTypes
 from .permission import Permission
+from .rate import Rate, RateTypes, RateSources
 from .role import Role
 from .text_pack import TextPack
 from .text_translation import TextTranslation

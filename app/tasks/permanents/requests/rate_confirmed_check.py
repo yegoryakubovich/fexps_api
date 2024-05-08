@@ -39,8 +39,8 @@ async def run():
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):
             custom_logger.info(text=f'rate_confirmed=False', request=request)
             await RequestRepository().update(request, rate_confirmed=False)
-        await asyncio.sleep(0.25)
-    await asyncio.sleep(0.5)
+        await asyncio.sleep(1)
+    await asyncio.sleep(5)
 
 
 async def get_action_by_state(request: Request, state: str):

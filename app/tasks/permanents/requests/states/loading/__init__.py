@@ -122,7 +122,7 @@ async def run():
             action=Actions.UPDATE,
             parameters={'state': RequestStates.WAITING},
         )
-        await asyncio.sleep(0.25)
+        await asyncio.sleep(1)
     await asyncio.sleep(5)
 
 
