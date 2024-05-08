@@ -27,7 +27,7 @@ async def run():
         await update_rate(currency=currency, rate_type=RateTypes.INPUT)
         await update_rate(currency=currency, rate_type=RateTypes.OUTPUT)
         await asyncio.sleep(1)
-    await asyncio.sleep(5)
+    await asyncio.sleep(60)
 
 
 async def update_rate(currency: Currency, rate_type: str):
