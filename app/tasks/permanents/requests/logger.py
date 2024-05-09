@@ -47,5 +47,8 @@ class RequestLogger:
     def info(self, **kwargs) -> None:
         self.send(func=logging.info, **kwargs)
 
+    def warning(self, **kwargs) -> None:
+        self.send(func=logging.warning, **kwargs)
+
     def critical(self, **kwargs) -> None:
         self.send(func=logging.critical, **kwargs)

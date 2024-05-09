@@ -52,7 +52,6 @@ async def get_input_data(
         request=request,
         currency_value=_currency_value,
         value=_value,
-        rate_decimal=request.rate_decimal,
     )
     return {'input_currency_value': _currency_value, 'input_value': _value, 'input_rate': _rate}
 
@@ -72,7 +71,6 @@ async def get_output_data(
         request=request,
         currency_value=_currency_value,
         value=_value,
-        rate_decimal=request.rate_decimal,
     )
     return {'output_currency_value': _currency_value, 'output_value': _value, 'output_rate': _rate}
 
@@ -90,7 +88,6 @@ async def get_all_data(
         request=request,
         currency_value=input_data['input_currency_value'],
         value=_output_currency_value,
-        rate_decimal=request.rate_decimal,
     )
     data.update(input_data)
     data.update(output_data)

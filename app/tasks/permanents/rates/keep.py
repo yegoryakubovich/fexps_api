@@ -13,7 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import asyncio
+import logging
 
 from app.db.models import RequisiteTypes, RequisiteStates, RateTypes, Currency, RateSources
 from app.repositories import CurrencyRepository, RequisiteRepository, RateRepository

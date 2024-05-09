@@ -56,11 +56,11 @@ class BaseRepository(Generic[ModelType]):
             custom_order=None,
             custom_limit=None,
             custom_offset=None,
-            **filters
+            **filters,
     ) -> List[ModelType]:
         custom_select = select(self.model)
         if self.model.__name__ not in [Action.__name__, ActionParameter.__name__]:
-            filters['is_deleted'] = False
+            filters.update(is_deleted=False)
         if custom_where is not None:
             custom_select = custom_select.where(custom_where)
         if custom_order is None:

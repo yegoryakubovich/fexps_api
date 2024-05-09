@@ -18,129 +18,72 @@
 from typing import Optional
 
 from app.db.models import Request, RequestFirstLine
-from app.repositories.requisite import RequisiteRepository
 from app.tasks.permanents.requests.logger import RequestLogger
-from app.tasks.permanents.requests.states.loading.input import request_type_input_currency_value, \
-    request_type_input_value
-from app.tasks.permanents.requests.states.loading.output import request_type_output_value, \
-    request_type_output_currency_value
+from app.tasks.permanents.requests.states.loading.input import request_type_input
+from app.tasks.permanents.requests.states.loading.output import request_type_output
 from app.utils.calculations.request.commissions import get_commission
-from app.utils.calculations.request.need_value import input_get_need_currency_value, output_get_need_value, \
-    output_get_need_currency_value, input_get_need_value
 from app.utils.calculations.request.rates import get_auto_rate
-from app.utils.calculations.schemes.loading import AllRequisiteTypeScheme
+from app.utils.calculations.schemes.loading import AllTypeScheme
 
 custom_logger = RequestLogger(prefix='request_state_loading_all_check')
 
 
 async def request_type_all(
         request: Request,
-) -> Optional[AllRequisiteTypeScheme]:
+) -> Optional[AllTypeScheme]:
     custom_logger.info(text='start check', request=request)
+    currency_value = request.first_line_value
+    input_result_type, output_result_type = None, None
+    input_rate, output_rate = None, None
+    commission_value, rate = None, None
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-        need_input_currency_value = await input_get_need_currency_value(
-            request=request,
-            from_value=request.first_line_value,
-        )
-        custom_logger.info(text=f'input currency value, need_input_currency_value={need_input_currency_value}',
-                           request=request)
-        input_result = await request_type_input_currency_value(
-            request=request,
-            currency=request.input_method.currency,
-            need_currency_value=need_input_currency_value,
-        )
-        if not input_result:
+        custom_logger.info(text=f'input_currency_value={currency_value}', request=request)
+        input_result_type = await request_type_input(request=request, currency_value=currency_value)
+        if not input_result_type:
             return
         input_rate = get_auto_rate(
             request=request,
-            currency_value=input_result.sum_currency_value,
-            value=input_result.sum_value,
-            rate_decimal=request.rate_decimal,
+            currency_value=input_result_type.currency_value,
+            value=input_result_type.value,
         )
-        commission_value = await get_commission(
-            request=request,
-            wallet_id=request.wallet_id,
-            value=input_result.sum_value,
-        )
-        _output_from_value = input_result.sum_value - commission_value
-        need_output_value = await output_get_need_value(request=request, from_value=_output_from_value)
-        custom_logger.info(text=f'output value, need_output_value={need_output_value}', request=request)
-        output_result = await request_type_output_value(
-            request=request,
-            currency=request.output_method.currency,
-            need_value=need_output_value,
-        )
-        if not output_result:
-            for input_requisite_scheme in input_result.requisites_scheme_list:
-                requisite = await RequisiteRepository().get_by_id(input_requisite_scheme.requisite_id)
-                await RequisiteRepository().update(requisite, in_process=False)
+        output_from_value = input_result_type.value - input_result_type.commission_value
+        custom_logger.info(text=f'output_from_value={output_from_value}', request=request)
+        output_result_type = await request_type_output(request=request, value=output_from_value)
+        if not output_result_type:
             return
         output_rate = get_auto_rate(
             request=request,
-            currency_value=output_result.sum_currency_value,
-            value=output_result.sum_value,
-            rate_decimal=request.rate_decimal,
-        )
-        return AllRequisiteTypeScheme(
-            input_requisite_type=input_result,
-            output_requisites_type=output_result,
-            input_rate=input_rate,
-            output_rate=output_rate,
-            commission_value=commission_value
+            currency_value=output_result_type.currency_value,
+            value=output_result_type.value,
         )
     elif request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-        need_output_currency_value = await output_get_need_currency_value(
-            request=request,
-            from_value=request.first_line_value,
-        )
-        custom_logger.info(
-            text=f'output currency value, need_output_currency_value={need_output_currency_value}',
-            request=request,
-        )
-        output_result = await request_type_output_currency_value(
-            request=request,
-            currency=request.output_method.currency,
-            need_currency_value=need_output_currency_value,
-        )
-        if not output_result:
+        output_result_type = await request_type_output(request=request, currency_value=currency_value)
+        if not output_result_type:
             return
         output_rate = get_auto_rate(
             request=request,
-            currency_value=output_result.sum_currency_value,
-            value=output_result.sum_value,
-            rate_decimal=request.rate_decimal,
+            currency_value=output_result_type.currency_value,
+            value=output_result_type.value,
         )
         commission_value = await get_commission(
             request=request,
             wallet_id=request.wallet_id,
-            value=output_result.sum_value,
+            value=output_result_type.value,
         )
-        _input_from_value = output_result.sum_value + commission_value
-        need_input_value = await input_get_need_value(request=request, from_value=_input_from_value)
-        custom_logger.info(
-            text=f'input value, need_input_value={need_input_value}',
-            request=request,
-        )
-        input_result = await request_type_input_value(
-            request=request,
-            currency=request.input_method.currency,
-            need_value=need_input_value,
-        )
-        if not input_result:
-            for output_requisite_scheme in output_result.requisites_scheme_list:
-                requisite = await RequisiteRepository().get_by_id(output_requisite_scheme.requisite_id)
-                await RequisiteRepository().update(requisite, in_process=False)
+        input_from_value = output_result_type.value + commission_value
+        input_result_type = await request_type_input(request=request, value=input_from_value)
+        if not input_result_type:
             return
         input_rate = get_auto_rate(
             request=request,
-            currency_value=input_result.sum_currency_value,
-            value=input_result.sum_value,
-            rate_decimal=request.rate_decimal,
+            currency_value=input_result_type.currency_value,
+            value=input_result_type.value,
         )
-        return AllRequisiteTypeScheme(
-            input_requisite_type=input_result,
-            output_requisites_type=output_result,
-            input_rate=input_rate,
-            output_rate=output_rate,
-            commission_value=commission_value
-        )
+    commission_value = input_result_type.commission_value + output_result_type.commission_value
+    return AllTypeScheme(
+        input_type=input_result_type,
+        output_type=output_result_type,
+        input_rate=input_rate,
+        output_rate=output_rate,
+        commission_value=commission_value,
+    )

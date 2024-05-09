@@ -19,7 +19,6 @@ from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, Wa
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.wallet_ban import WalletBanService
-from app.utils.calculations.schemes.loading import RequisiteScheme
 from app.utils.service_addons.transfer import create_transfer
 
 
@@ -75,22 +74,22 @@ async def waited_order(
     )
 
 
-async def waited_order_by_scheme(
-        request: Request,
-        requisite_scheme: RequisiteScheme,
-        order_type: str,
-        order_state: str = OrderStates.WAITING,
-) -> None:
-    requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-    await waited_order(
-        request=request,
-        requisite=requisite,
-        currency_value=requisite_scheme.currency_value,
-        value=requisite_scheme.value,
-        rate=requisite_scheme.rate,
-        order_type=order_type,
-        order_state=order_state,
-    )
+# async def waited_order_by_scheme(
+#         request: Request,
+#         requisite_scheme: RequisiteScheme,
+#         order_type: str,
+#         order_state: str = OrderStates.WAITING,
+# ) -> None:
+#     requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
+#     await waited_order(
+#         request=request,
+#         requisite=requisite,
+#         currency_value=requisite_scheme.currency_value,
+#         value=requisite_scheme.value,
+#         rate=requisite_scheme.rate,
+#         order_type=order_type,
+#         order_state=order_state,
+#     )
 
 
 async def order_cancel_related(order: Order) -> None:
