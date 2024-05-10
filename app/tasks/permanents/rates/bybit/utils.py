@@ -45,10 +45,9 @@ async def rate_get_bybit(currency: Currency, rate_type: str = 'output'):
                 },
             )
             json_data = await response.json()
-            logging.critical(json_data)
             rates += [float(item['price']) for item in json_data['result']['items']]
-    print(rates)
-    print(sum(rates) / len(rates))
+    if not rates:
+        return
     rate_value = sum(rates) / len(rates)
     if rate_type == RateTypes.INPUT:
         rate_value = math.floor(rate_value * 10 ** currency.rate_decimal)
