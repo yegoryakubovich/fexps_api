@@ -57,8 +57,8 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     if not requisites_output:
         return
     rate_decimal = max([currency_input.rate_decimal, currency_output.rate_decimal])
-    rate_input_value = requisites_input[0].rate ** 10 ** (rate_decimal - currency_input.rate_decimal)
-    rate_output_value = requisites_output[0].rate ** 10 ** (rate_decimal - currency_output.rate_decimal)
+    rate_input_value = requisites_input[0].rate * 10 ** (rate_decimal - currency_input.rate_decimal)
+    rate_output_value = requisites_output[0].rate * 10 ** (rate_decimal - currency_output.rate_decimal)
     rate_value = math.ceil(rate_input_value / rate_output_value * 10 ** rate_decimal)
     await RatePairRepository().create(
         currency_input=currency_input,
