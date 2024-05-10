@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 import math
 
 import aiohttp
@@ -46,6 +45,7 @@ async def rate_get_bybit(currency: Currency, rate_type: str = 'output'):
                 },
             )
             json_data = await response.json()
+            logging.critical(json_data)
             rates += [float(item['price']) for item in json_data['result']['items']]
     print(rates)
     print(sum(rates) / len(rates))

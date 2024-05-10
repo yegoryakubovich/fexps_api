@@ -22,7 +22,7 @@ from app.db.models import RequisiteTypes, RequisiteStates, RateTypes, Currency, 
 from app.repositories import CurrencyRepository, RequisiteRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
 
-custom_logger = RateLogger(prefix='rate_keep')
+custom_logger = RateLogger(prefix='rate_our_keep')
 
 
 async def run():

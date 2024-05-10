@@ -35,7 +35,7 @@ async def run():
 
 
 async def update_rate(currency: Currency, rate_type: str):
-    rate_value = rate_get_bybit(currency=currency, rate_type=rate_type)
+    rate_value = await rate_get_bybit(currency=currency, rate_type=rate_type)
     if not rate_value:
         return
     await RateRepository().create(

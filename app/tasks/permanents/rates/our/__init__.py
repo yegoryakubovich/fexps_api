@@ -16,4 +16,3 @@
 
 
 from .keep import rate_our_keep
-from .keep_pair import rate_our_keep_pair
