@@ -15,5 +15,9 @@
 #
 
 
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from app.db.models import RatePair
+from app.repositories.base import BaseRepository
+
+
+class RatePairRepository(BaseRepository[RatePair]):
+    model = RatePair
