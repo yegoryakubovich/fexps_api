@@ -18,7 +18,7 @@
 import asyncio
 
 from app import config_logger
-from app.tasks.permanents.rates import rate_keep, rate_keep_pair
+from app.tasks.permanents.rates import rate_our_keep, rate_our_keep_pair
 from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
     request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
     request_state_output_reserved_check, request_state_output_check

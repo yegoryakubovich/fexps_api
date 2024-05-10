@@ -18,7 +18,7 @@
 import asyncio
 import math
 
-from app.db.models import RequisiteTypes, RequisiteStates, Currency
+from app.db.models import RequisiteTypes, RequisiteStates, Currency, RatePairSources
 from app.repositories import CurrencyRepository, RequisiteRepository, RatePairRepository
 from app.tasks.permanents.rates.logger import RateLogger
 
@@ -64,11 +64,12 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         currency_input=currency_input,
         currency_output=currency_output,
         rate_decimal=rate_decimal,
+        source=RatePairSources.OUR,
         value=rate_value,
     )
 
 
-async def rate_keep_pair():
+async def rate_our_keep_pair():
     custom_logger.info(text=f'started...')
     while True:
         try:

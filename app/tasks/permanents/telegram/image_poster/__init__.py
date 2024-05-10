@@ -15,11 +15,8 @@
 #
 
 
-import datetime
-
 from aiogram.types import FSInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 from app.tasks.permanents.telegram.image_poster.bot import send_message
 from app.tasks.permanents.telegram.image_poster.image import image_create

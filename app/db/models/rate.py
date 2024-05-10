@@ -28,6 +28,7 @@ class RateTypes:
 
 class RateSources:
     OUR = 'our'
+    BYBIT = 'bybit'
     BINANCE = 'binance'
 
 

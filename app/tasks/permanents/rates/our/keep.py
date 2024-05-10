@@ -50,10 +50,6 @@ async def update_rate(currency: Currency, rate_type: str):
     if not requisites:
         return
     rate_value = requisites[0].rate
-    # last_rate = await RateRepository().get(currency=currency, type=rate_type)
-    # if last_rate:
-    #     if last_rate.value == rate_value:
-    #         return
     await RateRepository().create(
         currency=currency,
         type=rate_type,
@@ -62,7 +58,7 @@ async def update_rate(currency: Currency, rate_type: str):
     )
 
 
-async def rate_keep():
+async def rate_our_keep():
     custom_logger.info(text=f'started...')
     while True:
         try:
