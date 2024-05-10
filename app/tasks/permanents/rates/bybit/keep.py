@@ -23,7 +23,7 @@ from app.repositories import CurrencyRepository, RequisiteRepository, RateReposi
 from app.tasks.permanents.rates.bybit.utils import rate_get_bybit
 from app.tasks.permanents.rates.logger import RateLogger
 
-custom_logger = RateLogger(prefix='rate_keep')
+custom_logger = RateLogger(prefix='rate_bybit_keep')
 
 
 async def run():
