@@ -18,8 +18,8 @@
 import asyncio
 import math
 
-from app.db.models import RequisiteTypes, RequisiteStates, Currency, RatePairSources
-from app.repositories import CurrencyRepository, RequisiteRepository, RatePairRepository
+from app.db.models import RequisiteTypes, RequisiteStates, Currency, RatePairSources, RateTypes
+from app.repositories import CurrencyRepository, RequisiteRepository, RatePairRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
 
 custom_logger = RateLogger(prefix='rate_keep_pair')
@@ -42,23 +42,23 @@ async def run():
 
 
 async def update_rate(currency_input: Currency, currency_output: Currency):
-    requisites_input = await RequisiteRepository().get_list_input_by_rate(
+    rate_input = await RateRepository().get(
         currency=currency_input,
-        type=RequisiteTypes.OUTPUT,
-        state=RequisiteStates.ENABLE,
+        type=RateTypes.INPUT,
     )
-    if not requisites_input:
+    if not rate_input:
         return
-    requisites_output = await RequisiteRepository().get_list_output_by_rate(
+    rate_value_input = rate_input.value
+    rate_output = await RateRepository().get(
         currency=currency_output,
-        type=RequisiteTypes.INPUT,
-        state=RequisiteStates.ENABLE,
+        type=RateTypes.OUTPUT,
     )
-    if not requisites_output:
+    if not rate_output:
         return
+    rate_value_output = rate_output.value
     rate_decimal = max([currency_input.rate_decimal, currency_output.rate_decimal])
-    rate_input_value = requisites_input[0].rate * 10 ** (rate_decimal - currency_input.rate_decimal)
-    rate_output_value = requisites_output[0].rate * 10 ** (rate_decimal - currency_output.rate_decimal)
+    rate_input_value = rate_value_input * 10 ** (rate_decimal - currency_input.rate_decimal)
+    rate_output_value = rate_value_output * 10 ** (rate_decimal - currency_output.rate_decimal)
     rate_value = math.ceil(rate_input_value / rate_output_value * 10 ** rate_decimal)
     await RatePairRepository().create(
         currency_input=currency_input,
