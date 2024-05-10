@@ -16,30 +16,10 @@
 
 
 import asyncio
-import logging
 
-from app.db.models import Request, Order
+from app.tasks.permanents.requisites.logger import RequisiteLogger
 
-
-def send_log(
-        text: str,
-        prefix: str = 'requisite_balance_out',
-        func: callable = logging.info,
-        request: Request = None,
-        order: Order = None,
-) -> None:
-    log_list = [f'[{prefix}]']
-    if order:
-        log_list += [
-            f'request.{order.request.id} ({order.request.type}:{order.request.state})',
-            f'order.{order.id} ({order.type}:{order.state})',
-        ]
-    elif request:
-        log_list += [
-            f'request.{request.id} ({request.type}:{request.state})'
-        ]
-    log_list += [text]
-    func(f' '.join(log_list))
+custom_logger = RequisiteLogger(prefix='requisite_balance_out')
 
 
 async def run():
@@ -59,9 +39,9 @@ async def run():
 
 
 async def requisite_balance_out_check():
-    send_log(text=f'started...')
+    custom_logger.info(text=f'started...')
     while True:
         try:
             await run()
         except ValueError as e:
-            send_log(text=f'Exception \n {e}', func=logging.critical)
+            custom_logger.critical(text=f'Exception \n {e}')

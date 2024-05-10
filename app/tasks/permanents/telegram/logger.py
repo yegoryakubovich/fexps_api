@@ -14,35 +14,25 @@
 # limitations under the License.
 #
 
-API_PORT=8000
-TASKS_FLOWER_PORT=
 
-MYSQL_HOST=
-MYSQL_PORT=
-MYSQL_USER=
-MYSQL_PASSWORD=
-MYSQL_NAME=
+import logging
 
-REDIS_HOST=
-REDIS_PORT=6379
-REDIS_USER=
-REDIS_PASSWORD=
 
-FLOWER_USER=
-FLOWER_PASSWORD=
+class TelegramLogger:
+    def __init__(self, prefix: str):
+        self.prefix = prefix
 
-ROOT_TOKEN=
-BOT_TOKEN=
-CHANNEL_ID=
-FILE_URL=
-CHAT_URL=
-SYNC_DB_URL=
-SYNC_DB_TABLE_NAME=
-DEBUG=1
-WALLET_MAX_COUNT=
-WALLET_MAX_VALUE=
+    def send(
+            self,
+            func: callable,
+            text: str,
+    ) -> None:
+        log_list = [f'[{self.prefix}]']
+        log_list += [text]
+        func(f' '.join(log_list))
 
-TEST=False
-TEST_FILE_URL=
-TEST_CHAT_URL=
-TEST_SYNC_DB_URL=
+    def info(self, **kwargs) -> None:
+        self.send(func=logging.info, **kwargs)
+
+    def critical(self, **kwargs) -> None:
+        self.send(func=logging.critical, **kwargs)

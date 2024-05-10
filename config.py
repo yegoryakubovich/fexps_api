@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     flower_password: str
 
     root_token: str
+    bot_token: str
+    channel_id: int
     file_url: str
     chat_url: str
     sync_db_url: str
@@ -53,17 +55,19 @@ class Settings(BaseSettings):
     version: str = '0.1'
     path_texts_packs: str = 'assets/texts_packs'
     path_files: str = 'assets/files'
+    path_telegram: str = 'assets/telegram'
 
     items_per_page: int = 10
     request_waiting_check: int = 5
     request_rate_confirmed_minutes: int = 60
     datetime_format: str = '%d-%m-%y %H:%M'
+    need_rate_pairs: list = [('rub', 'usd'), ('usd', 'eur')]
 
     model_config = SettingsConfigDict(env_file='.env')
 
     def get_mysql_host(self) -> str:
         if self.test:
-            return '192.168.31.40'
+            # return '192.168.31.40'
             return '127.0.0.1'
         return self.mysql_host
 
