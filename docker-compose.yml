@@ -29,6 +29,7 @@ services:
     volumes:
       - ./assets/texts_packs:/app/assets/texts_packs
       - ./assets/files:/app/assets/files
+      - ./assets/telegram:/app/assets/telegram
     env_file:
       - .env
   tasks_permanents:
@@ -37,6 +38,7 @@ services:
     volumes:
       - ./assets/texts_packs:/app/assets/texts_packs
       - ./assets/files:/app/assets/files
+      - ./assets/telegram:/app/assets/telegram
     env_file:
       - .env
   tasks_celery:
