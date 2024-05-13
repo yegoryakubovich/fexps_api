@@ -36,9 +36,20 @@ class Settings(BaseSettings):
     flower_user: str
     flower_password: str
 
+    telegram_token: str
+    telegram_chat_id: int
+    telegram_manager: str
+    telegram_about: str
+    telegram_info: str
+    telegram_reviews: str
+    telegram_rate_pairs: list = [
+        ('rub', 'usd'),
+        ('usd', 'rub'),
+        ('usdt', 'usd'),
+        ('usd', 'usdt'),
+    ]
+
     root_token: str
-    bot_token: str
-    channel_id: int
     file_url: str
     chat_url: str
     sync_db_url: str
@@ -61,16 +72,12 @@ class Settings(BaseSettings):
     request_waiting_check: int = 5
     request_rate_confirmed_minutes: int = 60
     datetime_format: str = '%d-%m-%y %H:%M'
-    need_rate_pairs: list = [
-        ('rub', 'usd'),
-        ('usd', 'rub'),
-    ]
 
     model_config = SettingsConfigDict(env_file='.env')
 
     def get_mysql_host(self) -> str:
         if self.test:
-            # return '192.168.31.40'
+            return '192.168.31.40'
             return '127.0.0.1'
         return self.mysql_host
 

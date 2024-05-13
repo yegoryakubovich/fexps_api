@@ -15,22 +15,24 @@
 #
 
 
-from aiogram.types import FSInputFile
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from aiogram.types import FSInputFile, Message
 
-from app.tasks.permanents.telegram.image_poster.bot import send_message
-from app.tasks.permanents.telegram.image_poster.image import image_create
+from app.repositories import TelegramPostRepository
 from app.tasks.permanents.telegram.logger import TelegramLogger
+from app.tasks.permanents.telegram.utils.bot import send_message, get_post_keyboard
+from app.tasks.permanents.telegram.utils.image import image_create
 
 custom_logger = TelegramLogger(prefix='telegram_image_poster')
 
 
-async def run():
-    image_path = await image_create()
-    await send_message(photo=FSInputFile(path=image_path))
-
-
 async def telegram_image_poster():
-    scheduler = AsyncIOScheduler()
-    scheduler.add_job(run, 'cron', hour=12, minute=00)
-    scheduler.start()
+    custom_logger.info(text='HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
+    image_path = await image_create()
+    message: Message = await send_message(
+        photo=FSInputFile(path=image_path),
+        keyboard=get_post_keyboard(),
+    )
+    if not message:
+        custom_logger.critical(text='Not found message')
+        return
+    await TelegramPostRepository().create(chat_id=message.chat.id, message_id=message.message_id)

@@ -20,6 +20,7 @@ from .commission_pack import CommissionPack
 from .currency import Currency
 from .file import File
 from .language import Language
+from .telegram_post import TelegramPost
 from .text import Text
 from .timezone import Timezone
 

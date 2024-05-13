@@ -45,6 +45,7 @@ from .role import RoleRepository
 from .role_permission import RolePermissionRepository
 from .session import SessionRepository
 from .session import SessionRepository
+from .telegram_post import TelegramPostRepository
 from .text import TextRepository
 from .text_pack import TextPackRepository
 from .text_translation import TextTranslationRepository

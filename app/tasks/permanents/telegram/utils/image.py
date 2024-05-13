@@ -59,42 +59,38 @@ def image_draw_center(image_draw, coordinates, text):
 
 
 async def image_create():
-    filename = f'default.png'
-    image = Image.open(f'{settings.path_telegram}/source/{filename}')
+    image_input_path = f'{settings.path_telegram}/source/default.png'
+    image_output_path = f'{settings.path_telegram}/images/default.png'
+    image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
     pairs = []
-    for currency_input in await CurrencyRepository().get_list():
-        for currency_output in await CurrencyRepository().get_list():
-            pair = (currency_input.id_str, currency_output.id_str)
-            if pair not in settings.need_rate_pairs:
-                continue
-            if pair in pairs:
-                continue
-            i = len(pairs)
-            rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-            if not rate_pair:
-                continue
-            rate = rate_pair.value / 10 ** rate_pair.rate_decimal
-            if rate < 1:
-                rate = round(1 / rate, 2)
-            image_draw_center(
-                image_draw=image_draw,
-                coordinates=COORDINATES_RANGES[i],
-                text=f'{currency_input.id_str.upper()} - {currency_output.id_str.upper()}',
-            )
-            image_draw_center(
-                image_draw=image_draw,
-                coordinates=COORDINATES_RATES[i],
-                text=f'{rate}',
-            )
-            pairs.append(pair)
-    # Дата и время
+    for currency_input_id_str, currency_output_id_str in settings.telegram_rate_pairs:
+        pair = (currency_input_id_str, currency_output_id_str)
+        currency_input = await CurrencyRepository().get_by_id_str(id_str=currency_input_id_str)
+        currency_output = await CurrencyRepository().get_by_id_str(id_str=currency_output_id_str)
+        i = len(pairs)
+        rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
+        if not rate_pair:
+            continue
+        rate = rate_pair.value / 10 ** rate_pair.rate_decimal
+        if rate < 1:
+            rate = round(1 / rate, 2)
+        image_draw_center(
+            image_draw=image_draw,
+            coordinates=COORDINATES_RANGES[i],
+            text=f'{currency_input.id_str.upper()} - {currency_output.id_str.upper()}',
+        )
+        image_draw_center(
+            image_draw=image_draw,
+            coordinates=COORDINATES_RATES[i],
+            text=f'{rate}',
+        )
+        pairs.append(pair)
     image_draw.text(
         (1210, 101),
         font=FONT_JETBRAINSMONO_REGULAR,
         text='{}'.format(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')),
         fill='#333',
     )
-    image_path = f'{settings.path_telegram}/images/{filename}'
-    image.save(image_path)
-    return image_path
+    image.save(image_output_path)
+    return image_output_path

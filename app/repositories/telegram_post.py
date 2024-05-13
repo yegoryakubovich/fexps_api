@@ -15,17 +15,9 @@
 #
 
 
-from aiogram import Bot
-from aiogram.types import FSInputFile
-
-from config import settings
+from app.db.models import TelegramPost
+from app.repositories.base import BaseRepository
 
 
-async def send_message(text: str = None, photo: [str, FSInputFile] = None):
-    bot = Bot(token=settings.bot_token)
-    if photo:
-        async with bot:
-            await bot.send_photo(chat_id=settings.channel_id, caption=text, photo=photo)
-    elif text:
-        async with bot:
-            await bot.send_message(chat_id=settings.channel_id, text=text)
+class TelegramPostRepository(BaseRepository[TelegramPost]):
+    model = TelegramPost

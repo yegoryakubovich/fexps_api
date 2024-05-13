@@ -15,4 +15,15 @@
 #
 
 
-from .balance_out import requisite_balance_out_check
+from sqlalchemy import Column, BigInteger, Boolean
+
+from app.db.base_class import Base
+
+
+class TelegramPost(Base):
+    __tablename__ = 'telegrams_posts'
+
+    id = Column(BigInteger, primary_key=True)
+    chat_id = Column(BigInteger)
+    message_id = Column(BigInteger)
+    is_deleted = Column(Boolean, default=False)
