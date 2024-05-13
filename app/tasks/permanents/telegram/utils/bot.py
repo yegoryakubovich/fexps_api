@@ -24,10 +24,16 @@ from config import settings
 def get_post_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager)],
-            [InlineKeyboardButton(text='О НАС', url=settings.telegram_about)],
-            [InlineKeyboardButton(text='КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info)],
-            [InlineKeyboardButton(text='ОТЗЫВЫ', url=settings.telegram_reviews)],
+            [
+                InlineKeyboardButton(text='СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager),
+            ],
+            [
+                InlineKeyboardButton(text='КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info),
+            ],
+            [
+                InlineKeyboardButton(text='О НАС', url=settings.telegram_about),
+                InlineKeyboardButton(text='ОТЗЫВЫ', url=settings.telegram_reviews),
+            ],
         ],
     )
     return keyboard

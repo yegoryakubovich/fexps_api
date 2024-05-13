@@ -30,6 +30,9 @@ custom_logger = TelegramLogger(prefix='telegram_image_updater')
 async def run():
     image_path = await image_create()
     telegram_post = await TelegramPostRepository().get()
+    if not telegram_post:
+        custom_logger.critical(text='Not found telegram_post')
+        return
     await edit_message(
         message_id=telegram_post.message_id,
         photo=FSInputFile(path=image_path),

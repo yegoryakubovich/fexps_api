@@ -26,7 +26,6 @@ custom_logger = TelegramLogger(prefix='telegram_image_poster')
 
 
 async def telegram_image_poster():
-    custom_logger.info(text='HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII')
     image_path = await image_create()
     message: Message = await send_message(
         photo=FSInputFile(path=image_path),
