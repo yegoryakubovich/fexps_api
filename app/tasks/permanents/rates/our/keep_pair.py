@@ -69,12 +69,13 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     await RatePairRepository().create(
         currency_input=currency_input,
         currency_output=currency_output,
+        source=RateSources.OUR,
         rate_decimal=rate_decimal,
         value=rate_value,
     )
 
 
-async def rate_keep_pair():
+async def rate_keep_pair_our():
     custom_logger.info(text=f'started...')
     while True:
         try:

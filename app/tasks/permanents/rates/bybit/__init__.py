@@ -15,4 +15,4 @@
 #
 
 
-from .keep import rate_bybit_keep
+from .keep_pair import rate_keep_pair_bybit

@@ -16,15 +16,20 @@
 
 
 import asyncio
+from datetime import datetime
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 
 from app import config_logger
-from app.tasks.permanents.rates import rate_bybit_keep, rate_our_keep, rate_keep_pair
+from app.tasks.permanents.rates import rate_keep_pair_bybit, rate_our_keep, rate_keep_pair_our
 from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
     request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
     request_state_output_reserved_check, request_state_output_check
-from app.tasks.permanents.requisites import requisite_balance_out_check
-from app.tasks.permanents.sync_gd import sync_gd
+from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram import telegram_image_poster
+from app.tasks.permanents.telegram.image_poster import telegram_image_poster
+from app.tasks.permanents.telegram.image_updater import telegram_image_updater
 
 TASKS = []
 # Request
@@ -37,28 +42,24 @@ TASKS += [
     request_state_output_reserved_check,
     request_state_output_check,
 ]
-# Requisite
-TASKS += [
-    requisite_balance_out_check,
-]
 # Rate
 TASKS += [
-    rate_bybit_keep,
     rate_our_keep,
-    rate_keep_pair,
-]
-# Google Drive
-TASKS += [
-    sync_gd,
+    rate_keep_pair_our,
+    rate_keep_pair_bybit,
 ]
 # Telegram
 TASKS += [
-    telegram_image_poster,
+    telegram_image_updater,
 ]
 
 
 async def start_app() -> None:
     config_logger()
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(func=go_sync_gd, trigger=CronTrigger.from_crontab('0 * * * *'), next_run_time=datetime.now())
+    scheduler.add_job(func=telegram_image_poster, trigger='cron', hour=12, minute=00)
+    scheduler.start()
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]
         [asyncio.create_task(coro=task(), name=task.__name__) for task in TASKS if task.__name__ not in tasks_names]
