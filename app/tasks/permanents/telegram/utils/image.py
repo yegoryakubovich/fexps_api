@@ -22,24 +22,17 @@ from PIL import Image, ImageDraw, ImageFont
 from app.repositories import RatePairRepository, CurrencyRepository
 from config import settings
 
-COORDINATES_RANGES = [
-    [[228, 313], [788, 413]],
-    [[228, 419], [788, 519]],
-    [[228, 525], [788, 625]],
-    [[228, 631], [788, 731]],
-    [[228, 737], [788, 837]],
-]
 COORDINATES_RATES = [
-    [[795, 313], [1125, 413]],
-    [[795, 419], [1125, 519]],
-    [[795, 525], [1125, 625]],
-    [[795, 631], [1125, 731]],
-    [[795, 737], [1125, 837]],
+    [[1455, 280], [1792, 415]],
+    [[1455, 435], [1792, 570]],
+    [[1455, 590], [1792, 725]],
+    [[1455, 745], [1792, 880]],
+    [[1455, 900], [1792, 1035]],
 ]
 
-FONT_MONTSERRAT_SEMIBOLD = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_semibold.ttf', 50)
+FONT_MONTSERRAT_SEMIBOLD = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_semibold.ttf', 70)
 FONT_MONTSERRAT_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_regular.ttf', 36)
-FONT_JETBRAINSMONO_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/jetbrainsmono_regular.ttf', 24)
+FONT_JETBRAINSMONO_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/jetbrainsmono_regular.ttf', 42)
 
 
 def image_draw_center(image_draw, coordinates, text):
@@ -49,7 +42,7 @@ def image_draw_center(image_draw, coordinates, text):
         coordinates[0][1] + (coordinates[1][1] - coordinates[0][1] - box_size[3]) / 2,
     ]
     text_coordinates[1] -= 7
-    color = '#40403D'
+    color = '#ffffff'
     image_draw.text(
         text_coordinates,
         font=FONT_MONTSERRAT_SEMIBOLD,
@@ -59,8 +52,8 @@ def image_draw_center(image_draw, coordinates, text):
 
 
 async def image_create():
-    image_input_path = f'{settings.path_telegram}/source/default.png'
-    image_output_path = f'{settings.path_telegram}/images/default.png'
+    image_input_path = f'{settings.path_telegram}/source/sowapay.png'
+    image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
     pairs = []
@@ -77,20 +70,15 @@ async def image_create():
             rate = round(1 / rate, 2)
         image_draw_center(
             image_draw=image_draw,
-            coordinates=COORDINATES_RANGES[i],
-            text=f'{currency_input.id_str.upper()} - {currency_output.id_str.upper()}',
-        )
-        image_draw_center(
-            image_draw=image_draw,
             coordinates=COORDINATES_RATES[i],
             text=f'{rate}',
         )
         pairs.append(pair)
     image_draw.text(
-        (1210, 101),
+        (1212, 116),
         font=FONT_JETBRAINSMONO_REGULAR,
-        text='{}'.format(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')),
-        fill='#333',
+        text='{}'.format(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M (UTC)')),
+        fill='#ffffff',
     )
     image.save(image_output_path)
     return image_output_path
