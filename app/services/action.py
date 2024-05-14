@@ -54,8 +54,11 @@ class ActionService:
             model: Base,
             action: Actions,
     ) -> Action:
-        result = await ActionRepository().get(model=underscore(model.__class__.__name__), model_id=model.id,
-                                              action=action)
+        result = await ActionRepository().get(
+            model=underscore(model.__class__.__name__),
+            model_id=model.id,
+            action=action,
+        )
         return result
 
     @staticmethod
