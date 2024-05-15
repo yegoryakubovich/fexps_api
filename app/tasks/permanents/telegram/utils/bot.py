@@ -15,24 +15,51 @@
 #
 
 
+import datetime
+
 from aiogram import Bot
 from aiogram.types import FSInputFile, InlineKeyboardMarkup, InputMediaPhoto, InlineKeyboardButton, Message
 
 from config import settings
+
+WEEK_DAY = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+MONTH_DAY = [
+    'января',
+    'февраля',
+    'марта',
+    'апреля',
+    'мая',
+    'июня',
+    'июля',
+    'августа',
+    'сентября',
+    'октября',
+    'ноября',
+    'декабря',
+]
+
+
+def get_post_text() -> str:
+    date_now = datetime.datetime.now(tz=datetime.UTC)
+    return '\n'.join([
+        f'🗓 {WEEK_DAY[date_now.weekday()]}, {date_now.day} {MONTH_DAY[date_now.month - 1]}.',
+        f'',
+        f'🤝 Прекрасная возможность обменять деньги по ВЫГОДНОМУ КУРСУ вместе с Sowa Pay.',
+    ])
 
 
 def get_post_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text='СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager),
+                InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager),
             ],
             [
-                InlineKeyboardButton(text='О НАС', url=settings.telegram_about),
-                InlineKeyboardButton(text='ОТЗЫВЫ', url=settings.telegram_reviews),
+                InlineKeyboardButton(text='🤔 О НАС', url=settings.telegram_about),
+                InlineKeyboardButton(text='💬 ОТЗЫВЫ', url=settings.telegram_reviews),
             ],
             [
-                InlineKeyboardButton(text='КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info),
+                InlineKeyboardButton(text='💰 КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info),
             ],
         ],
     )

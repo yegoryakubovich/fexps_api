@@ -19,7 +19,7 @@ from aiogram.types import FSInputFile, Message
 
 from app.repositories import TelegramPostRepository
 from app.tasks.permanents.telegram.logger import TelegramLogger
-from app.tasks.permanents.telegram.utils.bot import send_message, get_post_keyboard
+from app.tasks.permanents.telegram.utils.bot import send_message, get_post_text, get_post_keyboard
 from app.tasks.permanents.telegram.utils.image import image_create
 
 custom_logger = TelegramLogger(prefix='telegram_image_poster')
@@ -29,9 +29,14 @@ async def telegram_image_poster():
     image_path = await image_create()
     message: Message = await send_message(
         photo=FSInputFile(path=image_path),
+        text=get_post_text(),
         keyboard=get_post_keyboard(),
     )
     if not message:
         custom_logger.critical(text='Not found message')
         return
-    await TelegramPostRepository().create(chat_id=message.chat.id, message_id=message.message_id)
+    await TelegramPostRepository().create(
+        chat_id=message.chat.id,
+        message_id=message.message_id,
+        text=message.text,
+    )

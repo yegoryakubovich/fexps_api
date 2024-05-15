@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean
+from sqlalchemy import Column, BigInteger, Boolean, String
 
 from app.db.base_class import Base
 
@@ -26,4 +26,5 @@ class TelegramPost(Base):
     id = Column(BigInteger, primary_key=True)
     chat_id = Column(BigInteger)
     message_id = Column(BigInteger)
+    text = Column(String(length=512))
     is_deleted = Column(Boolean, default=False)

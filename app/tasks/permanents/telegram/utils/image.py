@@ -87,14 +87,11 @@ async def image_create():
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
     rate_pair = await RatePairStaticRepository().get(currency_input=currency_input, currency_output=currency_output)
-    logging.critical(rate_pair)
     if not rate_pair:
         rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-    logging.critical(rate_pair)
     if not rate_pair:
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal
-    logging.critical(rate)
     if f'{currency_input.id_str}{currency_output.id_str}' in ['usdusdt', 'usdtusd']:
         rate = (1 - rate) * 100
         rate = rate if rate > 1 else -rate
