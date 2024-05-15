@@ -21,10 +21,14 @@ from app.db.models import OrderTypes
 
 
 def get_div_by_currency_value(
-        currency_value: int, div: int, rate: int, rate_decimal: int, order_type: str,
+        currency_value: int,
+        div: int,
+        rate: int,
+        rate_decimal: int,
+        type_: str,
 ) -> tuple[int, int]:
     currency_value = round(currency_value // div * div)
-    if order_type == OrderTypes.INPUT:
+    if type_ == OrderTypes.INPUT:
         value = math.floor(currency_value / rate * 10 ** rate_decimal)
     else:
         value = math.ceil(currency_value / rate * 10 ** rate_decimal)
@@ -32,7 +36,11 @@ def get_div_by_currency_value(
 
 
 def get_div_by_value(
-        value: int, div: int, rate: int, rate_decimal: int, type_: str,
+        value: int,
+        div: int,
+        rate: int,
+        rate_decimal: int,
+        type_: str,
 ) -> tuple[int, int]:
     currency_value = round(value * rate / 10 ** rate_decimal)
     currency_value = round(currency_value // div * div)
