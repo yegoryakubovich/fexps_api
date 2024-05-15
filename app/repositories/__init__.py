@@ -37,7 +37,7 @@ from .order_transfer import OrderTransferRepository
 from .permission import PermissionRepository
 from .rate import RateRepository
 from .rate_pair import RatePairRepository
-from .rate_pair_static import RatePairStaticRepository
+from .rate_static import RateStaticRepository
 from .request import RequestRepository
 from .request_requisite import RequestRequisiteRepository
 from .requisite import RequisiteRepository
