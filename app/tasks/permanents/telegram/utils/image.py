@@ -15,20 +15,22 @@
 #
 
 
-from datetime import datetime, timezone
+import datetime
+import logging
+from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.repositories import RatePairRepository, CurrencyRepository
+from app.db.models import Currency
+from app.repositories import RatePairRepository, CurrencyRepository, RatePairStaticRepository
 from config import settings
 
-COORDINATES_RATES = [
-    [[1455, 280], [1792, 415]],
-    [[1455, 435], [1792, 570]],
-    [[1455, 590], [1792, 725]],
-    [[1455, 745], [1792, 880]],
-    [[1455, 900], [1792, 1035]],
-]
+COORDINATES_RATES = {
+    'usdrub': [[1455, 280], [1792, 415]],
+    'rubusd': [[1455, 435], [1792, 570]],
+    'usdtusd': [[1455, 590], [1792, 725]],
+    'usdusdt': [[1455, 745], [1792, 880]],
+}
 
 FONT_MONTSERRAT_SEMIBOLD = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_semibold.ttf', 70)
 FONT_MONTSERRAT_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_regular.ttf', 36)
@@ -36,6 +38,8 @@ FONT_JETBRAINSMONO_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts
 
 
 def image_draw_center(image_draw, coordinates, text):
+    if not coordinates:
+        return
     box_size = FONT_MONTSERRAT_SEMIBOLD.getbbox(text)
     text_coordinates = [
         coordinates[0][0] + (coordinates[1][0] - coordinates[0][0] - box_size[2]) / 2,
@@ -56,29 +60,47 @@ async def image_create():
     image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
-    pairs = []
     for currency_input_id_str, currency_output_id_str in settings.telegram_rate_pairs:
-        pair = (currency_input_id_str, currency_output_id_str)
         currency_input = await CurrencyRepository().get_by_id_str(id_str=currency_input_id_str)
         currency_output = await CurrencyRepository().get_by_id_str(id_str=currency_output_id_str)
-        i = len(pairs)
-        rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-        if not rate_pair:
+        rate_raw = await get_pair_rate(currency_input=currency_input, currency_output=currency_output)
+        if not rate_raw:
             continue
-        rate = rate_pair.value / 10 ** rate_pair.rate_decimal
-        if rate < 1:
-            rate = round(1 / rate, 2)
+        rate, type_ = rate_raw
+        rate_str = f'{rate}'
+        if type_ == 'percent':
+            rate_str += '%'
         image_draw_center(
             image_draw=image_draw,
-            coordinates=COORDINATES_RATES[i],
-            text=f'{rate}',
+            coordinates=COORDINATES_RATES.get(f'{currency_input.id_str}{currency_output.id_str}'),
+            text=rate_str,
         )
-        pairs.append(pair)
     image_draw.text(
         (1212, 116),
         font=FONT_JETBRAINSMONO_REGULAR,
-        text='{}'.format(datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M (UTC)')),
+        text='{}'.format(datetime.datetime.now(tz=datetime.UTC).strftime('%Y-%m-%d %H:%M (UTC)')),
         fill='#ffffff',
     )
     image.save(image_output_path)
     return image_output_path
+
+
+async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
+    rate_pair = await RatePairStaticRepository().get(currency_input=currency_input, currency_output=currency_output)
+    logging.critical(rate_pair)
+    if not rate_pair:
+        rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
+    logging.critical(rate_pair)
+    if not rate_pair:
+        return
+    rate = rate_pair.value / 10 ** rate_pair.rate_decimal
+    logging.critical(rate)
+    if f'{currency_input.id_str}{currency_output.id_str}' in ['usdusdt', 'usdtusd']:
+        rate = (1 - rate) * 100
+        rate = rate if rate > 1 else -rate
+        type_ = 'percent'
+    else:
+        if rate < 1:
+            rate = 1 / rate
+        type_ = 'value'
+    return round(rate, 2), type_
