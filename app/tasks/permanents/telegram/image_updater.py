@@ -36,6 +36,7 @@ async def run():
     await edit_message(
         message_id=telegram_post.message_id,
         photo=FSInputFile(path=image_path),
+        text=telegram_post.text,
         keyboard=get_post_keyboard(),
     )
     await asyncio.sleep(60)
