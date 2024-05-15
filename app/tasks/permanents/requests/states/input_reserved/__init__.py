@@ -103,7 +103,7 @@ async def get_new_requisite_by_currency_value(
             div=currency.div,
             rate=requisite_rate,
             rate_decimal=rate_decimal,
-            order_type=OrderTypes.INPUT,
+            type_=OrderTypes.INPUT,
         )
         if not suitable_currency_value or not suitable_value:
             await RequisiteRepository().update(requisite, in_process=False)
