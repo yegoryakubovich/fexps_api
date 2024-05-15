@@ -19,7 +19,7 @@ import asyncio
 import math
 
 from app.db.models import Currency, RateTypes, RateSources
-from app.repositories import CurrencyRepository, RatePairRepository, RateRepository
+from app.repositories import CurrencyRepository, RatePairRepository, RateRepository, RateStaticRepository
 from app.tasks.permanents.rates.logger import RateLogger
 
 custom_logger = RateLogger(prefix='rate_keep_pair')
@@ -48,6 +48,8 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         source=RateSources.OUR,
     )
     if not rate_input:
+        rate_input = await RateStaticRepository().get(currency=currency_input, type=RateTypes.INPUT)
+    if not rate_input:
         rate_input = await RateRepository().get(currency=currency_input, type=RateTypes.INPUT)
     if not rate_input:
         return
@@ -57,6 +59,8 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         type=RateTypes.OUTPUT,
         source=RateSources.OUR,
     )
+    if not rate_output:
+        rate_output = await RateStaticRepository().get(currency=currency_output, type=RateTypes.OUTPUT)
     if not rate_output:
         rate_output = await RateRepository().get(currency=currency_output, type=RateTypes.OUTPUT)
     if not rate_output:

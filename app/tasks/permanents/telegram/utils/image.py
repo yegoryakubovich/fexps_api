@@ -16,13 +16,13 @@
 
 
 import datetime
-import logging
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
 from app.db.models import Currency
-from app.repositories import RatePairRepository, CurrencyRepository, RatePairStaticRepository
+from app.db.models.rate_pair import RatePairSources
+from app.repositories import RatePairRepository, CurrencyRepository
 from config import settings
 
 COORDINATES_RATES = {
@@ -76,9 +76,9 @@ async def image_create():
             text=rate_str,
         )
     image_draw.text(
-        (1212, 116),
+        (1245, 116),
         font=FONT_JETBRAINSMONO_REGULAR,
-        text='{}'.format(datetime.datetime.now(tz=datetime.UTC).strftime('%Y-%m-%d %H:%M (UTC)')),
+        text='{}'.format(datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M (UTC)')),
         fill='#ffffff',
     )
     image.save(image_output_path)
@@ -86,9 +86,16 @@ async def image_create():
 
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
-    rate_pair = await RatePairStaticRepository().get(currency_input=currency_input, currency_output=currency_output)
+    rate_pair = await RatePairRepository().get(
+        currency_input=currency_input,
+        currency_output=currency_output,
+        source=RatePairSources.OUR,
+    )
     if not rate_pair:
-        rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
+        rate_pair = await RatePairRepository().get(
+            currency_input=currency_input,
+            currency_output=currency_output,
+        )
     if not rate_pair:
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal

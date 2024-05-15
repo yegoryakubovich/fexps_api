@@ -21,6 +21,8 @@ import logging
 from app.db.models import RequisiteTypes, RequisiteStates, RateTypes, Currency, RateSources
 from app.repositories import CurrencyRepository, RequisiteRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
+from app.utils.calculations.rates.input import get_input_rate_by_currency_value, get_input_rate_by_value
+from app.utils.calculations.rates.output import get_output_rate_by_value
 
 custom_logger = RateLogger(prefix='rate_our_keep')
 
@@ -34,22 +36,20 @@ async def run():
 
 
 async def update_rate(currency: Currency, rate_type: str):
-    requisites = None
+    rate_value = 0
     if rate_type == RateTypes.INPUT:
-        requisites = await RequisiteRepository().get_list_input_by_rate(
-            currency=currency,
-            type=RequisiteTypes.OUTPUT,
-            state=RequisiteStates.ENABLE,
-        )
+        input_result = await get_input_rate_by_value(currency=currency, value=1000_00)
+        if not input_result:
+            return
+        _, _, rate_value = input_result
     elif rate_type == RateTypes.OUTPUT:
-        requisites = await RequisiteRepository().get_list_output_by_rate(
-            currency=currency,
-            type=RequisiteTypes.INPUT,
-            state=RequisiteStates.ENABLE,
-        )
-    if not requisites:
+        output_result = await get_output_rate_by_value(currency=currency, value=1000_00)
+        if not output_result:
+            return
+        _, _, rate_value = output_result
+    if not rate_value:
         return
-    rate_value = requisites[0].rate
+    rate_value = rate_value * 10 ** currency.rate_decimal
     await RateRepository().create(
         currency=currency,
         type=rate_type,
