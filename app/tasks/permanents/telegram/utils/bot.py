@@ -22,7 +22,7 @@ from aiogram.types import FSInputFile, InlineKeyboardMarkup, InputMediaPhoto, In
 
 from config import settings
 
-WEEK_DAY = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье']
+WEEK_DAY = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
 MONTH_DAY = [
     'января',
     'февраля',
@@ -42,7 +42,7 @@ MONTH_DAY = [
 def get_post_text() -> str:
     date_now = datetime.datetime.now(tz=datetime.UTC)
     return '\n'.join([
-        f'🗓 {WEEK_DAY[date_now.weekday()]}, {date_now.day} {MONTH_DAY[date_now.month - 1]}.',
+        f'🗓 Наступило {date_now.day} {MONTH_DAY[date_now.month - 1]}, {WEEK_DAY[date_now.weekday()]}.',
         f'',
         f'🤝 Прекрасная возможность обменять деньги по ВЫГОДНОМУ КУРСУ вместе с Sowa Pay.',
     ])
