@@ -19,5 +19,5 @@ from app.db.models import RatePairStatic
 from app.repositories.base import BaseRepository
 
 
-class RatePairRepository(BaseRepository[RatePairStatic]):
+class RatePairStaticRepository(BaseRepository[RatePairStatic]):
     model = RatePairStatic

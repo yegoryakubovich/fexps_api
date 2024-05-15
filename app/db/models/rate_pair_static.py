@@ -15,20 +15,14 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, Integer, String
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, Integer
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class RatePairSources:
-    OUR = 'our'
-    BYBIT = 'bybit'
-    BINANCE = 'binance'
-
-
 class RatePairStatic(Base):
-    __tablename__ = 'rates_pairs'
+    __tablename__ = 'rates_pairs_statics'
 
     id = Column(BigInteger, primary_key=True)
 
@@ -38,5 +32,4 @@ class RatePairStatic(Base):
     currency_output = relationship(argument='Currency', foreign_keys=currency_output_id, uselist=False, lazy='selectin')
     rate_decimal = Column(Integer, default=2)
     value = Column(BigInteger)
-    source = Column(String(length=32))
     is_deleted = Column(Boolean, default=False)
