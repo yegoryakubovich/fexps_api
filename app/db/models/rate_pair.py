@@ -27,7 +27,7 @@ class RatePairSources:
     BINANCE = 'binance'
 
 
-class RatePairStatic(Base):
+class RatePair(Base):
     __tablename__ = 'rates_pairs'
 
     id = Column(BigInteger, primary_key=True)
