@@ -21,7 +21,6 @@ from typing import Optional
 from PIL import Image, ImageDraw, ImageFont
 
 from app.db.models import Currency
-from app.db.models.rate_pair import RatePairSources
 from app.repositories import RatePairRepository, CurrencyRepository
 from config import settings
 
@@ -86,16 +85,7 @@ async def image_create():
 
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
-    rate_pair = await RatePairRepository().get(
-        currency_input=currency_input,
-        currency_output=currency_output,
-        source=RatePairSources.OUR,
-    )
-    if not rate_pair:
-        rate_pair = await RatePairRepository().get(
-            currency_input=currency_input,
-            currency_output=currency_output,
-        )
+    rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
     if not rate_pair:
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal
