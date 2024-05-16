@@ -28,16 +28,16 @@ custom_logger = RateLogger(prefix='rate_bybit_keep')
 
 async def run():
     currency = await CurrencyRepository().get_by_id_str(id_str='rub')
-    await update_rate(currency=currency, type_=RateTypes.INPUT)
-    await update_rate(currency=currency, type_=RateTypes.OUTPUT)
+    await update_rate(currency=currency, rate_type=RateTypes.INPUT)
+    await update_rate(currency=currency, rate_type=RateTypes.OUTPUT)
     await asyncio.sleep(60)
 
 
-async def update_rate(currency: Currency, type_: str):
-    rate_value = await rate_get_bybit(currency=currency, type_=type_)
+async def update_rate(currency: Currency, rate_type: str):
+    rate_value = await rate_get_bybit(currency=currency, rate_type=rate_type)
     if not rate_value:
         return
-    if type_ == RateTypes.INPUT:
+    if rate_type == RateTypes.INPUT:
         result_value = 1000_00
         result_currency_value = result_value * rate_value / 10 ** currency.rate_decimal
         commission_pack = await CommissionPackRepository().get(is_default=True)
@@ -52,7 +52,7 @@ async def update_rate(currency: Currency, type_: str):
         rate_value = round(result_currency_value / result_value * 10 ** currency.rate_decimal)
     await RateRepository().create(
         currency=currency,
-        type_=type_,
+        type=rate_type,
         source=RateSources.BYBIT,
         value=rate_value,
     )

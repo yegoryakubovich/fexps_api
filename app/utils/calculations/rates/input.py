@@ -106,9 +106,12 @@ async def get_input_rate_by_value(currency: Currency, value: int) -> Optional[tu
         result_value += suitable_value
     if value and value > 100:
         return
+    commission_pack = await CommissionPackRepository().get(is_default=True)
+    if not commission_pack:
+        return
     commission_pack_value = await CommissionPackValueRepository().get_by_value(
-        commission_pack=await CommissionPackRepository().get(is_default=True),
+        commission_pack=commission_pack,
         value=result_value,
     )
-    result_value += get_commission_value(value=result_value, commission_pack_value=commission_pack_value)
+    result_value += get_commission_value_by_pack(value=result_value, commission_pack_value=commission_pack_value)
     return result_currency_value, result_value, round(result_currency_value / result_value, currency.rate_decimal)
