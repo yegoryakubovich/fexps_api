@@ -168,6 +168,8 @@ class MethodService(BaseService):
             'name_text': method.name_text.key,
             'schema_fields': method.schema_fields,
             'schema_input_fields': method.schema_input_fields,
+            'commission_percent': method.commission_percent,
+            'commission_value': method.commission_value,
             'color': method.color,
             'bgcolor': method.bgcolor,
             'is_active': method.is_active,
