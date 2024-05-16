@@ -15,7 +15,10 @@
 #
 
 
-from app.db.models import Wallet
+from typing import Optional
+
+from app.db.models import Wallet, CommissionPack
+from app.repositories import CommissionPackRepository
 from app.repositories.base import BaseRepository
 
 
@@ -27,3 +30,12 @@ class WalletRepository(BaseRepository[Wallet]):
         if not result:
             result = await self.create(name='System', is_system=True)
         return result
+
+    async def get_commission_pack(self, wallet: Wallet) -> Optional[CommissionPack]:
+        commission_pack = wallet.commission_pack
+        if not commission_pack:
+            commission_pack = await CommissionPackRepository().get(is_default=True)
+            if not commission_pack:
+                return
+            await self.update(wallet, commission_pack=commission_pack)
+        return commission_pack

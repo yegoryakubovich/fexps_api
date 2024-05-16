@@ -13,9 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import datetime
 
-
-from sqlalchemy import Column, BigInteger, String, ForeignKey, Boolean
+from sqlalchemy import Column, BigInteger, String, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -42,4 +42,5 @@ class Rate(Base):
     type = Column(String(length=16))
     source = Column(String(length=32))
     value = Column(BigInteger)
+    created_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     is_deleted = Column(Boolean, default=False)
