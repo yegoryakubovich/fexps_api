@@ -32,7 +32,6 @@ from .method import Method, MethodFieldTypes
 from .permission import Permission
 from .rate import Rate, RateTypes, RateSources
 from .rate_pair import RatePair
-from .rate_static import RateStatic
 from .role import Role
 from .text_pack import TextPack
 from .text_translation import TextTranslation

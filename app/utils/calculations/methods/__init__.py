@@ -13,11 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.db.models import RateStatic
-from app.repositories.base import BaseRepository
-
-
-class RateStaticRepository(BaseRepository[RateStatic]):
-    model = RateStatic
