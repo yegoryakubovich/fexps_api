@@ -19,8 +19,8 @@ import asyncio
 import datetime
 import math
 
-from app.db.models import Currency, RateTypes, RateSources, Rate, RateStatic
-from app.repositories import CurrencyRepository, RatePairRepository, RateRepository, RateStaticRepository
+from app.db.models import Currency, RateTypes, RateSources, Rate
+from app.repositories import CurrencyRepository, RatePairRepository, RateRepository, MethodRepository
 from app.tasks.permanents.rates.logger import RateLogger
 from config import settings
 
@@ -45,32 +45,52 @@ async def run():
 
 async def update_rate(currency_input: Currency, currency_output: Currency):
     rate_decimal = max([currency_input.rate_decimal, currency_output.rate_decimal])
-    # input
+    # INPUT
+    rate_value_input = None
+    # source our
     rate_input = await RateRepository().get(
         currency=currency_input,
         type=RateTypes.INPUT,
         source=RateSources.OUR,
     )
-    if not rate_input or not await check_rate_actual(rate=rate_input):
-        rate_input = await RateStaticRepository().get(currency=currency_input, type=RateTypes.INPUT)
-    if not rate_input or not await check_rate_actual(rate=rate_input):
+    if rate_input and await check_rate_actual(rate=rate_input):
+        rate_value_input = rate_input.value
+    # method default
+    if not rate_value_input:
+        method = await MethodRepository().get(currency=currency_input)
+        if method and method.rate_input_default:
+            rate_value_input = method.rate_input_default
+    # source other
+    if not rate_value_input:
         rate_input = await RateRepository().get(currency=currency_input, type=RateTypes.INPUT)
-    if not rate_input or not await check_rate_actual(rate=rate_input):
+        if rate_input and await check_rate_actual(rate=rate_input):
+            rate_value_input = rate_input.value
+    # finish check
+    if not rate_value_input:
         return
-    rate_value_input = rate_input.value
-    # output
+    # OUTPUT
+    rate_value_output = None
+    # source our
     rate_output = await RateRepository().get(
         currency=currency_output,
         type=RateTypes.OUTPUT,
         source=RateSources.OUR,
     )
-    if not rate_output or not await check_rate_actual(rate=rate_output):
-        rate_output = await RateStaticRepository().get(currency=currency_output, type=RateTypes.OUTPUT)
-    if not rate_output or not await check_rate_actual(rate=rate_output):
+    if rate_output and await check_rate_actual(rate=rate_output):
+        rate_value_output = rate_output.value
+    # method default
+    if not rate_value_output:
+        method = await MethodRepository().get(currency=currency_output)
+        if method and method.rate_output_default:
+            rate_value_output = method.rate_output_default
+    # source other
+    if not rate_value_output:
         rate_output = await RateRepository().get(currency=currency_output, type=RateTypes.OUTPUT)
-    if not rate_output or not await check_rate_actual(rate=rate_output):
+        if rate_output and await check_rate_actual(rate=rate_output):
+            rate_value_output = rate_output.value
+    # finish check
+    if not rate_value_output:
         return
-    rate_value_output = rate_output.value
     # result
     rate_input_value = rate_value_input * 10 ** (rate_decimal - currency_input.rate_decimal)
     rate_output_value = rate_value_output * 10 ** (rate_decimal - currency_output.rate_decimal)
@@ -83,9 +103,7 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     )
 
 
-async def check_rate_actual(rate: [Rate, RateStatic]) -> bool:
-    if isinstance(rate, RateStatic):
-        return True
+async def check_rate_actual(rate: Rate) -> bool:
     rate_date = rate.created_at.replace(tzinfo=datetime.timezone.utc)
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
     date_delta = datetime.timedelta(minutes=settings.rate_actual_minutes)
