@@ -15,7 +15,9 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, Integer
+import datetime
+
+from sqlalchemy import Column, BigInteger, ForeignKey, Boolean, Integer, DateTime
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -32,4 +34,5 @@ class RatePair(Base):
     currency_output = relationship(argument='Currency', foreign_keys=currency_output_id, uselist=False, lazy='selectin')
     rate_decimal = Column(Integer, default=2)
     value = Column(BigInteger)
+    created_at = Column(DateTime, default=datetime.datetime.now)
     is_deleted = Column(Boolean, default=False)
