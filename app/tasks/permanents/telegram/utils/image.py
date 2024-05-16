@@ -16,6 +16,7 @@
 
 
 import datetime
+import logging
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
@@ -86,12 +87,13 @@ async def image_create():
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
     rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-    if not rate_pair or not check_rate_actual(rate_pair=rate_pair):
+    if not rate_pair or not await check_rate_actual(rate_pair=rate_pair):
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal
     if f'{currency_input.id_str}{currency_output.id_str}' in ['usdusdt', 'usdtusd']:
         rate = (1 - rate) * 100
-        rate = rate if rate > 1 else -rate
+        if rate < 0:
+            rate = -rate
         type_ = 'percent'
     else:
         if rate < 1:
