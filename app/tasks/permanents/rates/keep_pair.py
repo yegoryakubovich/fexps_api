@@ -86,10 +86,11 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
 async def check_rate_actual(rate: [Rate, RateStatic]) -> bool:
     if isinstance(rate, RateStatic):
         return True
+    rate_date = rate.created_at.replace(tzinfo=datetime.timezone.utc)
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
     date_delta = datetime.timedelta(minutes=settings.rate_actual_minutes)
     date_check = date_now - date_delta
-    if rate.created_at < date_check:
+    if rate_date < date_check:
         return False
     return True
 
