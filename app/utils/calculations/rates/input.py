@@ -22,19 +22,7 @@ from app.db.models import Currency, RequisiteTypes, RequisiteStates, OrderTypes,
 from app.repositories import RequisiteRepository, CommissionPackRepository, CommissionPackValueRepository
 from app.utils.calculations.requisite.limits import check_currency_value_limits, check_value_limits
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
-
-
-def get_commission_value(
-        value: int,
-        commission_pack_value: CommissionPackValue,
-) -> int:
-    result = 0
-    commission_rate = 10 ** 4
-    if commission_pack_value.percent:
-        result += math.ceil(value - value * (commission_rate - commission_pack_value.percent) / commission_rate)
-    if commission_pack_value.value:
-        result += commission_pack_value.value
-    return result
+from app.utils.calculations.values.comissions import get_commission_value_by_pack
 
 
 async def get_input_rate_by_currency_value(currency: Currency, currency_value: int) -> Optional[tuple]:
@@ -72,11 +60,14 @@ async def get_input_rate_by_currency_value(currency: Currency, currency_value: i
         result_value += suitable_value
     if currency_value:
         return
+    commission_pack = await CommissionPackRepository().get(is_default=True)
+    if not commission_pack:
+        return
     commission_pack_value = await CommissionPackValueRepository().get_by_value(
-        commission_pack=await CommissionPackRepository().get(is_default=True),
+        commission_pack=commission_pack,
         value=result_value,
     )
-    result_value += get_commission_value(value=result_value, commission_pack_value=commission_pack_value)
+    result_value += get_commission_value_by_pack(value=result_value, commission_pack_value=commission_pack_value)
     return result_currency_value, result_value, round(result_currency_value / result_value, currency.rate_decimal)
 
 
