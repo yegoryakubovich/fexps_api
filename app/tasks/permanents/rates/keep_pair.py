@@ -67,9 +67,9 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         )
         if rate_input and await check_rate_actual(rate=rate_input):
             rate_value_input = rate_input.value
-
     # finish check
     if not rate_value_input:
+        logging.critical(f'{currency_input.id_str}{currency_output.id_str} input not found')
         return
     # OUTPUT
     rate_value_output = None
@@ -94,6 +94,7 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
             rate_value_output = rate_output.value
     # finish check
     if not rate_value_output:
+        logging.critical(f'{currency_input.id_str}{currency_output.id_str} output not found')
         return
     # result
     rate_input_value = rate_value_input * 10 ** (rate_decimal - currency_input.rate_decimal)
