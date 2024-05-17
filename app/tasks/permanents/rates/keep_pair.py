@@ -22,7 +22,8 @@ import logging
 from app.db.models import Currency, RateTypes, RateSources, Rate
 from app.repositories import CurrencyRepository, RatePairRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
-from app.utils.calculations.rates.default import rate_get_default
+from app.utils.calculations.rates.bybit import calculate_rate_bybit
+from app.utils.calculations.rates.default import calculate_rate_default
 from config import settings
 
 custom_logger = RateLogger(prefix='rate_keep_pair')
@@ -58,7 +59,16 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         rate_value_input = rate_input.value
     # source default
     if not rate_value_input:
-        rate_value_input = await rate_get_default(currency=currency_input, rate_type=RateTypes.INPUT)
+        rate_value_input = await calculate_rate_default(currency=currency_input, rate_type=RateTypes.INPUT)
+    # source bybit
+    if not rate_value_input:
+        rate_input = await RateRepository().get(
+            currency=currency_input,
+            type=RateTypes.INPUT,
+            source=RateSources.BYBIT,
+        )
+        if rate_input and await check_rate_actual(rate=rate_input):
+            rate_value_input = await calculate_rate_bybit(rate=rate_input)
     # source other
     if not rate_value_input:
         rate_input = await RateRepository().get(
@@ -83,7 +93,16 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         rate_value_output = rate_output.value
     # source default
     if not rate_value_output:
-        rate_value_output = await rate_get_default(currency=currency_output, rate_type=RateTypes.OUTPUT)
+        rate_value_output = await calculate_rate_default(currency=currency_output, rate_type=RateTypes.OUTPUT)
+    # source bybit
+    if not rate_value_output:
+        rate_output = await RateRepository().get(
+            currency=currency_output,
+            type=RateTypes.OUTPUT,
+            source=RateSources.BYBIT,
+        )
+        if rate_output and await check_rate_actual(rate=rate_output):
+            rate_value_output = await calculate_rate_bybit(rate=rate_output)
     # source other
     if not rate_value_output:
         rate_output = await RateRepository().get(

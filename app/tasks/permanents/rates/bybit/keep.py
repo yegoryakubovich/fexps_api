@@ -18,11 +18,9 @@
 import asyncio
 
 from app.db.models import Currency, RateSources, RateTypes
-from app.repositories import CurrencyRepository, RateRepository, CommissionPackRepository, MethodRepository
+from app.repositories import CurrencyRepository, RateRepository
 from app.tasks.permanents.rates.bybit.utils import rate_get_bybit
 from app.tasks.permanents.rates.logger import RateLogger
-from app.utils.calculations.methods.commissions import get_commission_value_by_method
-from app.utils.calculations.values.comissions import get_commission_value_by_pack
 
 custom_logger = RateLogger(prefix='rate_bybit_keep')
 
@@ -35,28 +33,14 @@ async def run():
 
 
 async def update_rate(currency: Currency, rate_type: str):
-    rate_value = await rate_get_bybit(currency=currency, rate_type=rate_type)
-    if not rate_value:
+    result_rate = await rate_get_bybit(currency=currency, rate_type=rate_type)
+    if not result_rate:
         return
-    result_value = 1000_00
-    result_currency_value = result_value * rate_value / 10 ** currency.rate_decimal
-    if rate_type == RateTypes.INPUT:
-        method = await MethodRepository().get(currency=currency)
-        result_value -= get_commission_value_by_method(value=result_value, method=method, rate_type=rate_type)
-        commission_pack = await CommissionPackRepository().get(is_default=True)
-        if not commission_pack:
-            custom_logger.info(text='CommissionPack not found')
-            return
-        result_value -= await get_commission_value_by_pack(value=result_value, commission_pack=commission_pack)
-        rate_value = round(result_currency_value / result_value * 10 ** currency.rate_decimal)
-    elif rate_type == RateTypes.OUTPUT:
-        method = await MethodRepository().get(currency=currency)
-        result_value += get_commission_value_by_method(value=result_value, method=method, rate_type=rate_type)
     await RateRepository().create(
         currency=currency,
         type=rate_type,
         source=RateSources.BYBIT,
-        value=rate_value,
+        value=result_rate,
     )
 
 
