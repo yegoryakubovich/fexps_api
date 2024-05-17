@@ -15,11 +15,10 @@
 #
 
 
-import math
 from typing import Optional
 
-from app.db.models import Currency, RequisiteTypes, RequisiteStates, OrderTypes, CommissionPackValue
-from app.repositories import RequisiteRepository, CommissionPackRepository, CommissionPackValueRepository
+from app.db.models import Currency, RequisiteTypes, RequisiteStates, OrderTypes
+from app.repositories import RequisiteRepository, CommissionPackRepository
 from app.utils.calculations.requisite.limits import check_currency_value_limits, check_value_limits
 from app.utils.calculations.simples import get_div_by_currency_value, get_div_by_value
 from app.utils.calculations.values.comissions import get_commission_value_by_pack
@@ -63,11 +62,7 @@ async def get_input_rate_by_currency_value(currency: Currency, currency_value: i
     commission_pack = await CommissionPackRepository().get(is_default=True)
     if not commission_pack:
         return
-    commission_pack_value = await CommissionPackValueRepository().get_by_value(
-        commission_pack=commission_pack,
-        value=result_value,
-    )
-    result_value += get_commission_value_by_pack(value=result_value, commission_pack_value=commission_pack_value)
+    result_value += await get_commission_value_by_pack(value=result_value, commission_pack=commission_pack)
     return result_currency_value, result_value, round(result_currency_value / result_value, currency.rate_decimal)
 
 
@@ -109,9 +104,5 @@ async def get_input_rate_by_value(currency: Currency, value: int) -> Optional[tu
     commission_pack = await CommissionPackRepository().get(is_default=True)
     if not commission_pack:
         return
-    commission_pack_value = await CommissionPackValueRepository().get_by_value(
-        commission_pack=commission_pack,
-        value=result_value,
-    )
-    result_value += get_commission_value_by_pack(value=result_value, commission_pack_value=commission_pack_value)
+    result_value += await get_commission_value_by_pack(value=result_value, commission_pack=commission_pack)
     return result_currency_value, result_value, round(result_currency_value / result_value, currency.rate_decimal)

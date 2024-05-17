@@ -18,11 +18,15 @@
 import math
 from typing import Optional
 
-from app.db.models import CommissionPackValue, Wallet
+from app.db.models import CommissionPackValue, Wallet, CommissionPack
 from app.repositories import CommissionPackValueRepository, WalletRepository
 
 
-def get_commission_value_by_pack(commission_pack_value: CommissionPackValue, value: int) -> int:
+async def get_commission_value_by_pack(commission_pack: CommissionPack, value: int) -> int:
+    commission_pack_value = await CommissionPackValueRepository().get_by_value(
+        commission_pack=commission_pack,
+        value=value,
+    )
     result = 0
     commission_rate = 10 ** 4
     if commission_pack_value.percent:
@@ -36,8 +40,4 @@ async def get_commission_value_by_wallet(wallet: Wallet, value: int) -> Optional
     commission_pack = await WalletRepository().get_commission_pack(wallet=wallet)
     if not commission_pack:
         return
-    commission_pack_value = await CommissionPackValueRepository().get_by_value(
-        commission_pack=commission_pack,
-        value=value,
-    )
-    return get_commission_value_by_pack(commission_pack_value=commission_pack_value, value=value)
+    return await get_commission_value_by_pack(commission_pack=commission_pack, value=value)

@@ -24,13 +24,9 @@ def get_commission_value_by_method(method: Method, value: int, rate_type: str) -
     result, commission_rate = 0, 10 ** 4
     commission_percent, commission_value = 0, 0
     if rate_type == RateTypes.INPUT:
-        commission_percent = method.rate_input_commission_percent
-        commission_value = method.rate_input_commission_value
+        commission_percent = method.rate_input_percent
     elif rate_type == RateTypes.OUTPUT:
-        commission_percent = method.rate_output_commission_percent
-        commission_value = method.rate_output_commission_value
+        commission_percent = method.rate_output_percent
     if commission_percent:
         result += math.ceil(value - value * (commission_rate - commission_percent) / commission_rate)
-    if commission_value:
-        result += commission_value
     return result

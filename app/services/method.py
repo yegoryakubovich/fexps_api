@@ -38,8 +38,13 @@ class MethodService(BaseService):
             name: str,
             fields: list[dict],
             input_fields: list[dict],
+            rate_input_default: int,
+            rate_output_default: int,
+            rate_input_percent: int,
+            rate_output_percent: int,
             color: str,
             bgcolor: str,
+            is_rate_default: bool = None,
     ) -> dict:
         # fields
         if isinstance(fields, str):
@@ -69,8 +74,13 @@ class MethodService(BaseService):
             name_text=name_text,
             schema_fields=fields,
             schema_input_fields=input_fields,
+            rate_input_default=rate_input_default,
+            rate_output_default=rate_output_default,
+            rate_input_percent=rate_input_percent,
+            rate_output_percent=rate_output_percent,
             color=color,
             bgcolor=bgcolor,
+            is_rate_default=is_rate_default,
         )
         await TextPackRepository().create_all()
         await self.create_action(
@@ -80,8 +90,13 @@ class MethodService(BaseService):
                 'creator': f'session_{session.id}',
                 'name_text': name_text.key,
                 'currency': currency.id_str,
+                'rate_input_default': rate_input_default,
+                'rate_output_default': rate_output_default,
+                'rate_input_percent': rate_input_percent,
+                'rate_output_percent': rate_output_percent,
                 'color': color,
                 'bgcolor': bgcolor,
+                'is_rate_default': is_rate_default,
             },
         )
         return {'id': method.id}
@@ -108,8 +123,13 @@ class MethodService(BaseService):
             currency_id_str: str = None,
             fields: list[dict] = None,
             input_fields: list[dict] = None,
+            rate_input_default: int = None,
+            rate_output_default: int = None,
+            rate_input_percent: int = None,
+            rate_output_percent: int = None,
             color: str = None,
             bgcolor: str = None,
+            is_rate_default: bool = None,
     ) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
@@ -117,8 +137,13 @@ class MethodService(BaseService):
             currency_id_str=currency_id_str,
             schema_fields=fields,
             schema_input_fields=input_fields,
+            rate_input_default=rate_input_default,
+            rate_output_default=rate_output_default,
+            rate_input_percent=rate_input_percent,
+            rate_output_percent=rate_output_percent,
             color=color,
             bgcolor=bgcolor,
+            is_rate_default=is_rate_default,
         )
         await TextPackRepository().create_all()
         action_parameters = {
@@ -131,10 +156,20 @@ class MethodService(BaseService):
             action_parameters['schema_fields'] = fields
         if input_fields:
             action_parameters['schema_input_fields'] = input_fields
+        if rate_input_default:
+            action_parameters['rate_input_default'] = rate_input_default
+        if rate_output_default:
+            action_parameters['rate_output_default'] = rate_output_default
+        if rate_input_percent:
+            action_parameters['rate_input_percent'] = rate_input_percent
+        if rate_output_percent:
+            action_parameters['rate_output_percent'] = rate_output_percent
         if color:
             action_parameters['color'] = color
         if bgcolor:
             action_parameters['bgcolor'] = bgcolor
+        if is_rate_default:
+            action_parameters['is_rate_default'] = is_rate_default
         await self.create_action(
             model=method,
             action=Actions.UPDATE,
@@ -168,9 +203,12 @@ class MethodService(BaseService):
             'name_text': method.name_text.key,
             'schema_fields': method.schema_fields,
             'schema_input_fields': method.schema_input_fields,
-            'commission_percent': method.commission_percent,
-            'commission_value': method.commission_value,
+            'rate_input_default': method.rate_input_default,
+            'rate_output_default': method.rate_output_default,
+            'rate_input_percent': method.rate_input_percent,
+            'rate_output_percent': method.rate_output_percent,
             'color': method.color,
             'bgcolor': method.bgcolor,
+            'is_rate_default': method.is_rate_default,
             'is_active': method.is_active,
         }

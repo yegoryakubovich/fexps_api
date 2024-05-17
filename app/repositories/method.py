@@ -32,8 +32,13 @@ class MethodRepository(BaseRepository[Method]):
             currency_id_str: str = None,
             schema_fields: list[dict] = None,
             schema_input_fields: list[dict] = None,
+            rate_input_default: int = None,
+            rate_output_default: int = None,
+            rate_input_percent: int = None,
+            rate_output_percent: int = None,
             color: str = None,
             bgcolor: str = None,
+            is_rate_default: bool = None,
     ) -> None:
         updates = {}
         if currency_id_str:
@@ -55,10 +60,20 @@ class MethodRepository(BaseRepository[Method]):
                 )
                 field['name_text_key'] = name_text.key
             updates['schema_input_fields'] = schema_input_fields
-        if color:
+        if rate_input_default is not None:
+            updates['rate_input_default'] = rate_input_default
+        if rate_output_default is not None:
+            updates['rate_output_default'] = rate_output_default
+        if rate_input_percent is not None:
+            updates['rate_input_percent'] = rate_input_percent
+        if rate_output_percent is not None:
+            updates['rate_output_percent'] = rate_output_percent
+        if color is not None:
             updates['color'] = color
-        if bgcolor:
+        if bgcolor is not None:
             updates['bgcolor'] = bgcolor
+        if is_rate_default is not None:
+            updates['is_rate_default'] = is_rate_default
         if not updates:
             raise NoRequiredParameters(
                 kwargs={

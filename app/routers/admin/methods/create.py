@@ -22,7 +22,6 @@ from app.services import MethodService
 from app.utils import Router, Response
 from app.utils.exceptions.method import MethodParametersMissing, MethodParametersValidationError
 
-
 router = Router(
     prefix='/create',
 )
@@ -38,8 +37,13 @@ class MethodCreateSchema(BaseModel):
     input_fields: list[dict] = Field(
         default='[{"key": "string", "type": "str/int/image", "name": "string", "optional": false}]'
     )
+    rate_input_default: int = Field(default=0)
+    rate_output_default: int = Field(default=0)
+    rate_input_percent: int = Field(default=0)
+    rate_output_percent: int = Field(default=0)
     color: str = Field(min_length=2, max_length=7, default='#1D1D1D')
     bgcolor: str = Field(min_length=2, max_length=7, default='#FFFCEF')
+    is_rate_default: bool = Field(default=False)
 
     @field_validator('fields')
     @classmethod
@@ -117,7 +121,12 @@ async def route(schema: MethodCreateSchema):
         name=schema.name,
         fields=schema.fields,
         input_fields=schema.input_fields,
+        rate_input_default=schema.rate_input_default,
+        rate_output_default=schema.rate_output_default,
+        rate_input_percent=schema.rate_input_percent,
+        rate_output_percent=schema.rate_output_percent,
         color=schema.color,
         bgcolor=schema.bgcolor,
+        is_rate_default=schema.is_rate_default,
     )
     return Response(**result)

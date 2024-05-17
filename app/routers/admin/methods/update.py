@@ -35,8 +35,14 @@ class MethodUpdateSchema(BaseModel):
     currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
     fields: Optional[list[dict]] = Field(default=None)
     input_fields: Optional[list[dict]] = Field(default=None)
+    rate_input_default: Optional[int] = Field(default=None)
+    rate_output_default: Optional[int] = Field(default=None)
+    rate_input_percent: Optional[int] = Field(default=None)
+    rate_output_percent: Optional[int] = Field(default=None)
     color: str = Field(min_length=2, max_length=7, default='#1D1D1D')
     bgcolor: str = Field(min_length=2, max_length=7, default='#FFFCEF')
+    is_rate_default: Optional[bool] = Field(default=None)
+
 
     @field_validator('fields')
     @classmethod
@@ -114,10 +120,15 @@ async def route(schema: MethodUpdateSchema):
     result = await MethodService().update_by_admin(
         token=schema.token,
         id_=schema.id_,
-        currency_id_str=schema.currency_id_str or None,
-        fields=schema.fields or None,
-        input_fields=schema.input_fields or None,
-        color=schema.color or None,
-        bgcolor=schema.bgcolor or None,
+        currency_id_str=schema.currency_id_str,
+        fields=schema.fields,
+        input_fields=schema.input_fields,
+        rate_input_default=schema.rate_input_default,
+        rate_output_default=schema.rate_output_default,
+        rate_input_percent=schema.rate_input_percent,
+        rate_output_percent=schema.rate_output_percent,
+        color=schema.color,
+        bgcolor=schema.bgcolor,
+        is_rate_default=schema.is_rate_default,
     )
     return Response(**result)

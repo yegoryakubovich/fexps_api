@@ -17,11 +17,12 @@
 
 import asyncio
 import datetime
-import math
+import logging
 
 from app.db.models import Currency, RateTypes, RateSources, Rate
-from app.repositories import CurrencyRepository, RatePairRepository, RateRepository, MethodRepository
+from app.repositories import CurrencyRepository, RatePairRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
+from app.utils.calculations.rates.default import rate_get_default
 from config import settings
 
 custom_logger = RateLogger(prefix='rate_keep_pair')
@@ -55,16 +56,18 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     )
     if rate_input and await check_rate_actual(rate=rate_input):
         rate_value_input = rate_input.value
-    # method default
+    # source default
     if not rate_value_input:
-        method = await MethodRepository().get(currency=currency_input)
-        if method and method.rate_input_default:
-            rate_value_input = method.rate_input_default
+        rate_value_input = await rate_get_default(currency=currency_input, rate_type=RateTypes.INPUT)
     # source other
     if not rate_value_input:
-        rate_input = await RateRepository().get(currency=currency_input, type=RateTypes.INPUT)
+        rate_input = await RateRepository().get(
+            currency=currency_input,
+            type=RateTypes.INPUT,
+        )
         if rate_input and await check_rate_actual(rate=rate_input):
             rate_value_input = rate_input.value
+
     # finish check
     if not rate_value_input:
         return
@@ -78,14 +81,15 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     )
     if rate_output and await check_rate_actual(rate=rate_output):
         rate_value_output = rate_output.value
-    # method default
+    # source default
     if not rate_value_output:
-        method = await MethodRepository().get(currency=currency_output)
-        if method and method.rate_output_default:
-            rate_value_output = method.rate_output_default
+        rate_value_output = await rate_get_default(currency=currency_output, rate_type=RateTypes.OUTPUT)
     # source other
     if not rate_value_output:
-        rate_output = await RateRepository().get(currency=currency_output, type=RateTypes.OUTPUT)
+        rate_output = await RateRepository().get(
+            currency=currency_output,
+            type=RateTypes.OUTPUT,
+        )
         if rate_output and await check_rate_actual(rate=rate_output):
             rate_value_output = rate_output.value
     # finish check
@@ -94,7 +98,15 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
     # result
     rate_input_value = rate_value_input * 10 ** (rate_decimal - currency_input.rate_decimal)
     rate_output_value = rate_value_output * 10 ** (rate_decimal - currency_output.rate_decimal)
-    rate_value = math.ceil(rate_input_value / rate_output_value * 10 ** rate_decimal)
+    rate_value = round(rate_input_value / rate_output_value * 10 ** rate_decimal)
+    logging.critical(
+        f'{currency_input.id_str}{currency_output.id_str}: '
+        f'rate_input_value {rate_input_value} | '
+        f'rate_output_value {rate_output_value} | '
+        f'rate_value {rate_value}'
+    )
+    if not rate_value:
+        return
     await RatePairRepository().create(
         currency_input=currency_input,
         currency_output=currency_output,

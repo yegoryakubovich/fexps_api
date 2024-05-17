@@ -18,8 +18,7 @@
 import asyncio
 
 from app.db.models import Currency, RateSources, RateTypes
-from app.repositories import CurrencyRepository, RateRepository, CommissionPackValueRepository, \
-    CommissionPackRepository, MethodRepository
+from app.repositories import CurrencyRepository, RateRepository, CommissionPackRepository, MethodRepository
 from app.tasks.permanents.rates.bybit.utils import rate_get_bybit
 from app.tasks.permanents.rates.logger import RateLogger
 from app.utils.calculations.methods.commissions import get_commission_value_by_method
@@ -48,11 +47,7 @@ async def update_rate(currency: Currency, rate_type: str):
         if not commission_pack:
             custom_logger.info(text='CommissionPack not found')
             return
-        commission_pack_value = await CommissionPackValueRepository().get_by_value(
-            commission_pack=commission_pack,
-            value=result_value,
-        )
-        result_value -= get_commission_value_by_pack(value=result_value, commission_pack_value=commission_pack_value)
+        result_value -= await get_commission_value_by_pack(value=result_value, commission_pack=commission_pack)
         rate_value = round(result_currency_value / result_value * 10 ** currency.rate_decimal)
     elif rate_type == RateTypes.OUTPUT:
         method = await MethodRepository().get(currency=currency)
@@ -65,7 +60,7 @@ async def update_rate(currency: Currency, rate_type: str):
     )
 
 
-async def rate_keep_bybit():
+async def rate_keep_bybit():  # FIXME (commissions)
     custom_logger.info(text=f'started...')
     while True:
         try:
