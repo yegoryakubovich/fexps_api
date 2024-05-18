@@ -38,5 +38,5 @@ async def telegram_image_poster():
     await TelegramPostRepository().create(
         chat_id=message.chat.id,
         message_id=message.message_id,
-        text=message.text,
+        text=message.caption,
     )
