@@ -30,8 +30,8 @@ from app.db.models import RateTypes, Currency
 async def rate_get_bybit(currency: Currency, rate_type: str):
     rates = []
     async with aiohttp.ClientSession() as session:
-        for value in [50_000, 100_000, 200_000]:
-            for payment_id in [382, 581]:
+        for value in [100_000]:
+            for payment_id in [581]:
                 response = await session.post(
                     url='https://api2.bybit.com/fiat/otc/item/online',
                     json={
