@@ -72,7 +72,7 @@ async def image_create():
             rate_str += '%'
         image_draw_center(
             image_draw=image_draw,
-            coordinates=COORDINATES_RATES.get(f'{currency_input.id_str}{currency_output.id_str}'),
+            coordinates=COORDINATES_RATES.get(f'{currency_output.id_str}{currency_input.id_str}'),
             text=rate_str,
         )
     image_draw.text(

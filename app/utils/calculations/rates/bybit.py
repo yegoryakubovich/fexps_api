@@ -37,20 +37,20 @@ async def calculate_rate_bybit(rate: Rate):
         if not commission_pack:
             return
         commission_value = await get_commission_value_by_pack(value=value, commission_pack=commission_pack)
-        result_value -= commission_value
+        result_value += commission_value
         if method and method.rate_input_percent:
-            result_rate_float = result_rate / 10 ** currency.rate_decimal
-            rate_output_percent_float = method.rate_output_percent / 10 ** currency.rate_decimal
-            result_rate_float = result_rate_float / (1 - rate_output_percent_float)
-            result_rate = result_rate_float * 10 ** currency.rate_decimal
-        round_func = math.ceil
-    elif rate_type == RateTypes.OUTPUT:
-        if method and method.rate_output_percent:
             result_rate_float = result_rate / 10 ** currency.rate_decimal
             rate_input_percent_float = method.rate_input_percent / 10 ** currency.rate_decimal
             result_rate_float = result_rate_float * (1 - rate_input_percent_float)
             result_rate = result_rate_float * 10 ** currency.rate_decimal
         round_func = math.floor
+    elif rate_type == RateTypes.OUTPUT:
+        if method and method.rate_output_percent:
+            result_rate_float = result_rate / 10 ** currency.rate_decimal
+            rate_output_percent_float = method.rate_output_percent / 10 ** currency.rate_decimal
+            result_rate_float = result_rate_float / (1 - rate_output_percent_float)
+            result_rate = result_rate_float * 10 ** currency.rate_decimal
+        round_func = math.ceil
     if not result_value:
         return
     result_value = result_value / result_rate * 10 ** currency.rate_decimal
