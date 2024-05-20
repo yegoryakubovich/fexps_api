@@ -75,7 +75,6 @@ async def start_app() -> None:
         misfire_grace_time=30,
         trigger='cron',
         minute=0,
-        next_run_time=datetime.now(),
     )
     scheduler.start()
     while True:

@@ -17,9 +17,12 @@
 
 from typing import Optional
 
-from app.db.models import Request, RateTypes
+from app.db.models import Request, RateTypes, RateSources
 from app.repositories import RateRepository
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.calculations.rates.bybit import calculate_rate_bybit
+from app.utils.calculations.rates.checks import check_actual_rate
+from app.utils.calculations.rates.default import calculate_rate_default
 from app.utils.calculations.schemes.loading import TypesScheme
 
 custom_logger = RequestLogger(prefix='request_state_loading_output_check')
@@ -35,10 +38,39 @@ async def request_type_output(
         text=f'first_line={request.first_line}, currency={currency.id_str}',
         request=request,
     )
-    last_rate = await RateRepository().get(currency=currency, type=RateTypes.OUTPUT)
-    if not last_rate:
+    request_rate = None
+    # source our
+    rate = await RateRepository().get(
+        currency=currency,
+        type=RateTypes.OUTPUT,
+        source=RateSources.OUR,
+    )
+    if rate and await check_actual_rate(rate=rate):
+        request_rate = rate.value
+    # source default
+    if not request_rate:
+        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
+    # source bybit
+    if not request_rate:
+        rate = await RateRepository().get(
+            currency=currency,
+            type=RateTypes.OUTPUT,
+            source=RateSources.BYBIT,
+        )
+        if rate and await check_actual_rate(rate=rate):
+            request_rate = await calculate_rate_bybit(rate=rate)
+    # source other
+    if not request_rate:
+        rate = await RateRepository().get(
+            currency=currency,
+            type=RateTypes.OUTPUT,
+        )
+        if rate and await check_actual_rate(rate=rate):
+            request_rate = rate.value
+    # finish check
+    if request_rate is None:
+        custom_logger.critical(text=f'{currency.id_str} output not found')
         return
-    request_rate = last_rate.value
     if currency.rate_decimal != request.rate_decimal:
         request_rate *= 10 ** (request.rate_decimal - currency.rate_decimal)
     if currency_value:

@@ -16,13 +16,13 @@
 
 
 import datetime
-import logging
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.db.models import Currency, RatePair
+from app.db.models import Currency
 from app.repositories import RatePairRepository, CurrencyRepository
+from app.utils.calculations.rates.checks import check_actual_rate_pair
 from config import settings
 
 COORDINATES_RATES = {
@@ -88,7 +88,7 @@ async def image_create():
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
     rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-    if not rate_pair or not await check_rate_actual(rate_pair=rate_pair):
+    if not rate_pair or not await check_actual_rate_pair(rate_pair=rate_pair):
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal
     if f'{currency_input.id_str}{currency_output.id_str}' in ['usdusdt', 'usdtusd']:
@@ -101,13 +101,3 @@ async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> 
             rate = 1 / rate
         type_ = 'value'
     return round(rate, 2), type_
-
-
-async def check_rate_actual(rate_pair: RatePair) -> bool:
-    rate_date = rate_pair.created_at.replace(tzinfo=datetime.timezone.utc)
-    date_now = datetime.datetime.now(tz=datetime.timezone.utc)
-    date_delta = datetime.timedelta(minutes=settings.rate_actual_minutes)
-    date_check = date_now - date_delta
-    if rate_date < date_check:
-        return False
-    return True
