@@ -19,7 +19,6 @@ import asyncio
 from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
 
 from app import config_logger
 from app.tasks.permanents.rates import rate_keep_bybit, rate_our_keep, rate_keep_pair_our
@@ -57,9 +56,9 @@ TASKS += [
 async def start_app() -> None:
     config_logger()
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(func=go_sync_gd, trigger='cron', minute=00, next_run_time=datetime.now())
-    scheduler.add_job(func=telegram_image_poster, trigger='cron', hour=12, minute=00)
-    scheduler.add_job(func=telegram_image_updater, trigger='cron', minute=00)
+    scheduler.add_job(func=go_sync_gd, misfire_grace_time=30, trigger='cron', minute=00, next_run_time=datetime.now())
+    scheduler.add_job(func=telegram_image_poster, misfire_grace_time=30, trigger='cron', hour=16, minute=00)
+    scheduler.add_job(func=telegram_image_updater, misfire_grace_time=30, trigger='cron', minute=00)
     scheduler.start()
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]

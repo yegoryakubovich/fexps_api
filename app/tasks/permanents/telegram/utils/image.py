@@ -56,6 +56,7 @@ def image_draw_center(image_draw, coordinates, text):
 
 
 async def image_create():
+    date_now = datetime.datetime.now(tz=datetime.timezone.utc)
     image_input_path = f'{settings.path_telegram}/source/sowapay.png'
     image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
@@ -78,7 +79,7 @@ async def image_create():
     image_draw.text(
         (1245, 116),
         font=FONT_JETBRAINSMONO_REGULAR,
-        text='{}'.format(datetime.datetime.now(tz=datetime.timezone.utc).strftime('%Y-%m-%d %H:%M (UTC)')),
+        text='{}'.format(date_now.strftime('%Y-%m-%d %H:%M (UTC)')),
         fill='#ffffff',
     )
     image.save(image_output_path)
