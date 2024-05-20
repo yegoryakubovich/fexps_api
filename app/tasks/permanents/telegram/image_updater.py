@@ -28,6 +28,7 @@ custom_logger = TelegramLogger(prefix='telegram_image_updater')
 
 
 async def telegram_image_updater():
+    custom_logger.critical(text='Start update')
     telegram_post = await TelegramPostRepository().get()
     if not telegram_post:
         custom_logger.critical(text='Not found telegram_post')
