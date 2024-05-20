@@ -57,8 +57,9 @@ TASKS += [
 async def start_app() -> None:
     config_logger()
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(func=go_sync_gd, trigger=CronTrigger.from_crontab('0 * * * *'), next_run_time=datetime.now())
+    scheduler.add_job(func=go_sync_gd, trigger='cron', minute=00, next_run_time=datetime.now())
     scheduler.add_job(func=telegram_image_poster, trigger='cron', hour=12, minute=00)
+    scheduler.add_job(func=telegram_image_updater, trigger='cron', minute=00)
     scheduler.start()
     while True:
         tasks_names = [task.get_name() for task in asyncio.all_tasks()]

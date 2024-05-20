@@ -27,7 +27,7 @@ from app.tasks.permanents.telegram.utils.image import image_create
 custom_logger = TelegramLogger(prefix='telegram_image_updater')
 
 
-async def run():
+async def telegram_image_updater():
     telegram_post = await TelegramPostRepository().get()
     if not telegram_post:
         custom_logger.critical(text='Not found telegram_post')
@@ -39,13 +39,4 @@ async def run():
         text=telegram_post.text,
         keyboard=get_post_keyboard(),
     )
-    await asyncio.sleep(60)
 
-
-async def telegram_image_updater():
-    custom_logger.info(text=f'started...')
-    while True:
-        try:
-            await run()
-        except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
