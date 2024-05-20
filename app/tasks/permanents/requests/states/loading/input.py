@@ -42,19 +42,19 @@ async def request_type_input(
     request_rate = None
     rate = await RateRepository().get(
         currency=currency,
-        type=RateTypes.INPUT,
+        type=RateTypes.OUTPUT,
         source=RateSources.OUR,
     )
     if rate and await check_actual_rate(rate=rate):
         request_rate = rate.value
     # source default
     if not request_rate:
-        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.INPUT)
+        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
     # source bybit
     if not request_rate:
         rate = await RateRepository().get(
             currency=currency,
-            type=RateTypes.INPUT,
+            type=RateTypes.OUTPUT,
             source=RateSources.BYBIT,
         )
         if rate and await check_actual_rate(rate=rate):
@@ -63,7 +63,7 @@ async def request_type_input(
     if not request_rate:
         rate = await RateRepository().get(
             currency=currency,
-            type=RateTypes.INPUT,
+            type=RateTypes.OUTPUT,
         )
         if rate and await check_actual_rate(rate=rate):
             request_rate = rate.value

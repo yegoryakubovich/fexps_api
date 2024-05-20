@@ -57,6 +57,7 @@ async def start_app() -> None:
     config_logger()
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
+        name='go_sync_gd',
         func=go_sync_gd,
         misfire_grace_time=30,
         trigger='cron',
@@ -64,6 +65,7 @@ async def start_app() -> None:
         next_run_time=datetime.now(),
     )
     scheduler.add_job(
+        name='telegram_image_poster',
         func=telegram_image_poster,
         misfire_grace_time=30,
         trigger='cron',
@@ -71,6 +73,7 @@ async def start_app() -> None:
         minute=0,
     )
     scheduler.add_job(
+        name='telegram_image_updater',
         func=telegram_image_updater,
         misfire_grace_time=30,
         trigger='cron',
