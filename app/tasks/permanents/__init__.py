@@ -30,6 +30,7 @@ from app.tasks.permanents.telegram import telegram_image_poster
 from app.tasks.permanents.telegram.image_poster import telegram_image_poster
 from app.tasks.permanents.telegram.image_updater import telegram_image_updater
 
+
 TASKS = []
 # Request
 TASKS += [
@@ -46,10 +47,6 @@ TASKS += [
     rate_our_keep,
     rate_keep_pair_our,
     rate_keep_bybit,
-]
-# Telegram
-TASKS += [
-    telegram_image_updater,
 ]
 
 
