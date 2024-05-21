@@ -32,15 +32,16 @@ router = Router(
 class MethodUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
-    currency_id_str: Optional[str] = Field(default=None, min_length=2, max_length=32)
+    currency: Optional[str] = Field(default=None, min_length=2, max_length=32)
+    name: Optional[str] = Field(min_length=1, max_length=1024)
     fields: Optional[list[dict]] = Field(default=None)
     input_fields: Optional[list[dict]] = Field(default=None)
     rate_input_default: Optional[int] = Field(default=None)
     rate_output_default: Optional[int] = Field(default=None)
     rate_input_percent: Optional[int] = Field(default=None)
     rate_output_percent: Optional[int] = Field(default=None)
-    color: str = Field(min_length=2, max_length=7, default='#1D1D1D')
-    bgcolor: str = Field(min_length=2, max_length=7, default='#FFFCEF')
+    color: Optional[str] = Field(min_length=2, max_length=7, default='#1D1D1D')
+    bgcolor: Optional[str] = Field(min_length=2, max_length=7, default='#FFFCEF')
     is_rate_default: Optional[bool] = Field(default=None)
 
 
@@ -120,7 +121,8 @@ async def route(schema: MethodUpdateSchema):
     result = await MethodService().update_by_admin(
         token=schema.token,
         id_=schema.id_,
-        currency_id_str=schema.currency_id_str,
+        currency=schema.currency,
+        name=schema.name,
         fields=schema.fields,
         input_fields=schema.input_fields,
         rate_input_default=schema.rate_input_default,

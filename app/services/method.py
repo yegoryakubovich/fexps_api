@@ -120,7 +120,8 @@ class MethodService(BaseService):
             self,
             session: Session,
             id_: int,
-            currency_id_str: str = None,
+            currency: str = None,
+            name: str = None,
             fields: list[dict] = None,
             input_fields: list[dict] = None,
             rate_input_default: int = None,
@@ -134,7 +135,8 @@ class MethodService(BaseService):
         method = await MethodRepository().get_by_id(id_=id_)
         await MethodRepository().update_method(
             method,
-            currency_id_str=currency_id_str,
+            currency=currency,
+            name=name,
             schema_fields=fields,
             schema_input_fields=input_fields,
             rate_input_default=rate_input_default,
@@ -150,8 +152,10 @@ class MethodService(BaseService):
             'updater': f'session_{session.id}',
             'id': id_,
         }
-        if currency_id_str:
-            action_parameters['currency_id_str'] = currency_id_str
+        if currency:
+            action_parameters['currency'] = currency
+        if name:
+            action_parameters['name'] = name
         if fields:
             action_parameters['schema_fields'] = fields
         if input_fields:

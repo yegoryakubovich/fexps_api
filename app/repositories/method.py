@@ -29,7 +29,8 @@ class MethodRepository(BaseRepository[Method]):
     async def update_method(
             self,
             db_obj: Method,
-            currency_id_str: str = None,
+            currency: str = None,
+            name: str = None,
             schema_fields: list[dict] = None,
             schema_input_fields: list[dict] = None,
             rate_input_default: int = None,
@@ -41,9 +42,10 @@ class MethodRepository(BaseRepository[Method]):
             is_rate_default: bool = None,
     ) -> None:
         updates = {}
-        if currency_id_str:
-            currency = await CurrencyRepository().get_by_id_str(id_str=currency_id_str)
-            updates['currency'] = currency
+        if currency:
+            updates['currency'] = await CurrencyRepository().get_by_id_str(id_str=currency)
+        if name:
+            a = await TextRepository().update(db_obj.name_text, value_default=name)
         if schema_fields:
             for field in schema_fields:
                 name_text = await TextRepository().create(
