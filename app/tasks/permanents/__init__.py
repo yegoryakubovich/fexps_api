@@ -16,11 +16,12 @@
 
 
 import asyncio
+import logging
 from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app import config_logger
+from app import config_logger, init_db
 from app.tasks.permanents.rates import rate_keep_bybit, rate_our_keep, rate_keep_pair_our
 from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
     request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
@@ -52,6 +53,12 @@ TASKS += [
 
 async def start_app() -> None:
     config_logger()
+    try:
+        await init_db()
+        logging.info('Success connect to database')
+    except ConnectionRefusedError:
+        logging.error('Failed to connect to database')
+        exit(1)
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         name='go_sync_gd',

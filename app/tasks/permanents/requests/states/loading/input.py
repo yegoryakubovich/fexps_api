@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from typing import Optional
 
 from app.db.models import Request, RateTypes, RateSources
@@ -34,6 +33,8 @@ async def request_type_input(
         currency_value=None,
         value=None,
 ) -> Optional[TypesScheme]:
+    logging.critical(f'currency_value={currency_value}')
+    logging.critical(f'value={value}')
     currency = request.input_method.currency
     custom_logger.info(
         text=f'currency_value={currency_value}, value={value}, currency={currency.id_str}',
@@ -74,9 +75,13 @@ async def request_type_input(
     if currency.rate_decimal != request.rate_decimal:
         request_rate *= 10 ** (request.rate_decimal - currency.rate_decimal)
     if currency_value:
+        logging.critical(1)
         value = round(currency_value / (request_rate / 10 ** request.rate_decimal))
     elif value:
-        currency_value = round(value * (request_rate / 10 ** request.rate_decimal))
+        logging.critical(2)
+        currency_value = value * (request_rate / 10 ** request.rate_decimal) // currency.div * currency.div
+    custom_logger.critical(text=f'123 input_type value {value}')
+    custom_logger.critical(text=f'123 input_type currency_value {currency_value}')
     if None in [currency_value, value]:
         return
     commission_value = await get_commission(request=request, wallet_id=request.wallet_id, value=value)

@@ -16,6 +16,8 @@
 
 
 import asyncio
+import logging
+import math
 
 from app.db.models import RequestStates, RequestTypes, Actions, RequestFirstLine
 from app.repositories.request import RequestRepository
@@ -39,6 +41,13 @@ async def run():
             if not result_all_type:
                 custom_logger.info(text='all result not found', request=request)
                 continue
+            logging.critical(f'123 input_type {result_all_type.input_type.currency_value}')
+            logging.critical(f'123 output_type {result_all_type.output_type.currency_value}')
+            rate = get_auto_rate(
+                request=request,
+                currency_value=result_all_type.input_type.currency_value,
+                value=result_all_type.output_type.currency_value,
+            )
             await RequestRepository().update(
                 request,
                 input_currency_value_raw=result_all_type.input_type.currency_value,
@@ -48,6 +57,7 @@ async def run():
                 output_value_raw=result_all_type.output_type.value,
                 output_rate_raw=result_all_type.output_rate,
                 commission_value=result_all_type.commission_value,
+                rate=rate,
                 div_value=0,
             )
         elif request.type == RequestTypes.INPUT:  # INPUT
@@ -71,6 +81,7 @@ async def run():
                 input_value_raw=result_type.value,
                 input_rate_raw=input_rate,
                 commission_value=result_type.commission_value,
+                rate=input_rate,
             )
         elif request.type == RequestTypes.OUTPUT:  # OUTPUT
             currency_value, value = None, None
@@ -93,6 +104,7 @@ async def run():
                 output_value_raw=result_type.value,
                 output_rate_raw=output_rate,
                 commission_value=result_type.commission_value,
+                rate=output_rate,
             )
         await write_other(request=request)
         custom_logger.info(text=f'{request.state}->{RequestStates.WAITING}', request=request)

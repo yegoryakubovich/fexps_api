@@ -35,7 +35,6 @@ async def request_type_all(
     currency_value = request.first_line_value
     input_result_type, output_result_type = None, None
     input_rate, output_rate = None, None
-    commission_value, rate = None, None
     if request.first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
         custom_logger.info(text=f'input_currency_value={currency_value}', request=request)
         input_result_type = await request_type_input(request=request, currency_value=currency_value)

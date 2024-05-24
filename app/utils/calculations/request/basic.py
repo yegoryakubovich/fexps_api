@@ -25,16 +25,22 @@ async def write_other(request: Request) -> None:
     data = {}
     if request.type == RequestTypes.INPUT:
         data = await get_input_data(request=request)
-        data.update(rate=data['input_rate'])
+        if data:
+            data.update(rate=data['input_rate'])
     elif request.type == RequestTypes.OUTPUT:
         data = await get_output_data(request=request)
-        data.update(rate=data['output_rate'])
+        if data:
+            data.update(rate=data['output_rate'])
     elif request.type == RequestTypes.ALL:
         data = await get_all_data(request=request)
+    if not data:
+        return
     await RequestRepository().update(request, **data)
 
 
 async def get_input_data(request: Request) -> dict:
+    if not request.input_currency_value or request.input_value:
+        return {}
     _currency_value, _value, _rate = 0, 0, 0
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state == OrderStates.CANCELED:
@@ -53,6 +59,8 @@ async def get_input_data(request: Request) -> dict:
 
 
 async def get_output_data(request: Request) -> dict:
+    if not request.output_currency_value or request.output_value:
+        return {}
     _currency_value, _value, _rate = 0, 0, 0
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state == OrderStates.CANCELED:
@@ -72,7 +80,11 @@ async def get_output_data(request: Request) -> dict:
 async def get_all_data(request: Request) -> dict:
     data = {}
     input_data = await get_input_data(request=request)
+    if not input_data:
+        return {}
     output_data = await get_output_data(request=request)
+    if not output_data:
+        return {}
     _output_currency_value = request.output_currency_value_raw
     if output_data.get('output_currency_value'):
         _output_currency_value = output_data.get('output_currency_value')
