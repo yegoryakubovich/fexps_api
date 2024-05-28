@@ -17,6 +17,7 @@
 
 from .account import AccountRepository
 from .account_contact import AccountContactRepository
+from .account_notification import AccountNotificationRepository
 from .account_role import AccountRoleRepository
 from .action import ActionRepository
 from .action_parameter import ActionParameterRepository
