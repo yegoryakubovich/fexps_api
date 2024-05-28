@@ -22,7 +22,7 @@ from string import ascii_letters, digits
 
 from app.db.models import Account, Session, Actions
 from app.repositories import AccountRepository, CountryRepository, LanguageRepository, TimezoneRepository, \
-    CurrencyRepository, TextPackRepository
+    CurrencyRepository, TextPackRepository, AccountNotificationRepository, WalletRepository, WalletAccountRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
@@ -98,7 +98,12 @@ class AccountService(BaseService):
             },
             with_client=True,
         )
-        return {'id': account.id}
+        wallet = await WalletRepository().create()
+        await WalletAccountRepository().create(account=account, wallet=wallet)
+        await AccountNotificationRepository().create(account=account)
+        return {
+            'id': account.id,
+        }
 
     @session_required(return_model=False, permissions=['accounts'])
     async def get_by_admin(self, id_: int) -> dict:

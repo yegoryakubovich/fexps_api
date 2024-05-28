@@ -15,24 +15,22 @@
 #
 
 
-from typing import Optional
+from pydantic import Field, BaseModel
 
-from aiogram import Bot
-
-from config import settings
-
-
-async def get_bot_username() -> str:
-    bot = Bot(token=settings.telegram_token)
-    async with bot:
-        bot_info = await bot.get_me()
-    return bot_info.username
+from app.services import NotificationService
+from app.utils import Response, Router
 
 
-async def get_chat_username(chat_id: int) -> Optional[str]:
-    if not chat_id:
-        return
-    bot = Bot(token=settings.telegram_token)
-    async with bot:
-        bot_info = await bot.get_chat(chat_id)
-    return bot_info.username
+router = Router(
+    prefix='/code',
+)
+
+
+class NotificationUpdateCodeSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.post()
+async def route(schema: NotificationUpdateCodeSchema):
+    result = await NotificationService().update_code(token=schema.token)
+    return Response(**result)

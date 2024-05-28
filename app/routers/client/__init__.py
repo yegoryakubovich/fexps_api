@@ -24,6 +24,7 @@ from .files import router as router_files
 from .languages import router as router_languages
 from .messages import router as router_messages
 from .methods import router as router_methods
+from .notifications import router as router_notifications
 from .orders import router as router_orders
 from .requests import router as router_requests
 from .requisites import router as router_requisites
@@ -46,6 +47,7 @@ router = Router(
         router_files,
         router_languages,
         router_methods,
+        router_notifications,
         router_orders,
         router_requests,
         router_requisites,

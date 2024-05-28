@@ -15,24 +15,16 @@
 #
 
 
-from typing import Optional
-
-from aiogram import Bot
-
-from config import settings
+from app.utils import Router
+from .get import router as router_get
+from .updates import router as router_updates
 
 
-async def get_bot_username() -> str:
-    bot = Bot(token=settings.telegram_token)
-    async with bot:
-        bot_info = await bot.get_me()
-    return bot_info.username
-
-
-async def get_chat_username(chat_id: int) -> Optional[str]:
-    if not chat_id:
-        return
-    bot = Bot(token=settings.telegram_token)
-    async with bot:
-        bot_info = await bot.get_chat(chat_id)
-    return bot_info.username
+router = Router(
+    prefix='/notifications',
+    routes_included=[
+        router_get,
+        router_updates,
+    ],
+    tags=['Notifications'],
+)

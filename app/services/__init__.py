@@ -30,6 +30,7 @@ from .file import FileService
 from .language import LanguageService
 from .message import MessageService
 from .method import MethodService
+from .notification import NotificationService
 from .order import OrderService
 from .order_request import OrderRequestService
 from .permission import PermissionService
