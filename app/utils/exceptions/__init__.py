@@ -24,6 +24,7 @@ from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters,
     WrongTokenFormat, MethodNotSupportedRoot, ModelAlreadyExist
 from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodParametersMissing, \
     MethodParametersValidationError, MethodFieldsTypeError
+from .notification import NotificationTelegramAlreadyLinked
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
     OrderNotPermission, OrderRequestStateNotPermission, OrderRequestMaxValueError
 from .request import RequestStateWrong, RequestStateNotPermission

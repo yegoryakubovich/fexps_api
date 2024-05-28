@@ -21,6 +21,7 @@ from app.services.base import BaseService
 from app.utils.bot.username import get_bot_username, get_chat_username
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
+from app.utils.exceptions import NotificationTelegramAlreadyLinked
 
 
 class NotificationService(BaseService):
@@ -44,6 +45,8 @@ class NotificationService(BaseService):
     ) -> dict:
         account = session.account
         account_notification = await AccountNotificationRepository().get(account=account)
+        if account_notification.telegram_id:
+            raise NotificationTelegramAlreadyLinked()
         code = await create_id_str()
         await AccountNotificationRepository().update(
             account_notification,
