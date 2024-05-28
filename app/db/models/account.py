@@ -25,7 +25,6 @@ class Account(Base):
     __tablename__ = 'accounts'
 
     id = Column(BigInteger, primary_key=True)
-
     username = Column(String(length=32))
     password_salt = Column(String(length=32))
     password_hash = Column(String(length=32))

@@ -78,7 +78,7 @@ class Settings(BaseSettings):
 
     def get_mysql_host(self) -> str:
         if self.test:
-            # return '192.168.31.40'
+            return '192.168.31.40'
             return '127.0.0.1'
         return self.mysql_host
 

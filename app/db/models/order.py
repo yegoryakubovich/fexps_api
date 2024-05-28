@@ -55,19 +55,15 @@ class Order(Base):
     type = Column(String(length=8))
     state = Column(String(length=16))
     canceled_reason = Column(String(length=16), nullable=True)
-
     request_id = Column(BigInteger, ForeignKey('requests.id', ondelete='SET NULL'), nullable=True)
     request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     requisite_id = Column(BigInteger, ForeignKey('requisites.id', ondelete='SET NULL'), nullable=True)
     requisite = relationship('Requisite', foreign_keys=requisite_id, uselist=False, lazy='selectin')
-
     currency_value = Column(BigInteger())
     value = Column(BigInteger())
     rate = Column(BigInteger)
-
     requisite_scheme_fields = Column(JSON())
     requisite_fields = Column(JSON())
     input_scheme_fields = Column(JSON())
     input_fields = Column(JSON(), nullable=True)
-
     is_deleted = Column(Boolean, default=False)

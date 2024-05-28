@@ -25,7 +25,6 @@ class Wallet(Base):
     __tablename__ = 'wallets'
 
     id = Column(BigInteger, primary_key=True)
-
     name = Column(String(length=32), default='Wallet')
     commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
     commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')

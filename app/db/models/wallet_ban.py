@@ -33,7 +33,6 @@ class WalletBan(Base):
     __tablename__ = 'wallets_bans'
 
     id = Column(BigInteger, primary_key=True)
-
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
     wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
     value = Column(BigInteger, default=0)

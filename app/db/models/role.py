@@ -25,7 +25,6 @@ class Role(Base):
     __tablename__ = 'roles'
 
     id = Column(BigInteger, primary_key=True)
-
     name_text_id = Column(BigInteger, ForeignKey('texts.id', ondelete='SET NULL'), nullable=True)
     name_text = relationship('Text', uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

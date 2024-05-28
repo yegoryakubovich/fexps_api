@@ -32,7 +32,6 @@ class WalletAccount(Base):
     __tablename__ = 'wallets_accounts'
 
     id = Column(BigInteger, primary_key=True)
-
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
     wallet = relationship('Wallet', backref='accounts', uselist=False, lazy='selectin')
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))

@@ -25,7 +25,6 @@ class RolePermission(Base):
     __tablename__ = 'roles_permissions'
 
     id = Column(BigInteger, primary_key=True)
-
     role_id = Column(BigInteger, ForeignKey('roles.id', ondelete='SET NULL'), nullable=True)
     role = relationship('Role', uselist=False, lazy='selectin')
     permission_id = Column(BigInteger, ForeignKey('permissions.id'))

@@ -25,7 +25,6 @@ class ActionParameter(Base):
     __tablename__ = 'actions_parameters'
 
     id = Column(BigInteger, primary_key=True)
-
     action_id = Column(BigInteger, ForeignKey('actions.id', ondelete='SET NULL'))
     action = relationship(argument='Action', uselist=False, lazy='selectin')
     key = Column(String(length=256))

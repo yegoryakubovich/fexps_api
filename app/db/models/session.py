@@ -25,7 +25,6 @@ class Session(Base):
     __tablename__ = 'sessions'
 
     id = Column(BigInteger, primary_key=True)
-
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
     account = relationship('Account', backref='parameters', uselist=False, lazy='selectin')
     token_salt = Column(String(length=32))

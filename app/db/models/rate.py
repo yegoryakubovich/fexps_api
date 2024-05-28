@@ -38,7 +38,6 @@ class Rate(Base):
     __tablename__ = 'rates'
 
     id = Column(BigInteger, primary_key=True)
-
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'))
     currency = relationship(argument='Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))

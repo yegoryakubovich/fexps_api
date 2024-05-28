@@ -31,5 +31,4 @@ class CommissionPackValue(Base):
     value_to = Column(BigInteger)
     value = Column(BigInteger, nullable=True)
     percent = Column(BigInteger, nullable=True)
-
     is_deleted = Column(Boolean, default=False)

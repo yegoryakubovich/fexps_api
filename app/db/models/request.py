@@ -67,27 +67,22 @@ class Request(Base):
     rate_decimal = Column(Integer, default=2)
     rate_confirmed = Column(Boolean, default=False)
     difference_confirmed = Column(BigInteger, default=0)
-
     first_line = Column(String(length=32))
     first_line_value = Column(BigInteger)
-
     input_currency_value_raw = Column(BigInteger, nullable=True)
     input_currency_value = Column(BigInteger, nullable=True)
     input_value_raw = Column(BigInteger, nullable=True)
     input_value = Column(BigInteger, nullable=True)
     input_rate_raw = Column(BigInteger, nullable=True)
     input_rate = Column(BigInteger, nullable=True)
-
     commission_value = Column(BigInteger, default=0)
     rate = Column(BigInteger, nullable=True)
-
     output_currency_value_raw = Column(BigInteger, nullable=True)
     output_currency_value = Column(BigInteger, nullable=True)
     output_value_raw = Column(BigInteger, nullable=True)
     output_value = Column(BigInteger, nullable=True)
     output_rate_raw = Column(BigInteger, nullable=True)
     output_rate = Column(BigInteger, nullable=True)
-
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     output_requisite_data_id = Column(BigInteger, ForeignKey('requisites_datas.id', ondelete='SET NULL'), nullable=True)

@@ -24,7 +24,6 @@ class Text(Base):
     __tablename__ = 'texts'
 
     id = Column(BigInteger, primary_key=True)
-
     key = Column(String(length=128))
     value_default = Column(String(length=1024))
     is_deleted = Column(Boolean, default=False)

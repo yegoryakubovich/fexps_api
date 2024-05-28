@@ -36,7 +36,6 @@ class TransferSystem(Base):
     __tablename__ = 'transfers_systems'
 
     id = Column(BigInteger, primary_key=True)
-
     transfer_id = Column(BigInteger, ForeignKey('transfers.id', ondelete='SET NULL'), nullable=True)
     transfer = relationship('Transfer', foreign_keys=transfer_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))

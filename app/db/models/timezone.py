@@ -24,7 +24,6 @@ class Timezone(Base):
     __tablename__ = 'timezones'
 
     id = Column(BigInteger, primary_key=True)
-
     id_str = Column(String(length=16))
     deviation = Column(Integer, default=0)
     is_deleted = Column(Boolean, default=False)

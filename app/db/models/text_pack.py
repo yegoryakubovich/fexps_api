@@ -25,7 +25,6 @@ class TextPack(Base):
     __tablename__ = 'texts_packs'
 
     id = Column(BigInteger, primary_key=True)
-
     language_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'))
     language = relationship('Language', uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

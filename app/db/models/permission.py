@@ -25,7 +25,6 @@ class Permission(Base):
     __tablename__ = 'permissions'
 
     id = Column(BigInteger, primary_key=True)
-
     id_str = Column(String(length=32))
     name_text_id = Column(BigInteger, ForeignKey('texts.id', ondelete='SET NULL'), nullable=True)
     name_text = relationship('Text', uselist=False, lazy='selectin')

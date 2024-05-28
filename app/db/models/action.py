@@ -33,7 +33,6 @@ class Action(Base):
     __tablename__ = 'actions'
 
     id = Column(BigInteger, primary_key=True)
-
     datetime = Column(DateTime, default=datetime.utcnow)
     model = Column(String(length=64))
     model_id = Column(BigInteger)

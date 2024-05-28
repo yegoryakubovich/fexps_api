@@ -25,11 +25,9 @@ class TextTranslation(Base):
     __tablename__ = 'texts_translations'
 
     id = Column(BigInteger, primary_key=True)
-
     text_id = Column(BigInteger, ForeignKey('texts.id', ondelete='SET NULL'))
     text = relationship('Text', backref='translations', uselist=False, lazy='selectin')
     language_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)
     language = relationship('Language', uselist=False, lazy='selectin')
-
     value = Column(String(length=1024))
     is_deleted = Column(Boolean, default=False)

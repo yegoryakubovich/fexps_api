@@ -39,7 +39,6 @@ class Transfer(Base):
     __tablename__ = 'transfers'
 
     id = Column(BigInteger, primary_key=True)
-
     type = Column(String(length=16))
     wallet_from_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet_from = relationship('Wallet', foreign_keys=wallet_from_id, uselist=False, lazy='selectin')

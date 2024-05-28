@@ -42,7 +42,6 @@ class Requisite(Base):
     id = Column(BigInteger, primary_key=True)
     type = Column(String(length=8))
     state = Column(String(length=8), default=RequisiteStates.ENABLE)
-
     wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'), nullable=True)
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     output_requisite_data_id = Column(BigInteger, ForeignKey('requisites_datas.id', ondelete='SET NULL'), nullable=True)
@@ -52,7 +51,6 @@ class Requisite(Base):
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
-
     currency_value = Column(BigInteger)
     total_currency_value = Column(BigInteger)
     currency_value_min = Column(BigInteger, nullable=True)
@@ -62,6 +60,5 @@ class Requisite(Base):
     total_value = Column(BigInteger)
     value_min = Column(BigInteger, nullable=True)
     value_max = Column(BigInteger, nullable=True)
-
     in_process = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

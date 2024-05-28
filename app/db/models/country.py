@@ -25,7 +25,6 @@ class Country(Base):
     __tablename__ = 'countries'
 
     id = Column(BigInteger, primary_key=True)
-
     id_str = Column(String(length=16))
     name = Column(String(length=64))
     language_default_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)

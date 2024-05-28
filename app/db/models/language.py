@@ -24,7 +24,6 @@ class Language(Base):
     __tablename__ = 'languages'
 
     id = Column(BigInteger, primary_key=True)
-
     id_str = Column(String(length=16))
     name = Column(String(length=32))
     is_deleted = Column(Boolean, default=False)
