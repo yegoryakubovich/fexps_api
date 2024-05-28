@@ -26,8 +26,8 @@ class AccountContact(Base):
 
     id = Column(BigInteger, primary_key=True)
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'), nullable=True)
-    account = relationship('Account', uselist=False, lazy='selectin')
+    account = relationship('Account', foreign_keys=account_id, uselist=False, lazy='selectin')
     contact_id = Column(BigInteger, ForeignKey('contacts.id', ondelete='SET NULL'), nullable=True)
-    contact = relationship('Contact', uselist=False, lazy='selectin')
+    contact = relationship('Contact', foreign_keys=contact_id, uselist=False, lazy='selectin')
     value = Column(String(length=256))
     is_deleted = Column(Boolean, default=False)
