@@ -63,7 +63,7 @@ class NotificationService(BaseService):
         bot_username = await get_bot_username()
         return {
             'code': code,
-            'link': f'https://t.me/{bot_username}?start={code}'
+            'url': f'https://t.me/{bot_username}?start={code}'
         }
 
     @session_required()

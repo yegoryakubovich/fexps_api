@@ -20,7 +20,7 @@ from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from app.repositories import AccountNotificationRepository
+from app.repositories import NotificationSettingRepository
 
 start_router = Router()
 
@@ -31,11 +31,11 @@ async def start_menu_handler(message: Message, state: FSMContext, command: Comma
     if not command_code:
         await message.answer(text='Not found params')
         return
-    account_notification = await AccountNotificationRepository().get(code=command_code)
+    account_notification = await NotificationSettingRepository().get(code=command_code)
     if not account_notification:
         await message.answer(text='Not found account')
         return
-    await AccountNotificationRepository().update(
+    await NotificationSettingRepository().update(
         account_notification,
         telegram_id=message.chat.id,
         code=None,
