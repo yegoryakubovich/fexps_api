@@ -21,25 +21,30 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class NotificationTypes:
+class NotificationHistoryTypes:
     REQUEST_CHANGE = 'request_change'
     REQUISITE_CHANGE = 'requisite_change'
     ORDER_CHANGE = 'order_change'
     CHAT_CHANGE = 'chat_change'
 
 
-class NotificationStates:
+class NotificationHistoryStates:
     SENT = 'sent'
     BLOCKED = 'blocked'
     ERROR = 'error'
 
 
-class Notification(Base):
-    __tablename__ = 'notifications'
+class NotificationHistory(Base):
+    __tablename__ = 'notifications_histories'
 
     id = Column(BigInteger, primary_key=True)
-    account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))
-    account = relationship('Account', uselist=False, lazy='selectin')
+    notification_setting_id = Column(BigInteger, ForeignKey('notifications_settings.id', ondelete='SET NULL'))
+    notification_setting = relationship(
+        'NotificationSetting',
+        foreign_keys=notification_setting_id,
+        uselist=False,
+        lazy='selectin',
+    )
     type = Column(String(length=32))
     state = Column(String(length=32))
     text = Column(Text)

@@ -27,11 +27,21 @@ router = Router(
 
 class NotificationUpdateSettingsSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    is_request_change: bool = Field(default=False),
+    is_requisite_change: bool = Field(default=False),
+    is_order_change: bool = Field(default=False),
+    is_chat_change: bool = Field(default=False),
+    is_active: bool = Field(default=False),
 
 
 @router.post()
 async def route(schema: NotificationUpdateSettingsSchema):
     result = await NotificationService().update_settings(
         token=schema.token,
+        is_request_change=schema.is_request_change,
+        is_requisite_change=schema.is_requisite_change,
+        is_order_change=schema.is_order_change,
+        is_chat_change=schema.is_chat_change,
+        is_active=schema.is_active,
     )
     return Response(**result)

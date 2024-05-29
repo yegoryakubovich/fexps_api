@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import AccountNotification
+from app.db.models import NotificationHistory
 from app.repositories.base import BaseRepository
 
 
-class AccountNotificationRepository(BaseRepository[AccountNotification]):
-    model = AccountNotification
+class NotificationHistoryRepository(BaseRepository[NotificationHistory]):
+    model = NotificationHistory

@@ -17,7 +17,6 @@
 
 from .account import AccountRepository
 from .account_contact import AccountContactRepository
-from .account_notification import AccountNotificationRepository
 from .account_role import AccountRoleRepository
 from .action import ActionRepository
 from .action_parameter import ActionParameterRepository
@@ -31,6 +30,8 @@ from .language import LanguageRepository
 from .message import MessageRepository
 from .message_file import MessageFileRepository
 from .method import MethodRepository
+from .notification_history import NotificationHistoryRepository
+from .notification_setting import NotificationSettingRepository
 from .order import OrderRepository
 from .order_file import OrderFileRepository
 from .order_request import OrderRequestRepository

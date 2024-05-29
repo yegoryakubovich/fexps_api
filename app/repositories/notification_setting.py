@@ -15,9 +15,9 @@
 #
 
 
-from app.db.models import Notification
+from app.db.models import NotificationSetting
 from app.repositories.base import BaseRepository
 
 
-class NotificationRepository(BaseRepository[Notification]):
-    model = Notification
+class NotificationSettingRepository(BaseRepository[NotificationSetting]):
+    model = NotificationSetting

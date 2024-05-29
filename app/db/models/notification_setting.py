@@ -21,8 +21,8 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class AccountNotification(Base):
-    __tablename__ = 'accounts_notifications'
+class NotificationSetting(Base):
+    __tablename__ = 'notifications_settings'
 
     id = Column(BigInteger, primary_key=True)
     account_id = Column(BigInteger, ForeignKey('accounts.id', ondelete='SET NULL'))

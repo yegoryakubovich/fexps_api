@@ -43,9 +43,9 @@ from .transfer import Transfer, TransferTypes
 from .wallet_ban import WalletBan, WalletBanReasons
 
 from .account_contact import AccountContact
-from .account_notification import AccountNotification
 from .account_role import AccountRole
-from .notification import Notification, NotificationTypes, NotificationStates
+from .notification_history import NotificationHistory, NotificationHistoryTypes, NotificationHistoryStates
+from .notification_setting import NotificationSetting
 from .requisite_data import RequisiteData
 from .session import Session
 from .transfer_system import TransferSystem, TransferSystemTypes
