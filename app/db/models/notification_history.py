@@ -21,17 +21,17 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class NotificationHistoryTypes:
+class NotificationTypes:
     REQUEST_CHANGE = 'request_change'
     REQUISITE_CHANGE = 'requisite_change'
     ORDER_CHANGE = 'order_change'
     CHAT_CHANGE = 'chat_change'
 
 
-class NotificationHistoryStates:
-    SENT = 'sent'
-    BLOCKED = 'blocked'
+class NotificationStates:
+    SUCCESS = 'success'
     ERROR = 'error'
+    BLOCKED = 'blocked'
 
 
 class NotificationHistory(Base):

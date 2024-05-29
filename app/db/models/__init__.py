@@ -44,7 +44,7 @@ from .wallet_ban import WalletBan, WalletBanReasons
 
 from .account_contact import AccountContact
 from .account_role import AccountRole
-from .notification_history import NotificationHistory, NotificationHistoryTypes, NotificationHistoryStates
+from .notification_history import NotificationHistory, NotificationTypes, NotificationStates
 from .notification_setting import NotificationSetting
 from .requisite_data import RequisiteData
 from .session import Session
