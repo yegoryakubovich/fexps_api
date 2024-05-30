@@ -183,6 +183,7 @@ class RequestService(BaseService):
                 'output_rate_raw': result_all_type.output_rate,
                 'commission_value': result_all_type.commission_value,
                 'rate': rate,
+                'rate_decimal': rate_decimal,
                 'div_value': 0,
             }
         elif type_ == RequestTypes.INPUT:  # INPUT
@@ -214,6 +215,7 @@ class RequestService(BaseService):
                 'input_rate_raw': input_rate,
                 'commission_value': result_type.commission_value,
                 'rate': input_rate,
+                'rate_decimal': rate_decimal,
             }
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
             currency_value, value = None, None
@@ -242,6 +244,7 @@ class RequestService(BaseService):
                 'output_rate_raw': output_rate,
                 'commission_value': result_type.commission_value,
                 'rate': output_rate,
+                'rate_decimal': rate_decimal,
             }
         return {}
 
