@@ -19,10 +19,11 @@ import asyncio
 import logging
 import math
 
-from app.db.models import RequestStates, RequestTypes, Actions, RequestFirstLine
+from app.db.models import RequestStates, RequestTypes, Actions, RequestFirstLine, NotificationTypes
 from app.repositories.request import RequestRepository
 from app.services.base import BaseService
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.rates import get_auto_rate
 from .all import request_type_all
@@ -107,6 +108,13 @@ async def run():
         await write_other(request=request)
         custom_logger.info(text=f'{request.state}->{RequestStates.WAITING}', request=request)
         await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
+        await BotNotification().send_notification_by_wallet(
+            wallet=request.wallet,
+            notification_type=NotificationTypes.REQUEST_CHANGE,
+            text_key='notification_request_update_state',
+            request_id=request.id,
+            state=RequestStates.WAITING,
+        )
         await BaseService().create_action(
             model=request,
             action=Actions.UPDATE,

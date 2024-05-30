@@ -17,11 +17,12 @@
 
 import asyncio
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
+from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons, NotificationTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import TransferSystemService, WalletBanService
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.need_value import input_get_need_currency_value
 
 custom_logger = RequestLogger(prefix='request_state_input_check')
@@ -68,6 +69,13 @@ async def run():
             next_state = RequestStates.COMPLETED
         custom_logger.info(text=f'{request.state}->{next_state}', request=request)
         await RequestRepository().update(request, state=next_state)
+        await BotNotification().send_notification_by_wallet(
+            wallet=request.wallet,
+            notification_type=NotificationTypes.REQUEST_CHANGE,
+            text_key='notification_request_update_state',
+            request_id=request.id,
+            state=next_state,
+        )
         await asyncio.sleep(1)
     await asyncio.sleep(5)
 

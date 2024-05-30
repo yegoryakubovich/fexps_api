@@ -18,11 +18,12 @@
 import asyncio
 import datetime
 
-from app.db.models import RequestStates, Actions, Request, OrderStates
+from app.db.models import RequestStates, Actions, Request, OrderStates, NotificationTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import ActionService, RequestService
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.bot.notification import BotNotification
 from app.utils.service_addons.order import order_cancel_related
 from config import settings
 
@@ -40,6 +41,13 @@ async def run():
             custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
             await RequestService().cancel_related(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
+            await BotNotification().send_notification_by_wallet(
+                wallet=request.wallet,
+                notification_type=NotificationTypes.REQUEST_CHANGE,
+                text_key='notification_request_update_state',
+                request_id=request.id,
+                state=RequestStates.CANCELED,
+            )
         await asyncio.sleep(1)
     await asyncio.sleep(5)
 

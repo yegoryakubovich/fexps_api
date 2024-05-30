@@ -391,6 +391,21 @@ class RequestService(BaseService):
                 continue
             await order_cancel_related(order=order)
             await OrderRepository().update(order, state=OrderStates.CANCELED)
+            bot_notification = BotNotification()
+            await bot_notification.send_notification_by_wallet(
+                wallet=order.request.wallet,
+                notification_type=NotificationTypes.ORDER_CHANGE,
+                text_key='notification_order_update_state',
+                order_id=order.id,
+                state=OrderStates.CANCELED,
+            )
+            await bot_notification.send_notification_by_wallet(
+                wallet=order.requisite.wallet,
+                notification_type=NotificationTypes.ORDER_CHANGE,
+                text_key='notification_order_update_state',
+                order_id=order.id,
+                state=OrderStates.CANCELED,
+            )
 
     @staticmethod
     async def generate_request_dict(request: Request) -> dict:

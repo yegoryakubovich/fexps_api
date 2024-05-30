@@ -18,13 +18,14 @@
 import asyncio
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, RequisiteTypes, \
-    RequestTypes, RequisiteStates
+    RequestTypes, RequisiteStates, NotificationTypes
 from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services import TransferSystemService
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.difference import get_difference
 from app.utils.calculations.request.need_value import output_get_need_value
@@ -59,10 +60,32 @@ async def run():
                     await order_banned_value(wallet=request.wallet, value=wait_order.value)
                 custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                bot_notification = BotNotification()
+                await bot_notification.send_notification_by_wallet(
+                    wallet=wait_order.request.wallet,
+                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    text_key='notification_order_update_state',
+                    order_id=wait_order.id,
+                    state=OrderStates.PAYMENT,
+                )
+                await bot_notification.send_notification_by_wallet(
+                    wallet=wait_order.requisite.wallet,
+                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    text_key='notification_order_update_state',
+                    order_id=wait_order.id,
+                    state=OrderStates.PAYMENT,
+                )
             if not waiting_orders:
                 await write_other(request=request)
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
+                await BotNotification().send_notification_by_wallet(
+                    wallet=request.wallet,
+                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    text_key='notification_request_update_state',
+                    request_id=request.id,
+                    state=RequestStates.OUTPUT,
+                )
             continue
         # create missing orders
         if request.type == RequestTypes.ALL:
@@ -86,6 +109,7 @@ async def run():
                 from_banned_value=True,
             )
             await RequestRepository().update(request, difference_confirmed=difference_value)
+
         await asyncio.sleep(1)
     await asyncio.sleep(5)
 

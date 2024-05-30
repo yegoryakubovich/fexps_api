@@ -18,12 +18,13 @@
 import asyncio
 
 from app.db.models import RequestStates, OrderTypes, RequisiteTypes, OrderStates, Request, \
-    RequisiteStates
+    RequisiteStates, NotificationTypes
 from app.repositories import RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
 from app.tasks.permanents.requests.logger import RequestLogger
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.basic import write_other
 from app.utils.calculations.request.need_value import input_get_need_currency_value
 from app.utils.calculations.simples import get_div_by_currency_value
@@ -47,10 +48,32 @@ async def run():
             for wait_order in waiting_orders:
                 custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                bot_notification = BotNotification()
+                await bot_notification.send_notification_by_wallet(
+                    wallet=wait_order.request.wallet,
+                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    text_key='notification_order_update_state',
+                    order_id=wait_order.id,
+                    state=OrderStates.PAYMENT,
+                )
+                await bot_notification.send_notification_by_wallet(
+                    wallet=wait_order.requisite.wallet,
+                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    text_key='notification_order_update_state',
+                    order_id=wait_order.id,
+                    state=OrderStates.PAYMENT,
+                )
             if not waiting_orders:
                 custom_logger.info(text=f'{request.state}->{RequestStates.INPUT}', request=request)
                 await write_other(request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT)
+                await BotNotification().send_notification_by_wallet(
+                    wallet=request.wallet,
+                    notification_type=NotificationTypes.REQUEST_CHANGE,
+                    text_key='notification_request_update_state',
+                    request_id=request.id,
+                    state=RequestStates.INPUT,
+                )
             continue
         # create missing orders
         await get_new_requisite_by_currency_value(request=request, need_currency_value=_need_currency_value)
