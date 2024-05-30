@@ -34,6 +34,8 @@ class NotificationService(BaseService):
     ) -> dict:
         account = session.account
         notification_setting = await NotificationSettingRepository().get(account=account)
+        if not notification_setting:
+            await NotificationSettingRepository().create(account=account)
         return {
             'notification': await self.generate_notification_dict(notification_setting=notification_setting),
         }
