@@ -77,9 +77,6 @@ async def request_type_output(
         value = round(currency_value / (request_rate / 10 ** request.rate_decimal))
     elif value:
         currency_value = value * (request_rate / 10 ** request.rate_decimal) // currency.div * currency.div
-    custom_logger.critical(text=f'123 output value {value}')
-    custom_logger.critical(text=f'123 output currency_value {currency_value}')
-
     if None in [currency_value, value]:
         return
     return TypesScheme(currency_value=currency_value, value=value, commission_value=0)

@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import logging
 from typing import Optional
 
@@ -80,8 +82,6 @@ async def request_type_input(
     elif value:
         logging.critical(2)
         currency_value = value * (request_rate / 10 ** request.rate_decimal) // currency.div * currency.div
-    custom_logger.critical(text=f'123 input_type value {value}')
-    custom_logger.critical(text=f'123 input_type currency_value {currency_value}')
     if None in [currency_value, value]:
         return
     commission_value = await get_commission(request=request, wallet_id=request.wallet_id, value=value)
