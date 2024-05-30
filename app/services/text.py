@@ -66,7 +66,9 @@ class TextService(BaseService):
             await TextPackService().create_all_by_admin(session=session)
         if return_model:
             return text
-        return {'key': text.key}
+        return {
+            'key': text.key,
+                }
 
     @session_required(return_model=False, permissions=['texts'])
     async def get(

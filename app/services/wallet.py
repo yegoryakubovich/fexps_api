@@ -56,7 +56,9 @@ class WalletService(BaseService):
             session=session,
             wallet_id=wallet.id,
         )
-        return {'id': wallet.id}
+        return {
+            'id': wallet.id,
+        }
 
     @session_required(permissions=['wallets'])
     async def get_by_admin(

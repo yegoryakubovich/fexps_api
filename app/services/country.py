@@ -64,7 +64,9 @@ class CountryService(BaseService):
                 'by_admin': True,
             }
         )
-        return {'id_str': country.id_str}
+        return {
+            'id_str': country.id_str,
+        }
 
     @session_required(permissions=['countries'], can_root=True)
     async def update_by_admin(

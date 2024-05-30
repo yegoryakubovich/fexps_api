@@ -63,7 +63,9 @@ class CommissionPackValueService(BaseService):
                 'value': value,
             },
         )
-        return {'id': commission_pack_value.id}
+        return {
+            'id': commission_pack_value.id,
+        }
 
     @session_required(permissions=['commissions_packs'])
     async def get_by_admin(

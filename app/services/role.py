@@ -53,7 +53,9 @@ class RoleService(BaseService):
             }
         )
 
-        return {'id': role.id}
+        return {
+            'id': role.id,
+                }
 
     @session_required(permissions=['roles'], return_model=False, can_root=True)
     async def get_by_admin(

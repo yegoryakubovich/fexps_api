@@ -60,7 +60,9 @@ class CurrencyService(BaseService):
                 'by_admin': True,
             }
         )
-        return {'id_str': currency.id_str}
+        return {
+            'id_str': currency.id_str,
+        }
 
     async def get(self, id_str: str):
         currency = await CurrencyRepository().get_by_id_str(id_str=id_str)

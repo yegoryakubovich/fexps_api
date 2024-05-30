@@ -55,7 +55,9 @@ class RequisiteDataService(BaseService):
                 'fields': fields,
             },
         )
-        return {'id': requisite_data.id}
+        return {
+            'id': requisite_data.id,
+        }
 
     @session_required()
     async def get(

@@ -106,7 +106,53 @@ class RequestService(BaseService):
                 'output_requisite_data_id': output_requisite_data_id,
             },
         )
-        return {'id': request.id}
+        return {
+            'id': request.id,
+        }
+
+    @session_required()
+    async def calc(
+            self,
+            session: Session,
+            wallet_id: int,
+            type_: str,
+            input_method_id: int,
+            input_currency_value: int,
+            input_value: int,
+            output_currency_value: int,
+            output_value: int,
+            output_requisite_data_id: int,
+    ) -> dict:
+        first_line, first_line_value = None, None
+        input_method, output_requisite_data, output_method = None, None, None
+        if input_currency_value:
+            first_line = RequestFirstLine.INPUT_CURRENCY_VALUE
+            first_line_value = input_currency_value
+        elif input_value:
+            first_line = RequestFirstLine.INPUT_VALUE
+            first_line_value = input_value
+        elif output_currency_value:
+            first_line = RequestFirstLine.OUTPUT_CURRENCY_VALUE
+            first_line_value = output_currency_value
+        elif output_value:
+            first_line = RequestFirstLine.OUTPUT_VALUE
+            first_line_value = output_value
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        rate_decimal = []
+        if input_method_id:
+            input_method = await MethodRepository().get_by_id(id_=input_method_id)
+            rate_decimal.append(input_method.currency.rate_decimal)
+        if output_requisite_data_id:
+            output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
+            output_method = output_requisite_data.method
+            rate_decimal.append(output_method.currency.rate_decimal)
+        if type_ == RequestTypes.OUTPUT and output_value:
+            balance = wallet.value - wallet.value_can_minus
+            if output_value > balance:
+                raise NotEnoughFundsOnBalance()
+        return {
+
+        }
 
     @session_required()
     async def get(

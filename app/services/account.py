@@ -197,7 +197,9 @@ class AccountService(BaseService):
             parameters=action_parameters,
         )
         if generated_password:
-            return {'new_password': generated_password}
+            return {
+                'new_password': generated_password,
+            }
         return {}
 
     @staticmethod

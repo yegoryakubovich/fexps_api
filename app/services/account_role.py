@@ -47,7 +47,9 @@ class AccountRoleService(BaseService):
                 'by_admin': True,
             }
         )
-        return {'id': account_role.id}
+        return {
+            'id': account_role.id,
+        }
 
     @session_required(permissions=['accounts'])
     async def delete_by_admin(

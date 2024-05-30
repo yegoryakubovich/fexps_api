@@ -123,7 +123,9 @@ class RequisiteService(BaseService):
             },
         )
 
-        return {'id': requisite.id}
+        return {
+            'id': requisite.id,
+        }
 
     @session_required()
     async def get(

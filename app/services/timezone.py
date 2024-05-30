@@ -55,7 +55,9 @@ class TimezoneService(BaseService):
             },
             with_client=True,
         )
-        return {'id_str': timezone.id_str}
+        return {
+            'id_str': timezone.id_str,
+        }
 
     @staticmethod
     async def get(

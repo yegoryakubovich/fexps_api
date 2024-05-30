@@ -47,7 +47,9 @@ class AccountContactService(BaseService):
                 'contact_id': f'{contact.id}',
             },
         )
-        return {'id': account_contact.id}
+        return {
+            'id': account_contact.id,
+        }
 
     @session_required()
     async def get(
@@ -85,7 +87,9 @@ class AccountContactService(BaseService):
                     'value': account_contact.value,
                 }
             )
-        return {'account_contacts': account_contacts_list}
+        return {
+            'account_contacts': account_contacts_list,
+        }
 
     @session_required()
     async def update(

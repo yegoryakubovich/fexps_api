@@ -58,7 +58,9 @@ class LanguageService(BaseService):
         )
 
         await TextPackService().create_by_admin(session=session, language_id_str=language.id_str)
-        return {'id_str': language.id_str}
+        return {
+            'id_str': language.id_str,
+        }
 
     async def get(
             self,

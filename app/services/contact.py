@@ -47,7 +47,9 @@ class ContactService(BaseService):
                 'name_text_id': name_text.id,
             },
         )
-        return {'id': contact.id}
+        return {
+            'id': contact.id,
+        }
 
     async def get(
             self,

@@ -99,7 +99,9 @@ class MethodService(BaseService):
                 'is_rate_default': is_rate_default,
             },
         )
-        return {'id': method.id}
+        return {
+            'id': method.id,
+        }
 
     async def get(self, id_: int) -> dict:
         method = await MethodRepository().get_by_id(id_=id_)

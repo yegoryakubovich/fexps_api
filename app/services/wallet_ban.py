@@ -48,7 +48,9 @@ class WalletBanService(BaseService):
                 'reason': reason,
             },
         )
-        return {'id': wallet_ban.id}
+        return {
+            'id': wallet_ban.id,
+        }
 
     @staticmethod
     async def create_related(
