@@ -16,12 +16,13 @@
 
 
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
-    OrderCanceledReasons, MessageRoles
+    OrderCanceledReasons, MessageRoles, NotificationTypes
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
+from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
     OrderRequestAlreadyExists
@@ -122,6 +123,19 @@ class OrderRequestService(BaseService):
             await connections_manager_aiohttp.send(
                 role=MessageRoles.SYSTEM,
                 text=f'order_request_create_{type_}',
+            )
+            bot_notification = BotNotification()
+            await bot_notification.send_notification_by_wallet(
+                wallet=order.request.wallet,
+                notification_type=NotificationTypes.ORDER_CHANGE,
+                text_key=f'notification_order_request_create_{type_}',
+                order_id=order.id,
+            )
+            await bot_notification.send_notification_by_wallet(
+                wallet=order.requisite.wallet,
+                notification_type=NotificationTypes.ORDER_CHANGE,
+                text_key=f'notification_order_request_create_{type_}',
+                order_id=order.id,
             )
         await self.create_action(
             model=order_request,

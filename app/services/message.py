@@ -19,11 +19,12 @@ from typing import Optional
 
 from fastapi import UploadFile
 
-from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions
+from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions, NotificationTypes
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, MessageFileRepository, \
     OrderFileRepository
 from app.services import ActionService, FileService
 from app.services.base import BaseService
+from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
 from app.utils.service_addons.wallet import wallet_check_permission
@@ -63,6 +64,21 @@ class MessageService(BaseService):
             file = await FileService().create(session=session, file=file, return_model=True)
             await OrderFileRepository().create(order=order, file=file)
             await MessageFileRepository().create(message=message, file=file)
+        bot_notification = BotNotification()
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.request.wallet,
+            notification_type=NotificationTypes.CHAT_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_chat_new_message',
+            order_id=order.id,
+        )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.requisite.wallet,
+            notification_type=NotificationTypes.CHAT_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_chat_new_message',
+            order_id=order.id,
+        )
         return await self.generate_message_dict(message=message)
 
     @session_required()

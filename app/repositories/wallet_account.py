@@ -15,6 +15,8 @@
 #
 
 
+from typing import List
+
 from app.db.models import WalletAccount, Account, Wallet
 from app.repositories.base import BaseRepository
 from app.utils.exceptions import WalletPermissionError
@@ -28,3 +30,9 @@ class WalletAccountRepository(BaseRepository[WalletAccount]):
         if not result:
             raise WalletPermissionError()
         return result
+
+    async def get_accounts_by_wallet(self, wallet: Wallet) -> List[Account]:
+        accounts = []
+        for wallet_account in await self.get_list(wallet=wallet):
+            accounts += [wallet_account.account]
+        return accounts

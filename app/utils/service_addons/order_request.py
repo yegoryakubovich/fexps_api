@@ -18,11 +18,12 @@
 import math
 
 from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
-    RequestRequisiteTypes, RequestTypes, Requisite
+    RequestRequisiteTypes, RequestTypes, Requisite, NotificationTypes
 from app.repositories import RequestRequisiteRepository, CommissionPackValueRepository
 from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.commissions import get_commission_value_input
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
@@ -69,6 +70,19 @@ async def order_request_update_type_cancel(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
     )
+    bot_notification = BotNotification()
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.request.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+        order_id=order.id,
+    )
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.requisite.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+        order_id=order.id,
+    )
 
 
 async def order_request_update_type_recreate(
@@ -97,6 +111,19 @@ async def order_request_update_type_recreate(
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+    )
+    bot_notification = BotNotification()
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.request.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+        order_id=order.id,
+    )
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.requisite.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
+        order_id=order.id,
     )
 
 
@@ -180,4 +207,17 @@ async def order_request_update_type_update_value(
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}',
+    )
+    bot_notification = BotNotification()
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.request.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}',
+        order_id=order.id,
+    )
+    await bot_notification.send_notification_by_wallet(
+        wallet=order.requisite.wallet,
+        notification_type=NotificationTypes.ORDER_CHANGE,
+        text_key=f'notification_order_request_finished_{order_request.type}_{state}',
+        order_id=order.id,
     )

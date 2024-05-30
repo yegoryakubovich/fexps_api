@@ -18,7 +18,8 @@
 import datetime
 from math import ceil
 
-from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine, OrderStates
+from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine, OrderStates, \
+    NotificationTypes
 from app.repositories import WalletAccountRepository, OrderRepository
 from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
@@ -30,6 +31,7 @@ from app.services.currency import CurrencyService
 from app.services.method import MethodService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
+from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
@@ -224,6 +226,14 @@ class RequestService(BaseService):
             ),
         )
         await RequestRepository().update(request, name=name)
+        bot_notification = BotNotification()
+        await bot_notification.send_notification_by_wallet(
+            wallet=request.wallet,
+            notification_type=NotificationTypes.REQUEST_CHANGE,
+            text_key=f'notification_request_update_name',
+            request_id=request.id,
+            name=name,
+        )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,

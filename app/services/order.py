@@ -16,7 +16,7 @@
 
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
-    MessageRoles
+    MessageRoles, NotificationTypes
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
@@ -27,6 +27,7 @@ from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.request import RequestService
 from app.services.requisite import RequisiteService
+from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.service_addons.method import method_check_input_field
@@ -192,6 +193,23 @@ class OrderService(BaseService):
         await OrderRequestService().check_have_order_request(order=order)
         await OrderRepository().update(order, state=next_state)
         await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        bot_notification = BotNotification()
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.request.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.requisite.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -277,6 +295,23 @@ class OrderService(BaseService):
                 )
         await OrderRepository().update(order, input_fields=input_fields)
         await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        bot_notification = BotNotification()
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.request.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.requisite.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -334,6 +369,23 @@ class OrderService(BaseService):
         await order_compete_related(order=order)
         await OrderRepository().update(order, state=next_state)
         await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        bot_notification = BotNotification()
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.request.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.requisite.wallet,
+            notification_type=NotificationTypes.ORDER_CHANGE,
+            account_id_black_list=[account.id],
+            text_key='notification_order_update_state',
+            order_id=order.id,
+            state=next_state,
+        )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

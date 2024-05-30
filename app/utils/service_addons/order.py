@@ -74,24 +74,6 @@ async def waited_order(
     )
 
 
-# async def waited_order_by_scheme(
-#         request: Request,
-#         requisite_scheme: RequisiteScheme,
-#         order_type: str,
-#         order_state: str = OrderStates.WAITING,
-# ) -> None:
-#     requisite = await RequisiteRepository().get_by_id(id_=requisite_scheme.requisite_id)
-#     await waited_order(
-#         request=request,
-#         requisite=requisite,
-#         currency_value=requisite_scheme.currency_value,
-#         value=requisite_scheme.value,
-#         rate=requisite_scheme.rate,
-#         order_type=order_type,
-#         order_state=order_state,
-#     )
-
-
 async def order_cancel_related(order: Order) -> None:
     if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
         await WalletBanService().create_related(
