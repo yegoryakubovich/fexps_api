@@ -31,28 +31,6 @@ class BotNotification:
             return text.value_default.format(**kwargs)
         return translation.value.format(**kwargs)
 
-    async def message_notification(
-            self,
-            account: Account,
-            order: Order,
-            text_key: str,
-            **kwargs,
-    ):
-        await self.send_notification_by_wallet(
-            wallet=order.request.wallet,
-            notification_type=NotificationTypes.CHAT_CHANGE,
-            account_id_black_list=[account.id],
-            text_key=text_key,
-            **kwargs,
-        )
-        await self.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.CHAT_CHANGE,
-            account_id_black_list=[account.id],
-            text_key=text_key,
-            **kwargs,
-        )
-
     async def send_notification_by_wallet(
             self,
             wallet: Wallet,
