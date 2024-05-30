@@ -32,7 +32,11 @@ from app.services.method import MethodService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
+from app.utils.calculations.request.full.all import get_auto_rate, calc_request_full_all
+from app.utils.calculations.request.full.input import calc_request_full_input
+from app.utils.calculations.request.full.output import calc_request_full_output
 from app.utils.decorators import session_required
+from app.utils.exceptions import MethodNotSupportedRoot
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 from app.utils.service_addons.order import order_cancel_related
@@ -150,9 +154,96 @@ class RequestService(BaseService):
             balance = wallet.value - wallet.value_can_minus
             if output_value > balance:
                 raise NotEnoughFundsOnBalance()
-        return {
-
-        }
+        rate_decimal = max(rate_decimal)
+        if type_ == RequestTypes.ALL:  # ALL
+            result_all_type = await calc_request_full_all(
+                wallet=wallet,
+                input_method=input_method,
+                output_method=output_method,
+                first_line_value=first_line_value,
+                first_line=first_line,
+                type_=type_,
+                rate_decimal=rate_decimal,
+            )
+            if not result_all_type:
+                raise MethodNotSupportedRoot()
+            rate = get_auto_rate(
+                first_line=first_line,
+                type_=type_,
+                rate_decimal=rate_decimal,
+                currency_value=result_all_type.input_type.currency_value,
+                value=result_all_type.output_type.currency_value,
+            )
+            return {
+                'input_currency_value_raw': result_all_type.input_type.currency_value,
+                'input_value_raw': result_all_type.input_type.value,
+                'input_rate_raw': result_all_type.input_rate,
+                'output_currency_value_raw': result_all_type.output_type.currency_value,
+                'output_value_raw': result_all_type.output_type.value,
+                'output_rate_raw': result_all_type.output_rate,
+                'commission_value': result_all_type.commission_value,
+                'rate': rate,
+                'div_value': 0,
+            }
+        elif type_ == RequestTypes.INPUT:  # INPUT
+            currency_value, value = None, None
+            if first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
+                currency_value = first_line_value
+            elif first_line == RequestFirstLine.INPUT_VALUE:
+                value = first_line_value
+            result_type = await calc_request_full_input(
+                first_line=first_line,
+                input_method=input_method,
+                rate_decimal=rate_decimal,
+                wallet_id=wallet.id,
+                currency_value=currency_value,
+                value=value,
+            )
+            if not result_type:
+                raise MethodNotSupportedRoot()
+            input_rate = get_auto_rate(
+                first_line=first_line,
+                type_=type_,
+                rate_decimal=rate_decimal,
+                currency_value=result_type.currency_value,
+                value=result_type.value,
+            )
+            return {
+                'input_currency_value_raw': result_type.currency_value,
+                'input_value_raw': result_type.value,
+                'input_rate_raw': input_rate,
+                'commission_value': result_type.commission_value,
+                'rate': input_rate,
+            }
+        elif type_ == RequestTypes.OUTPUT:  # OUTPUT
+            currency_value, value = None, None
+            if first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
+                currency_value = first_line_value
+            elif first_line == RequestFirstLine.OUTPUT_VALUE:
+                value = first_line_value
+            result_type = await calc_request_full_output(
+                output_method=output_method,
+                rate_decimal=rate_decimal,
+                currency_value=currency_value,
+                value=value
+            )
+            if not result_type:
+                raise MethodNotSupportedRoot()
+            output_rate = get_auto_rate(
+                first_line=first_line,
+                type_=type_,
+                rate_decimal=rate_decimal,
+                currency_value=result_type.currency_value,
+                value=result_type.value,
+            )
+            return {
+                'output_currency_value_raw': result_type.currency_value,
+                'output_value_raw': result_type.value,
+                'output_rate_raw': output_rate,
+                'commission_value': result_type.commission_value,
+                'rate': output_rate,
+            }
+        return {}
 
     @session_required()
     async def get(

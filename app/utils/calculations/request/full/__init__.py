@@ -13,24 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.utils import Router
-from .calc import router as router_calc
-from .create import router as router_create
-from .get import router as router_get
-from .search import router as router_search
-from .updates import router as router_update
-
-
-router = Router(
-    prefix='/requests',
-    routes_included=[
-        router_create,
-        router_calc,
-        router_get,
-        router_search,
-        router_update,
-    ],
-    tags=['Requests'],
-)

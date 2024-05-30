@@ -41,8 +41,6 @@ async def run():
             if not result_all_type:
                 custom_logger.info(text='all result not found', request=request)
                 continue
-            logging.critical(f'123 input_type {result_all_type.input_type.currency_value}')
-            logging.critical(f'123 output_type {result_all_type.output_type.currency_value}')
             rate = get_auto_rate(
                 request=request,
                 currency_value=result_all_type.input_type.currency_value,
