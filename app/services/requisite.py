@@ -213,9 +213,8 @@ class RequisiteService(BaseService):
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
             notification_type=NotificationTypes.REQUISITE_CHANGE,
-            text_key='notification_requisite_update_state',
+            text_key=f'notification_requisite_update_state_{next_state}',
             requisite_id=requisite.id,
-            state=next_state,
         )
         await self.create_action(
             model=requisite,
@@ -253,9 +252,8 @@ class RequisiteService(BaseService):
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
             notification_type=NotificationTypes.REQUISITE_CHANGE,
-            text_key='notification_requisite_update_state',
+            text_key=f'notification_requisite_update_state_{next_state}',
             requisite_id=requisite.id,
-            state=next_state,
         )
         await self.create_action(
             model=requisite,
@@ -302,9 +300,8 @@ class RequisiteService(BaseService):
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
             notification_type=NotificationTypes.REQUISITE_CHANGE,
-            text_key='notification_requisite_update_state',
+            text_key=f'notification_requisite_update_state_{next_state}',
             requisite_id=requisite.id,
-            state=next_state,
         )
         await self.create_action(
             model=requisite,
