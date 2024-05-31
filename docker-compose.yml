@@ -46,15 +46,15 @@ services:
       - ./assets/telegram:/app/assets/telegram
     env_file:
       - .env
-  tasks_celery:
-    build:
-      dockerfile: tasks_celery.dockerfile
-    volumes:
-      - ./app/tasks/:/app/app/tasks
-  tasks_flower:
-    environment:
-      FLOWER_BASIC_AUTH: ${FLOWER_USER}:${FLOWER_PASSWORD}
-    build:
-      dockerfile: tasks_flower.dockerfile
-    ports:
-      - "${TASKS_FLOWER_PORT}:5555"
+#  tasks_celery:
+#    build:
+#      dockerfile: tasks_celery.dockerfile
+#    volumes:
+#      - ./app/tasks/:/app/app/tasks
+#  tasks_flower:
+#    environment:
+#      FLOWER_BASIC_AUTH: ${FLOWER_USER}:${FLOWER_PASSWORD}
+#    build:
+#      dockerfile: tasks_flower.dockerfile
+#    ports:
+#      - "${TASKS_FLOWER_PORT}:5555"
