@@ -73,9 +73,8 @@ async def run():
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
             notification_type=NotificationTypes.REQUEST_CHANGE,
-            text_key='notification_request_update_state',
+            text_key=f'notification_request_update_state_{next_state}',
             request_id=request.id,
-            state=next_state,
         )
         await asyncio.sleep(1)
     await asyncio.sleep(5)

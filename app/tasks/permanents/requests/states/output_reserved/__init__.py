@@ -82,10 +82,9 @@ async def run():
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
                 await BotNotification().send_notification_by_wallet(
                     wallet=request.wallet,
-                    notification_type=NotificationTypes.ORDER_CHANGE,
-                    text_key='notification_request_update_state',
+                    notification_type=NotificationTypes.REQUEST_CHANGE,
+                    text_key=f'notification_request_update_state_{RequestStates.OUTPUT}',
                     request_id=request.id,
-                    state=RequestStates.OUTPUT,
                 )
             continue
         # create missing orders
