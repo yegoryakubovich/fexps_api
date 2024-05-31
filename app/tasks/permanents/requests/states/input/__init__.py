@@ -30,6 +30,7 @@ custom_logger = RequestLogger(prefix='request_state_input_check')
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT):
+        custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
         _from_value = request.input_currency_value_raw
         continue_ = False

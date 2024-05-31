@@ -35,6 +35,7 @@ custom_logger = RequestLogger(prefix='request_state_input_reserved_check')
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
+        custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
         _from_value = request.input_currency_value_raw
         _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)

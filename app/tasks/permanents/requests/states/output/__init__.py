@@ -29,6 +29,7 @@ custom_logger = RequestLogger(prefix='request_state_output_check')
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT):
+        custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
         if request.type == RequestTypes.ALL:
             if request.rate_confirmed:

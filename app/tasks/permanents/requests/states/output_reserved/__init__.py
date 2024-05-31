@@ -37,6 +37,7 @@ custom_logger = RequestLogger(prefix='request_state_output_reserved_check')
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
+        custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
         _from_value = None
         if request.type == RequestTypes.ALL:

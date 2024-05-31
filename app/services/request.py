@@ -353,6 +353,7 @@ class RequestService(BaseService):
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
+                'type': 'confirmation',
                 'answer': answer,
                 'state': next_state,
             },
@@ -391,6 +392,7 @@ class RequestService(BaseService):
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
+                'type': 'name',
                 'name': name,
             },
         )
