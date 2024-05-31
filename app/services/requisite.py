@@ -17,7 +17,8 @@
 
 from math import ceil
 
-from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates
+from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates, \
+    NotificationTypes
 from app.repositories import WalletAccountRepository, OrderRepository
 from app.repositories.method import MethodRepository
 from app.repositories.requisite import RequisiteRepository
@@ -29,6 +30,7 @@ from app.services.method import MethodService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
+from app.utils.bot.notification import BotNotification
 from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
@@ -99,6 +101,12 @@ class RequisiteService(BaseService):
             value_min=value_min,
             value_max=value_max,
         )
+        await BotNotification().send_notification_by_wallet(
+            wallet=requisite.wallet,
+            notification_type=NotificationTypes.REQUISITE_CHANGE,
+            text_key='notification_requisite_create',
+            requisite_id=requisite.id,
+        )
         await self.create_action(
             model=requisite,
             action=Actions.CREATE,
@@ -122,7 +130,6 @@ class RequisiteService(BaseService):
                 'value_max': value_max,
             },
         )
-
         return {
             'id': requisite.id,
         }
@@ -203,6 +210,13 @@ class RequisiteService(BaseService):
                 },
             )
         await RequisiteRepository().update(requisite, state=next_state)
+        await BotNotification().send_notification_by_wallet(
+            wallet=requisite.wallet,
+            notification_type=NotificationTypes.REQUISITE_CHANGE,
+            text_key='notification_requisite_update_state',
+            requisite_id=requisite.id,
+            state=next_state,
+        )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -235,8 +249,12 @@ class RequisiteService(BaseService):
                     'need_state': need_state,
                 },
             )
-        await RequisiteRepository().update(
-            requisite,
+        await RequisiteRepository().update(requisite, state=next_state)
+        await BotNotification().send_notification_by_wallet(
+            wallet=requisite.wallet,
+            notification_type=NotificationTypes.REQUISITE_CHANGE,
+            text_key='notification_requisite_update_state',
+            requisite_id=requisite.id,
             state=next_state,
         )
         await self.create_action(
@@ -280,8 +298,12 @@ class RequisiteService(BaseService):
             requisite=requisite,
             value=-requisite.value,
         )
-        await RequisiteRepository().update(
-            requisite,
+        await RequisiteRepository().update(requisite, state=next_state)
+        await BotNotification().send_notification_by_wallet(
+            wallet=requisite.wallet,
+            notification_type=NotificationTypes.REQUISITE_CHANGE,
+            text_key='notification_requisite_update_state',
+            requisite_id=requisite.id,
             state=next_state,
         )
         await self.create_action(
