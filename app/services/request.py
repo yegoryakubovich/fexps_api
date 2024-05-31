@@ -98,6 +98,12 @@ class RequestService(BaseService):
             output_requisite_data=output_requisite_data,
             output_method=output_method,
         )
+        await BotNotification().send_notification_by_wallet(
+            wallet=request.wallet,
+            notification_type=NotificationTypes.REQUEST_CHANGE,
+            text_key='notification_request_create',
+            request_id=request.id,
+        )
         await self.create_action(
             model=request,
             action=Actions.CREATE,
@@ -335,6 +341,13 @@ class RequestService(BaseService):
                 },
             )
         await RequestRepository().update(request, state=next_state)
+        await BotNotification().send_notification_by_wallet(
+            wallet=request.wallet,
+            notification_type=NotificationTypes.REQUEST_CHANGE,
+            text_key=f'notification_request_update_state',
+            request_id=request.id,
+            state=next_state,
+        )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -366,8 +379,7 @@ class RequestService(BaseService):
             ),
         )
         await RequestRepository().update(request, name=name)
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
+        await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
             notification_type=NotificationTypes.REQUEST_CHANGE,
             text_key=f'notification_request_update_name',
