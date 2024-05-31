@@ -46,7 +46,6 @@ class SessionGetByTokenService(BaseService):
                         'username': 'root',
                         'firstname': 'root',
                         'lastname': 'root',
-                        'surname': None,
                         'country_id': {'id_str': 'root'},
                         'language_id': {'id_str': 'root'},
                         'timezone_id': {'id_str': 'root'},

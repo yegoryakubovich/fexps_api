@@ -30,7 +30,6 @@ class Account(Base):
     password_hash = Column(String(length=32))
     firstname = Column(String(length=32))
     lastname = Column(String(length=32))
-    surname = Column(String(length=32), nullable=True)
     country_id = Column(BigInteger, ForeignKey('countries.id', ondelete='SET NULL'), nullable=True)
     country = relationship('Country', foreign_keys=country_id, uselist=False, lazy='selectin')
     language_id = Column(BigInteger, ForeignKey('languages.id', ondelete='SET NULL'), nullable=True)

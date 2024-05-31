@@ -33,7 +33,6 @@ class CreateAccountSchema(BaseModel):
     password: str = Field(min_length=6, max_length=128)
     firstname: str = Field(min_length=2, max_length=32)
     lastname: str = Field(min_length=2, max_length=32)
-    surname: Optional[str] = Field(min_length=2, max_length=32, default=None)
     country: str = Field(max_length=16)
     language: str = Field(max_length=32)
     timezone: str = Field(max_length=16)
@@ -47,7 +46,6 @@ async def route(schema: CreateAccountSchema):
         password=schema.password,
         firstname=schema.firstname,
         lastname=schema.lastname,
-        surname=schema.surname,
         country_id_str=schema.country,
         language_id_str=schema.language,
         timezone_id_str=schema.timezone,

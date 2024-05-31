@@ -42,7 +42,6 @@ class AccountService(BaseService):
             language_id_str: str,
             timezone_id_str: str,
             currency_id_str: str,
-            surname: str = None,
     ) -> dict:
         if await AccountRepository().is_exist_by_username(username=username):
             raise ModelAlreadyExist(
@@ -76,7 +75,6 @@ class AccountService(BaseService):
             password_hash=password_hash,
             firstname=firstname,
             lastname=lastname,
-            surname=surname,
             country=country,
             language=language,
             timezone=timezone,
@@ -90,7 +88,6 @@ class AccountService(BaseService):
                 'username': username,
                 'firstname': firstname,
                 'lastname': lastname,
-                'surname': surname,
                 'country': country.id_str,
                 'language': language.id_str,
                 'timezone': timezone.id_str,
@@ -267,7 +264,6 @@ class AccountService(BaseService):
             'username': account.username,
             'firstname': account.firstname,
             'lastname': account.lastname,
-            'surname': account.surname,
             'country': account.country.id_str,
             'language': account.language.id_str,
             'timezone': account.timezone.id_str,
