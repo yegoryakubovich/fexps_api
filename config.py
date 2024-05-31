@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     ]
 
     root_token: str
+    site_url: str
     file_url: str
     chat_url: str
     sync_db_url: str

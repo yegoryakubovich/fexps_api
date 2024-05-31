@@ -1,11 +1,28 @@
+#
+# (c) 2024, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+
 import asyncio
 import logging
-from typing import List
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramForbiddenError
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from app.db.models import NotificationStates, Account, NotificationTypes, Actions, Order, Language, Wallet
+from app.db.models import NotificationStates, Account, NotificationTypes, Actions, Language, Wallet
 from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, WalletAccountRepository, \
     TextRepository, TextTranslationRepository
 from app.services.base import BaseService
@@ -73,7 +90,20 @@ class BotNotification:
         state = NotificationStates.SUCCESS
         text = await self.get_text(key=text_key, language=account.language, **kwargs)
         try:
-            await self.bot.send_message(chat_id=notification_setting.telegram_id, text=text)
+            await self.bot.send_message(
+                chat_id=notification_setting.telegram_id,
+                text=text,
+                reply_markup=InlineKeyboardMarkup(
+                    inline_keyboard=[
+                        [
+                            InlineKeyboardButton(
+                                text=await self.get_text(key='notification_site_button', language=account.language),
+                                url=settings.site_url,
+                            ),
+                        ],
+                    ],
+                ),
+            )
         except TelegramForbiddenError:
             state = NotificationStates.BLOCKED
         except Exception as e:
