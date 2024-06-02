@@ -20,7 +20,7 @@ from math import ceil
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, RequestFirstLine, OrderStates, \
     NotificationTypes
-from app.repositories import WalletAccountRepository, OrderRepository
+from app.repositories import WalletAccountRepository, OrderRepository, RatePairRepository, CurrencyRepository
 from app.repositories.method import MethodRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -32,11 +32,7 @@ from app.services.method import MethodService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.full.all import get_auto_rate, calc_request_full_all
-from app.utils.calculations.request.full.input import calc_request_full_input
-from app.utils.calculations.request.full.output import calc_request_full_output
 from app.utils.decorators import session_required
-from app.utils.exceptions import MethodNotSupportedRoot
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 from app.utils.service_addons.order import order_cancel_related
@@ -124,133 +120,49 @@ class RequestService(BaseService):
     async def calc(
             self,
             session: Session,
-            wallet_id: int,
             type_: str,
             input_method_id: int,
-            input_currency_value: int,
-            input_value: int,
-            output_currency_value: int,
-            output_value: int,
             output_requisite_data_id: int,
     ) -> dict:
-        first_line, first_line_value = None, None
+        account = session.account
         input_method, output_requisite_data, output_method = None, None, None
-        if input_currency_value:
-            first_line = RequestFirstLine.INPUT_CURRENCY_VALUE
-            first_line_value = input_currency_value
-        elif input_value:
-            first_line = RequestFirstLine.INPUT_VALUE
-            first_line_value = input_value
-        elif output_currency_value:
-            first_line = RequestFirstLine.OUTPUT_CURRENCY_VALUE
-            first_line_value = output_currency_value
-        elif output_value:
-            first_line = RequestFirstLine.OUTPUT_VALUE
-            first_line_value = output_value
-        wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        rate_decimal = []
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
-            rate_decimal.append(input_method.currency.rate_decimal)
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
-            rate_decimal.append(output_method.currency.rate_decimal)
-        if type_ == RequestTypes.OUTPUT and output_value:
-            balance = wallet.value - wallet.value_can_minus
-            if output_value > balance:
-                raise NotEnoughFundsOnBalance()
-        rate_decimal = max(rate_decimal)
         if type_ == RequestTypes.ALL:  # ALL
-            result_all_type = await calc_request_full_all(
-                wallet=wallet,
-                input_method=input_method,
-                output_method=output_method,
-                first_line_value=first_line_value,
-                first_line=first_line,
-                type_=type_,
-                rate_decimal=rate_decimal,
-            )
-            if not result_all_type:
-                raise MethodNotSupportedRoot()
-            rate = get_auto_rate(
-                first_line=first_line,
-                type_=type_,
-                rate_decimal=rate_decimal,
-                currency_value=result_all_type.input_type.currency_value,
-                value=result_all_type.output_type.currency_value,
+            rate_pair = await RatePairRepository().get(
+                currency_input=input_method.currency,
+                currency_output=output_method.currency,
             )
             return {
-                'input_currency_value_raw': result_all_type.input_type.currency_value,
-                'input_value_raw': result_all_type.input_type.value,
-                'input_rate_raw': result_all_type.input_rate,
-                'output_currency_value_raw': result_all_type.output_type.currency_value,
-                'output_value_raw': result_all_type.output_type.value,
-                'output_rate_raw': result_all_type.output_rate,
-                'commission_value': result_all_type.commission_value,
-                'rate': rate,
-                'rate_decimal': rate_decimal,
-                'div_value': 0,
+                'currency_input': rate_pair.currency_input.id_str,
+                'currency_output': rate_pair.currency_output.id_str,
+                'rate': rate_pair.value,
+                'rate_decimal': rate_pair.rate_decimal,
             }
         elif type_ == RequestTypes.INPUT:  # INPUT
-            currency_value, value = None, None
-            if first_line == RequestFirstLine.INPUT_CURRENCY_VALUE:
-                currency_value = first_line_value
-            elif first_line == RequestFirstLine.INPUT_VALUE:
-                value = first_line_value
-            result_type = await calc_request_full_input(
-                first_line=first_line,
-                input_method=input_method,
-                rate_decimal=rate_decimal,
-                wallet_id=wallet.id,
-                currency_value=currency_value,
-                value=value,
-            )
-            if not result_type:
-                raise MethodNotSupportedRoot()
-            input_rate = get_auto_rate(
-                first_line=first_line,
-                type_=type_,
-                rate_decimal=rate_decimal,
-                currency_value=result_type.currency_value,
-                value=result_type.value,
+            rate_pair = await RatePairRepository().get(
+                currency_input=input_method.currency,
+                currency_output=await CurrencyRepository().get_by_id_str(id_str='usdt'),
             )
             return {
-                'input_currency_value_raw': result_type.currency_value,
-                'input_value_raw': result_type.value,
-                'input_rate_raw': input_rate,
-                'commission_value': result_type.commission_value,
-                'rate': input_rate,
-                'rate_decimal': rate_decimal,
+                'currency_input': rate_pair.currency_input.id_str,
+                'currency_output': rate_pair.currency_output.id_str,
+                'rate': rate_pair.value,
+                'rate_decimal': rate_pair.rate_decimal,
             }
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
-            currency_value, value = None, None
-            if first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
-                currency_value = first_line_value
-            elif first_line == RequestFirstLine.OUTPUT_VALUE:
-                value = first_line_value
-            result_type = await calc_request_full_output(
-                output_method=output_method,
-                rate_decimal=rate_decimal,
-                currency_value=currency_value,
-                value=value
-            )
-            if not result_type:
-                raise MethodNotSupportedRoot()
-            output_rate = get_auto_rate(
-                first_line=first_line,
-                type_=type_,
-                rate_decimal=rate_decimal,
-                currency_value=result_type.currency_value,
-                value=result_type.value,
+            rate_pair = await RatePairRepository().get(
+                currency_input=await CurrencyRepository().get_by_id_str(id_str='usdt'),
+                currency_output=output_method.currency,
             )
             return {
-                'output_currency_value_raw': result_type.currency_value,
-                'output_value_raw': result_type.value,
-                'output_rate_raw': output_rate,
-                'commission_value': result_type.commission_value,
-                'rate': output_rate,
-                'rate_decimal': rate_decimal,
+                'currency_input': rate_pair.currency_input.id_str,
+                'currency_output': rate_pair.currency_output.id_str,
+                'rate': rate_pair.value,
+                'rate_decimal': rate_pair.rate_decimal,
             }
         return {}
 
@@ -344,9 +256,8 @@ class RequestService(BaseService):
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
             notification_type=NotificationTypes.REQUEST_CHANGE,
-            text_key=f'notification_request_update_state',
+            text_key=f'notification_request_update_state_{next_state}',
             request_id=request.id,
-            state=next_state,
         )
         await self.create_action(
             model=request,
@@ -394,6 +305,35 @@ class RequestService(BaseService):
                 'updater': f'session_{session.id}',
                 'type': 'name',
                 'name': name,
+            },
+        )
+        return {}
+
+    @session_required()
+    async def update_cancellation(
+            self,
+            session: Session,
+            id_: int,
+    ):
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=id_)
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=RequestStateNotPermission(
+                kwargs={
+                    'id_value': request.id,
+                    'action': f'Update name',
+                },
+            ),
+        )
+
+        await self.create_action(
+            model=request,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'type': 'cancellation',
             },
         )
         return {}
