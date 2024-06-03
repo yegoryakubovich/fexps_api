@@ -67,14 +67,14 @@ class MessageService(BaseService):
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,
-            notification_type=NotificationTypes.CHAT_CHANGE,
+            notification_type=NotificationTypes.CHAT,
             account_id_black_list=[account.id],
             text_key='notification_chat_new_message',
             order_id=order.id,
         )
         await bot_notification.send_notification_by_wallet(
             wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.CHAT_CHANGE,
+            notification_type=NotificationTypes.CHAT,
             account_id_black_list=[account.id],
             text_key='notification_chat_new_message',
             order_id=order.id,

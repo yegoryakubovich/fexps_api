@@ -52,14 +52,14 @@ async def run():
                 bot_notification = BotNotification()
                 await bot_notification.send_notification_by_wallet(
                     wallet=wait_order.request.wallet,
-                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    notification_type=NotificationTypes.ORDER,
                     text_key='notification_order_update_state',
                     order_id=wait_order.id,
                     state=OrderStates.PAYMENT,
                 )
                 await bot_notification.send_notification_by_wallet(
                     wallet=wait_order.requisite.wallet,
-                    notification_type=NotificationTypes.ORDER_CHANGE,
+                    notification_type=NotificationTypes.ORDER,
                     text_key='notification_order_update_state',
                     order_id=wait_order.id,
                     state=OrderStates.PAYMENT,
@@ -70,7 +70,7 @@ async def run():
                 await RequestRepository().update(request, state=RequestStates.INPUT)
                 await BotNotification().send_notification_by_wallet(
                     wallet=request.wallet,
-                    notification_type=NotificationTypes.REQUEST_CHANGE,
+                    notification_type=NotificationTypes.REQUEST,
                     text_key=f'notification_request_update_state_{RequestStates.INPUT}',
                     request_id=request.id,
                 )

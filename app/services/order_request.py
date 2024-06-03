@@ -127,13 +127,13 @@ class OrderRequestService(BaseService):
             bot_notification = BotNotification()
             await bot_notification.send_notification_by_wallet(
                 wallet=order.request.wallet,
-                notification_type=NotificationTypes.ORDER_CHANGE,
+                notification_type=NotificationTypes.ORDER,
                 text_key=f'notification_order_request_create_{type_}',
                 order_id=order.id,
             )
             await bot_notification.send_notification_by_wallet(
                 wallet=order.requisite.wallet,
-                notification_type=NotificationTypes.ORDER_CHANGE,
+                notification_type=NotificationTypes.ORDER,
                 text_key=f'notification_order_request_create_{type_}',
                 order_id=order.id,
             )

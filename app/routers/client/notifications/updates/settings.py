@@ -27,10 +27,12 @@ router = Router(
 
 class NotificationUpdateSettingsSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    is_request_change: bool = Field(default=False),
-    is_requisite_change: bool = Field(default=False),
-    is_order_change: bool = Field(default=False),
-    is_chat_change: bool = Field(default=False),
+    is_request: bool = Field(default=False),
+    is_requisite: bool = Field(default=False),
+    is_order: bool = Field(default=False),
+    is_chat: bool = Field(default=False),
+    is_transfer: bool = Field(default=False),
+    is_global: bool = Field(default=False),
     is_active: bool = Field(default=False),
 
 
@@ -38,10 +40,12 @@ class NotificationUpdateSettingsSchema(BaseModel):
 async def route(schema: NotificationUpdateSettingsSchema):
     result = await NotificationService().update_settings(
         token=schema.token,
-        is_request_change=schema.is_request_change,
-        is_requisite_change=schema.is_requisite_change,
-        is_order_change=schema.is_order_change,
-        is_chat_change=schema.is_chat_change,
+        is_request=schema.is_request,
+        is_requisite=schema.is_requisite,
+        is_order=schema.is_order,
+        is_chat=schema.is_chat,
+        is_transfer=schema.is_transfer,
+        is_global=schema.is_global,
         is_active=schema.is_active,
     )
     return Response(**result)

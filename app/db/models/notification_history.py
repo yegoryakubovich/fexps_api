@@ -22,10 +22,12 @@ from app.db.base_class import Base
 
 
 class NotificationTypes:
-    REQUEST_CHANGE = 'request_change'
-    REQUISITE_CHANGE = 'requisite_change'
-    ORDER_CHANGE = 'order_change'
-    CHAT_CHANGE = 'chat_change'
+    REQUEST = 'request'
+    REQUISITE = 'requisite'
+    ORDER = 'order'
+    CHAT = 'chat'
+    TRANSFER = 'transfer'
+    GLOBAL = 'global'
 
 
 class NotificationStates:

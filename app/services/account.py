@@ -20,11 +20,12 @@ from random import sample
 from re import compile, search
 from string import ascii_letters, digits
 
-from app.db.models import Account, Session, Actions
+from app.db.models import Account, Session, Actions, NotificationTypes
 from app.repositories import AccountRepository, CountryRepository, LanguageRepository, TimezoneRepository, \
     CurrencyRepository, TextPackRepository, NotificationSettingRepository, WalletRepository, WalletAccountRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
+from app.utils.bot.notification import BotNotification
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
 from app.utils.exceptions import InvalidPassword, InvalidUsername, ModelAlreadyExist, WrongPassword
@@ -181,6 +182,11 @@ class AccountService(BaseService):
             password_salt = await create_salt()
             password_hash = await create_hash_by_string_and_salt(string=new_password, salt=password_salt)
         await AccountRepository().update(account, password_salt=password_salt, password_hash=password_hash)
+        await BotNotification().send_notification(
+            account=account,
+            notification_type=NotificationTypes.GLOBAL,
+            text_key='notification_global_password_change',
+        )
         action_parameters = {
             'account_id': account.id,
             'password_salt': password_salt,

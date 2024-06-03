@@ -72,20 +72,24 @@ class NotificationService(BaseService):
     async def update_settings(
             self,
             session: Session,
-            is_request_change: bool,
-            is_requisite_change: bool,
-            is_order_change: bool,
-            is_chat_change: bool,
+            is_request: bool,
+            is_requisite: bool,
+            is_order: bool,
+            is_chat: bool,
+            is_transfer: bool,
+            is_global: bool,
             is_active: bool,
     ) -> dict:
         account = session.account
         notification_setting = await NotificationSettingRepository().get(account=account)
         await NotificationSettingRepository().update(
             notification_setting,
-            is_request_change=is_request_change,
-            is_requisite_change=is_requisite_change,
-            is_order_change=is_order_change,
-            is_chat_change=is_chat_change,
+            is_request=is_request,
+            is_requisite=is_requisite,
+            is_order=is_order,
+            is_chat=is_chat,
+            is_transfer=is_transfer,
+            is_global=is_global,
             is_active=is_active,
         )
         await self.create_action(
@@ -93,10 +97,12 @@ class NotificationService(BaseService):
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
-                'is_request_change': is_request_change,
-                'is_requisite_change': is_requisite_change,
-                'is_order_change': is_order_change,
-                'is_chat_change': is_chat_change,
+                'is_request': is_request,
+                'is_requisite': is_requisite,
+                'is_order': is_order,
+                'is_chat': is_chat,
+                'is_transfer': is_transfer,
+                'is_global': is_global,
                 'is_active': is_active,
             },
         )
@@ -108,9 +114,11 @@ class NotificationService(BaseService):
             'id': notification_setting.id,
             'telegram_id': notification_setting.telegram_id,
             'username': await get_chat_username(chat_id=notification_setting.telegram_id),
-            'is_request_change': notification_setting.is_request_change,
-            'is_requisite_change': notification_setting.is_requisite_change,
-            'is_order_change': notification_setting.is_order_change,
-            'is_chat_change': notification_setting.is_chat_change,
+            'is_request': notification_setting.is_request,
+            'is_requisite': notification_setting.is_requisite,
+            'is_order': notification_setting.is_order,
+            'is_chat': notification_setting.is_chat,
+            'is_transfer': notification_setting.is_transfer,
+            'is_global': notification_setting.is_global,
             'is_active': notification_setting.is_active,
         }

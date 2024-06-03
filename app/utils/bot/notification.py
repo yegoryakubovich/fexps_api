@@ -77,15 +77,21 @@ class BotNotification:
             **kwargs,
     ):
         notification_setting = await NotificationSettingRepository().get(account=account)
-        if not notification_setting.telegram_id or not notification_setting.is_active:
+        if not notification_setting.telegram_id:
             return
-        if notification_type == NotificationTypes.REQUEST_CHANGE and not notification_setting.is_request_change:
+        if not notification_setting.is_active:
             return
-        if notification_type == NotificationTypes.REQUISITE_CHANGE and not notification_setting.is_requisite_change:
+        if notification_type == NotificationTypes.REQUEST and not notification_setting.is_request:
             return
-        if notification_type == NotificationTypes.ORDER_CHANGE and not notification_setting.is_order_change:
+        if notification_type == NotificationTypes.REQUISITE and not notification_setting.is_requisite:
             return
-        if notification_type == NotificationTypes.CHAT_CHANGE and not notification_setting.is_chat_change:
+        if notification_type == NotificationTypes.ORDER and not notification_setting.is_order:
+            return
+        if notification_type == NotificationTypes.CHAT and not notification_setting.is_chat:
+            return
+        if notification_type == NotificationTypes.TRANSFER and not notification_setting.is_transfer:
+            return
+        if notification_type == NotificationTypes.GLOBAL and not notification_setting.is_global:
             return
         state = NotificationStates.SUCCESS
         text = await self.get_text(key=text_key, language=account.language, **kwargs)

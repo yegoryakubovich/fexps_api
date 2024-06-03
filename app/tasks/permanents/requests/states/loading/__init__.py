@@ -110,7 +110,7 @@ async def run():
         await RequestRepository().update(request, rate_confirmed=True, state=RequestStates.WAITING)
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST_CHANGE,
+            notification_type=NotificationTypes.REQUEST,
             text_key=f'notification_request_update_state_{RequestStates.WAITING}',
             request_id=request.id,
         )

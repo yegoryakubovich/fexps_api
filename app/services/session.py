@@ -15,11 +15,12 @@
 #
 
 
-from app.db.models import Session, Actions
+from app.db.models import Session, Actions, NotificationTypes
 from app.repositories.account import AccountRepository
 from app.repositories.session import SessionRepository
 from app.services import ActionService, AccountService
 from app.services.base import BaseService
+from app.utils.bot.notification import BotNotification
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 
 
@@ -35,6 +36,11 @@ class SessionService(BaseService):
         token_hash = await create_hash_by_string_and_salt(string=token, salt=token_salt)
         # Create session and action
         session = await SessionRepository().create(account=account, token_hash=token_hash, token_salt=token_salt)
+        await BotNotification().send_notification(
+            account=account,
+            notification_type=NotificationTypes.GLOBAL,
+            text_key='notification_global_new_session',
+        )
         await self.create_action(
             model=session,
             action=Actions.CREATE,

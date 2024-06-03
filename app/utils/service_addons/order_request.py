@@ -73,13 +73,13 @@ async def order_request_update_type_cancel(
     bot_notification = BotNotification()
     await bot_notification.send_notification_by_wallet(
         wallet=order.request.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         order_id=order.id,
     )
     await bot_notification.send_notification_by_wallet(
         wallet=order.requisite.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         order_id=order.id,
     )
@@ -115,13 +115,13 @@ async def order_request_update_type_recreate(
     bot_notification = BotNotification()
     await bot_notification.send_notification_by_wallet(
         wallet=order.request.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         order_id=order.id,
     )
     await bot_notification.send_notification_by_wallet(
         wallet=order.requisite.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         order_id=order.id,
     )
@@ -211,13 +211,13 @@ async def order_request_update_type_update_value(
     bot_notification = BotNotification()
     await bot_notification.send_notification_by_wallet(
         wallet=order.request.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}',
         order_id=order.id,
     )
     await bot_notification.send_notification_by_wallet(
         wallet=order.requisite.wallet,
-        notification_type=NotificationTypes.ORDER_CHANGE,
+        notification_type=NotificationTypes.ORDER,
         text_key=f'notification_order_request_finished_{order_request.type}_{state}',
         order_id=order.id,
     )

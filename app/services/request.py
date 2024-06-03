@@ -97,7 +97,7 @@ class RequestService(BaseService):
         )
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST_CHANGE,
+            notification_type=NotificationTypes.REQUEST,
             text_key='notification_request_create',
             request_id=request.id,
         )
@@ -252,7 +252,7 @@ class RequestService(BaseService):
         await RequestRepository().update(request, state=next_state)
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST_CHANGE,
+            notification_type=NotificationTypes.REQUEST,
             text_key=f'notification_request_update_state_{next_state}',
             request_id=request.id,
         )
@@ -290,7 +290,7 @@ class RequestService(BaseService):
         await RequestRepository().update(request, name=name)
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST_CHANGE,
+            notification_type=NotificationTypes.REQUEST,
             text_key=f'notification_request_update_name',
             request_id=request.id,
             name=name,
@@ -345,14 +345,14 @@ class RequestService(BaseService):
             bot_notification = BotNotification()
             await bot_notification.send_notification_by_wallet(
                 wallet=order.request.wallet,
-                notification_type=NotificationTypes.ORDER_CHANGE,
+                notification_type=NotificationTypes.ORDER,
                 text_key='notification_order_update_state',
                 order_id=order.id,
                 state=OrderStates.CANCELED,
             )
             await bot_notification.send_notification_by_wallet(
                 wallet=order.requisite.wallet,
-                notification_type=NotificationTypes.ORDER_CHANGE,
+                notification_type=NotificationTypes.ORDER,
                 text_key='notification_order_update_state',
                 order_id=order.id,
                 state=OrderStates.CANCELED,
