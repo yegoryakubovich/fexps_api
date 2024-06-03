@@ -26,3 +26,8 @@ class RequestStateWrong(ApiException):
 class RequestStateNotPermission(ApiException):
     code = 10001
     message = 'Request.{id_value} you dont have permission to execute "{action}"'
+
+
+class RequestRatePairNotFound(ApiException):
+    code = 10002
+    message = 'Rate pair {input_currency}-{output_currency} not found'

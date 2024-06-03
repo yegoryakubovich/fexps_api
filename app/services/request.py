@@ -33,6 +33,7 @@ from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
+from app.utils.exceptions import RequestRatePairNotFound
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.exceptions.wallet import NotEnoughFundsOnBalance
 from app.utils.service_addons.order import order_cancel_related
@@ -121,50 +122,46 @@ class RequestService(BaseService):
             self,
             session: Session,
             type_: str,
-            input_method_id: int,
-            output_requisite_data_id: int,
+            input_currency_id_str: str,
+            output_currency_id_str: str,
     ) -> dict:
         account = session.account
-        input_method, output_requisite_data, output_method = None, None, None
-        if input_method_id:
-            input_method = await MethodRepository().get_by_id(id_=input_method_id)
-        if output_requisite_data_id:
-            output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
-            output_method = output_requisite_data.method
+        input_currency, output_currency = None, None
+        rate_pair = None
+        if input_currency_id_str:
+            input_currency = await CurrencyRepository().get_by_id_str(id_str=input_currency_id_str)
+        if output_currency_id_str:
+            output_currency = await CurrencyRepository().get_by_id_str(id_str=output_currency_id_str)
         if type_ == RequestTypes.ALL:  # ALL
             rate_pair = await RatePairRepository().get(
-                currency_input=input_method.currency,
-                currency_output=output_method.currency,
+                currency_input=input_currency,
+                currency_output=output_currency,
             )
-            return {
-                'currency_input': rate_pair.currency_input.id_str,
-                'currency_output': rate_pair.currency_output.id_str,
-                'rate': rate_pair.value,
-                'rate_decimal': rate_pair.rate_decimal,
-            }
         elif type_ == RequestTypes.INPUT:  # INPUT
+            output_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
             rate_pair = await RatePairRepository().get(
-                currency_input=input_method.currency,
-                currency_output=await CurrencyRepository().get_by_id_str(id_str='usdt'),
+                currency_input=input_currency,
+                currency_output=output_currency,
             )
-            return {
-                'currency_input': rate_pair.currency_input.id_str,
-                'currency_output': rate_pair.currency_output.id_str,
-                'rate': rate_pair.value,
-                'rate_decimal': rate_pair.rate_decimal,
-            }
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
+            input_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
             rate_pair = await RatePairRepository().get(
-                currency_input=await CurrencyRepository().get_by_id_str(id_str='usdt'),
-                currency_output=output_method.currency,
+                currency_input=input_currency,
+                currency_output=output_currency,
             )
-            return {
-                'currency_input': rate_pair.currency_input.id_str,
-                'currency_output': rate_pair.currency_output.id_str,
-                'rate': rate_pair.value,
-                'rate_decimal': rate_pair.rate_decimal,
-            }
-        return {}
+        if not rate_pair:
+            raise RequestRatePairNotFound(
+                kwargs={
+                    'input_currency': input_currency.id_str,
+                    'output_currency': output_currency.id_str,
+                }
+            )
+        return {
+            'input_currency': rate_pair.currency_input.id_str,
+            'output_currency': rate_pair.currency_output.id_str,
+            'rate': rate_pair.value,
+            'rate_decimal': rate_pair.rate_decimal,
+        }
 
     @session_required()
     async def get(
