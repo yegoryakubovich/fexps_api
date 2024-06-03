@@ -28,8 +28,8 @@ router = Router(
 
 class ChangeAccountPasswordSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    current_password: str = Field(min_length=8, max_length=32)
-    new_password: str = Field(min_length=8, max_length=32)
+    current_password: str = Field(min_length=6, max_length=32)
+    new_password: str = Field(min_length=6, max_length=32)
 
 
 @router.post()

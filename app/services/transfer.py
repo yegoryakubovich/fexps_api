@@ -17,16 +17,18 @@
 
 from math import ceil
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet
+from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet, NotificationTypes
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository, OrderTransferRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services import ActionService
 from app.services.base import BaseService
+from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.service_addons.transfer import create_transfer
 from app.utils.service_addons.wallet import wallet_check_permission
+from app.utils.value import value_to_float
 from config import settings
 
 
@@ -55,6 +57,22 @@ class TransferService(BaseService):
             wallet_from=wallet_from,
             wallet_to=wallet_to,
             value=value
+        )
+        await BotNotification().send_notification_by_wallet(
+            wallet=wallet_to,
+            notification_type=NotificationTypes.TRANSFER,
+            text_key='notification_transfer_create',
+            value=value_to_float(value=value),
+            wallet_to_id=wallet_to_id,
+            wallet_from_id=wallet_from_id,
+        )
+        await BotNotification().send_notification_by_wallet(
+            wallet=wallet_from,
+            notification_type=NotificationTypes.TRANSFER,
+            text_key='notification_transfer_create',
+            value=value_to_float(value=value),
+            wallet_to_id=wallet_to_id,
+            wallet_from_id=wallet_from_id,
         )
         return {
             'id': transfer.id,

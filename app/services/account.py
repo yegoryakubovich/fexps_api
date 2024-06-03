@@ -169,7 +169,7 @@ class AccountService(BaseService):
             account: Account = await AccountRepository().get_by_id(id_=account_id)
             chars = ascii_letters + digits + '!@#$%^&*'
             while True:
-                generated_password = ''.join(sample(chars, 10))
+                generated_password = ''.join(sample(chars, 8))
                 if await self._is_valid_password(password=generated_password):
                     break
             password_salt = await create_salt()
