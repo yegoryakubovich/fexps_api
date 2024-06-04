@@ -38,7 +38,7 @@ async def rate_get_bybit(currency: Currency, rate_type: str):
                         'userId': '',
                         'tokenId': 'USDT',
                         'currencyId': currency.id_str.upper(),
-                        'side': '0' if rate_type == RateTypes.INPUT else '1',
+                        'side': '1' if rate_type == RateTypes.INPUT else '0',
                         'payment': [str(payment_id)],
                         'size': '5',
                         'page': '1',

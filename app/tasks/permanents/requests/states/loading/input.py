@@ -35,14 +35,9 @@ async def request_type_input(
         currency_value=None,
         value=None,
 ) -> Optional[TypesScheme]:
-    logging.critical(f'currency_value={currency_value}')
-    logging.critical(f'value={value}')
     currency = request.input_method.currency
-    custom_logger.info(
-        text=f'currency_value={currency_value}, value={value}, currency={currency.id_str}',
-        request=request,
-    )
     request_rate = None
+    commission_value = None
     rate = await RateRepository().get(
         currency=currency,
         type=RateTypes.OUTPUT,
@@ -50,9 +45,18 @@ async def request_type_input(
     )
     if rate and await check_actual_rate(rate=rate):
         request_rate = rate.value
+        if request_rate:
+            commission_value = await get_commission(request=request, wallet_id=request.wallet_id, value=value)
+    logging.critical(f'our - {request_rate}')
+    logging.critical(f'our - {commission_value}')
     # source default
     if not request_rate:
-        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
+        default_result = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
+        if default_result:
+            request_rate = default_result.rate
+            commission_value = default_result.commission_value
+    logging.critical(f'default - {request_rate}')
+    logging.critical(f'default - {commission_value}')
     # source bybit
     if not request_rate:
         rate = await RateRepository().get(
@@ -61,7 +65,12 @@ async def request_type_input(
             source=RateSources.BYBIT,
         )
         if rate and await check_actual_rate(rate=rate):
-            request_rate = await calculate_rate_bybit(rate=rate)
+            bybit_result = await calculate_rate_bybit(rate=rate)
+            if bybit_result:
+                request_rate = bybit_result.rate
+                commission_value = bybit_result.commission_value
+    logging.critical(f'bybit - {request_rate}')
+    logging.critical(f'bybit - {commission_value}')
     # source other
     if not request_rate:
         rate = await RateRepository().get(
@@ -70,6 +79,10 @@ async def request_type_input(
         )
         if rate and await check_actual_rate(rate=rate):
             request_rate = rate.value
+            if request_rate:
+                commission_value = await get_commission(request=request, wallet_id=request.wallet_id, value=value)
+    logging.critical(f'other - {request_rate}')
+    logging.critical(f'other - {commission_value}')
     # finish check
     if request_rate is None:
         custom_logger.critical(text=f'{currency.id_str}input not found')
@@ -77,12 +90,10 @@ async def request_type_input(
     if currency.rate_decimal != request.rate_decimal:
         request_rate *= 10 ** (request.rate_decimal - currency.rate_decimal)
     if currency_value:
-        logging.critical(1)
         value = round(currency_value / (request_rate / 10 ** request.rate_decimal))
     elif value:
-        logging.critical(2)
         currency_value = value * (request_rate / 10 ** request.rate_decimal) // currency.div * currency.div
     if None in [currency_value, value]:
         return
-    commission_value = await get_commission(request=request, wallet_id=request.wallet_id, value=value)
+    logging.critical(f'request_rate={request_rate}')
     return TypesScheme(currency_value=currency_value, value=value, commission_value=commission_value)

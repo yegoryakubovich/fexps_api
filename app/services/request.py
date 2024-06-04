@@ -127,28 +127,17 @@ class RequestService(BaseService):
     ) -> dict:
         account = session.account
         input_currency, output_currency = None, None
-        rate_pair = None
         if input_currency_id_str:
             input_currency = await CurrencyRepository().get_by_id_str(id_str=input_currency_id_str)
         if output_currency_id_str:
             output_currency = await CurrencyRepository().get_by_id_str(id_str=output_currency_id_str)
         if type_ == RequestTypes.ALL:  # ALL
-            rate_pair = await RatePairRepository().get(
-                currency_input=input_currency,
-                currency_output=output_currency,
-            )
+            pass
         elif type_ == RequestTypes.INPUT:  # INPUT
             output_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
-            rate_pair = await RatePairRepository().get(
-                currency_input=input_currency,
-                currency_output=output_currency,
-            )
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
             input_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
-            rate_pair = await RatePairRepository().get(
-                currency_input=input_currency,
-                currency_output=output_currency,
-            )
+        rate_pair = await RatePairRepository().get(currency_input=input_currency, currency_output=output_currency)
         if not rate_pair:
             raise RequestRatePairNotFound(
                 kwargs={

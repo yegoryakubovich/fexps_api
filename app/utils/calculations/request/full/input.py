@@ -63,7 +63,9 @@ async def calc_request_full_input(
         request_rate = rate.value
     # source default
     if not request_rate:
-        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
+        default_result = await calculate_rate_default(currency=currency, rate_type=RateTypes.OUTPUT)
+        if default_result:
+            request_rate = default_result.rate
     # source bybit
     if not request_rate:
         rate = await RateRepository().get(
@@ -72,7 +74,9 @@ async def calc_request_full_input(
             source=RateSources.BYBIT,
         )
         if rate and await check_actual_rate(rate=rate):
-            request_rate = await calculate_rate_bybit(rate=rate)
+            bybit_result = await calculate_rate_bybit(rate=rate)
+            if bybit_result:
+                request_rate = bybit_result.rate
     # source other
     if not request_rate:
         rate = await RateRepository().get(
@@ -87,10 +91,8 @@ async def calc_request_full_input(
     if currency.rate_decimal != rate_decimal:
         request_rate *= 10 ** (rate_decimal - currency.rate_decimal)
     if currency_value:
-        logging.critical(1)
         value = round(currency_value / (request_rate / 10 ** rate_decimal))
     elif value:
-        logging.critical(2)
         currency_value = value * (request_rate / 10 ** rate_decimal) // currency.div * currency.div
     if None in [currency_value, value]:
         return

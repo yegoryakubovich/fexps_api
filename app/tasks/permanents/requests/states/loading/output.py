@@ -15,6 +15,7 @@
 #
 
 
+import logging
 from typing import Optional
 
 from app.db.models import Request, RateTypes, RateSources
@@ -49,7 +50,9 @@ async def request_type_output(
         request_rate = rate.value
     # source default
     if not request_rate:
-        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.INPUT)
+        default_result = await calculate_rate_default(currency=currency, rate_type=RateTypes.INPUT)
+        if default_result:
+            request_rate = default_result.rate
     # source bybit
     if not request_rate:
         rate = await RateRepository().get(
@@ -58,7 +61,9 @@ async def request_type_output(
             source=RateSources.BYBIT,
         )
         if rate and await check_actual_rate(rate=rate):
-            request_rate = await calculate_rate_bybit(rate=rate)
+            bybit_result = await calculate_rate_bybit(rate=rate)
+            if bybit_result:
+                request_rate = bybit_result.rate
     # source other
     if not request_rate:
         rate = await RateRepository().get(
@@ -79,4 +84,5 @@ async def request_type_output(
         currency_value = value * (request_rate / 10 ** request.rate_decimal) // currency.div * currency.div
     if None in [currency_value, value]:
         return
+    logging.critical(f'request_rate={request_rate}')
     return TypesScheme(currency_value=currency_value, value=value, commission_value=0)

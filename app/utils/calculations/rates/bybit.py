@@ -15,45 +15,56 @@
 #
 
 
-import logging
 import math
+from typing import Optional
 
-from app.db.models import Currency, RateTypes, Rate
+from pydantic import BaseModel
+
+from app.db.models import RateTypes, Rate
 from app.repositories import MethodRepository, CommissionPackRepository
 from app.utils.calculations.values.comissions import get_commission_value_by_pack
 
 
-async def calculate_rate_bybit(rate: Rate):
+class ResultScheme(BaseModel):
+    value: int
+    rate: int
+    commission_value: int
+    rate_decimal: int
+
+
+async def calculate_rate_bybit(
+        rate: Rate,
+        value: int = 1000_00,
+) -> Optional[ResultScheme]:
     result_rate = rate.value
-    currency = rate.currency
-    rate_type = rate.type
-    logging.critical(f'{currency.id_str} {rate_type}: result rate: {result_rate}')
-    value = 1000_00
     result_value = value
-    round_func = round
+    currency = rate.currency
     method = await MethodRepository().get(currency=currency, is_rate_default=True)
-    if rate_type == RateTypes.INPUT:
+    if rate.type == RateTypes.INPUT:
         commission_pack = await CommissionPackRepository().get(is_default=True)
         if not commission_pack:
             return
         commission_value = await get_commission_value_by_pack(value=value, commission_pack=commission_pack)
         result_value += commission_value
-        if method and method.rate_input_percent:
+        if method and method.rate_input_percent or True:
             result_rate_float = result_rate / 10 ** currency.rate_decimal
             rate_input_percent_float = method.rate_input_percent / 10 ** currency.rate_decimal
-            result_rate_float = result_rate_float * (1 - rate_input_percent_float)
-            result_rate = result_rate_float * 10 ** currency.rate_decimal
-        round_func = math.floor
-    elif rate_type == RateTypes.OUTPUT:
-        if method and method.rate_output_percent:
-            result_rate_float = result_rate / 10 ** currency.rate_decimal
-            rate_output_percent_float = method.rate_output_percent / 10 ** currency.rate_decimal
-            result_rate_float = result_rate_float / (1 - rate_output_percent_float)
+            result_rate_float = result_rate_float / (1 - rate_input_percent_float)
             result_rate = result_rate_float * 10 ** currency.rate_decimal
         round_func = math.ceil
-    if not result_value:
-        return
+    else:
+        commission_value = 0
+        if method and method.rate_output_percent or True:
+            result_rate_float = result_rate / 10 ** currency.rate_decimal
+            rate_output_percent_float = method.rate_output_percent / 10 ** currency.rate_decimal
+            result_rate_float = result_rate_float * (1 - rate_output_percent_float)
+            result_rate = result_rate_float * 10 ** currency.rate_decimal
+        round_func = math.floor
     result_value = result_value / result_rate * 10 ** currency.rate_decimal
     result_rate = round_func(value / result_value * 10 ** currency.rate_decimal)
-    logging.critical(f'{currency.id_str} {rate_type}: result rate: {result_rate}')
-    return result_rate
+    return ResultScheme(
+        value=value,
+        rate=result_rate,
+        commission_value=commission_value,
+        rate_decimal=currency.rate_decimal,
+    )

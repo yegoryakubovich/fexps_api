@@ -16,6 +16,7 @@
 
 
 import datetime
+import logging
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
@@ -73,7 +74,7 @@ async def image_create():
             rate_str += '%'
         image_draw_center(
             image_draw=image_draw,
-            coordinates=COORDINATES_RATES.get(f'{currency_output.id_str}{currency_input.id_str}'),
+            coordinates=COORDINATES_RATES.get(f'{currency_input.id_str}{currency_output.id_str}'),
             text=rate_str,
         )
     image_draw.text(
@@ -88,6 +89,7 @@ async def image_create():
 
 async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
     rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
+    logging.critical(f'{currency_input.id_str}-{currency_output.id_str} {rate_pair.value}')
     if not rate_pair or not await check_actual_rate_pair(rate_pair=rate_pair):
         return
     rate = rate_pair.value / 10 ** rate_pair.rate_decimal

@@ -41,9 +41,9 @@ async def request_type_all(
         if not input_result_type:
             return
         input_rate = get_auto_rate(
-            request=request,
             currency_value=input_result_type.currency_value,
             value=input_result_type.value,
+            rate_decimal=request.rate_decimal,
         )
         output_from_value = input_result_type.value - input_result_type.commission_value
         custom_logger.info(text=f'output_from_value={output_from_value}', request=request)
@@ -51,18 +51,18 @@ async def request_type_all(
         if not output_result_type:
             return
         output_rate = get_auto_rate(
-            request=request,
             currency_value=output_result_type.currency_value,
             value=output_result_type.value,
+            rate_decimal=request.rate_decimal,
         )
     elif request.first_line == RequestFirstLine.OUTPUT_CURRENCY_VALUE:
         output_result_type = await request_type_output(request=request, currency_value=currency_value)
         if not output_result_type:
             return
         output_rate = get_auto_rate(
-            request=request,
             currency_value=output_result_type.currency_value,
             value=output_result_type.value,
+            rate_decimal=request.rate_decimal,
         )
         commission_value = await get_commission(
             request=request,
@@ -74,9 +74,9 @@ async def request_type_all(
         if not input_result_type:
             return
         input_rate = get_auto_rate(
-            request=request,
             currency_value=input_result_type.currency_value,
             value=input_result_type.value,
+            rate_decimal=request.rate_decimal,
         )
     commission_value = input_result_type.commission_value + output_result_type.commission_value
     return AllTypeScheme(

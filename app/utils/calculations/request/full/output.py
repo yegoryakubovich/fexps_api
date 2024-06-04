@@ -43,7 +43,8 @@ async def calc_request_full_output(
         request_rate = rate.value
     # source default
     if not request_rate:
-        request_rate = await calculate_rate_default(currency=currency, rate_type=RateTypes.INPUT)
+        default_result = await calculate_rate_default(currency=currency, rate_type=RateTypes.INPUT)
+        request_rate = default_result.rate
     # source bybit
     if not request_rate:
         rate = await RateRepository().get(
@@ -52,7 +53,8 @@ async def calc_request_full_output(
             source=RateSources.BYBIT,
         )
         if rate and await check_actual_rate(rate=rate):
-            request_rate = await calculate_rate_bybit(rate=rate)
+            bybit_result = await calculate_rate_bybit(rate=rate)
+            request_rate = bybit_result.rate
     # source other
     if not request_rate:
         rate = await RateRepository().get(

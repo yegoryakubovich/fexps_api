@@ -39,13 +39,14 @@ async def run():
         custom_logger.info(text='start check', request=request)
         if request.type == RequestTypes.ALL:  # ALL
             result_all_type = await request_type_all(request=request)
+            logging.critical(result_all_type)
             if not result_all_type:
                 custom_logger.info(text='all result not found', request=request)
                 continue
             rate = get_auto_rate(
-                request=request,
                 currency_value=result_all_type.input_type.currency_value,
                 value=result_all_type.output_type.currency_value,
+                rate_decimal=request.rate_decimal,
             )
             await RequestRepository().update(
                 request,
@@ -70,9 +71,9 @@ async def run():
                 custom_logger.warning(text='input result not found', request=request)
                 continue
             input_rate = get_auto_rate(
-                request=request,
                 currency_value=result_type.currency_value,
                 value=result_type.value,
+                rate_decimal=request.rate_decimal,
             )
             await RequestRepository().update(
                 request,
@@ -93,9 +94,9 @@ async def run():
                 custom_logger.info(text='output result not found', request=request)
                 continue
             output_rate = get_auto_rate(
-                request=request,
                 currency_value=result_type.currency_value,
                 value=result_type.value,
+                rate_decimal=request.rate_decimal,
             )
             await RequestRepository().update(
                 request,

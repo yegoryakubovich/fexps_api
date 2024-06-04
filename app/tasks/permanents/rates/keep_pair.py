@@ -36,6 +36,7 @@ async def run():
                 continue
             pair = (currency_input.id_str, currency_output.id_str)
             if pair in pairs:
+                logging.critical('ПАРА ПИЗДЕЦ ТУПАЯ')
                 continue
             await update_rate(currency_input=currency_input, currency_output=currency_output)
             pairs.append(pair)
@@ -58,7 +59,9 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         rate_value_input = rate_input.value
     # source default
     if not rate_value_input:
-        rate_value_input = await calculate_rate_default(currency=currency_input, rate_type=RateTypes.INPUT)
+        default_result = await calculate_rate_default(currency=currency_input, rate_type=RateTypes.INPUT)
+        if default_result:
+            rate_value_input = default_result.rate
     # source bybit
     if not rate_value_input:
         rate_input = await RateRepository().get(
@@ -67,7 +70,9 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
             source=RateSources.BYBIT,
         )
         if rate_input and await check_actual_rate(rate=rate_input):
-            rate_value_input = await calculate_rate_bybit(rate=rate_input)
+            bybit_result = await calculate_rate_bybit(rate=rate_input)
+            if bybit_result:
+                rate_value_input = bybit_result.rate
     # source other
     if not rate_value_input:
         rate_input = await RateRepository().get(
@@ -78,7 +83,6 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
             rate_value_input = rate_input.value
     # finish check
     if rate_value_input is None:
-        logging.critical(f'{currency_input.id_str}{currency_output.id_str} input not found')
         return
     # OUTPUT
     rate_value_output = None
@@ -92,7 +96,9 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         rate_value_output = rate_output.value
     # source default
     if not rate_value_output:
-        rate_value_output = await calculate_rate_default(currency=currency_output, rate_type=RateTypes.OUTPUT)
+        default_result = await calculate_rate_default(currency=currency_output, rate_type=RateTypes.OUTPUT)
+        if default_result:
+            rate_value_output = default_result.rate
     # source bybit
     if not rate_value_output:
         rate_output = await RateRepository().get(
@@ -101,7 +107,9 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
             source=RateSources.BYBIT,
         )
         if rate_output and await check_actual_rate(rate=rate_output):
-            rate_value_output = await calculate_rate_bybit(rate=rate_output)
+            bybit_result = await calculate_rate_bybit(rate=rate_output)
+            if bybit_result:
+                rate_value_output = bybit_result.rate
     # source other
     if not rate_value_output:
         rate_output = await RateRepository().get(
@@ -112,25 +120,19 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
             rate_value_output = rate_output.value
     # finish check
     if rate_value_output is None:
-        logging.critical(f'{currency_input.id_str}{currency_output.id_str} output not found')
         return
     # result
     rate_input_value = rate_value_input * 10 ** (rate_decimal - currency_input.rate_decimal)
+    logging.critical(f'{currency_input.id_str}{currency_output.id_str} rate_input_value:{rate_input_value}')
     rate_output_value = rate_value_output * 10 ** (rate_decimal - currency_output.rate_decimal)
-    rate_value = round(rate_input_value / rate_output_value * 10 ** rate_decimal)
-    logging.critical(
-        f'{currency_input.id_str}{currency_output.id_str}: '
-        f'rate_input_value {rate_input_value} | '
-        f'rate_output_value {rate_output_value} | '
-        f'rate_value {rate_value}'
-    )
-    if not rate_value:
-        return
+    logging.critical(f'{currency_input.id_str}{currency_output.id_str} rate_output_value:{rate_output_value}')
+    rate_value = rate_input_value / rate_output_value * 10 ** rate_decimal
+    logging.critical(f'{currency_input.id_str}{currency_output.id_str} rate_value:{rate_value}')
     await RatePairRepository().create(
         currency_input=currency_input,
         currency_output=currency_output,
         rate_decimal=rate_decimal,
-        value=rate_value,
+        value=round(rate_value),
     )
 
 

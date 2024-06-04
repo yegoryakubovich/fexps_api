@@ -16,12 +16,11 @@
 
 
 import asyncio
-import logging
 
-from app.db.models import RequisiteTypes, RequisiteStates, RateTypes, Currency, RateSources
-from app.repositories import CurrencyRepository, RequisiteRepository, RateRepository
+from app.db.models import RateTypes, Currency, RateSources
+from app.repositories import CurrencyRepository, RateRepository
 from app.tasks.permanents.rates.logger import RateLogger
-from app.utils.calculations.rates.input import get_input_rate_by_currency_value, get_input_rate_by_value
+from app.utils.calculations.rates.input import get_input_rate_by_value
 from app.utils.calculations.rates.output import get_output_rate_by_value
 
 custom_logger = RateLogger(prefix='rate_our_keep')
