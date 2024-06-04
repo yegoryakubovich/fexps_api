@@ -42,7 +42,7 @@ async def run():
         for i in range(2):
             _need_value = await output_get_need_value(request=request, from_value=_from_value)
             # check wait orders / complete state
-            if _need_value:
+            if _need_value and _need_value >= 100:
                 custom_logger.info(text=f'found _need_value={_need_value}', request=request)
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
