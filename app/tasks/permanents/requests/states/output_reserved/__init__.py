@@ -49,7 +49,7 @@ async def run():
             _from_value = request.output_value_raw
         _need_value = await output_get_need_value(request=request, from_value=_from_value)
         # check wait orders / complete state
-        if not _need_value:
+        if not _need_value or _need_value < 100:
             waiting_orders = await OrderRepository().get_list(
                 request=request,
                 type=OrderTypes.OUTPUT,
@@ -109,7 +109,6 @@ async def run():
                 from_banned_value=True,
             )
             await RequestRepository().update(request, difference_confirmed=difference_value)
-
         await asyncio.sleep(1)
     await asyncio.sleep(5)
 
