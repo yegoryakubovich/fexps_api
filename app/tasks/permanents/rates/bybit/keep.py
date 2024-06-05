@@ -25,11 +25,10 @@ from app.tasks.permanents.rates.logger import RateLogger
 custom_logger = RateLogger(prefix='rate_bybit_keep')
 
 
-async def run():
+async def rate_keep_bybit():
     currency = await CurrencyRepository().get_by_id_str(id_str='rub')
     await update_rate(currency=currency, rate_type=RateTypes.INPUT)
     await update_rate(currency=currency, rate_type=RateTypes.OUTPUT)
-    await asyncio.sleep(60)
 
 
 async def update_rate(currency: Currency, rate_type: str):
@@ -42,12 +41,3 @@ async def update_rate(currency: Currency, rate_type: str):
         source=RateSources.BYBIT,
         value=result_rate,
     )
-
-
-async def rate_keep_bybit():  # FIXME (commissions)
-    custom_logger.info(text=f'started...')
-    while True:
-        try:
-            await run()
-        except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')

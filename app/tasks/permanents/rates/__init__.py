@@ -15,6 +15,6 @@
 #
 
 
-from app.tasks.permanents.rates.keep_pair import rate_keep_pair_our
 from .bybit import rate_keep_bybit
-from .our import rate_our_keep
+from .keep_pair import rate_keep_pair_our
+from .our import rate_keep_our

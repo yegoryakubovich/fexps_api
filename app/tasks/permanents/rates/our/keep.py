@@ -27,12 +27,11 @@ from app.utils.calculations.rates.output import get_output_rate_by_value
 custom_logger = RateLogger(prefix='rate_our_keep')
 
 
-async def run():
+async def rate_keep_our():
     for currency in await CurrencyRepository().get_list():
         await update_rate(currency=currency, rate_type=RateTypes.INPUT)
         await update_rate(currency=currency, rate_type=RateTypes.OUTPUT)
         await asyncio.sleep(1)
-    await asyncio.sleep(60)
 
 
 async def update_rate(currency: Currency, rate_type: str):
@@ -56,12 +55,3 @@ async def update_rate(currency: Currency, rate_type: str):
         source=RateSources.OUR,
         value=rate_value,
     )
-
-
-async def rate_our_keep():
-    custom_logger.info(text=f'started...')
-    while True:
-        try:
-            await run()
-        except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')

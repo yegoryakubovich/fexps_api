@@ -28,7 +28,7 @@ from app.utils.calculations.rates.default import calculate_rate_default
 custom_logger = RateLogger(prefix='rate_keep_pair')
 
 
-async def run():
+async def rate_keep_pair_our():
     pairs = []
     for currency_input in await CurrencyRepository().get_list():
         for currency_output in await CurrencyRepository().get_list():
@@ -40,8 +40,7 @@ async def run():
             await update_rate(currency_input=currency_input, currency_output=currency_output)
             pairs.append(pair)
             await asyncio.sleep(0.5)
-        await asyncio.sleep(1)
-    await asyncio.sleep(60)
+        await asyncio.sleep(0.5)
 
 
 async def update_rate(currency_input: Currency, currency_output: Currency):
@@ -132,12 +131,3 @@ async def update_rate(currency_input: Currency, currency_output: Currency):
         rate_decimal=rate_decimal,
         value=rate_value,
     )
-
-
-async def rate_keep_pair_our():
-    custom_logger.info(text=f'started...')
-    while True:
-        try:
-            await run()
-        except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
