@@ -15,9 +15,15 @@
 #
 
 
-from app.db.models import NotificationSetting
+from app.db.models import NotificationSetting, Account
 from app.repositories.base import BaseRepository
 
 
 class NotificationSettingRepository(BaseRepository[NotificationSetting]):
     model = NotificationSetting
+
+    async def get_by_account(self, account: Account) -> NotificationSetting:
+        notification_settings = await self.get(account=account)
+        if not notification_settings:
+            notification_settings = await self.create(account=account)
+        return notification_settings

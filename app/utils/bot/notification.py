@@ -76,7 +76,7 @@ class BotNotification:
             text_key: str,
             **kwargs,
     ):
-        notification_setting = await NotificationSettingRepository().get(account=account)
+        notification_setting = await NotificationSettingRepository().get_by_account(account=account)
         if not notification_setting.telegram_id:
             return
         if not notification_setting.is_active:

@@ -33,7 +33,7 @@ class NotificationService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
-        notification_setting = await NotificationSettingRepository().get(account=account)
+        notification_setting = await NotificationSettingRepository().get_by_account(account=account)
         if not notification_setting:
             notification_setting = await NotificationSettingRepository().create(account=account)
         return {
@@ -46,7 +46,7 @@ class NotificationService(BaseService):
             session: Session,
     ) -> dict:
         account = session.account
-        notification_setting = await NotificationSettingRepository().get(account=account)
+        notification_setting = await NotificationSettingRepository().get_by_account(account=account)
         if notification_setting.telegram_id:
             raise NotificationTelegramAlreadyLinked()
         code = await create_id_str()
@@ -81,7 +81,7 @@ class NotificationService(BaseService):
             is_active: bool,
     ) -> dict:
         account = session.account
-        notification_setting = await NotificationSettingRepository().get(account=account)
+        notification_setting = await NotificationSettingRepository().get_by_account(account=account)
         await NotificationSettingRepository().update(
             notification_setting,
             is_request=is_request,
