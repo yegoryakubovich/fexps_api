@@ -13,14 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import logging
 from os import remove
+from time import time
+from typing import List
 
 from fastapi import UploadFile
 from starlette.responses import FileResponse
 
 from app.db.models import File, Session, Actions
 from app.repositories import FileRepository, OrderRepository, RequestRepository, MessageRepository
+from app.repositories.file_key import FileKeyRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -55,21 +60,36 @@ class FileService(BaseService):
             'id_str': file.id_str,
         }
 
-    @session_required()
     async def create(
             self,
-            session: Session,
-            file: UploadFile,
-            return_model: bool = False,
+            key: str,
+            files: List[UploadFile],
     ):
-        image = await self._create(file=file, session=session)
-
-        if return_model:
-            return image
-
-        return {
-            'id_str': image.id_str,
-        }
+        logging.critical(1)
+        if not await FileKeyRepository().get(file_id=None, key=key):
+            return {'error': 'key not found'}
+        logging.critical(2)
+        time_str = str(int(time()))
+        for file in files:
+            id_str = f'{await create_id_str()}{time_str}'
+            logging.critical(id_str)
+            extension = file.filename.split('.')[-1]
+            with open(f'{settings.path_files}/{id_str}.{extension}', mode='wb') as file_:
+                file_.write(await file.read())
+            file_db = await FileRepository().create(id_str=id_str, filename=file.filename, extension=extension)
+            await FileKeyRepository().create(file=file_db, key=key)
+            await self.create_action(
+                model=file_db,
+                action=Actions.CREATE,
+                parameters={
+                    'key': key,
+                    'id_str': id_str,
+                    'filename': file.filename,
+                    'extension': extension,
+                },
+            )
+        await FileKeyRepository().delete(await FileKeyRepository().get(file_id=None, key=key))
+        return {}
 
     async def _create(
             self,

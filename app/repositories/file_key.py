@@ -15,16 +15,9 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String
+from app.db.models import FileKey
+from app.repositories.base import BaseRepository
 
-from app.db.base_class import Base
 
-
-class File(Base):
-    __tablename__ = 'files'
-
-    id = Column(BigInteger, primary_key=True)
-    id_str = Column(String(length=32))
-    filename = Column(String(length=128))
-    extension = Column(String(8))
-    is_deleted = Column(Boolean, default=False)
+class FileKeyRepository(BaseRepository[FileKey]):
+    model = FileKey

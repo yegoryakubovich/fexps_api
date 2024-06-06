@@ -28,6 +28,7 @@ from .action_parameter import ActionParameter
 from .commission_pack_value import CommissionPackValue
 from .contact import Contact
 from .country import Country
+from .file_key import FileKey
 from .method import Method, MethodFieldTypes
 from .permission import Permission
 from .rate import Rate, RateTypes, RateSources

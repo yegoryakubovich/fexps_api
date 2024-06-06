@@ -15,22 +15,31 @@
 #
 
 
-from typing import Annotated, List
+from fastapi import Request
+from starlette.responses import HTMLResponse
+from starlette.templating import Jinja2Templates
 
-from fastapi import UploadFile, Form
-
-from app.services import FileService
-from app.utils import Response, Router
+from app.repositories.file_key import FileKeyRepository
+from app.utils import Router
 
 router = Router(
-    prefix='/create',
+    prefix='/upload',
 )
 
 
-@router.post()
+@router.get(response_class=HTMLResponse)
 async def route(
-        key: Annotated[str, Form()],
-        files: Annotated[List[UploadFile], Form()],
+        request: Request,
+        key: str,
 ):
-    result = await FileService().create(key=key, files=files)
-    return Response(**result)
+    if not await FileKeyRepository().get(file_id=None, key=key):
+        return
+    templates = Jinja2Templates(directory="app/utils/templates")
+    return templates.TemplateResponse(
+        request=request,
+        name="file/index.html",
+        context={
+            'title': 'Upload files',
+            'key': key,
+        },
+    )

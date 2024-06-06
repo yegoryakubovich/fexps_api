@@ -17,12 +17,9 @@
 
 from fastapi import Depends
 from pydantic import BaseModel, Field
-from starlette.responses import FileResponse
 
-from app.repositories import FileRepository
 from app.services import FileService
 from app.utils import Router
-from config import settings
 
 
 router = Router(

@@ -20,6 +20,7 @@ import logging
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.staticfiles import StaticFiles
 
 from app.db.init_db import init_db
 from app.routers import routers
@@ -56,9 +57,10 @@ app = FastAPI(
     },
     dependencies=[Depends(init)],
     exception_handlers={RequestValidationError: validation_error},
-    on_startup=[on_startup]
+    on_startup=[on_startup],
 )
 app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=Middleware())
+app.mount("/static", StaticFiles(directory="app/utils/static"), name="static")
 [app.include_router(router) for router in routers]
 
 

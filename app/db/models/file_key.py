@@ -15,16 +15,17 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String
+from sqlalchemy import Column, BigInteger, Boolean, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
 
-class File(Base):
-    __tablename__ = 'files'
+class FileKey(Base):
+    __tablename__ = 'files_keys'
 
     id = Column(BigInteger, primary_key=True)
-    id_str = Column(String(length=32))
-    filename = Column(String(length=128))
-    extension = Column(String(8))
+    file_id = Column(BigInteger, ForeignKey('files.id', ondelete='SET NULL'), nullable=True)
+    file = relationship('File', foreign_keys=file_id, uselist=False, lazy='selectin')
+    key = Column(String(length=32))
     is_deleted = Column(Boolean, default=False)

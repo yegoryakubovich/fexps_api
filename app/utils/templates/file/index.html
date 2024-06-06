@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='file/styles.css') }}">
+</head>
+<body>
+<div id="image-container"></div>
+<form id="file-form" action="create" method="post" enctype="multipart/form-data">
+    <div id="file-input-container">
+        <input type="hidden" name="key" value="{{ key }}">
+        <input type="file" id="file-input" name="files" multiple>
+        <div class="file-buttons">
+            <button type="button" class="file-button" id="file-button">добавить файл</button>
+            <button type="submit" class="file-button" id="continue-button">Продолжить</button>
+        </div>
+    </div>
+</form>
+<script src="{{ url_for('static', path='file/script.js') }}"></script>
+</body>
+</html>
