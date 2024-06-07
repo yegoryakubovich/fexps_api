@@ -27,6 +27,7 @@ from .contact import ContactService
 from .country import CountryService
 from .currency import CurrencyService
 from .file import FileService
+from .file_key import FileKeyService
 from .language import LanguageService
 from .message import MessageService
 from .method import MethodService

@@ -15,20 +15,22 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .get import router as router_get
-from .upload import router as router_upload
-from .key import router as router_key
+from pydantic import Field, BaseModel
+
+from app.services import FileKeyService
+from app.utils import Response, Router
 
 
 router = Router(
-    prefix='/files',
-    routes_included=[
-        router_get,
-        router_create,
-        router_upload,
-        router_key,
-    ],
-    tags=['Files'],
+    prefix='/create',
 )
+
+
+class FileKeyCreateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.post()
+async def route(schema: FileKeyCreateSchema):
+    result = await FileKeyService().create(token=schema.token)
+    return Response(**result)
