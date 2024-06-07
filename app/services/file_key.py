@@ -17,8 +17,9 @@
 
 from time import time
 
-from app.db.models import File, Session, Actions
+from app.db.models import File, Session, Actions, FileKey
 from app.repositories.file_key import FileKeyRepository
+from app.services import FileService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -45,4 +46,31 @@ class FileKeyService(BaseService):
         )
         return {
             'id': file_key.id,
+        }
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            key: str,
+    ) -> dict:
+        if await FileKeyRepository().get(file_id=None, key=key):
+            return {
+                'files_keys': [],
+            }
+        return {
+            'key': key,
+            'files_keys': [
+                await self.generate_file_key_dict(file_key=file_key)
+                for file_key in await FileKeyRepository().get_list(key=key)
+            ],
+        }
+
+    @staticmethod
+    async def generate_file_key_dict(file_key: FileKey) -> dict:
+        if not file_key.file:
+            return {}
+        return {
+            'file_key_id': file_key.id,
+            **await FileService().generate_file_dict(file=file_key.file),
         }

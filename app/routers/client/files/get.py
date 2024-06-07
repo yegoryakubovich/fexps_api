@@ -33,6 +33,4 @@ class FileGetSchema(BaseModel):
 
 @router.get()
 async def route(schema: FileGetSchema = Depends()):
-    return await FileService().get(
-        id_str=schema.id_str,
-    )
+    return await FileService().get(id_str=schema.id_str)

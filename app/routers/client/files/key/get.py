@@ -15,15 +15,27 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_create
-from .get import router as router_get
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services import FileKeyService
+from app.utils import Response, Router
 
 
 router = Router(
-    prefix='/keys',
-    routes_included=[
-        router_create,
-        router_get,
-    ],
+    prefix='/get',
 )
+
+
+class FileKeyCreateSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    key: str = Field(min_length=8, max_length=32)
+
+
+@router.get()
+async def route(schema: FileKeyCreateSchema = Depends()):
+    result = await FileKeyService().get(
+        token=schema.token,
+        key=schema.key,
+    )
+    return Response(**result)

@@ -145,24 +145,16 @@ class MessageService(BaseService):
             elif message.account.id == requisite_account.id:
                 position = MessageUserPositions.SENDER
         action = await ActionService().get_action(model=message, action=Actions.CREATE)
-        files = []
-        for message_file in await MessageFileRepository().get_list(message=message):
-            with open(f'{settings.path_files}/{message_file.file.id_str}.{message_file.file.extension}', 'rb') as f:
-                file_byte = f.read()
-            files += [{
-                'id_str': message_file.file.id_str,
-                'filename': message_file.file.filename,
-                'extension': message_file.file.extension,
-                'url': f'{settings.get_file_url()}?id_str={message_file.file.id_str}',
-                'value': file_byte.decode('ISO-8859-1'),
-            }]
         return {
             'id': message.id,
             'account': message.account.id,
             'role': message.role,
             'position': position,
             'order': message.order.id,
-            'files': files,
+            'files': [
+                await FileService().generate_file_dict(file=message_file.file)
+                for message_file in await MessageFileRepository().get_list(message=message)
+            ],
             'text': message.text,
             'date': action.datetime.strftime(settings.datetime_format),
         }

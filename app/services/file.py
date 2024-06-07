@@ -15,7 +15,6 @@
 #
 
 
-import logging
 from os import remove
 from time import time
 from typing import List
@@ -65,14 +64,11 @@ class FileService(BaseService):
             key: str,
             files: List[UploadFile],
     ):
-        logging.critical(1)
         if not await FileKeyRepository().get(file_id=None, key=key):
             return {'error': 'key not found'}
-        logging.critical(2)
         time_str = str(int(time()))
         for file in files:
             id_str = f'{await create_id_str()}{time_str}'
-            logging.critical(id_str)
             extension = file.filename.split('.')[-1]
             with open(f'{settings.path_files}/{id_str}.{extension}', mode='wb') as file_:
                 file_.write(await file.read())
@@ -183,3 +179,15 @@ class FileService(BaseService):
             parameters=action_parameters,
         )
         return {}
+
+    @staticmethod
+    async def generate_file_dict(file: File) -> dict:
+        with open(f'{settings.path_files}/{file.id_str}.{file.extension}', 'rb') as f:
+            file_byte = f.read()
+        return {
+            'id_str': file.id_str,
+            'filename': file.filename,
+            'extension': file.extension,
+            'url': f'{settings.get_file_url()}?id_str={file.id_str}',
+            'value': file_byte.decode('ISO-8859-1'),
+        }
