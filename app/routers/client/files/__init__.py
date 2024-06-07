@@ -18,6 +18,7 @@
 from app.utils import Router
 from .create import router as router_create
 from .get import router as router_get
+from .open import router as router_open
 from .upload import router as router_upload
 from .key import router as router_key
 
@@ -25,9 +26,10 @@ from .key import router as router_key
 router = Router(
     prefix='/files',
     routes_included=[
-        router_get,
-        router_create,
         router_upload,
+        router_create,
+        router_get,
+        router_open,
         router_key,
     ],
     tags=['Files'],

@@ -19,10 +19,11 @@ from fastapi import Depends
 from pydantic import BaseModel, Field
 
 from app.services import FileService
-from app.utils import Response, Router
+from app.utils import Router
+
 
 router = Router(
-    prefix='/get',
+    prefix='/open',
 )
 
 
@@ -32,5 +33,4 @@ class FileGetSchema(BaseModel):
 
 @router.get()
 async def route(schema: FileGetSchema = Depends()):
-    result = await FileService().get(id_str=schema.id_str)
-    return Response(**result)
+    return await FileService().open(id_str=schema.id_str)

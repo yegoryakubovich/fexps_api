@@ -23,6 +23,7 @@ from app.services import FileService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
+from config import settings
 
 
 class FileKeyService(BaseService):
@@ -46,6 +47,8 @@ class FileKeyService(BaseService):
         )
         return {
             'id': file_key.id,
+            'key': file_key.key,
+            'url': f'{settings.get_file_upload_url()}?key={file_key.key}',
         }
 
     @session_required()
@@ -59,7 +62,6 @@ class FileKeyService(BaseService):
                 'files_keys': [],
             }
         return {
-            'key': key,
             'files_keys': [
                 await self.generate_file_key_dict(file_key=file_key)
                 for file_key in await FileKeyRepository().get_list(key=key)
@@ -71,6 +73,7 @@ class FileKeyService(BaseService):
         if not file_key.file:
             return {}
         return {
+            'key': file_key.key,
             'file_key_id': file_key.id,
             **await FileService().generate_file_dict(file=file_key.file),
         }

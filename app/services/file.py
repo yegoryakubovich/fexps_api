@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from os import remove
 from time import time
 from typing import List
@@ -120,7 +119,7 @@ class FileService(BaseService):
         return image
 
     @staticmethod
-    async def get(id_str: str):
+    async def open(id_str: str):
         file = await FileRepository().get_by_id_str(id_str=id_str)
         if file.extension in ['jpg', 'jpeg', 'png', 'pdf']:
             return FileResponse(
@@ -130,6 +129,15 @@ class FileService(BaseService):
             path=f'{settings.path_files}/{file.id_str}.{file.extension}',
             filename=file.filename,
         )
+
+    async def get(self, id_str: str):
+        logging.critical(id_str)
+        file = await FileRepository().get_by_id_str(id_str=id_str)
+        logging.critical(file)
+        logging.critical(file.id)
+        return {
+            'file': await self.generate_file_dict(file=file),
+        }
 
     @session_required(permissions=['files'])
     async def delete_by_admin(
@@ -188,6 +196,6 @@ class FileService(BaseService):
             'id_str': file.id_str,
             'filename': file.filename,
             'extension': file.extension,
-            'url': f'{settings.get_file_url()}?id_str={file.id_str}',
+            'url': f'{settings.get_file_open_url()}?id_str={file.id_str}',
             'value': file_byte.decode('ISO-8859-1'),
         }
