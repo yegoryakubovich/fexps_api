@@ -20,7 +20,7 @@ from .create import router as router_create
 
 
 router = Router(
-    prefix='/files',
+    prefix='/keys',
     routes_included=[
         router_create,
     ],

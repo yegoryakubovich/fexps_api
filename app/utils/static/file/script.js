@@ -1,6 +1,7 @@
 const fileInput = document.getElementById('file-input');
 const fileButton = document.getElementById('file-button');
 const imageContainer = document.getElementById('image-container');
+const fileMaxCount = 10;
 
 fileButton.addEventListener('click', () => {
     fileInput.click();
@@ -9,7 +10,8 @@ fileButton.addEventListener('click', () => {
 fileInput.addEventListener('change', () => {
     const files = fileInput.files;
     imageContainer.innerHTML = '';
-    if (files.length > 2){
+    if (files.length > fileMaxCount){
+        alert('max files / макс. файлов ' + fileMaxCount);
         return
     }
     for (const file of files) {
