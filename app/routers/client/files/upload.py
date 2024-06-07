@@ -22,6 +22,7 @@ from starlette.templating import Jinja2Templates
 from app.repositories.file_key import FileKeyRepository
 from app.utils import Router
 
+
 router = Router(
     prefix='/upload',
 )

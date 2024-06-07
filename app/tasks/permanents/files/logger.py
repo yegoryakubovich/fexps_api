@@ -15,23 +15,28 @@
 #
 
 
-from typing import Annotated, List
-
-from fastapi import UploadFile, Form
-
-from app.services import FileService
-from app.utils import Response, Router
+import logging
 
 
-router = Router(
-    prefix='/create',
-)
+class FileLogger:
+    def __init__(self, prefix: str):
+        self.prefix = prefix
 
+    def send(
+            self,
+            func: callable,
+            text: str,
+    ) -> None:
+        log_list = [f'[{self.prefix}]']
 
-@router.post()
-async def route(
-        key: Annotated[str, Form()],
-        files: Annotated[List[UploadFile], Form()],
-):
-    result = await FileService().create(key=key, files=files)
-    return Response(**result)
+        log_list += [text]
+        func(f' '.join(log_list))
+
+    def info(self, **kwargs) -> None:
+        self.send(func=logging.info, **kwargs)
+
+    def warning(self, **kwargs) -> None:
+        self.send(func=logging.warning, **kwargs)
+
+    def critical(self, **kwargs) -> None:
+        self.send(func=logging.critical, **kwargs)

@@ -14,24 +14,4 @@
 # limitations under the License.
 #
 
-
-from typing import Annotated, List
-
-from fastapi import UploadFile, Form
-
-from app.services import FileService
-from app.utils import Response, Router
-
-
-router = Router(
-    prefix='/create',
-)
-
-
-@router.post()
-async def route(
-        key: Annotated[str, Form()],
-        files: Annotated[List[UploadFile], Form()],
-):
-    result = await FileService().create(key=key, files=files)
-    return Response(**result)
+from .file_key_close_check import file_key_close_check

@@ -18,6 +18,7 @@
 from app.utils import Router
 from .create import router as router_create
 from .get import router as router_get
+from .upload import router as router_upload
 
 
 router = Router(
@@ -25,6 +26,7 @@ router = Router(
     routes_included=[
         router_get,
         router_create,
+        router_upload,
     ],
     tags=['Files'],
 )

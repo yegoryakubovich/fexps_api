@@ -30,6 +30,7 @@ from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram import telegram_image_poster
 from app.tasks.permanents.telegram.image_poster import telegram_image_poster
 from app.tasks.permanents.telegram.image_updater import telegram_image_updater
+from app.tasks.permanents.files import file_key_close_check
 
 
 TASKS = []
@@ -43,6 +44,11 @@ TASKS += [
     request_state_output_reserved_check,
     request_state_output_check,
 ]
+# File
+TASKS += [
+    file_key_close_check,
+]
+
 
 
 async def start_app() -> None:

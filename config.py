@@ -72,6 +72,7 @@ class Settings(BaseSettings):
     items_per_page: int = 10
     request_waiting_check: int = 5
     request_rate_confirmed_minutes: int = 60
+    file_key_close_minutes: int = 60
     rate_actual_minutes: int = 5
     datetime_format: str = '%d-%m-%y %H:%M'
 
