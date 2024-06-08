@@ -44,6 +44,8 @@ class MessageService(BaseService):
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
+        if not text and not await FileKeyRepository().get_list(key=files_key):
+            return
         message = await MessageRepository().create(
             account=account,
             order=order,
@@ -67,7 +69,6 @@ class MessageService(BaseService):
                     continue
                 await OrderFileRepository().create_not_exists(order=order, file=file_key.file)
                 await MessageFileRepository().create_not_exists(message=message, file=file_key.file)
-
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,
