@@ -21,3 +21,8 @@ from app.repositories.base import BaseRepository
 
 class MessageFileRepository(BaseRepository[MessageFile]):
     model = MessageFile
+
+    async def create_not_exists(self, **kwargs):
+        if self.get(**kwargs):
+            return
+        return self.create(**kwargs)

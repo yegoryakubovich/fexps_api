@@ -21,3 +21,8 @@ from app.repositories.base import BaseRepository
 
 class OrderFileRepository(BaseRepository[OrderFile]):
     model = OrderFile
+
+    async def create_not_exists(self, **kwargs):
+        if self.get(**kwargs):
+            return
+        return self.create(**kwargs)
