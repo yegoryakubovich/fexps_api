@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
 
 from app.db.models import Method, MethodFieldTypes
 from app.utils.exceptions.method import MethodFieldsParameterMissing, MethodFieldsTypeError
@@ -53,7 +53,11 @@ async def method_check_validation_scheme(method: Method, fields: dict):
 
 
 async def method_check_input_field(method: Method, fields: dict):
-    for field in method.schema_input_fields:
+    await check_input_field(schema_input_fields=method.schema_input_fields, fields=fields)
+
+
+async def check_input_field(schema_input_fields: list, fields: dict):
+    for field in schema_input_fields:
         field_key = field.get('key')
         field_type = field.get('type')
         field_optional = field.get('optional')
@@ -70,7 +74,7 @@ async def method_check_input_field(method: Method, fields: dict):
         for type_, python_type in [
             (MethodFieldTypes.STR, str),
             (MethodFieldTypes.INT, int),
-            (MethodFieldTypes.IMAGE, list),
+            (MethodFieldTypes.IMAGE, str),
         ]:
             if field_type == type_ and not isinstance(field_result, python_type):
                 raise MethodFieldsTypeError(

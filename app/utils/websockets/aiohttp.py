@@ -26,13 +26,13 @@ class ConnectionManagerAiohttp:
         self.order_id = order_id
         self.url = f'{settings.get_chat_url()}?token={self.token}&order_id={self.order_id}'
 
-    async def send(self, role: str, text: str = None, files: list = None):
+    async def send(self, role: str, text: str = None, files_key: str = None):
         async with aiohttp.ClientSession() as session:
             async with session.ws_connect(self.url) as ws:
                 await ws.send_json(
                     data={
                         'role': role,
                         'text': text,
-                        'files': files if files else [],
+                        'files_key': files_key,
                     },
                 )

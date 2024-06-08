@@ -29,7 +29,7 @@ custom_logger = FileLogger(prefix='request_rate_confirmed_check')
 
 async def run():
     time_now = datetime.datetime.now(datetime.UTC)
-    for file_key in await FileKeyRepository().get_list(file=None):
+    for file_key in await FileKeyRepository().get_list():
         await asyncio.sleep(0.5)
         file_key_action = await ActionService().get_action(file_key, action=Actions.CREATE)
         if not file_key_action:

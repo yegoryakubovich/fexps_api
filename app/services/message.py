@@ -17,11 +17,10 @@
 
 from typing import Optional
 
-from fastapi import UploadFile
-
 from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions, NotificationTypes
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, MessageFileRepository, \
     OrderFileRepository
+from app.repositories.file_key import FileKeyRepository
 from app.services import ActionService, FileService
 from app.services.base import BaseService
 from app.utils.bot.notification import BotNotification
@@ -39,9 +38,9 @@ class MessageService(BaseService):
             self,
             session: Session,
             order_id: int,
-            text: Optional[str] = None,
             role: Optional[str] = None,
-            files: Optional[list[UploadFile]] = None,
+            text: Optional[str] = None,
+            files_key: Optional[str] = None,
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
@@ -56,14 +55,19 @@ class MessageService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'order_id': order_id,
+                'order_id': order.id,
                 'text': text,
+                'role': role,
+                'files_key': files_key,
             }
         )
-        for file in files:
-            file = await FileService().create(session=session, file=file, return_model=True)
-            await OrderFileRepository().create(order=order, file=file)
-            await MessageFileRepository().create(message=message, file=file)
+        if files_key:
+            for file_key in await FileKeyRepository().get_list(key=files_key):
+                if not file_key.file:
+                    continue
+                await OrderFileRepository().create_not_exists(order=order, file=file_key.file)
+                await MessageFileRepository().create_not_exists(message=message, file=file_key.file)
+
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,

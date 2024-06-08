@@ -17,7 +17,8 @@
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
     MessageRoles, NotificationTypes
-from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository
+from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository
+from app.repositories.file_key import FileKeyRepository
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.repositories.requisite import RequisiteRepository
@@ -30,7 +31,7 @@ from app.services.requisite import RequisiteService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
-from app.utils.service_addons.method import method_check_input_field
+from app.utils.service_addons.method import check_input_field
 from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
 from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
@@ -263,16 +264,8 @@ class OrderService(BaseService):
                 },
             )
         await OrderRequestService().check_have_order_request(order=order)
-        if order.type == OrderTypes.INPUT:
-            await method_check_input_field(
-                method=order.requisite.output_requisite_data.method,
-                fields=input_fields,
-            )
-        elif order.type == OrderTypes.OUTPUT:
-            await method_check_input_field(
-                method=order.requisite.input_method,
-                fields=input_fields,
-            )
+        await check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
+
         await OrderRepository().update(order, state=next_state)
         connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
@@ -282,10 +275,14 @@ class OrderService(BaseService):
                 continue
             text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
             if field_scheme['type'] == MethodFieldTypes.IMAGE:
+                for file_key in await FileKeyRepository().get_list(key=field_value):
+                    if not file_key.file:
+                        continue
+                    await OrderFileRepository().create(order=order, file=file_key.file)
                 await connections_manager_aiohttp.send(
                     role=MessageRoles.USER,
                     text=text.value_default,
-                    files=field_value,
+                    files_key=field_value,
                 )
                 input_fields[field_key] = 'added'
             else:

@@ -15,8 +15,6 @@
 #
 
 
-import io
-
 from fastapi import WebSocket, WebSocketDisconnect, UploadFile
 
 from app.services import MessageService
@@ -40,14 +38,7 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 order_id=order_id,
                 text=data['text'],
                 role=data['role'],
-                files=[
-                    UploadFile(
-                        file=io.BytesIO(file_dict['data'].encode('ISO-8859-1')),
-                        filename=file_dict['filename'],
-                        size=len(file_dict['data'].encode('ISO-8859-1')),
-                    )
-                    for file_dict in data["files"]
-                ],
+                files_key=data['files_key'],
             )
             await connections_manager_fastapi.send(data=message, order_id=order_id)
     except WebSocketDisconnect:
