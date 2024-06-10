@@ -72,7 +72,7 @@ async def request_type_input(
             request_rate = rate.value
     # finish check
     if request_rate is None:
-        custom_logger.critical(text=f'{currency.id_str}input not found')
+        custom_logger.critical(text=f'{currency.id_str} input not found')
         return
     if currency.rate_decimal != request.rate_decimal:
         request_rate *= 10 ** (request.rate_decimal - currency.rate_decimal)
