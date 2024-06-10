@@ -53,8 +53,8 @@
         .file-button {
             width: 48%;
             padding: 15px;
-            background-color: #007bff;
-            color: white;
+            background-color: #FFE500;
+            color: black;
             text-align: center;
             border: none;
             border-radius: 5px;
@@ -63,7 +63,7 @@
         }
 
         .file-button:hover {
-            background-color: #0056b3;
+            background-color: #ad9e18;
         }
 
         #image-container {
@@ -120,7 +120,7 @@
             const imgWrapper = document.createElement('div');
             imgWrapper.className = 'image-wrapper';
             const img = document.createElement('img');
-            const filename_split = file.name.split('.')
+            const filename_split = file.name.split('.');
             if (['jpg', 'png'].includes(filename_split[filename_split.length - 1])) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
