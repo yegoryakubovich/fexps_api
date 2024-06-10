@@ -29,7 +29,7 @@ from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderReque
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value, order_request_update_type_recreate
 from app.utils.service_addons.wallet import wallet_check_permission
-from app.utils.websockets.chat import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
 class OrderRequestService(BaseService):
@@ -71,7 +71,7 @@ class OrderRequestService(BaseService):
             )
         order_request, data = None, {}
         await self.check_have_order_request(order=order)
-        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         if type_ == OrderRequestTypes.CANCEL:
             if order.state in OrderStates.choices_one_side_cancel and wallet.id == order.request.wallet.id:
                 order_request = await OrderRequestRepository().create(
@@ -231,7 +231,7 @@ class OrderRequestService(BaseService):
                     'action': f'Change OrderRequest to state "{state}"',
                 },
             )
-        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         if order_request.type == OrderRequestTypes.CANCEL:
             await order_request_update_type_cancel(
                 order_request=order_request,

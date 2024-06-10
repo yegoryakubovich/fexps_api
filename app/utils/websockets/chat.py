@@ -21,7 +21,7 @@ from fastapi import WebSocket
 from config import settings
 
 
-class ConnectionManagerAiohttp:
+class ChatConnectionManagerAiohttp:
     def __init__(self, token: str, order_id: int):
         self.token = token
         self.order_id = order_id
@@ -39,7 +39,7 @@ class ConnectionManagerAiohttp:
                 )
 
 
-class ConnectionManagerFastApi:
+class ChatConnectionManagerFastApi:
     def __init__(self):
         self.active_connections: list[tuple[int, WebSocket]] = []
 
@@ -57,4 +57,4 @@ class ConnectionManagerFastApi:
             await connection[1].send_json(data=data)
 
 
-connections_manager_fastapi = ConnectionManagerFastApi()
+chat_connections_manager_fastapi = ChatConnectionManagerFastApi()

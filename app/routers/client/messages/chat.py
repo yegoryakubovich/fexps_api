@@ -15,11 +15,12 @@
 #
 
 
-from fastapi import WebSocket, WebSocketDisconnect, UploadFile
+from fastapi import WebSocket, WebSocketDisconnect
 
 from app.services import MessageService
 from app.utils import Router
-from app.utils.websockets.chat import connections_manager_fastapi
+from app.utils.websockets.chat import chat_connections_manager_fastapi
+
 
 router = Router(
     prefix='/chat',
@@ -28,7 +29,7 @@ router = Router(
 
 @router.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
-    await connections_manager_fastapi.connect(websocket, order_id=order_id)
+    await chat_connections_manager_fastapi.connect(websocket, order_id=order_id)
     try:
         while True:
             data = await websocket.receive_json()
@@ -39,6 +40,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str, order_id: int):
                 role=data['role'],
                 files_key=data['files_key'],
             )
-            await connections_manager_fastapi.send(data=message, order_id=order_id)
+            await chat_connections_manager_fastapi.send(data=message, order_id=order_id)
     except WebSocketDisconnect:
-        connections_manager_fastapi.disconnect(websocket, order_id=order_id)
+        chat_connections_manager_fastapi.disconnect(websocket, order_id=order_id)

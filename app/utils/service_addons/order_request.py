@@ -28,14 +28,14 @@ from app.utils.calculations.request.commissions import get_commission_value_inpu
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
 from app.utils.value import value_to_float
-from app.utils.websockets.chat import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
 async def order_request_update_type_cancel(
         order_request: OrderRequest,
         state: str,
         canceled_reason: str,
-        connections_manager_aiohttp: ConnectionManagerAiohttp,
+        connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
     order: Order = order_request.order
     request: Request = order.request
@@ -89,7 +89,7 @@ async def order_request_update_type_recreate(
         order_request: OrderRequest,
         state: str,
         canceled_reason: str,
-        connections_manager_aiohttp: ConnectionManagerAiohttp,
+        connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
     order: Order = order_request.order
     if state == OrderRequestStates.COMPLETED:
@@ -130,7 +130,7 @@ async def order_request_update_type_recreate(
 async def order_request_update_type_update_value(
         order_request: OrderRequest,
         state: str,
-        connections_manager_aiohttp: ConnectionManagerAiohttp,
+        connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
     order: Order = order_request.order
     request: Request = order.request

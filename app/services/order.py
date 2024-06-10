@@ -34,7 +34,7 @@ from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, Orde
 from app.utils.service_addons.method import check_input_field
 from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
-from app.utils.websockets.chat import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
 class OrderService(BaseService):
@@ -190,7 +190,7 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
-        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
         await OrderRepository().update(order, state=next_state)
         await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
@@ -267,7 +267,7 @@ class OrderService(BaseService):
         await check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
 
         await OrderRepository().update(order, state=next_state)
-        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
             field_key = field_scheme['key']
             field_value = input_fields.get(field_key)
@@ -361,7 +361,7 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
-        connections_manager_aiohttp = ConnectionManagerAiohttp(token=token, order_id=order.id)
+        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
         await order_compete_related(order=order)
         await OrderRepository().update(order, state=next_state)
