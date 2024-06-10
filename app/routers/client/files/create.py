@@ -18,9 +18,10 @@
 from typing import Annotated, List
 
 from fastapi import UploadFile, Form
+from starlette.responses import HTMLResponse
 
 from app.services import FileService
-from app.utils import Response, Router
+from app.utils import Router
 
 
 router = Router(
@@ -28,10 +29,40 @@ router = Router(
 )
 
 
-@router.post()
+@router.post(response_class=HTMLResponse)
 async def route(
         key: Annotated[str, Form()],
         files: Annotated[List[UploadFile], Form()],
 ):
     result = await FileService().create(key=key, files=files)
-    return Response(**result)
+    text = 'Готово! Вы можете вернуться'
+    if result.get('error') and result['error'] == 'key_not_found':
+        text = 'Ошибка. Ваш ключ уже был использован.'
+    html_content = """
+    <html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Центрированный текст</title>
+        <style>
+            body, html {
+                height: 100%;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #f0f0f0;
+            }
+            .centered {
+                font-size: 48px;
+                font-family: Arial, sans-serif;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="centered">center_text</div>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content.replace('center_text', text))
