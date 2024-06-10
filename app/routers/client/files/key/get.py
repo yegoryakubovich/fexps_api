@@ -15,11 +15,13 @@
 #
 
 
-from fastapi import Depends
+from fastapi import Depends, WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
 
+from app.repositories.file_key import FileKeyRepository
 from app.services import FileKeyService
 from app.utils import Response, Router
+from app.utils.websockets.file import file_connections_manager_fastapi
 
 
 router = Router(
@@ -39,3 +41,24 @@ async def route(schema: FileKeyCreateSchema = Depends()):
         key=schema.key,
     )
     return Response(**result)
+
+
+@router.websocket('/ws')
+async def websocket_endpoint(websocket: WebSocket):
+    await file_connections_manager_fastapi.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            files = [
+                await FileKeyService().generate_file_key_dict(file_key=file_key)
+                for file_key in await FileKeyRepository().get_list(key=data['key'])
+            ]
+            [files.remove({}) for i in range(files.count({}))]
+            await file_connections_manager_fastapi.send(
+                data={
+                    'key': data['key'],
+                    'files': files,
+                },
+            )
+    except WebSocketDisconnect:
+        file_connections_manager_fastapi.disconnect(websocket)

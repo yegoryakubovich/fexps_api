@@ -13,8 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
-from os import remove
+
+
+import os
 from time import time
 from typing import List
 
@@ -27,6 +28,7 @@ from app.repositories.file_key import FileKeyRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
+from app.utils.websockets.file import FileConnectionManagerAiohttp
 from config import settings
 
 
@@ -83,6 +85,7 @@ class FileService(BaseService):
                     'extension': extension,
                 },
             )
+        await FileConnectionManagerAiohttp().send(key=key)
         await FileKeyRepository().delete(await FileKeyRepository().get(file_id=None, key=key))
         return {}
 
@@ -131,10 +134,7 @@ class FileService(BaseService):
         )
 
     async def get(self, id_str: str):
-        logging.critical(id_str)
         file = await FileRepository().get_by_id_str(id_str=id_str)
-        logging.critical(file)
-        logging.critical(file.id)
         return {
             'file': await self.generate_file_dict(file=file),
         }
@@ -180,7 +180,7 @@ class FileService(BaseService):
                 }
             )
         await FileRepository().delete(model=file)
-        remove(f'{settings.path_files}/{id_str}.{file.extension}')
+        os.remove(f'{settings.path_files}/{id_str}.{file.extension}')
         await self.create_action(
             model=file,
             action=Actions.DELETE,

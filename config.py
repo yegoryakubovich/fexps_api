@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     file_open_url: str
     file_upload_url: str
     chat_url: str
+    file_url: str
     sync_db_url: str
     sync_db_table_name: str
     debug: int
@@ -64,6 +65,7 @@ class Settings(BaseSettings):
     test_file_open_url: str
     test_file_upload_url: str
     test_chat_url: str
+    test_file_url: str
     test_sync_db_url: str
 
     version: str = '0.1'
@@ -100,6 +102,11 @@ class Settings(BaseSettings):
         if self.test:
             return self.test_chat_url
         return self.chat_url
+
+    def get_file_url(self):
+        if self.test:
+            return self.test_file_url
+        return self.file_url
 
     def get_sync_db_url(self):
         if self.test:
