@@ -16,6 +16,7 @@
 
 
 import aiohttp
+from fastapi import WebSocket
 
 from config import settings
 
@@ -36,3 +37,24 @@ class ConnectionManagerAiohttp:
                         'files_key': files_key,
                     },
                 )
+
+
+class ConnectionManagerFastApi:
+    def __init__(self):
+        self.active_connections: list[tuple[int, WebSocket]] = []
+
+    async def connect(self, websocket: WebSocket, order_id: int):
+        await websocket.accept()
+        self.active_connections.append((order_id, websocket))
+
+    def disconnect(self, websocket: WebSocket, order_id: int):
+        self.active_connections.remove((order_id, websocket))
+
+    async def send(self, order_id: int, data):
+        for connection in self.active_connections:
+            if connection[0] != order_id:
+                continue
+            await connection[1].send_json(data=data)
+
+
+connections_manager_fastapi = ConnectionManagerFastApi()

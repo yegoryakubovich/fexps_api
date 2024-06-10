@@ -29,7 +29,7 @@ from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderReque
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value, order_request_update_type_recreate
 from app.utils.service_addons.wallet import wallet_check_permission
-from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ConnectionManagerAiohttp
 
 
 class OrderRequestService(BaseService):

@@ -28,7 +28,7 @@ from app.utils.calculations.request.commissions import get_commission_value_inpu
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
 from app.utils.value import value_to_float
-from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ConnectionManagerAiohttp
 
 
 async def order_request_update_type_cancel(

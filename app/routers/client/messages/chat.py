@@ -19,8 +19,7 @@ from fastapi import WebSocket, WebSocketDisconnect, UploadFile
 
 from app.services import MessageService
 from app.utils import Router
-from app.utils.websockets import connections_manager_fastapi
-
+from app.utils.websockets.chat import connections_manager_fastapi
 
 router = Router(
     prefix='/chat',

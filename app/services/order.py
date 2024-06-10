@@ -34,7 +34,7 @@ from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, Orde
 from app.utils.service_addons.method import check_input_field
 from app.utils.service_addons.order import order_compete_related
 from app.utils.service_addons.wallet import wallet_check_permission
-from app.utils.websockets.aiohttp import ConnectionManagerAiohttp
+from app.utils.websockets.chat import ConnectionManagerAiohttp
 
 
 class OrderService(BaseService):
