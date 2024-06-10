@@ -60,7 +60,6 @@ app = FastAPI(
     on_startup=[on_startup],
 )
 app.add_middleware(middleware_class=BaseHTTPMiddleware, dispatch=Middleware())
-app.mount("/static", StaticFiles(directory="app/utils/static"), name="static")
 [app.include_router(router) for router in routers]
 
 
