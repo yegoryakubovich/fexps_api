@@ -20,7 +20,6 @@ import logging
 from fastapi import FastAPI, Depends
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.staticfiles import StaticFiles
 
 from app.db.init_db import init_db
 from app.routers import routers
