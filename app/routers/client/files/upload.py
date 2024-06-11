@@ -35,12 +35,11 @@ async def route(
 ):
     if not await FileKeyRepository().get(file_id=None, key=key):
         return
-    templates = Jinja2Templates(directory="app/utils/templates")
-    return templates.TemplateResponse(
+    return Jinja2Templates(directory="app/utils/templates").TemplateResponse(
         request=request,
-        name="file/index.html",
+        name="file/upload.html",
         context={
-            'title': 'Upload files',
+            'title': 'Finance Express',
             'key': key,
         },
     )
