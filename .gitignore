@@ -26,6 +26,7 @@
 /assets/images/*
 /fexps_api_client.egg-info
 /fexps_api_client
+/tests
 
 .env
 */test.py

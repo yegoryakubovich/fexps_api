@@ -34,7 +34,6 @@ async def run():
     for request in await RequestRepository().get_list_not_finished(rate_confirmed=True):
         request_action = await get_action_by_state(request, state=RequestStates.WAITING)
         if not request_action:
-            custom_logger.info(text=f'not action', request=request)
             continue
         request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):

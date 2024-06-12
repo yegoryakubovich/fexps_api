@@ -24,7 +24,7 @@ from app.services import ActionService
 from app.tasks.permanents.files.logger import FileLogger
 from config import settings
 
-custom_logger = FileLogger(prefix='request_rate_confirmed_check')
+custom_logger = FileLogger(prefix='file_key_close_check')
 
 
 async def run():
@@ -33,12 +33,12 @@ async def run():
         await asyncio.sleep(0.5)
         file_key_action = await ActionService().get_action(file_key, action=Actions.CREATE)
         if not file_key_action:
-            custom_logger.info(text=f'not action')
             continue
         file_key_action_delta = time_now.replace(tzinfo=None) - file_key_action.datetime.replace(tzinfo=None)
         if file_key_action_delta < datetime.timedelta(minutes=settings.file_key_close_minutes):
             continue
         await FileKeyRepository().delete(file_key)
+    await asyncio.sleep(1)
 
 
 async def file_key_close_check():
