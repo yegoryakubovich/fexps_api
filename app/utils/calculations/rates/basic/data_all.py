@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
-from typing import Optional
+
 
 import math
+from typing import Optional
 
 from app.db.models import Method, RateTypes, CommissionPack
 from app.repositories import RateRepository
 from app.utils.calculations.commissions import get_input_commission
-from app.utils.calculations.rates.basic import check_actual_rate
 from app.utils.schemes.calculations_rate import DataAllScheme
 from app.utils.value import value_to_float, value_to_int
 
@@ -33,14 +32,14 @@ async def calculate_data_all_by_input_value(
         input_value: int,
 ) -> Optional['DataAllScheme']:
     # input rate
-    input_rate_db = await RateRepository().get(method=input_method, type=RateTypes.INPUT)
-    if not input_rate_db or not await check_actual_rate(rate=input_rate_db):
+    input_rate_db = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
+    if not input_rate_db:
         return
     input_rate = input_rate_db.rate
     input_rate_float = value_to_float(value=input_rate, decimal=input_method.currency.rate_decimal)
     # output rate
-    output_rate_db = await RateRepository().get(method=output_method, type=RateTypes.OUTPUT)
-    if not output_rate_db or not await check_actual_rate(rate=output_rate_db):
+    output_rate_db = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
+    if not output_rate_db:
         return
     output_rate = output_rate_db.rate
     output_rate_float = value_to_float(value=output_rate, decimal=output_method.currency.rate_decimal)
