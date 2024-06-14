@@ -18,26 +18,38 @@
 import asyncio
 
 from app.db.models import Currency, RateSources, RateTypes
-from app.repositories import CurrencyRepository, RateRepository
+from app.repositories import CurrencyRepository, RateParseRepository
 from app.tasks.permanents.rates.bybit.utils import rate_get_bybit
 from app.tasks.permanents.rates.logger import RateLogger
 
 custom_logger = RateLogger(prefix='rate_bybit_keep')
 
 
-async def rate_keep_bybit():
+async def run():
     currency = await CurrencyRepository().get_by_id_str(id_str='rub')
     await update_rate(currency=currency, rate_type=RateTypes.INPUT)
     await update_rate(currency=currency, rate_type=RateTypes.OUTPUT)
+    await asyncio.sleep(60)
 
 
 async def update_rate(currency: Currency, rate_type: str):
-    result_rate = await rate_get_bybit(currency=currency, rate_type=rate_type)
-    if not result_rate:
+    custom_logger.info(text=f'update {currency.id_str.upper()} {rate_type}')
+    rate = await rate_get_bybit(currency=currency, rate_type=rate_type)
+    if not rate:
         return
-    await RateRepository().create(
+    await RateParseRepository().create(
         currency=currency,
         type=rate_type,
         source=RateSources.BYBIT,
-        value=result_rate,
+        rate=rate,
     )
+    await asyncio.sleep(0.25)
+
+
+async def rate_keep_bybit_parse():
+    custom_logger.info(text=f'started...')
+    while True:
+        try:
+            await run()
+        except ValueError as e:
+            custom_logger.critical(text=f'Exception \n {e}')

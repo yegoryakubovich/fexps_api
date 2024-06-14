@@ -21,24 +21,30 @@ import aiohttp
 
 from app.db.models import RateTypes, Currency
 
-
-# sbp: 382,
-# tinkoff: 581,
-# sberbank: 585,
+VALUES_LIST = [
+    # 50_000,
+    100_000,
+    # 150_000,
+]
+PAYMENT_IDS_LIST = [
+    # 382,  # SBP
+    581,  # T-BANK
+    # 595,  # SBERBANK,
+]
 
 
 async def rate_get_bybit(currency: Currency, rate_type: str):
     rates = []
     async with aiohttp.ClientSession() as session:
-        for value in [100_000]:
-            for payment_id in [581]:
+        for value in VALUES_LIST:
+            for payment_id in PAYMENT_IDS_LIST:
                 response = await session.post(
                     url='https://api2.bybit.com/fiat/otc/item/online',
                     json={
                         'userId': '',
                         'tokenId': 'USDT',
                         'currencyId': currency.id_str.upper(),
-                        'side': '0' if rate_type == RateTypes.INPUT else '1',
+                        'side': '1' if rate_type == RateTypes.INPUT else '0',
                         'payment': [str(payment_id)],
                         'size': '5',
                         'page': '1',
@@ -46,13 +52,13 @@ async def rate_get_bybit(currency: Currency, rate_type: str):
                         'authMaker': True,
                     },
                 )
-                json_data = await response.json()
-                rates += [float(item['price']) for item in json_data['result']['items']]
+                response_json = await response.json()
+                rates += [float(item['price']) for item in response_json['result']['items']]
     if not rates:
         return
     rate_value = sum(rates) / len(rates)
     if rate_type == RateTypes.INPUT:
-        rate_value = math.floor(rate_value * 10 ** currency.rate_decimal)
-    elif rate_type == RateTypes.OUTPUT:
         rate_value = math.ceil(rate_value * 10 ** currency.rate_decimal)
+    elif rate_type == RateTypes.OUTPUT:
+        rate_value = math.floor(rate_value * 10 ** currency.rate_decimal)
     return rate_value

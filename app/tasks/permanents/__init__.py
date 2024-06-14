@@ -26,6 +26,11 @@ from app.tasks.permanents.rates import rate_keep_bybit, rate_keep_our, rate_keep
 from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
     request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
     request_state_output_reserved_check, request_state_output_check
+from app.tasks.permanents.files import file_key_close_check
+from app.tasks.permanents.rates import rate_keep_bybit_parse, rate_keep, rate_keep_pair
+from app.tasks.permanents.requests import request_confirmation_check, request_rate_fixed_check, \
+    request_state_input_reserved_check, request_state_input_check, request_state_output_reserved_check, \
+    request_state_output_check
 from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram import telegram_image_poster
 from app.tasks.permanents.telegram.image_poster import telegram_image_poster
@@ -48,7 +53,10 @@ TASKS += [
 TASKS += [
     file_key_close_check,
 ]
-
+# Rate
+TASKS += [
+    rate_keep_bybit_parse,
+]
 
 
 async def start_app() -> None:

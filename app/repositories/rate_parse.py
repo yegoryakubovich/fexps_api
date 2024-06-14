@@ -15,4 +15,9 @@
 #
 
 
-from .keep import rate_keep_bybit_parse
+from app.db.models import RateParse
+from app.repositories.base import BaseRepository
+
+
+class RateParseRepository(BaseRepository[RateParse]):
+    model = RateParse
