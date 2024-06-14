@@ -29,7 +29,8 @@ class RateTypes:
 
 
 class RateSources:
-    OUR = 'our'
+    REQUISITE = 'requisite'
+    DEFAULT = 'default'
     BYBIT = 'bybit'
     BINANCE = 'binance'
 
@@ -38,10 +39,10 @@ class Rate(Base):
     __tablename__ = 'rates'
 
     id = Column(BigInteger, primary_key=True)
-    currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'))
-    currency = relationship(argument='Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
+    method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'))
+    method = relationship(argument='Method', foreign_keys=method_id, uselist=False, lazy='selectin')
     type = Column(String(length=16))
     source = Column(String(length=32))
-    value = Column(BigInteger)
+    rate = Column(BigInteger)
     created_at = Column(DateTime, default=datetime.datetime.now)
     is_deleted = Column(Boolean, default=False)

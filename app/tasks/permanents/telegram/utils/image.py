@@ -20,9 +20,11 @@ from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.db.models import Currency
-from app.repositories import RatePairRepository, CurrencyRepository
-from app.utils.calculations.rates.checks import check_actual_rate_pair
+from app.db.models import Currency, Method
+from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository
+from app.utils.calculations.rates.basic import check_actual_rate
+from app.utils.value import value_to_float
+# from app.utils.calculations.rates.checks import check_actual_rate_pair
 from config import settings
 
 COORDINATES_RATES = {
@@ -61,10 +63,16 @@ async def image_create():
     image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
-    for currency_input_id_str, currency_output_id_str in settings.telegram_rate_pairs:
-        currency_input = await CurrencyRepository().get_by_id_str(id_str=currency_input_id_str)
-        currency_output = await CurrencyRepository().get_by_id_str(id_str=currency_output_id_str)
-        rate_raw = await get_pair_rate(currency_input=currency_input, currency_output=currency_output)
+    for input_currency_id_str, output_currency_id_str in settings.telegram_rate_pairs:
+        input_currency = await CurrencyRepository().get_by_id_str(id_str=input_currency_id_str)
+        input_method = await MethodRepository().get(currency=input_currency, is_rate_default=True)
+        if not input_method:
+            continue
+        output_currency = await CurrencyRepository().get_by_id_str(id_str=output_currency_id_str)
+        output_method = await MethodRepository().get(currency=output_currency, is_rate_default=True)
+        if not output_method:
+            continue
+        rate_raw = await get_pair_rate(input_method=input_method, output_method=output_method)
         if not rate_raw:
             continue
         rate, type_ = rate_raw
@@ -73,7 +81,7 @@ async def image_create():
             rate_str += '%'
         image_draw_center(
             image_draw=image_draw,
-            coordinates=COORDINATES_RATES.get(f'{currency_output.id_str}{currency_input.id_str}'),
+            coordinates=COORDINATES_RATES.get(f'{input_currency.id_str}{output_currency.id_str}'),
             text=rate_str,
         )
     image_draw.text(
@@ -86,18 +94,18 @@ async def image_create():
     return image_output_path
 
 
-async def get_pair_rate(currency_input: Currency, currency_output: Currency) -> Optional[tuple]:
-    rate_pair = await RatePairRepository().get(currency_input=currency_input, currency_output=currency_output)
-    if not rate_pair or not await check_actual_rate_pair(rate_pair=rate_pair):
+async def get_pair_rate(input_method: Method, output_method: Method) -> Optional[tuple]:
+    rate_pair = await RatePairRepository().get(input_method=input_method, output_method=output_method)
+    if not rate_pair or not await check_actual_rate(rate=rate_pair):
         return
-    rate = rate_pair.value / 10 ** rate_pair.rate_decimal
-    if f'{currency_input.id_str}{currency_output.id_str}' in ['usdusdt', 'usdtusd']:
-        rate = (1 - rate) * 100
-        if rate < 0:
-            rate = -rate
+    rate_float = value_to_float(value=rate_pair.rate, decimal=rate_pair.rate_decimal)
+    if f'{input_method.currency.id_str}{output_method.currency.id_str}' in ['usdusdt', 'usdtusd']:
+        rate_float = (1 - rate_float) * 100
+        if rate_float < 0:
+            rate_float = -rate_float
         type_ = 'percent'
     else:
-        if rate < 1:
-            rate = 1 / rate
+        if rate_float < 1:
+            rate_float = 1 / rate_float
         type_ = 'value'
-    return round(rate, 2), type_
+    return round(rate_float, 2), type_

@@ -15,6 +15,5 @@
 #
 
 
-from .bybit import rate_keep_bybit_parse
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from .input import get_input_commission
+from .output import get_output_commission

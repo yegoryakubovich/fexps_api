@@ -15,6 +15,5 @@
 #
 
 
-from .bybit import rate_keep_bybit_parse
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from .actual_rate import check_actual_rate
+from .rate_with_method_percent import calculate_rate_with_method_percent

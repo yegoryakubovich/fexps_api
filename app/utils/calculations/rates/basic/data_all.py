@@ -1,0 +1,83 @@
+#
+# (c) 2024, Yegor Yakubovich, yegoryakubovich.com, personal@yegoryakybovich.com
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+import logging
+from typing import Optional
+
+import math
+
+from app.db.models import Method, RateTypes, CommissionPack
+from app.repositories import RateRepository
+from app.utils.calculations.commissions import get_input_commission
+from app.utils.calculations.rates.basic import check_actual_rate
+from app.utils.schemes.calculations_rate import DataAllScheme
+from app.utils.value import value_to_float, value_to_int
+
+
+async def calculate_data_all_by_input_value(
+        input_method: Method,
+        output_method: Method,
+        commission_pack: CommissionPack,
+        input_value: int,
+) -> Optional['DataAllScheme']:
+    input_rate_db = await RateRepository().get(method=input_method, type=RateTypes.INPUT)
+    if not input_rate_db or not await check_actual_rate(rate=input_rate_db):
+        return
+    output_rate_db = await RateRepository().get(method=output_method, type=RateTypes.OUTPUT)
+    if not output_rate_db or not await check_actual_rate(rate=output_rate_db):
+        return
+
+    """INPUT"""
+    input_rate = input_rate_db.rate
+    input_rate_float = value_to_float(value=input_rate, decimal=input_method.currency.rate_decimal)
+    commission = await get_input_commission(commission_pack=commission_pack, value=input_value)
+    input_value_float = value_to_float(value=input_value)
+    input_currency_value_float = input_value_float * input_rate_float
+    input_currency_value = value_to_int(value=input_currency_value_float)
+    commission_float = value_to_float(value=commission)
+
+    """OUTPUT"""
+    output_rate = output_rate_db.rate
+    output_rate_float = value_to_float(value=output_rate, decimal=output_method.currency.rate_decimal)
+    output_value_float = input_value_float - commission_float
+    output_value = value_to_int(value=output_value_float)
+    output_currency_value_float = output_value_float * output_rate_float
+    output_currency_value = value_to_int(value=output_currency_value_float)
+
+    """BASE"""
+    rate_float = output_currency_value_float / input_currency_value_float
+    rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])
+    if rate_float < 1:
+        rate_decimal *= 2
+    logging.critical(f'{input_method.currency.id_str}-{output_method.currency.id_str}')
+    logging.critical(f'input_rate_float {input_rate_float}')
+    logging.critical(f'output_rate_float {output_rate_float}')
+    logging.critical(rate_float)
+    logging.critical(rate_float)
+    rate = value_to_int(value=rate_float, decimal=rate_decimal, round_method=math.floor)
+    logging.critical(rate)
+    logging.critical(rate / 10 ** rate_decimal)
+
+    return DataAllScheme(
+        input_currency_value=input_currency_value,
+        input_rate=input_rate,
+        input_value=input_value,
+        commission=commission,
+        rate=rate,
+        rate_decimal=rate_decimal,
+        output_currency_value=output_currency_value,
+        output_rate=output_rate,
+        output_value=output_value,
+    )

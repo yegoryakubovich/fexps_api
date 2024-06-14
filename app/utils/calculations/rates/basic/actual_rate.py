@@ -15,23 +15,17 @@
 #
 
 
-import asyncio
-import logging
+import datetime
 
-from app.db.models import Request, Order
-from app.tasks.permanents.requests.logger import RequestLogger
-
-custom_logger = RequestLogger(prefix='request_state_waiting_check')
+from app.db.models import Rate, RatePair
+from config import settings
 
 
-async def run():
-    await asyncio.sleep(5)
-
-
-async def request_state_waiting_check():
-    custom_logger.info(text=f'started...')
-    while True:
-        try:
-            await run()
-        except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
+async def check_actual_rate(rate: [Rate, RatePair]) -> bool:
+    rate_date = rate.created_at.replace(tzinfo=datetime.timezone.utc)
+    date_now = datetime.datetime.now(tz=datetime.timezone.utc)
+    date_delta = datetime.timedelta(minutes=settings.rate_actual_minutes)
+    date_check = date_now - date_delta
+    if rate_date < date_check:
+        return False
+    return True

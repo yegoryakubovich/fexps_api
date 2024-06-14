@@ -27,11 +27,11 @@ class RatePair(Base):
     __tablename__ = 'rates_pairs'
 
     id = Column(BigInteger, primary_key=True)
-    currency_input_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'))
-    currency_input = relationship(argument='Currency', foreign_keys=currency_input_id, uselist=False, lazy='selectin')
-    currency_output_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'))
-    currency_output = relationship(argument='Currency', foreign_keys=currency_output_id, uselist=False, lazy='selectin')
+    input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'))
+    input_method = relationship(argument='Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
+    output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'))
+    output_method = relationship(argument='Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')
     rate_decimal = Column(Integer, default=2)
-    value = Column(BigInteger)
+    rate = Column(BigInteger)
     created_at = Column(DateTime, default=datetime.datetime.now)
     is_deleted = Column(Boolean, default=False)

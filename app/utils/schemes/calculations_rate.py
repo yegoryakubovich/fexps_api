@@ -15,6 +15,23 @@
 #
 
 
-from .bybit import rate_keep_bybit_parse
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from pydantic import BaseModel
+
+
+class DataAllScheme(BaseModel):
+    input_currency_value: int
+    input_rate: int
+    input_value: int
+    commission: int
+    rate: int
+    rate_decimal: int
+    output_value: int
+    output_rate: int
+    output_currency_value: int
+
+
+class RequisiteDataScheme(BaseModel):
+    requisites: list[int]
+    currency_value: int
+    rate: int
+    value: int

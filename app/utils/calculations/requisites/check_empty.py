@@ -15,6 +15,14 @@
 #
 
 
-from .bybit import rate_keep_bybit_parse
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from app.db.models import Requisite
+
+
+async def calculate_requisite_check_empty(requisite: Requisite) -> bool:
+    if requisite.currency_value < requisite.currency.div:
+        return True
+    if requisite.value_min and requisite.value < requisite.value_min:
+        return True
+    if requisite.currency_value_min and requisite.currency_value < requisite.currency_value_min:
+        return True
+    return False

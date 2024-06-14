@@ -26,23 +26,23 @@ from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from config import settings
 
-custom_logger = RequestLogger(prefix='request_rate_confirmed_check')
+custom_logger = RequestLogger(prefix='request_rate_fixed_check')
 
 
 async def run():
     time_now = datetime.datetime.now(datetime.UTC)
-    for request in await RequestRepository().get_list_not_finished(rate_confirmed=True):
-        request_action = await get_action_by_state(request, state=RequestStates.WAITING)
+    for request in await RequestRepository().get_list_not_finished(rate_fixed=True):
+        request_action = await get_action_by_state(request, state=RequestStates.CONFIRMATION)
         if not request_action:
             continue
         request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
-        if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_confirmed_minutes):
-            custom_logger.info(text=f'rate_confirmed=False', request=request)
-            await RequestRepository().update(request, rate_confirmed=False)
+        if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
+            custom_logger.info(text=f'rate_fixed=False', request=request)
+            await RequestRepository().update(request, rate_fixed=False)
             await BotNotification().send_notification_by_wallet(
                 wallet=request.wallet,
                 notification_type=NotificationTypes.REQUEST,
-                text_key=f'notification_request_rate_confirmed_stop',
+                text_key=f'notification_request_rate_fixed_stop',
                 request_id=request.id,
             )
         await asyncio.sleep(1)
@@ -60,7 +60,7 @@ async def get_action_by_state(request: Request, state: str):
         return action
 
 
-async def request_rate_confirmed_check():
+async def request_rate_fixed_check():
     custom_logger.info(text=f'started...')
     while True:
         try:

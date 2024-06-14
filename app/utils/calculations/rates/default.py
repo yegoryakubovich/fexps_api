@@ -15,48 +15,19 @@
 #
 
 
-import math
+from typing import Optional
 
-from app.db.models import Currency, RateTypes
-from app.repositories import MethodRepository, CommissionPackRepository
-from app.utils.calculations.values.comissions import get_commission_value_by_pack
+from app.db.models import Method, RateTypes
+from app.utils.calculations.rates.basic import calculate_rate_with_method_percent
 
 
-async def calculate_rate_default(currency: Currency, rate_type: str):
-    method = await MethodRepository().get(currency=currency, is_rate_default=True)
-    if not method:
+async def calculate_rate_default(method: Method, rate_type: str) -> Optional[int]:
+    rate = None
+    if rate_type == RateTypes.INPUT and method.input_rate_default:
+        rate = method.input_rate_default
+    elif rate_type == RateTypes.OUTPUT and method.output_rate_default:
+        rate = method.output_rate_default
+    if not rate:
         return
-    value = 1000_00
-    result_rate = None
-    result_value = value
-    round_func = round
-    if rate_type == RateTypes.INPUT:
-        result_rate = method.rate_input_default
-        if not result_rate:
-            return
-        commission_pack = await CommissionPackRepository().get(is_default=True)
-        if not commission_pack:
-            return
-        commission_value = await get_commission_value_by_pack(value=value, commission_pack=commission_pack)
-        result_value += commission_value
-        if method.rate_input_percent:
-            result_rate_float = result_rate / 10 ** currency.rate_decimal
-            rate_input_percent_float = method.rate_input_percent / 10 ** currency.rate_decimal
-            result_rate_float = result_rate_float * (1 - rate_input_percent_float)
-            result_rate = result_rate_float * 10 ** currency.rate_decimal
-        round_func = math.floor
-    elif rate_type == RateTypes.OUTPUT:
-        result_rate = method.rate_output_default
-        if not result_rate:
-            return
-        if method.rate_output_percent:
-            result_rate_float = result_rate / 10 ** currency.rate_decimal
-            rate_output_percent_float = method.rate_output_percent / 10 ** currency.rate_decimal
-            result_rate_float = result_rate_float / (1 - rate_output_percent_float)
-            result_rate = result_rate_float * 10 ** currency.rate_decimal
-        round_func = math.ceil
-    if not result_value:
-        return
-    result_value = result_value / result_rate * 10 ** currency.rate_decimal
-    result_rate = round_func(value / result_value * 10 ** currency.rate_decimal)
-    return result_rate
+    rate = await calculate_rate_with_method_percent(method=method, rate=rate, rate_type=rate_type)
+    return rate

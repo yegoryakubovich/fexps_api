@@ -22,10 +22,6 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app import config_logger, init_db
-from app.tasks.permanents.rates import rate_keep_bybit, rate_keep_our, rate_keep_pair_our
-from app.tasks.permanents.requests import request_waiting_check, request_rate_confirmed_check, \
-    request_state_loading_check, request_state_input_reserved_check, request_state_input_check, \
-    request_state_output_reserved_check, request_state_output_check
 from app.tasks.permanents.files import file_key_close_check
 from app.tasks.permanents.rates import rate_keep_bybit_parse, rate_keep, rate_keep_pair
 from app.tasks.permanents.requests import request_confirmation_check, request_rate_fixed_check, \
@@ -35,15 +31,12 @@ from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram import telegram_image_poster
 from app.tasks.permanents.telegram.image_poster import telegram_image_poster
 from app.tasks.permanents.telegram.image_updater import telegram_image_updater
-from app.tasks.permanents.files import file_key_close_check
-
 
 TASKS = []
 # Request
 TASKS += [
-    request_waiting_check,
-    request_rate_confirmed_check,
-    request_state_loading_check,
+    request_rate_fixed_check,
+    request_confirmation_check,
     request_state_input_reserved_check,
     request_state_input_check,
     request_state_output_reserved_check,
@@ -77,22 +70,15 @@ async def start_app() -> None:
         next_run_time=datetime.now(),
     )
     scheduler.add_job(
-        name='rate_keep_bybit',
-        func=rate_keep_bybit,
+        name='rate_keep',
+        func=rate_keep,
         misfire_grace_time=30,
         trigger='cron',
-        minute=55,
+        minute=00,
     )
-    # scheduler.add_job(
-    #     name='rate_keep_our',
-    #     func=rate_keep_our,
-    #     misfire_grace_time=30,
-    #     trigger='cron',
-    #     minute=57,
-    # )
     scheduler.add_job(
-        name='rate_keep_pair_our',
-        func=rate_keep_pair_our,
+        name='rate_keep_pair',
+        func=rate_keep_pair,
         misfire_grace_time=30,
         trigger='cron',
         minute=59,
@@ -103,14 +89,14 @@ async def start_app() -> None:
         misfire_grace_time=30,
         trigger='cron',
         hour=12,
-        minute=0,
+        minute=1,
     )
     scheduler.add_job(
         name='telegram_image_updater',
         func=telegram_image_updater,
         misfire_grace_time=30,
         trigger='cron',
-        minute=0,
+        minute=1,
     )
     scheduler.start()
     while True:

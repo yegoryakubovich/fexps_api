@@ -15,6 +15,19 @@
 #
 
 
-from .bybit import rate_keep_bybit_parse
-from .keep import rate_keep
-from .keep_pair import rate_keep_pair
+from typing import Optional
+
+from app.db.models import Method, RateTypes
+from app.utils.calculations.requisites.find import calculate_requisite_input_by_value, \
+    calculate_requisite_output_by_value
+
+
+async def calculate_rate_requisite(method: Method, rate_type: str) -> Optional[int]:
+    result = None
+    if rate_type == RateTypes.INPUT:
+        result = await calculate_requisite_input_by_value(method=method, value=3_000_00)
+    elif rate_type == RateTypes.OUTPUT:
+        result = await calculate_requisite_output_by_value(method=method, value=3_000_00)
+    if not result:
+        return
+    return result.rate
