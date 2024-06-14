@@ -44,31 +44,24 @@ async def calculate_data_all_by_input_value(
         return
     output_rate = output_rate_db.rate
     output_rate_float = value_to_float(value=output_rate, decimal=output_method.currency.rate_decimal)
-    """INPUT"""
-    commission = await get_input_commission(commission_pack=commission_pack, value=input_value)
+    # input values
     input_value_float = value_to_float(value=input_value)
     input_currency_value_float = input_value_float * input_rate_float
     input_currency_value = value_to_int(value=input_currency_value_float, decimal=input_method.currency.rate_decimal)
+    # commission
+    commission = await get_input_commission(commission_pack=commission_pack, value=input_value)
     commission_float = value_to_float(value=commission)
-    """OUTPUT"""
+    # output values
     output_value_float = input_value_float - commission_float
     output_value = value_to_int(value=output_value_float)
     output_currency_value_float = output_value_float * output_rate_float
     output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.rate_decimal)
-
-    """BASE"""
+    # calculate rate
     rate_float = output_currency_value_float / input_currency_value_float
     rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])
     if rate_float < 1:
         rate_decimal *= 2
-    logging.critical(f'{input_method.currency.id_str}-{output_method.currency.id_str}')
-    logging.critical(f'input_rate_float {input_rate_float}')
-    logging.critical(f'output_rate_float {output_rate_float}')
-    logging.critical(rate_float)
-    logging.critical(rate_float)
     rate = value_to_int(value=rate_float, decimal=rate_decimal, round_method=math.floor)
-    logging.critical(rate)
-    logging.critical(rate / 10 ** rate_decimal)
 
     return DataAllScheme(
         input_currency_value=input_currency_value,
