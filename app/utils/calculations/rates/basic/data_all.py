@@ -54,7 +54,7 @@ async def calculate_data_all_by_input_value(
     output_value_float = input_value_float - commission_float
     output_value = value_to_int(value=output_value_float)
     output_currency_value_float = output_value_float * output_rate_float
-    output_currency_value = value_to_int(value=output_currency_value_float)
+    output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.rate_decimal)
 
     """BASE"""
     rate_float = output_currency_value_float / input_currency_value_float
