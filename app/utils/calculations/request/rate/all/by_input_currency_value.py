@@ -44,7 +44,7 @@ async def calculate_request_rate_all_by_input_currency_value(
     output_rate = output_rate_db.rate
     output_rate_float = value_to_float(value=output_rate, decimal=output_method.currency.rate_decimal)
     # input values
-    input_currency_value_float = value_to_float(value=input_currency_value, decimal=input_method.currency.rate_decimal)
+    input_currency_value_float = value_to_float(value=input_currency_value, decimal=input_method.currency.decimal)
     input_value_float = input_currency_value_float / input_rate_float
     input_value = value_to_int(value=input_value_float)
     # commission
@@ -54,7 +54,7 @@ async def calculate_request_rate_all_by_input_currency_value(
     output_value_float = input_value_float - commission_float
     output_value = value_to_int(value=output_value_float)
     output_currency_value_float = output_value_float * output_rate_float
-    output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.rate_decimal)
+    output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.decimal)
     # calculate rate
     rate_float = output_currency_value_float / input_currency_value_float
     rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])
