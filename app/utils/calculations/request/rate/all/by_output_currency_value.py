@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
+
 import math
 from typing import Optional
 
@@ -45,7 +46,7 @@ async def calculate_request_rate_all_by_output_currency_value(
     # output values
     output_currency_value_float = value_to_float(
         value=output_currency_value,
-        decimal=output_method.currency.rate_decimal,
+        decimal=output_method.currency.decimal,
     )
     output_value_float = output_currency_value_float / output_rate_float
     output_value = value_to_int(value=output_value_float)
@@ -54,16 +55,14 @@ async def calculate_request_rate_all_by_output_currency_value(
     commission_float = value_to_float(value=commission)
     # input values
     input_value_float = output_value_float + commission_float
-    logging.critical(f'input_value_float = {input_value_float}')
     input_value = value_to_int(value=input_value_float)
-    logging.critical(f'input_value = {input_value}')
     input_currency_value_float = input_value_float * input_rate_float
     input_currency_value = value_to_int(value=input_currency_value_float, decimal=input_method.currency.decimal)
     input_currency_value_temp = input_currency_value
     input_currency_value = math.ceil(input_currency_value / input_method.currency.div) * input_method.currency.div
     difference = math.floor((input_currency_value - input_currency_value_temp) / input_rate_float)
     # calculate rate
-    rate_float = output_currency_value_float / input_currency_value_float
+    rate_float = output_currency_value / input_currency_value
     rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])
     if rate_float < 1:
         rate_decimal *= 2
