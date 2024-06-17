@@ -20,49 +20,52 @@ from typing import Optional
 
 from app.db.models import Method, RateTypes, CommissionPack
 from app.repositories import RateRepository
-from app.utils.calculations.commissions import get_input_commission
-from app.utils.schemes.calculations_rate import DataAllScheme
+from app.utils.calculations.commissions import get_output_commission
+from app.utils.schemes.calculations.requests.rate import RequestCalculateScheme
 from app.utils.value import value_to_float, value_to_int
 
 
-async def calculate_data_all_by_input_value(
+async def calculate_request_rate_all_by_output_currency_value(
         input_method: Method,
         output_method: Method,
         commission_pack: CommissionPack,
-        input_value: int,
-) -> Optional['DataAllScheme']:
-    # input rate
-    input_rate_db = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
-    if not input_rate_db:
-        return
-    input_rate = input_rate_db.rate
-    input_rate_float = value_to_float(value=input_rate, decimal=input_method.currency.rate_decimal)
+        output_currency_value: int,
+) -> Optional['RequestCalculateScheme']:
     # output rate
     output_rate_db = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
     if not output_rate_db:
         return
     output_rate = output_rate_db.rate
     output_rate_float = value_to_float(value=output_rate, decimal=output_method.currency.rate_decimal)
-    # input values
-    input_value_float = value_to_float(value=input_value)
-    input_currency_value_float = input_value_float * input_rate_float
-    input_currency_value = value_to_int(value=input_currency_value_float, decimal=input_method.currency.rate_decimal)
-    # commission
-    commission = await get_input_commission(commission_pack=commission_pack, value=input_value)
-    commission_float = value_to_float(value=commission)
+    # input rate
+    input_rate_db = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
+    if not input_rate_db:
+        return
+    input_rate = input_rate_db.rate
+    input_rate_float = value_to_float(value=input_rate, decimal=input_method.currency.rate_decimal)
     # output values
-    output_value_float = input_value_float - commission_float
+    output_currency_value_float = value_to_float(
+        value=output_currency_value,
+        decimal=output_method.currency.rate_decimal,
+    )
+    output_value_float = output_currency_value_float / output_rate_float
     output_value = value_to_int(value=output_value_float)
-    output_currency_value_float = output_value_float * output_rate_float
-    output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.rate_decimal)
+    # commission
+    commission = await get_output_commission(commission_pack=commission_pack, value=output_value)
+    commission_float = value_to_float(value=commission)
+    # input values
+    input_value_float = output_value_float + commission_float
+    input_value = value_to_int(value=input_value_float)
+    input_currency_value_float = input_value * input_rate_float
+    input_currency_value = value_to_int(value=input_currency_value_float, decimal=input_method.currency.rate_decimal)
     # calculate rate
     rate_float = output_currency_value_float / input_currency_value_float
     rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])
     if rate_float < 1:
         rate_decimal *= 2
-    rate = value_to_int(value=rate_float, decimal=rate_decimal, round_method=math.floor)
+    rate = value_to_int(value=rate_float, decimal=rate_decimal, round_method=math.ceil)
 
-    return DataAllScheme(
+    return RequestCalculateScheme(
         input_currency_value=input_currency_value,
         input_rate=input_rate,
         input_value=input_value,

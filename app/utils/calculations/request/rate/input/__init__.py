@@ -15,6 +15,19 @@
 #
 
 
-from .rate_fixed_check import request_rate_fixed_check
-from .states import request_state_input_check, request_state_input_reserved_check, request_state_output_check, \
-    request_state_output_reserved_check, request_confirmation_check
+from typing import Optional
+
+from app.db.models import Method, CommissionPack
+from app.utils.schemes.calculations.requests.rate import RequestCalculateScheme
+
+
+async def calculate_request_rate_input(
+        input_method: Method,
+        commission_pack: CommissionPack,
+        input_currency_value: Optional[int] = None,
+        input_value: Optional[int] = None,
+) -> Optional['RequestCalculateScheme']:
+    if input_currency_value:
+        return
+    elif input_value:
+        return

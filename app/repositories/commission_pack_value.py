@@ -25,7 +25,7 @@ from app.utils.exceptions import IntervalNotExistsError
 class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
     model = CommissionPackValue
 
-    async def get_by_value(self, commission_pack: CommissionPack, value: int):
+    async def get_by_value(self, commission_pack: CommissionPack, value: int) -> CommissionPackValue:
         custom_where = and_(self.model.value_from <= value, value <= self.model.value_to)
         result = await self.get(custom_where=custom_where)
         if not result:

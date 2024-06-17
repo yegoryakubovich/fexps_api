@@ -30,12 +30,12 @@ custom_logger = RequestLogger(prefix='request_waiting_check')
 
 async def run():
     time_now = datetime.datetime.now(datetime.UTC)
-    for request in await RequestRepository().get_list_by_asc(state=RequestStates.WAITING):
-        request_action = await ActionService().get_action(request, action=Actions.UPDATE)
+    for request in await RequestRepository().get_list_by_asc(state=RequestStates.CONFIRMATION):
+        request_action = await ActionService().get_action(request, action=Actions.CREATE)
         if not request_action:
             continue
         request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.UTC)
-        if request_action_delta >= datetime.timedelta(minutes=settings.request_waiting_check):
+        if request_action_delta >= datetime.timedelta(minutes=settings.request_confirmation_check):
             custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
             await RequestService().cancel_related(request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
@@ -45,11 +45,11 @@ async def run():
                 text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
                 request_id=request.id,
             )
-        await asyncio.sleep(1)
-    await asyncio.sleep(5)
+        await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
 
 
-async def request_waiting_check():
+async def request_confirmation_check():
     custom_logger.info(text=f'started...')
     while True:
         try:

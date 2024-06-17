@@ -20,7 +20,7 @@ import asyncio
 from app.db.models import Method
 from app.repositories import CurrencyRepository, RatePairRepository, MethodRepository, CommissionPackRepository
 from app.tasks.permanents.rates.logger import RateLogger
-from app.utils.calculations.rates.basic.data_all import calculate_data_all_by_input_value
+from app.utils.calculations.rates.basic.data_rate import calculate_data_rate
 
 custom_logger = RateLogger(prefix='rate_keep_pair')
 
@@ -49,7 +49,7 @@ async def rate_keep_pair():
 
 async def update_rate(input_method: Method, output_method: Method):
     commission_pack = await CommissionPackRepository().get(is_default=True)
-    result = await calculate_data_all_by_input_value(
+    result = await calculate_data_rate(
         input_method=input_method,
         output_method=output_method,
         commission_pack=commission_pack,

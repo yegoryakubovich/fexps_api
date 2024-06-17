@@ -15,9 +15,8 @@
 #
 
 
+from .confirmation import request_confirmation_check
 from .input import request_state_input_check
 from .input_reserved import request_state_input_reserved_check
-from .loading import request_state_loading_check
 from .output import request_state_output_check
 from .output_reserved import request_state_output_reserved_check
-from .waiting import request_state_waiting_check

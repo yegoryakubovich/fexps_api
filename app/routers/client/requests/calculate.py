@@ -17,28 +17,27 @@
 
 from typing import Optional
 
-from pydantic import Field, field_validator, model_validator, BaseModel
+from pydantic import Field, model_validator, BaseModel, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequestTypes
 from app.services import RequestService
-from app.utils import Router, Response
-from app.utils.exceptions.main import ParametersAllContainError
-from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError, ParameterOneContainError
+from app.utils import Response, Router
+from app.utils.exceptions import ValueMustBePositive
+from app.utils.exceptions.main import ParameterContainError, ParameterOneContainError, ParametersAllContainError
 
 
 router = Router(
-    prefix='/create',
+    prefix='/calculate',
 )
 
 
-class RequestCreateSchema(BaseModel):
+class RequestCalculateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     type_: str = Field(min_length=1, max_length=8)
-    name: Optional[str] = Field(default=None, min_length=1, max_length=32)
     input_method_id: Optional[int] = Field(default=None)
-    output_requisite_data_id: Optional[int] = Field(default=None)
+    output_method_id: Optional[int] = Field(default=None)
     input_value: Optional[int] = Field(default=None)
     output_value: Optional[int] = Field(default=None)
 
@@ -66,16 +65,16 @@ class RequestCreateSchema(BaseModel):
                     'parameters': ['input_method'],
                 },
             )
-        if self.type_ == RequestTypes.OUTPUT and [self.output_requisite_data_id].count(None):
+        if self.type_ == RequestTypes.OUTPUT and [self.output_method_id].count(None):
             raise ParametersAllContainError(
                 kwargs={
-                    'parameters': ['output_requisite_data'],
+                    'parameters': ['output_method'],
                 },
             )
-        if self.type_ == RequestTypes.ALL and [self.input_method_id, self.output_requisite_data_id].count(None):
+        if self.type_ == RequestTypes.ALL and [self.input_method_id, self.output_method_id].count(None):
             raise ParametersAllContainError(
                 kwargs={
-                    'parameters': ['input_method', 'output_requisite_data'],
+                    'parameters': ['input_method', 'output_method'],
                 },
             )
         return self
@@ -95,14 +94,13 @@ class RequestCreateSchema(BaseModel):
 
 
 @router.post()
-async def route(schema: RequestCreateSchema):
-    result = await RequestService().create(
+async def route(schema: RequestCalculateSchema):
+    result = await RequestService().calculate(
         token=schema.token,
         wallet_id=schema.wallet_id,
         type_=schema.type_,
-        name=schema.name,
         input_method_id=schema.input_method_id,
-        output_requisite_data_id=schema.output_requisite_data_id,
+        output_method_id=schema.output_method_id,
         input_value=schema.input_value,
         output_value=schema.output_value,
     )

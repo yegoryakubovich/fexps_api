@@ -40,7 +40,7 @@ class ParameterContainError(ApiException):
 
 class ParameterOneContainError(ApiException):
     code = 1004
-    message = 'Must contain at least one parameter: {parameters}'
+    message = 'Must contain one parameter: {parameters}.'
 
 
 class ParameterTwoContainError(ApiException):
