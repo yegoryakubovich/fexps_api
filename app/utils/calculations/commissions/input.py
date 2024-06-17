@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
+
 import math
 
 from app.db.models import CommissionPack
@@ -21,7 +22,7 @@ from app.repositories import CommissionPackValueRepository
 from app.utils.value import value_to_float, value_to_int
 
 
-async def get_output_commission(commission_pack: CommissionPack, value: int) -> int:
+async def get_input_commission(commission_pack: CommissionPack, value: int) -> int:
     commission_pack_value = await CommissionPackValueRepository().get_by_value(
         commission_pack=commission_pack,
         value=value,
@@ -29,8 +30,5 @@ async def get_output_commission(commission_pack: CommissionPack, value: int) -> 
     value_float = value_to_float(value=value)
     commission_value_float = value_to_float(value=commission_pack_value.value)
     commission_percent_float = value_to_float(value=commission_pack_value.percent)
-
-    value_float = round(value_float - commission_value_float, 2)
-    logging.critical(value_float)
-    commission_float = commission_value_float + value_float / (100 - commission_percent_float) * 100 - value_float
+    commission_float = commission_value_float + (value_float - commission_value_float) * commission_percent_float / 100
     return value_to_int(value=commission_float, round_method=math.ceil)
