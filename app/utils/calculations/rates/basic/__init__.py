@@ -15,5 +15,5 @@
 #
 
 
-from .actual_rate import check_actual_rate
+from .data_rate import calculate_data_rate
 from .rate_with_method_percent import calculate_rate_with_method_percent

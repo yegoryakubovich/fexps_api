@@ -17,17 +17,24 @@
 
 from typing import Optional
 
-from app.db.models import Method, CommissionPack
+from app.db.models import Method
 from app.utils.schemes.calculations.requests.rate import RequestCalculateScheme
+from .by_output_currency_value import calculate_request_rate_all_by_output_currency_value
+from .by_output_value import calculate_request_rate_output_by_output_value
 
 
 async def calculate_request_rate_output(
         output_method: Method,
-        commission_pack: CommissionPack,
         output_currency_value: Optional[int] = None,
         output_value: Optional[int] = None,
 ) -> Optional['RequestCalculateScheme']:
     if output_currency_value:
-        return
+        return await calculate_request_rate_all_by_output_currency_value(
+            output_method=output_method,
+            output_currency_value=output_currency_value,
+        )
     elif output_value:
-        return
+        return await calculate_request_rate_output_by_output_value(
+            output_method=output_method,
+            output_value=output_value,
+        )

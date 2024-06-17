@@ -19,6 +19,8 @@ from typing import Optional
 
 from app.db.models import Method, CommissionPack
 from app.utils.schemes.calculations.requests.rate import RequestCalculateScheme
+from .by_input_currency_value import calculate_request_rate_input_by_input_currency_value
+from .by_input_value import calculate_request_rate_input_by_input_value
 
 
 async def calculate_request_rate_input(
@@ -28,6 +30,14 @@ async def calculate_request_rate_input(
         input_value: Optional[int] = None,
 ) -> Optional['RequestCalculateScheme']:
     if input_currency_value:
-        return
+        return await calculate_request_rate_input_by_input_currency_value(
+            input_method=input_method,
+            commission_pack=commission_pack,
+            input_currency_value=input_currency_value,
+        )
     elif input_value:
-        return
+        return await calculate_request_rate_input_by_input_value(
+            input_method=input_method,
+            commission_pack=commission_pack,
+            input_value=input_value,
+        )
