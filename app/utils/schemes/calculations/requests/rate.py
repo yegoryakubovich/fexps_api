@@ -15,17 +15,19 @@
 #
 
 
+from typing import Optional
+
 from pydantic import BaseModel
 
 
 class RequestCalculateScheme(BaseModel):
-    input_currency_value: int
-    input_rate: int
-    input_value: int
+    input_currency_value: Optional[int]
+    input_rate: Optional[int]
+    input_value: Optional[int]
     difference: int
     commission: int
     rate: int
     rate_decimal: int
-    output_value: int
-    output_rate: int
-    output_currency_value: int
+    output_value: Optional[int]
+    output_rate: Optional[int]
+    output_currency_value: Optional[int]

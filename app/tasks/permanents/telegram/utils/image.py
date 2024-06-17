@@ -20,11 +20,9 @@ from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
 
-from app.db.models import Currency, Method
+from app.db.models import Method
 from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository
-from app.utils.calculations.rates.basic import check_actual_rate
 from app.utils.value import value_to_float
-# from app.utils.calculations.rates.checks import check_actual_rate_pair
 from config import settings
 
 COORDINATES_RATES = {
@@ -95,8 +93,8 @@ async def image_create():
 
 
 async def get_pair_rate(input_method: Method, output_method: Method) -> Optional[tuple]:
-    rate_pair = await RatePairRepository().get(input_method=input_method, output_method=output_method)
-    if not rate_pair or not await check_actual_rate(rate=rate_pair):
+    rate_pair = await RatePairRepository().get_actual(input_method=input_method, output_method=output_method)
+    if not rate_pair:
         return
     rate_float = value_to_float(value=rate_pair.rate, decimal=rate_pair.rate_decimal)
     if f'{input_method.currency.id_str}{output_method.currency.id_str}' in ['usdusdt', 'usdtusd']:

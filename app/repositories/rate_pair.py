@@ -15,9 +15,23 @@
 #
 
 
+import datetime
+from typing import Optional
+
 from app.db.models import RatePair
 from app.repositories.base import BaseRepository
+from config import settings
 
 
 class RatePairRepository(BaseRepository[RatePair]):
     model = RatePair
+
+    async def get_actual(self, **filters) -> Optional[RatePair]:
+        rate = await self.get(**filters)
+        rate_date = rate.created_at.replace(tzinfo=datetime.timezone.utc)
+        date_now = datetime.datetime.now(tz=datetime.timezone.utc)
+        date_delta = datetime.timedelta(minutes=settings.rate_actual_minutes)
+        date_check = date_now - date_delta
+        if rate_date < date_check:
+            return
+        return rate

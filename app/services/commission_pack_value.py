@@ -75,7 +75,7 @@ class CommissionPackValueService(BaseService):
     ):
         commission_pack_value = await CommissionPackValueRepository().get_by_id(id_=id_)
         return {
-            'commission_pack_value': await self._generate_commission_pack_value_dict(
+            'commission_pack_value': await self.generate_commission_pack_value_dict(
                 commission_pack_value=commission_pack_value,
             ),
         }
@@ -89,7 +89,7 @@ class CommissionPackValueService(BaseService):
         commission_pack = await CommissionPackRepository().get_by_id(id_=commission_pack_id)
         return {
             'commissions_packs_values': [
-                await self._generate_commission_pack_value_dict(commission_pack_value=commission_pack_value)
+                await self.generate_commission_pack_value_dict(commission_pack_value=commission_pack_value)
                 for commission_pack_value in await CommissionPackValueRepository().get_list(
                     commission_pack=commission_pack,
                 )
@@ -126,7 +126,7 @@ class CommissionPackValueService(BaseService):
                 raise CommissionIntervalAlreadyTaken()
 
     @staticmethod
-    async def _generate_commission_pack_value_dict(commission_pack_value: CommissionPackValue):
+    async def generate_commission_pack_value_dict(commission_pack_value: CommissionPackValue):
         return {
             'id': commission_pack_value.id,
             'commission_pack_id': commission_pack_value.commission_pack_id,

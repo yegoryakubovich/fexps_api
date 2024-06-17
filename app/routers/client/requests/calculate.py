@@ -38,8 +38,6 @@ class RequestCalculateSchema(BaseModel):
     type_: str = Field(min_length=1, max_length=8)
     input_method_id: Optional[int] = Field(default=None)
     output_method_id: Optional[int] = Field(default=None)
-    input_value: Optional[int] = Field(default=None)
-    output_value: Optional[int] = Field(default=None)
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':
@@ -49,13 +47,6 @@ class RequestCalculateSchema(BaseModel):
                 kwargs={
                     'field_name': 'type_',
                     'parameters': RequestTypes.choices,
-                },
-            )
-        # check value
-        if [self.input_value, self.output_value].count(None) != 1:
-            raise ParameterOneContainError(
-                kwargs={
-                    'parameters': ['input_value', 'output_value'],
                 },
             )
         # check method and requisite data
@@ -79,19 +70,6 @@ class RequestCalculateSchema(BaseModel):
             )
         return self
 
-    @field_validator('input_value', 'output_value')
-    @classmethod
-    def check_values(cls, value: int, info: ValidationInfo):
-        if value is None:
-            return
-        if value <= 0:
-            raise ValueMustBePositive(
-                kwargs={
-                    'field_name': info.field_name,
-                },
-            )
-        return value
-
 
 @router.post()
 async def route(schema: RequestCalculateSchema):
@@ -101,7 +79,5 @@ async def route(schema: RequestCalculateSchema):
         type_=schema.type_,
         input_method_id=schema.input_method_id,
         output_method_id=schema.output_method_id,
-        input_value=schema.input_value,
-        output_value=schema.output_value,
     )
     return Response(**result)
