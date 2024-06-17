@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
+
 import math
 
 from app.db.models import CommissionPack
@@ -31,6 +32,5 @@ async def get_output_commission(commission_pack: CommissionPack, value: int) -> 
     commission_percent_float = value_to_float(value=commission_pack_value.percent)
 
     value_float = round(value_float - commission_value_float, 2)
-    logging.critical(value_float)
     commission_float = commission_value_float + value_float / (100 - commission_percent_float) * 100 - value_float
     return value_to_int(value=commission_float, round_method=math.ceil)
