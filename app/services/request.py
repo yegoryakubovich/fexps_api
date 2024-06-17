@@ -58,16 +58,6 @@ class RequestService(BaseService):
             input_value: Optional[int],
             output_value: Optional[int],
     ) -> dict:
-        logging.critical(dict(
-            session=session,
-            name=name,
-            wallet_id=wallet_id,
-            type_=type_,
-            input_method_id=input_method_id,
-            output_requisite_data_id=output_requisite_data_id,
-            input_value=input_value,
-            output_value=output_value,
-        ))
         start_value, end_value = input_value, output_value
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         rates_decimals = []
@@ -87,6 +77,13 @@ class RequestService(BaseService):
                 input_currency_value=input_currency_value,
                 input_value=input_value,
             )
+            if not calculate:
+                raise RequestRatePairNotFound(
+                    kwargs={
+                        'input_currency': input_method.currency.id_str,
+                        'output_currency': '',
+                    }
+                )
         elif type_ == RequestTypes.OUTPUT:
             output_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_output(
@@ -95,6 +92,13 @@ class RequestService(BaseService):
                 output_value=output_value,
                 output_currency_value=output_currency_value,
             )
+            if not calculate:
+                raise RequestRatePairNotFound(
+                    kwargs={
+                        'input_currency': '',
+                        'output_currency': output_requisite_data.method.currency.id_str,
+                    }
+                )
         else:
             input_currency_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_all(
@@ -118,7 +122,7 @@ class RequestService(BaseService):
             type=type_,
             rate_decimal=rate_decimal,
             rate_fixed=True,
-            difference=0,
+            difference=calculate.difference,
             difference_rate=0,
             commission=calculate.commission,
             rate=calculate.rate,

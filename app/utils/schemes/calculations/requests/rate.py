@@ -22,6 +22,7 @@ class RequestCalculateScheme(BaseModel):
     input_currency_value: int
     input_rate: int
     input_value: int
+    difference: int
     commission: int
     rate: int
     rate_decimal: int
