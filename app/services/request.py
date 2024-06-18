@@ -20,9 +20,9 @@ from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    NotificationTypes, RateTypes, RatePair
+    NotificationTypes, RateTypes
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
-    CommissionPackValueRepository, RatePairRepository, RateRepository
+    CommissionPackValueRepository, RateRepository
 from app.repositories.request import RequestRepository
 from app.repositories.wallet import WalletRepository
 from app.services import CommissionPackValueService
@@ -176,39 +176,50 @@ class RequestService(BaseService):
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
         if output_method_id:
             output_method = await MethodRepository().get_by_id(id_=output_method_id)
-        input_method_name, output_method_name = '', ''
+        input_rate, output_rate = None, None
         if type_ == RequestTypes.INPUT:  # INPUT
-            rate_db = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
-            input_method_name = output_method.name_text.value_default
+            input_rate = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
+            if not input_rate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': output_method.name_text.value_default,
+                        'output_method': '',
+                    }
+                )
+            input_rate = input_rate.rate
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
-            rate_db = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
-            output_method_name = output_method.name_text.value_default
+            output_rate = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
+            if not output_rate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': '',
+                        'output_method': output_method.name_text.value_default,
+                    }
+                )
+            output_rate = output_rate.rate
         else:  # ALL
-            rate_db = await RatePairRepository().get_actual(
-                input_method=input_method,
-                output_method=output_method,
-            )
-            input_method_name = input_method.name_text.value_default
-            output_method_name = output_method.name_text.value_default
-        if not rate_db:
-            raise RequestRateNotFound(
-                kwargs={
-                    'input_method': input_method_name,
-                    'output_method': output_method_name,
-                }
-            )
-        if isinstance(rate_db, RatePair):
-            rate_decimal = rate_db.rate_decimal
-        else:
-            rate_decimal = rate_db.method.currency.rate_decimal
+            input_rate = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
+            output_rate = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
+            if not input_rate or not output_rate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': input_method.name_text.value_default,
+                        'output_method': output_method.name_text.value_default,
+                    }
+                )
+            input_rate = input_rate.rate
+            output_rate = output_rate.rate
         return {
+            'wallet': wallet.id,
+            'type': type_,
             'commissions_packs': [
                 await CommissionPackValueService().generate_commission_pack_value_dict(commission_pack_value=cp_value)
                 for cp_value in await CommissionPackValueRepository().get_list(commission_pack=wallet.commission_pack)
             ],
-            'type': type_,
-            'rate': rate_db.rate,
-            'rate_decimal': rate_decimal,
+            'input_method': await MethodService().generate_method_dict(method=input_method),
+            'input_rate': input_rate,
+            'output_method': await MethodService().generate_method_dict(method=output_method),
+            'output_rate': output_rate,
         }
 
     @session_required()

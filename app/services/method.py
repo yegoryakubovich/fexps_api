@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Method, Session, Actions
 from app.repositories import TextPackRepository
 from app.repositories.currency import CurrencyRepository
@@ -202,7 +204,9 @@ class MethodService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_method_dict(method: Method) -> dict:
+    async def generate_method_dict(method: Method) -> Optional[dict]:
+        if not method:
+            return
         return {
             'id': method.id,
             'currency': await CurrencyService().generate_currency_dict(currency=method.currency),
