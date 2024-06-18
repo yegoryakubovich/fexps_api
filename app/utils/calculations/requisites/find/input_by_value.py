@@ -20,10 +20,10 @@ from typing import Optional
 
 from app.db.models import Method, RequisiteStates, RequisiteTypes
 from app.repositories import RequisiteRepository
-from app.utils.calculations.request.check_empty import calculate_requisite_check_empty
-from app.utils.calculations.request.proccess_change import calculate_requisite_process_change, \
+from app.utils.calculations.requisites.check_empty import calculate_requisite_check_empty
+from app.utils.calculations.requisites.process_change import calculate_requisite_process_change, \
     calculate_requisite_process_change_list
-from app.utils.calculations.request.suitable_value import calculate_requisite_suitable_from_value
+from app.utils.calculations.requisites.suitable_value import calculate_requisite_suitable_from_value
 from app.utils.schemes.calculations.rate import RequisiteDataScheme
 from app.utils.value import value_to_int
 
