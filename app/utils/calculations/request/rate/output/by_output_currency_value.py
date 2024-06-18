@@ -18,9 +18,8 @@
 import math
 from typing import Optional
 
-from app.db.models import Method, RateTypes, CommissionPack
+from app.db.models import Method, RateTypes
 from app.repositories import RateRepository
-from app.utils.calculations.commissions import get_output_commission
 from app.utils.schemes.calculations.requests.rate import RequestCalculateScheme
 from app.utils.value import value_to_float, value_to_int
 
