@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     request_confirmation_check: int = 5
     request_rate_fixed_minutes: int = 60
     file_key_close_minutes: int = 60
-    rate_actual_minutes: int = 60
+    rate_actual_minutes: int = 120
     datetime_format: str = '%d-%m-%y %H:%M'
 
     model_config = SettingsConfigDict(env_file='.env')
