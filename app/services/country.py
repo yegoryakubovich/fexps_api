@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Country, Session, Actions
 from app.repositories import CountryRepository, CurrencyRepository, LanguageRepository, TimezoneRepository
 from app.services.base import BaseService
@@ -151,7 +153,9 @@ class CountryService(BaseService):
         }
 
     @staticmethod
-    async def generate_country_dict(country: Country):
+    async def generate_country_dict(country: Country) -> Optional[dict]:
+        if not country:
+            return
         return {
             'id': country.id,
             'id_str': country.id_str,

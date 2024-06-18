@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
     MessageRoles, NotificationTypes
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository
@@ -394,7 +396,9 @@ class OrderService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_order_dict(order: Order):
+    async def generate_order_dict(order: Order) -> Optional[dict]:
+        if not order:
+            return
         method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
         order_request = await OrderRequestRepository().get(order=order, state=OrderRequestStates.WAIT)
         if order_request:

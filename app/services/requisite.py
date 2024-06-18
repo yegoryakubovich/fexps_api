@@ -16,6 +16,7 @@
 
 
 from math import ceil
+from typing import Optional
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates, \
     NotificationTypes
@@ -31,7 +32,7 @@ from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.requisite import all_value_calc
+# from app.utils.calculations.requisite import all_value_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
@@ -372,7 +373,9 @@ class RequisiteService(BaseService):
         )
 
     @staticmethod
-    async def generate_requisites_dict(requisite: Requisite):
+    async def generate_requisites_dict(requisite: Requisite) -> Optional[dict]:
+        if not requisite:
+            return
         input_method = None
         if requisite.input_method:
             input_method = await MethodService().generate_method_dict(method=requisite.input_method)

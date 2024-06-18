@@ -19,6 +19,7 @@ from math import ceil
 from random import sample
 from re import compile, search
 from string import ascii_letters, digits
+from typing import Optional
 
 from app.db.models import Account, Session, Actions, NotificationTypes
 from app.repositories import AccountRepository, CountryRepository, LanguageRepository, TimezoneRepository, \
@@ -262,7 +263,9 @@ class AccountService(BaseService):
             raise WrongPassword()
 
     @staticmethod
-    async def _generate_account_dict(account) -> dict:
+    async def _generate_account_dict(account: Account) -> Optional[dict]:
+        if not account:
+            return
         text_pack = await TextPackRepository().get_current(language=account.language)
         permissions = await AccountRoleCheckPermissionService().get_permissions(account=account)
         return {

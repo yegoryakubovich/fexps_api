@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Language, Session, Actions
 from app.repositories.language import LanguageRepository
 from app.services.base import BaseService
@@ -100,7 +102,9 @@ class LanguageService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_language_dict(language: Language):
+    async def generate_language_dict(language: Language) -> Optional[dict]:
+        if not language:
+            return
         return {
             'id': language.id,
             'id_str': language.id_str,

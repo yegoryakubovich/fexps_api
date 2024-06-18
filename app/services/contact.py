@@ -15,7 +15,9 @@
 #
 
 
-from app.db.models import Session, Contact, Actions, TextPack
+from typing import Optional
+
+from app.db.models import Session, Contact, Actions
 from app.repositories import TextPackRepository
 from app.repositories.contact import ContactRepository
 from app.repositories.text import TextRepository
@@ -88,7 +90,9 @@ class ContactService(BaseService):
         return {}
 
     @staticmethod
-    async def _generate_contact_dict(contact: Contact):
+    async def _generate_contact_dict(contact: Contact) -> Optional[dict]:
+        if not contact:
+            return
         return {
             'id': contact.id,
             'name_text': contact.name_text.key,

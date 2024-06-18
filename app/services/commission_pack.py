@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Session, CommissionPack, Actions
 from app.repositories import TextPackRepository, WalletRepository
 from app.repositories.commission_pack import CommissionPackRepository
@@ -112,7 +114,9 @@ class CommissionPackService(BaseService):
         return {}
 
     @staticmethod
-    async def _generate_commission_pack_dict(commission_pack: CommissionPack):
+    async def _generate_commission_pack_dict(commission_pack: CommissionPack) -> Optional[dict]:
+        if not commission_pack:
+            return
         return {
             'id': commission_pack.id,
             'name_text': commission_pack.name_text.key,

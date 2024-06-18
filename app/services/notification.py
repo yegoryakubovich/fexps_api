@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import NotificationSetting, Session, Actions
 from app.repositories.notification_setting import NotificationSettingRepository
 from app.services.base import BaseService
@@ -109,7 +111,9 @@ class NotificationService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_notification_dict(notification_setting: NotificationSetting):
+    async def generate_notification_dict(notification_setting: NotificationSetting) -> Optional[dict]:
+        if not notification_setting:
+            return
         return {
             'id': notification_setting.id,
             'telegram_id': notification_setting.telegram_id,

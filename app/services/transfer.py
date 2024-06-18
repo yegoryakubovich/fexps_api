@@ -16,6 +16,7 @@
 
 
 from math import ceil
+from typing import Optional
 
 from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet, NotificationTypes
 from app.db.models.transfer import TransferOperations
@@ -124,7 +125,9 @@ class TransferService(BaseService):
         }
 
     @staticmethod
-    async def generate_transfer_dict(wallet: Wallet, transfer: Transfer) -> dict:
+    async def generate_transfer_dict(transfer: Transfer, wallet: Wallet) -> Optional[dict]:
+        if not transfer:
+            return
         if transfer.wallet_from.is_system:
             account_from = {'id': 0, 'firstname': 'System', 'lastname': '', 'username': '', 'short_name': f'System'}
         else:

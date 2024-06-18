@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-
+from typing import Optional
 from app.db.models import Session, Currency, Actions
 from app.repositories.currency import CurrencyRepository
 from app.services.base import BaseService
@@ -136,7 +136,9 @@ class CurrencyService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_currency_dict(currency: Currency) -> dict:
+    async def generate_currency_dict(currency: Currency) -> Optional[dict]:
+        if not currency:
+            return
         return {
             'id': currency.id,
             'id_str': currency.id_str,

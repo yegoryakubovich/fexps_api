@@ -18,6 +18,7 @@
 import os
 from time import time
 from typing import List
+from typing import Optional
 
 from fastapi import UploadFile
 from starlette.responses import FileResponse
@@ -189,7 +190,9 @@ class FileService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_file_dict(file: File) -> dict:
+    async def generate_file_dict(file: File) -> Optional[dict]:
+        if not file:
+            return
         with open(f'{settings.path_files}/{file.id_str}.{file.extension}', 'rb') as f:
             file_byte = f.read()
         return {

@@ -16,7 +16,7 @@
 
 
 from time import time
-
+from typing import Optional
 from app.db.models import File, Session, Actions, FileKey
 from app.repositories.file_key import FileKeyRepository
 from app.services import FileService
@@ -69,7 +69,7 @@ class FileKeyService(BaseService):
         }
 
     @staticmethod
-    async def generate_file_key_dict(file_key: FileKey) -> dict:
+    async def generate_file_key_dict(file_key: FileKey) -> Optional[dict]:
         if not file_key.file:
             return {}
         return {

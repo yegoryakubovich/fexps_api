@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Wallet, Session, WalletAccountRoles, Actions
 from app.repositories import CommissionPackRepository, AccountRepository
 from app.repositories.wallet import WalletRepository
@@ -215,7 +217,9 @@ class WalletService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_wallet_dict(wallet: Wallet):
+    async def generate_wallet_dict(wallet: Wallet) -> Optional[dict]:
+        if not wallet:
+            return
         return {
             'id': wallet.id,
             'name': wallet.name,

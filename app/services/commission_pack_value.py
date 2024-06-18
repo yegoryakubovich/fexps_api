@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import CommissionPackValue, Session, Actions, CommissionPack
 from app.repositories.commission_pack import CommissionPackRepository
 from app.repositories.commission_pack_value import CommissionPackValueRepository
@@ -126,7 +128,9 @@ class CommissionPackValueService(BaseService):
                 raise CommissionIntervalAlreadyTaken()
 
     @staticmethod
-    async def generate_commission_pack_value_dict(commission_pack_value: CommissionPackValue):
+    async def generate_commission_pack_value_dict(commission_pack_value: CommissionPackValue) -> Optional[dict]:
+        if not commission_pack_value:
+            return
         return {
             'id': commission_pack_value.id,
             'commission_pack_id': commission_pack_value.commission_pack_id,

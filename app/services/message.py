@@ -135,7 +135,9 @@ class MessageService(BaseService):
         }
 
     @staticmethod
-    async def generate_message_dict(message: Message):
+    async def generate_message_dict(message: Message) -> Optional[dict]:
+        if not message:
+            return
         request_account = (await WalletAccountRepository().get(wallet=message.order.request.wallet)).account
         requisite_account = (await WalletAccountRepository().get(wallet=message.order.requisite.wallet)).account
         position = MessageUserPositions.UNKNOWN

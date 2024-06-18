@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Session, RequisiteData, Actions
 from app.repositories.method import MethodRepository
 from app.repositories.requisite_data import RequisiteDataRepository
@@ -134,7 +136,9 @@ class RequisiteDataService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_requisite_data_dict(requisite_data: RequisiteData):
+    async def generate_requisite_data_dict(requisite_data: RequisiteData) -> Optional[dict]:
+        if not requisite_data:
+            return
         return {
             'id': requisite_data.id,
             'account': requisite_data.account_id,

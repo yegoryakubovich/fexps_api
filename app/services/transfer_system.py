@@ -65,19 +65,19 @@ class TransferSystemService(BaseService):
             request: Request,
             from_banned_value: bool = False,
     ) -> None:
-        if not request.commission_value:
+        if not request.commission:
             return
         if from_banned_value:
             await WalletBanService().create_related(
                 wallet=request.wallet,
-                value=-request.commission_value,
+                value=-request.commission,
                 reason=WalletBanReasons.BY_ORDER,
                 ignore_bal=True,
             )
         await self.create_transfer(
             model=request,
             wallet_id=request.wallet_id,
-            value=request.commission_value,
+            value=request.commission,
             reason=TransferSystemReasons.COMMISSION,
         )
 
