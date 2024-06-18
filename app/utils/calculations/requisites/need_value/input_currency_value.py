@@ -15,22 +15,14 @@
 #
 
 
-from pydantic import BaseModel
+from app.db.models import Request, OrderTypes, OrderStates
+from app.repositories import OrderRepository
 
 
-class DataRateScheme(BaseModel):
-    rate: int
-    rate_decimal: int
-
-
-class RequisiteItemScheme(BaseModel):
-    requisite_id: int
-    currency_value: int
-    value: int
-
-
-class RequisiteDataScheme(BaseModel):
-    requisite_items: list[RequisiteItemScheme]
-    currency_value: int
-    rate: int
-    value: int
+async def calculations_requisites_need_input_currency_value(request: Request) -> int:
+    need_currency_value = request.input_currency_value
+    for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
+        if order.state in [OrderStates.CANCELED]:
+            continue
+        need_currency_value -= order.currency_value
+    return need_currency_value

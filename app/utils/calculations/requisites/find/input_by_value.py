@@ -24,7 +24,7 @@ from app.utils.calculations.requisites.check_empty import calculate_requisite_ch
 from app.utils.calculations.requisites.process_change import calculate_requisite_process_change, \
     calculate_requisite_process_change_list
 from app.utils.calculations.requisites.suitable_value import calculate_requisite_suitable_from_value
-from app.utils.schemes.calculations.rate import RequisiteDataScheme
+from app.utils.schemes.calculations.rate import RequisiteDataScheme, RequisiteItemScheme
 from app.utils.value import value_to_int
 
 
@@ -34,7 +34,7 @@ async def calculate_requisite_input_by_value(
         process: bool = False,
 ) -> Optional[RequisiteDataScheme]:
     need_value = value
-    requisite_ids = []
+    requisite_items = []
     result_currency_value, result_value = 0, 0
     requisite_params = {'type': RequisiteTypes.OUTPUT, 'output_method': method, 'state': RequisiteStates.ENABLE}
     if process:
@@ -55,21 +55,33 @@ async def calculate_requisite_input_by_value(
             await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
             continue
         suitable_currency_value, suitable_value = suitable_result
-        requisite_ids += [requisite.id]
+        requisite_items.append(RequisiteItemScheme(
+            requisite_id=requisite.id,
+            currency_value=suitable_currency_value,
+            value=suitable_value,
+        ))
         need_value -= suitable_value
         result_currency_value += suitable_currency_value
         result_value += suitable_value
     if not result_currency_value or not result_value:
-        await calculate_requisite_process_change_list(requisites=requisite_ids, in_process=False, process=process)
+        await calculate_requisite_process_change_list(
+            requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
+            in_process=False,
+            process=process,
+        )
         return
     rate_float = result_currency_value / result_value
     find_currency_value = need_value * rate_float
     if find_currency_value > method.currency.div:
-        await calculate_requisite_process_change_list(requisites=requisite_ids, in_process=False, process=process)
+        await calculate_requisite_process_change_list(
+            requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
+            in_process=False,
+            process=process,
+        )
         return
     rate = value_to_int(value=rate_float, decimal=method.currency.rate_decimal, round_method=math.ceil)
     return RequisiteDataScheme(
-        requisites=requisite_ids,
+        requisite_items=requisite_items,
         currency_value=result_currency_value,
         rate=rate,
         value=result_value,
