@@ -24,7 +24,7 @@ from app.repositories.order import OrderRepository
 from app.repositories.order_request import OrderRequestRepository
 from app.repositories.request import RequestRepository
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.commissions import get_commission_value_input
+# from app.utils.calculations.request.commissions import get_commission_value_input
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
 from app.utils.value import value_to_float
@@ -63,7 +63,7 @@ async def order_request_update_type_cancel(
             canceled_reason=canceled_reason,
         )
         await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
+        await RequestRepository().update(order_request.order.request, rate_fixed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
@@ -105,7 +105,7 @@ async def order_request_update_type_recreate(
             canceled_reason=canceled_reason,
         )
         await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
+        await RequestRepository().update(order_request.order.request, rate_fixed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
@@ -201,7 +201,7 @@ async def order_request_update_type_update_value(
             currency_value=currency_value,
         )
         await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_confirmed=False)
+        await RequestRepository().update(order_request.order.request, rate_fixed=False)
     elif state == OrderRequestStates.CANCELED:
         await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(

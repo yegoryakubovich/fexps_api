@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import Method, RateTypes
-from app.utils.calculations.request.find import calculate_requisite_input_by_value, calculate_requisite_output_by_value
+from app.utils.calculations.requisites.find import calculate_requisite_input_by_value, calculate_requisite_output_by_value
 
 
 async def calculate_rate_requisite(method: Method, rate_type: str) -> Optional[int]:

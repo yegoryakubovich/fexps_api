@@ -20,15 +20,15 @@ from typing import Optional
 
 from app.db.models import Method, RequisiteStates, RequisiteTypes
 from app.repositories import RequisiteRepository
-from app.utils.calculations.request.check_empty import calculate_requisite_check_empty
-from app.utils.calculations.request.proccess_change import calculate_requisite_process_change, \
+from app.utils.calculations.requisites.check_empty import calculate_requisite_check_empty
+from app.utils.calculations.requisites.process_change import calculate_requisite_process_change, \
     calculate_requisite_process_change_list
-from app.utils.calculations.request.suitable_value import calculate_requisite_suitable_from_currency_value
+from app.utils.calculations.requisites.suitable_value import calculate_requisite_suitable_from_currency_value
 from app.utils.schemes.calculations.rate import RequisiteDataScheme
 from app.utils.value import value_to_int
 
 
-async def calculate_requisite_output_by_currency_value(
+async def calculate_requisite_input_by_currency_value(
         method: Method,
         currency_value: int,
         process: bool = False,
@@ -36,7 +36,7 @@ async def calculate_requisite_output_by_currency_value(
     need_currency_value = currency_value
     requisite_ids = []
     result_currency_value, result_value = 0, 0
-    requisite_params = {'type': RequisiteTypes.INPUT, 'input_method': method, 'state': RequisiteStates.ENABLE}
+    requisite_params = {'type': RequisiteTypes.OUTPUT, 'output_method': method, 'state': RequisiteStates.ENABLE}
     if process:
         requisite_params['in_process'] = False
     for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
@@ -69,7 +69,7 @@ async def calculate_requisite_output_by_currency_value(
         await calculate_requisite_process_change_list(requisites=requisite_ids, in_process=False, process=process)
         return
     rate_float = result_currency_value / result_value
-    rate = value_to_int(value=rate_float, decimal=method.currency.rate_decimal, round_method=math.floor)
+    rate = value_to_int(value=rate_float, decimal=method.currency.rate_decimal, round_method=math.ceil)
     return RequisiteDataScheme(
         requisites=requisite_ids,
         currency_value=result_currency_value,
