@@ -23,53 +23,66 @@ from app.repositories.request import RequestRepository
 from app.services import TransferSystemService, WalletBanService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.need_value import input_get_need_currency_value
+from app.utils.calculations.requisites.need_value import calculations_requisites_need_input_currency_value
 
 custom_logger = RequestLogger(prefix='request_state_input_check')
 
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.INPUT):
-        custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
-        _from_value = request.input_currency_value_raw
+        custom_logger.info(text='start check', request=request)
         continue_ = False
         for i in range(2):
-            _need_currency_value = await input_get_need_currency_value(request=request, from_value=_from_value)
+            _need_currency_value = await calculations_requisites_need_input_currency_value(request=request)
             # check / change states
             if _need_currency_value:
-                custom_logger.info(text=f'found _need_currency_value = {_need_currency_value}', request=request)
                 custom_logger.info(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
                 continue_ = True
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.WAITING):
-                custom_logger.info(text=f'found waiting orders', request=request)
                 custom_logger.info(text=f'{request.state}->{RequestStates.INPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.INPUT_RESERVATION)
                 continue_ = True  # Found waiting orders
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.PAYMENT):
-                custom_logger.info(text=f'found payment orders', request=request)
                 continue_ = True  # Found payment orders
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.INPUT, state=OrderStates.CONFIRMATION):
-                custom_logger.info(text=f'found confirmation orders', request=request)
                 continue_ = True  # Found confirmation orders
                 break
         if continue_:
             continue
+        order_value_sum = 0
+        difference_rate = request.difference_rate
+        for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
+            if order.state == OrderStates.CANCELED:
+                continue
+            order_value_sum += order.value
+        if order_value_sum != request.input_value:
+            difference = order_value_sum - request.input_value
+            await TransferSystemService().payment_difference(
+                request=request,
+                value=difference,
+                from_banned_value=True,
+            )
+            difference_rate += difference
         await TransferSystemService().payment_commission(request=request, from_banned_value=True)
         next_state = RequestStates.OUTPUT_RESERVATION
         if request.type == RequestTypes.INPUT:
+            next_state = RequestStates.COMPLETED
             await WalletBanService().create_related(
                 wallet=request.wallet,
-                value=-(request.input_value - request.commission_value),
+                value=-(request.input_value - request.commission),
                 reason=WalletBanReasons.BY_ORDER,
             )
-            next_state = RequestStates.COMPLETED
         custom_logger.info(text=f'{request.state}->{next_state}', request=request)
-        await RequestRepository().update(request, state=next_state)
+        await RequestRepository().update(
+            request,
+            state=next_state,
+            difference_rate=difference_rate,
+        )
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
             notification_type=NotificationTypes.REQUEST,
