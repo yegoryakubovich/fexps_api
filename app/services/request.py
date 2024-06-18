@@ -16,16 +16,16 @@
 
 
 import datetime
-import logging
 from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    NotificationTypes
-from app.repositories import WalletAccountRepository, OrderRepository, RatePairRepository, CurrencyRepository, \
-    MethodRepository, RequisiteDataRepository
+    NotificationTypes, RateTypes, RatePair
+from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
+    CommissionPackValueRepository, RatePairRepository, RateRepository
 from app.repositories.request import RequestRepository
 from app.repositories.wallet import WalletRepository
+from app.services import CommissionPackValueService
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.method import MethodService
@@ -36,7 +36,7 @@ from app.utils.calculations.request.rate.all import calculate_request_rate_all
 from app.utils.calculations.request.rate.input import calculate_request_rate_input
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
 from app.utils.decorators import session_required
-from app.utils.exceptions import RequestRatePairNotFound
+from app.utils.exceptions import RequestRateNotFound
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
 from app.utils.service_addons.order import order_cancel_related
 from app.utils.service_addons.wallet import wallet_check_permission
@@ -58,17 +58,16 @@ class RequestService(BaseService):
             input_value: Optional[int],
             output_value: Optional[int],
     ) -> dict:
+        account = session.account
         start_value, end_value = input_value, output_value
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        rates_decimals = []
-        input_method, output_requisite_data = None, None
+        input_method, output_method, output_requisite_data = None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
-            rates_decimals.append(input_method.currency.rate_decimal)
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
-            rates_decimals.append(output_requisite_data.method.currency.rate_decimal)
-        rate_decimal = max(rates_decimals)
+            output_method = output_requisite_data.method
+        input_method_name, output_method_name = '', ''
         if type_ == RequestTypes.INPUT:
             input_currency_value, input_value = start_value, end_value
             calculate = await calculate_request_rate_input(
@@ -77,44 +76,33 @@ class RequestService(BaseService):
                 input_currency_value=input_currency_value,
                 input_value=input_value,
             )
-            if not calculate:
-                raise RequestRatePairNotFound(
-                    kwargs={
-                        'input_currency': input_method.currency.id_str,
-                        'output_currency': '',
-                    }
-                )
+            input_method_name = input_method.name_text.value_default
         elif type_ == RequestTypes.OUTPUT:
             output_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_output(
-                output_method=output_requisite_data.method,
-                commission_pack=wallet.commission_pack,
+                output_method=output_method,
                 output_value=output_value,
                 output_currency_value=output_currency_value,
             )
-            if not calculate:
-                raise RequestRatePairNotFound(
-                    kwargs={
-                        'input_currency': '',
-                        'output_currency': output_requisite_data.method.currency.id_str,
-                    }
-                )
+            output_method_name = output_method.name_text.value_default
         else:
             input_currency_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_all(
                 input_method=input_method,
-                output_method=output_requisite_data.method,
+                output_method=output_method,
                 commission_pack=wallet.commission_pack,
                 input_currency_value=input_currency_value,
                 output_currency_value=output_currency_value,
             )
-            if not calculate:
-                raise RequestRatePairNotFound(
-                    kwargs={
-                        'input_currency': input_method.currency.id_str,
-                        'output_currency': output_requisite_data.method.currency.id_str,
-                    }
-                )
+            input_method_name = input_method.name_text.value_default
+            output_method_name = output_method.name_text.value_default
+        if not calculate:
+            raise RequestRateNotFound(
+                kwargs={
+                    'input_method': input_method_name,
+                    'output_method': output_method_name,
+                }
+            )
         request = await RequestRepository().create(
             name=name,
             wallet=wallet,
@@ -128,7 +116,7 @@ class RequestService(BaseService):
             rate=calculate.rate,
             input_method=input_method,
             output_requisite_data=output_requisite_data,
-            output_method=output_requisite_data.method,
+            output_method=output_method,
             input_currency_value=calculate.input_currency_value,
             input_value=calculate.input_value,
             input_rate=calculate.input_rate,
@@ -176,38 +164,51 @@ class RequestService(BaseService):
     async def calculate(
             self,
             session: Session,
+            wallet_id: int,
             type_: str,
-            input_currency_id_str: str,
-            output_currency_id_str: str,
+            input_method_id: int = None,
+            output_method_id: int = None,
     ) -> dict:
         account = session.account
-        input_currency, output_currency = None, None
-        if input_currency_id_str:
-            input_currency = await CurrencyRepository().get_by_id_str(id_str=input_currency_id_str)
-        if output_currency_id_str:
-            output_currency = await CurrencyRepository().get_by_id_str(id_str=output_currency_id_str)
-        if type_ == RequestTypes.ALL:  # ALL
-            pass
-        elif type_ == RequestTypes.INPUT:  # INPUT
-            output_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
+        wallet = await WalletRepository().get_by_id(id_=wallet_id)
+        input_method, output_method = None, None
+        if input_method_id:
+            input_method = await MethodRepository().get_by_id(id_=input_method_id)
+        if output_method_id:
+            output_method = await MethodRepository().get_by_id(id_=output_method_id)
+        input_method_name, output_method_name = '', ''
+        if type_ == RequestTypes.INPUT:  # INPUT
+            rate_db = await RateRepository().get_actual(method=input_method, type=RateTypes.INPUT)
+            input_method_name = output_method.name_text.value_default
         elif type_ == RequestTypes.OUTPUT:  # OUTPUT
-            input_currency = await CurrencyRepository().get_by_id_str(id_str='usdt')
-        rate_pair = await RatePairRepository().get(
-            currency_input=output_currency,
-            currency_output=input_currency,
-        )
-        if not rate_pair:
-            raise RequestRatePairNotFound(
+            rate_db = await RateRepository().get_actual(method=output_method, type=RateTypes.OUTPUT)
+            output_method_name = output_method.name_text.value_default
+        else:  # ALL
+            rate_db = await RatePairRepository().get_actual(
+                input_method=input_method,
+                output_method=output_method,
+            )
+            input_method_name = input_method.name_text.value_default
+            output_method_name = output_method.name_text.value_default
+        if not rate_db:
+            raise RequestRateNotFound(
                 kwargs={
-                    'input_currency': input_currency.id_str,
-                    'output_currency': output_currency.id_str,
+                    'input_method': input_method_name,
+                    'output_method': output_method_name,
                 }
             )
+        if isinstance(rate_db, RatePair):
+            rate_decimal = rate_db.rate_decimal
+        else:
+            rate_decimal = rate_db.method.currency.rate_decimal
         return {
-            'input_currency': rate_pair.currency_input.id_str,
-            'output_currency': rate_pair.currency_output.id_str,
-            'rate': rate_pair.value,
-            'rate_decimal': rate_pair.rate_decimal,
+            'commissions_packs': [
+                await CommissionPackValueService().generate_commission_pack_value_dict(commission_pack_value=cp_value)
+                for cp_value in await CommissionPackValueRepository().get_list(commission_pack=wallet.commission_pack)
+            ],
+            'type': type_,
+            'rate': rate_db.rate,
+            'rate_decimal': rate_decimal,
         }
 
     @session_required()
