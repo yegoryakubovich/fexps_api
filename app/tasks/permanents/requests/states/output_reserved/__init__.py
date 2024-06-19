@@ -88,27 +88,27 @@ async def run():
         if request.rate_fixed:
             need_currency_value = await calculations_requisites_need_output_currency_value(request=request)
             custom_logger.info(text=f'create orders need_currency_value={need_currency_value}', request=request)
-            await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
-            difference_rate = request.difference_rate
-            order_currency_value_sum = 0
-            for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
-                if order.state == OrderStates.CANCELED:
-                    continue
-                order_currency_value_sum += order.currency_value
-            if order_currency_value_sum != request.output_currency_value:
-                difference = order_currency_value_sum - request.output_currency_value
-                await TransferSystemService().payment_difference(
-                    request=request,
-                    value=difference,
-                    from_banned_value=True,
-                )
-                difference_rate += difference
-                await RequestRepository().update(request, difference_rate=difference_rate)
+            result = await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
+            if result:
+                difference_rate = request.difference_rate
+                order_currency_value_sum = 0
+                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
+                    if order.state == OrderStates.CANCELED:
+                        continue
+                    order_currency_value_sum += order.currency_value
+                if order_currency_value_sum != request.output_currency_value:
+                    difference = order_currency_value_sum - request.output_currency_value
+                    await TransferSystemService().payment_difference(
+                        request=request,
+                        value=difference,
+                        from_banned_value=True,
+                    )
+                    difference_rate += difference
+                    await RequestRepository().update(request, difference_rate=difference_rate)
         else:
             need_value = await calculations_requisites_need_output_value(request=request)
             custom_logger.info(text=f'create orders need_value={need_value}', request=request)
             await get_new_requisite_by_value(request=request, need_value=need_value)
-
         await asyncio.sleep(1)
     await asyncio.sleep(5)
 
@@ -116,14 +116,14 @@ async def run():
 async def get_new_requisite_by_currency_value(
         request: Request,
         need_currency_value: int,
-) -> None:
+) -> bool:
     result = await calculate_requisite_output_by_currency_value(
         method=request.output_method,
         currency_value=need_currency_value,
         process=True,
     )
     if not result:
-        return
+        return False
     for requisite_item in result.requisite_items:
         requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
         rate_float = requisite_item.currency_value / requisite_item.value
@@ -136,12 +136,13 @@ async def get_new_requisite_by_currency_value(
             rate=_rate,
             order_type=OrderTypes.OUTPUT,
         )
+    return True
 
 
 async def get_new_requisite_by_value(
         request: Request,
         need_value: int,
-) -> None:
+) -> bool:
     result = await calculate_requisite_output_by_value(
         method=request.output_method,
         value=need_value,
@@ -149,7 +150,7 @@ async def get_new_requisite_by_value(
     )
     logging.critical(result)
     if not result:
-        return
+        return False
     for requisite_item in result.requisite_items:
         requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
         rate_float = requisite_item.currency_value / requisite_item.value
@@ -162,6 +163,7 @@ async def get_new_requisite_by_value(
             rate=_rate,
             order_type=OrderTypes.OUTPUT,
         )
+    return True
 
 
 async def request_state_output_reserved_check():

@@ -66,13 +66,14 @@ class RequisiteService(BaseService):
             account=account,
             wallets=[wallet],
         )
-        input_method, output_requisite_data, currency = None, None, None
+        input_method,output_method, output_requisite_data, currency = None, None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
             currency = input_method.currency
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
-            currency = output_requisite_data.method.currency
+            output_method = output_requisite_data.method
+            currency = output_method.currency
         currency_value_result, value_result, rate_result = await calculations_requisites_values_calc(
             type_=type_,
             rate_decimal=currency.rate_decimal,
@@ -89,8 +90,9 @@ class RequisiteService(BaseService):
         requisite = await RequisiteRepository().create(
             type=type_,
             wallet=wallet,
-            output_requisite_data=output_requisite_data,
             input_method=input_method,
+            output_method=output_method,
+            output_requisite_data=output_requisite_data,
             currency=currency,
             currency_value=currency_value_result,
             total_currency_value=currency_value_result,
