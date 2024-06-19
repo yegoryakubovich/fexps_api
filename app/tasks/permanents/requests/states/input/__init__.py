@@ -60,7 +60,7 @@ async def run():
             if order.state == OrderStates.CANCELED:
                 continue
             order_value_sum += order.value
-        if order_value_sum != request.input_value:
+        if order_value_sum != request.input_value and False:
             difference = order_value_sum - request.input_value
             await TransferSystemService().payment_difference(
                 request=request,

@@ -37,6 +37,8 @@ services:
       dockerfile: bot.dockerfile
     env_file:
       - .env
+    depends_on:
+      - api
   tasks_permanents:
     build:
       dockerfile: tasks_permanents.dockerfile
@@ -46,6 +48,8 @@ services:
       - ./assets/telegram:/app/assets/telegram
     env_file:
       - .env
+    depends_on:
+      - api
 #  tasks_celery:
 #    build:
 #      dockerfile: tasks_celery.dockerfile
