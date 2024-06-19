@@ -426,7 +426,7 @@ class RequestService(BaseService):
         if request.state == RequestStates.CONFIRMATION and update_action:
             time_now = datetime.datetime.now(tz=datetime.timezone.utc)
             time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
-            time_delta = datetime.timedelta(minutes=settings.request_waiting_check)
+            time_delta = datetime.timedelta(minutes=settings.request_confirmation_check)
             confirmation_delta = (time_delta - (time_now - time_update)).seconds
         input_method = None
         if request.input_method:

@@ -25,7 +25,7 @@ from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from config import settings
 
-custom_logger = RequestLogger(prefix='request_waiting_check')
+custom_logger = RequestLogger(prefix='request_confirmation_check')
 
 
 async def run():
