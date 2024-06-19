@@ -16,7 +16,6 @@
 
 
 import asyncio
-import logging
 import math
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, \
@@ -89,7 +88,6 @@ async def get_new_requisite_by_currency_value(
         currency_value=need_currency_value,
         process=True,
     )
-    logging.critical(result)
     if not result:
         return
     for requisite_item in result.requisite_items:

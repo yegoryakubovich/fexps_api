@@ -77,6 +77,12 @@ async def run():
                 value=-(request.input_value - request.commission),
                 reason=WalletBanReasons.BY_ORDER,
             )
+            if request.difference:
+                await TransferSystemService().payment_difference(
+                    request=request,
+                    value=request.difference,
+                    from_banned_value=True,
+                )
         custom_logger.info(text=f'{request.state}->{next_state}', request=request)
         await RequestRepository().update(
             request,
