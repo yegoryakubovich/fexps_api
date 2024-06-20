@@ -40,10 +40,10 @@ class MethodService(BaseService):
             name: str,
             fields: list[dict],
             input_fields: list[dict],
-            rate_input_default: int,
-            rate_output_default: int,
-            rate_input_percent: int,
-            rate_output_percent: int,
+            input_rate_default: int,
+            output_rate_default: int,
+            input_rate_percent: int,
+            output_rate_percent: int,
             color: str,
             bgcolor: str,
             is_rate_default: bool = None,
@@ -76,10 +76,10 @@ class MethodService(BaseService):
             name_text=name_text,
             schema_fields=fields,
             schema_input_fields=input_fields,
-            rate_input_default=rate_input_default,
-            rate_output_default=rate_output_default,
-            rate_input_percent=rate_input_percent,
-            rate_output_percent=rate_output_percent,
+            input_rate_default=input_rate_default,
+            output_rate_default=output_rate_default,
+            input_rate_percent=input_rate_percent,
+            output_rate_percent=output_rate_percent,
             color=color,
             bgcolor=bgcolor,
             is_rate_default=is_rate_default,
@@ -92,10 +92,10 @@ class MethodService(BaseService):
                 'creator': f'session_{session.id}',
                 'name_text': name_text.key,
                 'currency': currency.id_str,
-                'rate_input_default': rate_input_default,
-                'rate_output_default': rate_output_default,
-                'rate_input_percent': rate_input_percent,
-                'rate_output_percent': rate_output_percent,
+                'input_rate_default': input_rate_default,
+                'output_rate_default': output_rate_default,
+                'input_rate_percent': input_rate_percent,
+                'output_rate_percent': output_rate_percent,
                 'color': color,
                 'bgcolor': bgcolor,
                 'is_rate_default': is_rate_default,
@@ -128,10 +128,10 @@ class MethodService(BaseService):
             name: str = None,
             fields: list[dict] = None,
             input_fields: list[dict] = None,
-            rate_input_default: int = None,
-            rate_output_default: int = None,
-            rate_input_percent: int = None,
-            rate_output_percent: int = None,
+            input_rate_default: int = None,
+            output_rate_default: int = None,
+            input_rate_percent: int = None,
+            output_rate_percent: int = None,
             color: str = None,
             bgcolor: str = None,
             is_rate_default: bool = None,
@@ -143,10 +143,10 @@ class MethodService(BaseService):
             name=name,
             schema_fields=fields,
             schema_input_fields=input_fields,
-            rate_input_default=rate_input_default,
-            rate_output_default=rate_output_default,
-            rate_input_percent=rate_input_percent,
-            rate_output_percent=rate_output_percent,
+            input_rate_default=input_rate_default,
+            output_rate_default=output_rate_default,
+            input_rate_percent=input_rate_percent,
+            output_rate_percent=output_rate_percent,
             color=color,
             bgcolor=bgcolor,
             is_rate_default=is_rate_default,
@@ -164,14 +164,14 @@ class MethodService(BaseService):
             action_parameters['schema_fields'] = fields
         if input_fields:
             action_parameters['schema_input_fields'] = input_fields
-        if rate_input_default:
-            action_parameters['rate_input_default'] = rate_input_default
-        if rate_output_default:
-            action_parameters['rate_output_default'] = rate_output_default
-        if rate_input_percent:
-            action_parameters['rate_input_percent'] = rate_input_percent
-        if rate_output_percent:
-            action_parameters['rate_output_percent'] = rate_output_percent
+        if input_rate_default:
+            action_parameters['input_rate_default'] = input_rate_default
+        if output_rate_default:
+            action_parameters['output_rate_default'] = output_rate_default
+        if input_rate_percent:
+            action_parameters['input_rate_percent'] = input_rate_percent
+        if output_rate_percent:
+            action_parameters['output_rate_percent'] = output_rate_percent
         if color:
             action_parameters['color'] = color
         if bgcolor:
@@ -213,10 +213,10 @@ class MethodService(BaseService):
             'name_text': method.name_text.key,
             'schema_fields': method.schema_fields,
             'schema_input_fields': method.schema_input_fields,
-            'rate_input_default': method.input_rate_default,
-            'rate_output_default': method.output_rate_default,
-            'rate_input_percent': method.input_rate_percent,
-            'rate_output_percent': method.output_rate_percent,
+            'input_rate_default': method.input_rate_default,
+            'output_rate_default': method.output_rate_default,
+            'input_rate_percent': method.input_rate_percent,
+            'output_rate_percent': method.output_rate_percent,
             'color': method.color,
             'bgcolor': method.bgcolor,
             'is_rate_default': method.is_rate_default,

@@ -33,10 +33,10 @@ class MethodRepository(BaseRepository[Method]):
             name: str = None,
             schema_fields: list[dict] = None,
             schema_input_fields: list[dict] = None,
-            rate_input_default: int = None,
-            rate_output_default: int = None,
-            rate_input_percent: int = None,
-            rate_output_percent: int = None,
+            input_rate_default: int = None,
+            output_rate_default: int = None,
+            input_rate_percent: int = None,
+            output_rate_percent: int = None,
             color: str = None,
             bgcolor: str = None,
             is_rate_default: bool = None,
@@ -62,14 +62,14 @@ class MethodRepository(BaseRepository[Method]):
                 )
                 field['name_text_key'] = name_text.key
             updates['schema_input_fields'] = schema_input_fields
-        if rate_input_default is not None:
-            updates['rate_input_default'] = rate_input_default
-        if rate_output_default is not None:
-            updates['rate_output_default'] = rate_output_default
-        if rate_input_percent is not None:
-            updates['rate_input_percent'] = rate_input_percent
-        if rate_output_percent is not None:
-            updates['rate_output_percent'] = rate_output_percent
+        if input_rate_default is not None:
+            updates['input_rate_default'] = input_rate_default
+        if output_rate_default is not None:
+            updates['output_rate_default'] = output_rate_default
+        if input_rate_percent is not None:
+            updates['input_rate_percent'] = input_rate_percent
+        if output_rate_percent is not None:
+            updates['output_rate_percent'] = output_rate_percent
         if color is not None:
             updates['color'] = color
         if bgcolor is not None:

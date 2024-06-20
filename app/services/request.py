@@ -421,11 +421,10 @@ class RequestService(BaseService):
     async def generate_request_dict(request: Request) -> dict:
         action = await ActionService().get_action(model=request, action=Actions.CREATE)
         date = action.datetime.strftime(settings.datetime_format)
-        update_action = await ActionService().get_action(model=request, action=Actions.UPDATE)
         confirmation_delta = None
-        if request.state == RequestStates.CONFIRMATION and update_action:
+        if request.state == RequestStates.CONFIRMATION and action:
             time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_update = action.datetime.replace(tzinfo=datetime.timezone.utc)
             time_delta = datetime.timedelta(minutes=settings.request_confirmation_check)
             confirmation_delta = (time_delta - (time_now - time_update)).seconds
         input_method = None

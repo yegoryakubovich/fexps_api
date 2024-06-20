@@ -36,10 +36,10 @@ class MethodUpdateSchema(BaseModel):
     name: Optional[str] = Field(min_length=1, max_length=1024)
     fields: Optional[list[dict]] = Field(default=None)
     input_fields: Optional[list[dict]] = Field(default=None)
-    rate_input_default: Optional[int] = Field(default=None)
-    rate_output_default: Optional[int] = Field(default=None)
-    rate_input_percent: Optional[int] = Field(default=None)
-    rate_output_percent: Optional[int] = Field(default=None)
+    input_rate_default: Optional[int] = Field(default=None)
+    output_rate_default: Optional[int] = Field(default=None)
+    input_rate_percent: Optional[int] = Field(default=None)
+    output_rate_percent: Optional[int] = Field(default=None)
     color: Optional[str] = Field(min_length=2, max_length=7, default='#1D1D1D')
     bgcolor: Optional[str] = Field(min_length=2, max_length=7, default='#FFFCEF')
     is_rate_default: Optional[bool] = Field(default=None)
@@ -125,10 +125,10 @@ async def route(schema: MethodUpdateSchema):
         name=schema.name,
         fields=schema.fields,
         input_fields=schema.input_fields,
-        rate_input_default=schema.rate_input_default,
-        rate_output_default=schema.rate_output_default,
-        rate_input_percent=schema.rate_input_percent,
-        rate_output_percent=schema.rate_output_percent,
+        input_rate_default=schema.input_rate_default,
+        output_rate_default=schema.output_rate_default,
+        input_rate_percent=schema.input_rate_percent,
+        output_rate_percent=schema.output_rate_percent,
         color=schema.color,
         bgcolor=schema.bgcolor,
         is_rate_default=schema.is_rate_default,
