@@ -32,7 +32,7 @@ custom_logger = RequestLogger(prefix='request_rate_fixed_check')
 async def run():
     time_now = datetime.datetime.now(datetime.UTC)
     for request in await RequestRepository().get_list_not_finished(rate_fixed=True):
-        request_action = await get_action_by_state(request, state=RequestStates.CONFIRMATION)
+        request_action = await get_action_by_state(request, state=RequestStates.INPUT_RESERVATION)
         if not request_action:
             continue
         request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
