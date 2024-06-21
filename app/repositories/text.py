@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from app.db.models import Text, Language
 from app.repositories.base import BaseRepository
@@ -35,6 +35,12 @@ class TextRepository(BaseRepository[Text]):
                 },
             )
         return result
+
+    async def get_by_key_or_none(self, key: str, language: Language = None) -> Optional[str]:
+        text = await self.get(key=key)
+        if not text:
+            return f'404 {key}'
+        return await self.get_value(text, language=language)
 
     @staticmethod
     async def get_value(db_obj: Text, language: Language = None) -> str:

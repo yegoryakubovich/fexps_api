@@ -19,6 +19,7 @@ from fastapi import Request
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
+from app.repositories import TextRepository
 from app.repositories.file_key import FileKeyRepository
 from app.utils import Router
 
@@ -35,11 +36,15 @@ async def route(
 ):
     if not await FileKeyRepository().get(file_id=None, key=key):
         return
+    text_add_file = await TextRepository().get_by_key_or_none(key='filepicker_add_file')
+    text_continue = await TextRepository().get_by_key_or_none(key='filepicker_continue')
     return Jinja2Templates(directory="app/utils/templates").TemplateResponse(
         request=request,
         name="file/upload.html",
         context={
             'title': 'Finance Express',
             'key': key,
+            'text_add_file': text_add_file,
+            'text_continue': text_continue,
         },
     )
