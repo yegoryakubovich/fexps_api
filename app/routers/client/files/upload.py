@@ -36,8 +36,8 @@ async def route(
 ):
     if not await FileKeyRepository().get(file_id=None, key=key):
         return
-    text_add_file = await TextRepository().get_by_key_or_none(key='filepicker_add_file')
-    text_continue = await TextRepository().get_by_key_or_none(key='filepicker_continue')
+    text_add_file = await TextRepository().get_by_key_or_none(key='file_add_file_button')
+    text_continue = await TextRepository().get_by_key_or_none(key='file_continue_button')
     return Jinja2Templates(directory="app/utils/templates").TemplateResponse(
         request=request,
         name="file/upload.html",
