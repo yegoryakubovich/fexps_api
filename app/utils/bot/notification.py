@@ -24,7 +24,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.db.models import NotificationStates, Account, NotificationTypes, Actions, Language, Wallet
 from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, WalletAccountRepository, \
-    TextRepository, TextTranslationRepository
+    TextRepository
 from app.services.base import BaseService
 from config import settings
 
@@ -40,13 +40,8 @@ class BotNotification:
             language: Language,
             **kwargs
     ) -> str:
-        text = await TextRepository().get(key=key)
-        if not text:
-            return f'404 {key}'
-        translation = await TextTranslationRepository().get(text=text, language=language)
-        if not translation:
-            return text.value_default.format(**kwargs)
-        return translation.value.format(**kwargs)
+        text = await TextRepository().get_by_key_or_none(key=key, language=language)
+        return text.format(**kwargs)
 
     async def send_notification_by_wallet(
             self,
