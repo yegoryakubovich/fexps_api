@@ -25,8 +25,8 @@ class MessageFile(Base):
     __tablename__ = 'messages_files'
 
     id = Column(BigInteger, primary_key=True)
-    message_id = Column(BigInteger, ForeignKey('messages.id', ondelete='SET NULL'), nullable=True)
+    message_id = Column(BigInteger, ForeignKey('messages.id', ondelete='SET NULL'))
     message = relationship('Message', foreign_keys=message_id, uselist=False, lazy='selectin')
-    file_id = Column(BigInteger, ForeignKey('files.id', ondelete='SET NULL'), nullable=True)
+    file_id = Column(BigInteger, ForeignKey('files.id', ondelete='SET NULL'))
     file = relationship('File', foreign_keys=file_id, uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

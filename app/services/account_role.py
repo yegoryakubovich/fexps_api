@@ -70,6 +70,19 @@ class AccountRoleService(BaseService):
         return {}
 
     @session_required(permissions=['accounts'], return_model=False)
+    async def get_by_admin(self, account_id: int):
+        account = await AccountRepository().get_by_id(id_=account_id)
+        accounts_roles = await AccountRoleRepository().get_by_account(account=account)
+        return {
+            'accounts_roles': [
+                {
+                    'id': account_role.id,
+                    'role_id': account_role.role.id,
+                } for account_role in accounts_roles
+            ]
+        }
+
+    @session_required(permissions=['accounts'], return_model=False)
     async def get_list_by_admin(self):
         accounts_roles: list[AccountRole] = await AccountRoleRepository().get_list()
         return {
@@ -79,19 +92,6 @@ class AccountRoleService(BaseService):
                     'account_id': account_role.account.id,
                     'username': account_role.account.username,
                     'role': account_role.role.id,
-                } for account_role in accounts_roles
-            ]
-        }
-
-    @session_required(permissions=['accounts'], return_model=False)
-    async def get_by_admin(self, account_id: int):
-        account = await AccountRepository().get_by_id(id_=account_id)
-        accounts_roles = await AccountRoleRepository().get_by_account(account=account)
-        return {
-            'accounts_roles': [
-                {
-                    'id': account_role.id,
-                    'role_id': account_role.role.id,
                 } for account_role in accounts_roles
             ]
         }
