@@ -17,7 +17,7 @@
 
 import asyncio
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, RequestTypes, NotificationTypes
+from app.db.models import RequestStates, OrderTypes, OrderStates, NotificationTypes
 from app.repositories.order import OrderRepository
 from app.repositories.request import RequestRepository
 from app.services import TransferSystemService
@@ -25,8 +25,6 @@ from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.requisites.need_value import calculations_requisites_need_output_currency_value, \
     calculations_requisites_need_output_value
-
-# from app.utils.calculations.request.need_value import output_get_need_value
 
 custom_logger = RequestLogger(prefix='request_state_output_check')
 
