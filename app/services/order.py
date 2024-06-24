@@ -151,7 +151,7 @@ class OrderService(BaseService):
             ]
         }
 
-    @session_required()
+    @session_required(return_token=True)
     async def update_payment(
             self,
             session: Session,
