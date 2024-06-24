@@ -419,14 +419,25 @@ class RequestService(BaseService):
 
     @staticmethod
     async def generate_request_dict(request: Request) -> dict:
-        action = await ActionService().get_action(model=request, action=Actions.CREATE)
-        date = action.datetime.strftime(settings.datetime_format)
+        create_action = await ActionService().get_action(model=request, action=Actions.CREATE)
+        date = create_action.datetime.strftime(settings.datetime_format)
         confirmation_delta = None
-        if request.state == RequestStates.CONFIRMATION and action:
+        if request.state == RequestStates.CONFIRMATION and create_action:
             time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_update = action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_create = create_action.datetime.replace(tzinfo=datetime.timezone.utc)
             time_delta = datetime.timedelta(minutes=settings.request_confirmation_check)
-            confirmation_delta = (time_delta - (time_now - time_update)).seconds
+            confirmation_delta = (time_delta - (time_now - time_create)).seconds
+        update_action = await ActionService().get_action(
+            model=request,
+            action=Actions.UPDATE,
+            state=RequestStates.INPUT_RESERVATION,
+        )
+        rate_fixed_delta = None
+        if request.rate_fixed and update_action:
+            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
+            time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_delta = datetime.timedelta(minutes=settings.request_rate_fixed_minutes)
+            rate_fixed_delta = (time_delta - (time_now - time_update)).seconds
         input_method = None
         if request.input_method:
             input_method = await MethodService().generate_method_dict(method=request.input_method)
@@ -443,6 +454,7 @@ class RequestService(BaseService):
             'type': request.type,
             'state': request.state,
             'rate_decimal': request.rate_decimal,
+            'rate_fixed': request.rate_fixed,
             'difference': request.difference,
             'difference_rate': request.difference_rate,
             'commission': request.commission,
@@ -458,4 +470,5 @@ class RequestService(BaseService):
             'output_currency_value': request.output_currency_value,
             'date': date,
             'confirmation_delta': confirmation_delta,
+            'rate_fixed_delta': rate_fixed_delta,
         }

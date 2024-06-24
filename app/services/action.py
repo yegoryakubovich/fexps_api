@@ -16,12 +16,13 @@
 
 
 import logging
-from typing import List
+from typing import List, Optional
 
 from inflection import underscore
 
 from app.db.base_class import Base
 from app.db.models import Action, Actions
+from app.repositories import ActionParameterRepository
 from app.repositories.action import ActionRepository
 
 
@@ -53,22 +54,26 @@ class ActionService:
     async def get_action(
             model: Base,
             action: Actions,
-    ) -> Action:
-        result = await ActionRepository().get(
+            **parameters,
+    ) -> Optional[Action]:
+        action_db = await ActionRepository().get(
             model=underscore(model.__class__.__name__),
             model_id=model.id,
             action=action,
         )
-        return result
+        for key, value in parameters.items():
+            if not await ActionParameterRepository().get(action=action_db, key=key, value=value):
+                return
+        return action_db
 
     @staticmethod
     async def get_actions(
             model: Base,
             action: Actions,
     ) -> List[Action]:
-        result = await ActionRepository().get_list(
+        actions_db = await ActionRepository().get_list(
             model=underscore(model.__class__.__name__),
             model_id=model.id,
             action=action
         )
-        return result
+        return actions_db
