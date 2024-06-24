@@ -15,6 +15,7 @@
 #
 
 
+import logging
 import math
 from typing import Optional
 
@@ -38,21 +39,25 @@ async def calculate_requisite_output_by_value(
     result_currency_value, result_value = 0, 0
     requisite_params = {'type': RequisiteTypes.INPUT, 'input_method': method, 'state': RequisiteStates.ENABLE}
     if process:
-        requisite_params['in_process'] = True
+        requisite_params['in_process'] = False
     for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
+        logging.critical(f'CHECK REQUISITE {requisite.id}')
         await calculate_requisite_process_change(requisite=requisite, in_process=True, process=process)
         # Check need_value
         if not need_value:
             await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
+            logging.critical(1)
             break
         # Check balance
         if await calculate_requisite_check_empty(requisite=requisite):
             await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
+            logging.critical(2)
             continue
         # Find suitable value
         suitable_result = await calculate_requisite_suitable_from_value(requisite=requisite, need_value=need_value)
         if not suitable_result:
             await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
+            logging.critical(3)
             continue
         suitable_currency_value, suitable_value = suitable_result
         requisite_items.append(RequisiteItemScheme(
@@ -64,11 +69,13 @@ async def calculate_requisite_output_by_value(
         result_currency_value += suitable_currency_value
         result_value += suitable_value
     if not result_currency_value or not result_value:
+        logging.critical(requisite_items)
         await calculate_requisite_process_change_list(
             requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
             in_process=False,
             process=process,
         )
+        logging.critical(4)
         return
     rate_float = result_currency_value / result_value
     find_currency_value = need_value * rate_float
@@ -78,6 +85,7 @@ async def calculate_requisite_output_by_value(
             in_process=False,
             process=process,
         )
+        logging.critical(5)
         return
     rate = value_to_int(value=rate_float, decimal=method.currency.rate_decimal, round_method=math.floor)
     return RequisiteDataScheme(
