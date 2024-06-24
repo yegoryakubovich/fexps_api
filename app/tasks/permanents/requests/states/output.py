@@ -16,6 +16,7 @@
 
 
 import asyncio
+import logging
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, NotificationTypes
 from app.repositories.order import OrderRepository
@@ -37,29 +38,37 @@ async def run():
         for i in range(2):
             if request.rate_fixed:
                 need_currency_value = await calculations_requisites_need_output_currency_value(request=request)
-                need_bool = need_currency_value or need_currency_value >= request.output_method.currency.div
+                need_bool = bool(need_currency_value)
+                need_bool = need_bool and need_currency_value >= request.output_method.currency.div
+                need_bool = need_bool and need_currency_value > 0
             else:
                 need_value = await calculations_requisites_need_output_value(request=request)
-                need_bool = need_value or need_value >= 100
+                need_bool = bool(need_value)
+                need_bool = need_bool and need_value >= 100
+                need_bool = need_bool and need_value > 0
             # check wait orders / complete state
             if need_bool:
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
+                logging.critical(1)
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
+                logging.critical(2)
                 break  # Found waiting orders
             if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
                 continue_ = True
+                logging.critical(3)
                 break  # Found payment orders
             if await OrderRepository().get_list(
                     request=request,
                     type=OrderTypes.OUTPUT,
                     state=OrderStates.CONFIRMATION,
             ):
+                logging.critical(4)
                 continue_ = True
                 break  # Found confirmation orders
         if continue_:
