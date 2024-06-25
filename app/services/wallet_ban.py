@@ -59,6 +59,7 @@ class WalletBanService(BaseService):
             reason: str,
             ignore_bal: bool = False
     ) -> WalletBan:
+        wallet = await WalletRepository().get_by_id(id_=wallet.id)
         wallet_free_balance = await wallet_get_free_value(wallet=wallet)
         if not ignore_bal and wallet_free_balance < value:
             raise NotEnoughFundsOnBalance()

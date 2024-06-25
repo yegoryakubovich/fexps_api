@@ -16,7 +16,6 @@
 
 
 import asyncio
-import logging
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, NotificationTypes
 from app.repositories.order import OrderRepository
@@ -51,24 +50,20 @@ async def run():
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
-                logging.critical(1)
                 break
             if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.WAITING):
                 custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT_RESERVATION}', request=request)
                 await RequestRepository().update(request, state=RequestStates.OUTPUT_RESERVATION)
                 continue_ = True
-                logging.critical(2)
                 break  # Found waiting orders
             if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.PAYMENT):
                 continue_ = True
-                logging.critical(3)
                 break  # Found payment orders
             if await OrderRepository().get_list(
                     request=request,
                     type=OrderTypes.OUTPUT,
                     state=OrderStates.CONFIRMATION,
             ):
-                logging.critical(4)
                 continue_ = True
                 break  # Found confirmation orders
         if continue_:
@@ -80,7 +75,7 @@ async def run():
                 continue
             order_value_sum += order.value
         if order_value_sum != request.output_value:
-            difference = order_value_sum - request.output_value
+            difference = request.output_value - order_value_sum
             await TransferSystemService().payment_difference(
                 request=request,
                 value=difference,

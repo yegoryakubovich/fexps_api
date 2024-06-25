@@ -16,7 +16,6 @@
 
 
 import asyncio
-import logging
 import math
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, RequestTypes, NotificationTypes
@@ -148,7 +147,6 @@ async def get_new_requisite_by_value(
         value=need_value,
         process=True,
     )
-    logging.critical(result)
     if not result:
         return False
     for requisite_item in result.requisite_items:

@@ -33,12 +33,19 @@ async def create_transfer(
         order: Order = None,
         ignore_bal: bool = False,
 ) -> Transfer:
+    if value < 0:
+        value = -value
+        wallet_from, wallet_to = wallet_to, wallet_from
     balance = wallet_from.value - wallet_from.value_can_minus
     if not ignore_bal and value > balance:
         raise NotEnoughFundsOnBalance()
     available_value = await wallet_get_available_value(wallet=wallet_to)
     if not ignore_bal and value > available_value:
-        raise WalletLimitReached(kwargs={'wallet_max_value': settings.wallet_max_value})
+        raise WalletLimitReached(
+            kwargs={
+                'wallet_max_value': settings.wallet_max_value,
+            },
+        )
     await WalletRepository().update(wallet_from, value=wallet_from.value - value)
     transfer = await TransferRepository().create(
         type=type_,
@@ -48,6 +55,7 @@ async def create_transfer(
     )
     if order:
         await OrderTransferRepository().create(order=order, transfer=transfer)
+    await WalletRepository().update(wallet_to, value=wallet_to.value + value)
     await BaseService().create_action(
         model=transfer,
         action=Actions.CREATE,
@@ -61,5 +69,4 @@ async def create_transfer(
             'ignore_bal': ignore_bal,
         },
     )
-    await WalletRepository().update(wallet_to, value=wallet_to.value + value)
     return transfer
