@@ -67,7 +67,9 @@ class FileService(BaseService):
             files: List[UploadFile],
     ):
         if not await FileKeyRepository().get(file_id=None, key=key):
-            return {'error': 'key_not_found'}
+            return {
+                'error': 'key_not_found',
+            }
         time_str = str(int(time()))
         for file in files:
             id_str = f'{await create_id_str()}{time_str}'

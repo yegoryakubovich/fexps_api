@@ -54,7 +54,10 @@ class ChatConnectionManagerFastApi:
         for connection in self.active_connections:
             if connection[0] != order_id:
                 continue
-            await connection[1].send_json(data=data)
+            try:
+                await connection[1].send_json(data=data)
+            except:
+                self.active_connections.remove(connection)
 
 
 chat_connections_manager_fastapi = ChatConnectionManagerFastApi()
