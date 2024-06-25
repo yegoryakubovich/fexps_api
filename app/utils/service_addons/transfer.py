@@ -33,6 +33,8 @@ async def create_transfer(
         order: Order = None,
         ignore_bal: bool = False,
 ) -> Transfer:
+    wallet_from = await WalletRepository().get_by_id(id_=wallet_from.id)
+    wallet_to = await WalletRepository().get_by_id(id_=wallet_to.id)
     if value < 0:
         value = -value
         wallet_from, wallet_to = wallet_to, wallet_from
