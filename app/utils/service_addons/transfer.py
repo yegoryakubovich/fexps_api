@@ -20,7 +20,8 @@ from app.repositories import OrderTransferRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
-from app.utils.exceptions.wallet import NotEnoughFundsOnBalance, WalletLimitReached
+from app.services.wallet import WalletService
+from app.utils.exceptions.wallet import WalletLimitReached
 from app.utils.service_addons.wallet import wallet_get_available_value
 from config import settings
 
@@ -29,7 +30,7 @@ async def create_transfer(
         type_: str,
         wallet_from: Wallet,
         wallet_to: Wallet,
-        value: float,
+        value: int,
         order: Order = None,
         ignore_bal: bool = False,
 ) -> Transfer:
@@ -38,9 +39,8 @@ async def create_transfer(
     if value < 0:
         value = -value
         wallet_from, wallet_to = wallet_to, wallet_from
-    balance = wallet_from.value - wallet_from.value_can_minus
-    if not ignore_bal and value > balance:
-        raise NotEnoughFundsOnBalance()
+    if not ignore_bal:
+        await WalletService().check_balance(wallet=wallet_from, value=value)
     available_value = await wallet_get_available_value(wallet=wallet_to)
     if not ignore_bal and value > available_value:
         raise WalletLimitReached(

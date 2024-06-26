@@ -24,6 +24,7 @@ from app.repositories.wallet_account import WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
 from app.utils.decorators import session_required
+from app.utils.exceptions import NotEnoughFundsOnBalance
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
 from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
@@ -229,3 +230,16 @@ class WalletService(BaseService):
             'value_can_minus': wallet.value_can_minus,
             'system': wallet.is_system,
         }
+
+    @staticmethod
+    async def check_balance(
+            wallet: Wallet,
+            value: int,
+            error: bool = True,
+    ) -> bool:
+        current_balance = wallet.value + wallet.value_can_minus
+        if current_balance >= value:
+            return True
+        if not error:
+            return False
+        raise NotEnoughFundsOnBalance()

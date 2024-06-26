@@ -25,9 +25,9 @@ from app.repositories import WalletAccountRepository, OrderRepository, MethodRep
     CommissionPackValueRepository, RateRepository
 from app.repositories.request import RequestRepository
 from app.repositories.wallet import WalletRepository
-from app.services import CommissionPackValueService
 from app.services.action import ActionService
 from app.services.base import BaseService
+from app.services.commission_pack_value import CommissionPackValueService
 from app.services.method import MethodService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
@@ -103,6 +103,8 @@ class RequestService(BaseService):
                     'output_method': output_method_name,
                 }
             )
+        if type_ == RequestTypes.OUTPUT:
+            await WalletService().check_balance(wallet=wallet, value=calculate.output_value)
         request = await RequestRepository().create(
             name=name,
             wallet=wallet,
