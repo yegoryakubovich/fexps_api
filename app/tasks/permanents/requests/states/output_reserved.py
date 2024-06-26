@@ -120,6 +120,7 @@ async def get_new_requisite_by_currency_value(
         method=request.output_method,
         currency_value=need_currency_value,
         process=True,
+        request=request,
     )
     if not result:
         return False
@@ -146,6 +147,7 @@ async def get_new_requisite_by_value(
         method=request.output_method,
         value=need_value,
         process=True,
+        request=request,
     )
     if not result:
         return False

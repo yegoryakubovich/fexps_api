@@ -87,6 +87,7 @@ async def get_new_requisite_by_currency_value(
         method=request.input_method,
         currency_value=need_currency_value,
         process=True,
+        request=request,
     )
     if not result:
         return
