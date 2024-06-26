@@ -19,12 +19,9 @@ import math
 
 from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
     RequestRequisiteTypes, RequestTypes, Requisite, NotificationTypes
-from app.repositories import RequestRequisiteRepository, CommissionPackValueRepository
-from app.repositories.order import OrderRepository
-from app.repositories.order_request import OrderRequestRepository
-from app.repositories.request import RequestRepository
+from app.repositories import OrderRepository, OrderRequestRepository, RequestRepository, RequestRequisiteRepository
 from app.utils.bot.notification import BotNotification
-# from app.utils.calculations.request.commissions import get_commission_value_input
+from app.utils.calculations.commissions import get_input_commission
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
 from app.utils.value import value_to_float
@@ -43,17 +40,13 @@ async def order_request_update_type_cancel(
         if order.type == OrderTypes.INPUT:
             await RequestRepository().update(
                 request,
-                input_currency_value_raw=request.input_currency_value_raw - order.currency_value,
                 input_currency_value=request.input_currency_value - order.currency_value,
-                input_value_raw=request.input_value_raw - order.value,
                 input_value=request.input_value - order.value,
             )
         elif order.type == OrderTypes.OUTPUT:
             await RequestRepository().update(
                 request,
-                output_currency_value_raw=request.output_currency_value_raw - order.currency_value,
                 output_currency_value=request.output_currency_value - order.currency_value,
-                output_value_raw=request.output_value_raw - order.value,
                 output_value=request.output_value - order.value,
             )
         await order_cancel_related(order=order)
@@ -153,43 +146,31 @@ async def order_request_update_type_update_value(
             )
         params = {}
         if order.type == OrderTypes.INPUT:
-            commission_pack_value = await CommissionPackValueRepository().get_by_value(
-                commission_pack=request.wallet.commission_pack,
-                value=value,
-            )
             if delta_value > 0:
-                delta_commission = get_commission_value_input(
+                delta_commission = await get_input_commission(
                     value=delta_value,
-                    commission_pack_value=commission_pack_value,
+                    commission_pack=request.wallet.commission_pack,
                 )
             else:
-                delta_commission = -get_commission_value_input(
-                    value=delta_value * -1,
-                    commission_pack_value=commission_pack_value,
+                delta_commission = -await get_input_commission(
+                    value=-delta_value,
+                    commission_pack=request.wallet.commission_pack,
                 )
             params.update(
-                input_currency_value_raw=request.input_currency_value_raw - delta_currency_value,
                 input_currency_value=request.input_currency_value - delta_currency_value,
-                input_value_raw=request.input_value_raw - delta_value,
                 input_value=request.input_value - delta_value + delta_commission,
-                commission_value=request.commission_value - delta_commission,
+                commission_value=request.commission - delta_commission,
             )
         elif order.type == OrderTypes.OUTPUT:
             params.update(
-                output_currency_value_raw=request.output_currency_value_raw - delta_currency_value,
                 output_currency_value=request.output_currency_value - delta_currency_value,
-                output_value_raw=request.output_value_raw - delta_value,
                 output_value=request.output_value - delta_value,
             )
             if order.request.type == RequestTypes.ALL:
                 params.update(
-                    input_value_raw=request.input_value_raw - delta_value,
                     input_value=request.input_value - delta_value,
                 )
-        await RequestRepository().update(
-            request,
-            **params,
-        )
+        await RequestRepository().update(request, **params)
         await order_edit_value_related(
             order=order,
             delta_value=delta_value,
