@@ -35,17 +35,11 @@ class OrderStates:
     COMPLETED = 'completed'
     CANCELED = 'canceled'
 
-    choices = [WAITING, PAYMENT, CONFIRMATION, COMPLETED, CANCELED]
-    choices_one_side_cancel = [WAITING, PAYMENT]
-    choices_return_banned_value = [PAYMENT, CONFIRMATION]
-
 
 class OrderCanceledReasons:
     ONE_SIDED = 'one_sided'
     TWO_SIDED = 'two_sided'
     BY_ADMIN = 'by_admin'
-
-    choices = [ONE_SIDED, TWO_SIDED, BY_ADMIN]
 
 
 class Order(Base):

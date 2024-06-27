@@ -75,12 +75,13 @@ async def waited_order(
 
 
 async def order_cancel_related(order: Order) -> None:
-    if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
-        await WalletBanService().create_related(
-            wallet=order.request.wallet,
-            value=-order.value,
-            reason=WalletBanReasons.BY_ORDER,
-        )
+    if order.type == OrderTypes.OUTPUT:
+        if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+            await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
     await RequisiteRepository().update(
         order.requisite,
         currency_value=round(order.requisite.currency_value + order.currency_value),
@@ -93,12 +94,13 @@ async def order_edit_value_related(
         delta_value: int,
         delta_currency_value: int,
 ) -> None:
-    if order.type == OrderTypes.OUTPUT and order.state in OrderStates.choices_return_banned_value:
-        await WalletBanService().create_related(
-            wallet=order.request.wallet,
-            value=-delta_value,
-            reason=WalletBanReasons.BY_ORDER,
-        )
+    if order.type == OrderTypes.OUTPUT:
+        if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+            await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=-delta_value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
     await RequisiteRepository().update(
         order.requisite,
         currency_value=round(order.requisite.currency_value + delta_currency_value),
