@@ -18,9 +18,7 @@
 import math
 from typing import Optional
 
-from requests import Request
-
-from app.db.models import Method, RequisiteStates, RequisiteTypes, RequestRequisiteTypes
+from app.db.models import Method, RequisiteStates, RequisiteTypes, RequestRequisiteTypes, Request
 from app.repositories import RequisiteRepository, RequestRequisiteRepository
 from app.utils.calculations.requisites.check_empty import calculate_requisite_check_empty
 from app.utils.calculations.requisites.process_change import calculate_requisite_process_change, \
@@ -44,13 +42,17 @@ async def calculate_requisite_output_by_value(
         requisite_params['in_process'] = False
     for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
         await calculate_requisite_process_change(requisite=requisite, in_process=True, process=process)
-        if request and await RequestRequisiteRepository().get(
-                request=request,
-                requisite=requisite,
-                type=RequestRequisiteTypes.BLACKLIST,
-        ):
-            await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
-            continue
+        if request:
+            if request.wallet.id == requisite.wallet.id:
+                await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
+                continue
+            if await RequestRequisiteRepository().get(
+                    request=request,
+                    requisite=requisite,
+                    type=RequestRequisiteTypes.BLACKLIST,
+            ):
+                await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
+                continue
         # Check need_value
         if not need_value:
             await calculate_requisite_process_change(requisite=requisite, in_process=False, process=process)
