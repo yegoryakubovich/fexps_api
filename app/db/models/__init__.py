@@ -58,6 +58,8 @@ from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
 from .request_requisite import RequestRequisite, RequestRequisiteTypes
+from .wallet_ban_request import WalletBanRequest
+from .wallet_ban_requisite import WalletBanRequisite
 
 from .message import Message, MessageRoles, MessageUserPositions
 from .order_file import OrderFile

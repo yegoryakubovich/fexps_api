@@ -58,3 +58,5 @@ from .transfer_system import TransferSystemRepository
 from .wallet import WalletRepository
 from .wallet_account import WalletAccountRepository
 from .wallet_ban import WalletBanRepository
+from .wallet_ban_request import WalletBanRequestRepository
+from .wallet_ban_requisite import WalletBanRequisiteRepository
