@@ -39,21 +39,22 @@ class RequisiteCreateSchema(BaseModel):
     output_requisite_data_id: Optional[int] = Field(default=None)
     input_method_id: Optional[int] = Field(default=None)
     currency_value: Optional[int] = Field(default=None)
-    currency_value_min: Optional[int] = Field(default=None)
-    currency_value_max: Optional[int] = Field(default=None)
     rate: Optional[int] = Field(default=None)
     value: Optional[int] = Field(default=None)
-    value_min: Optional[int] = Field(default=None)
-    value_max: Optional[int] = Field(default=None)
+    currency_value_min: Optional[int] = Field(default=None)
+    currency_value_max: Optional[int] = Field(default=None)
 
-    @field_validator('currency_value', 'rate', 'value')
+    @field_validator('currency_value', 'rate', 'value', 'currency_value_min', 'currency_value_max')
     @classmethod
     def requisite_check_int(cls, value: int, info: ValidationInfo):
         if value is None:
             return
         if value <= 0:
             raise ValueMustBePositive(
-                kwargs={'field_name': info.field_name})
+                kwargs={
+                    'field_name': info.field_name,
+                },
+            )
         return value
 
     @model_validator(mode='after')
@@ -98,11 +99,9 @@ async def route(schema: RequisiteCreateSchema):
         output_requisite_data_id=schema.output_requisite_data_id,
         input_method_id=schema.input_method_id,
         currency_value=schema.currency_value,
-        currency_value_min=schema.currency_value_min,
-        currency_value_max=schema.currency_value_max,
         rate=schema.rate,
         value=schema.value,
-        value_min=schema.value_min,
-        value_max=schema.value_max,
+        currency_value_min=schema.currency_value_min,
+        currency_value_max=schema.currency_value_max,
     )
     return Response(**result)
