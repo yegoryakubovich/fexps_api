@@ -34,18 +34,6 @@ class WalletBanCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     wallet_id: int = Field()
     value: int = Field()
-    reason: str = Field(min_length=1, max_length=16)
-
-    @model_validator(mode='after')
-    def check_type(self) -> 'WalletBanCreateSchema':
-        if self.reason not in WalletBanReasons.choices:
-            raise ParameterContainError(
-                kwargs={
-                    'field_name': 'type',
-                    'parameters': WalletBanReasons.choices,
-                },
-            )
-        return self
 
     @field_validator('value')
     @classmethod
@@ -63,6 +51,5 @@ async def route(schema: WalletBanCreateSchema):
         token=schema.token,
         wallet_id=schema.wallet_id,
         value=schema.value,
-        reason=schema.reason,
     )
     return Response(**result)

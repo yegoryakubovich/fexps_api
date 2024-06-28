@@ -15,7 +15,7 @@
 #
 
 
-from app.db.models import Session, Actions, WalletBan, Wallet
+from app.db.models import Session, Actions, WalletBan, Wallet, WalletBanReasons
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_ban import WalletBanRepository
 from app.services.base import BaseService
@@ -34,10 +34,9 @@ class WalletBanService(BaseService):
             session: Session,
             wallet_id: int,
             value: int,
-            reason: str,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        wallet_ban = await self.create_related(wallet=wallet, value=value, reason=reason)
+        wallet_ban = await self.create_related(wallet=wallet, value=value, reason=WalletBanReasons.BY_ADMIN)
         await self.create_action(
             model=wallet_ban,
             action=Actions.CREATE,
@@ -45,7 +44,7 @@ class WalletBanService(BaseService):
                 'deleter': f'session_{session.id}',
                 'wallet_id': wallet_id,
                 'value': value,
-                'reason': reason,
+                'reason': WalletBanReasons.BY_ADMIN,
             },
         )
         return {
