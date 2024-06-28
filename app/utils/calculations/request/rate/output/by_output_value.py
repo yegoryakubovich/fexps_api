@@ -52,7 +52,7 @@ async def calculate_request_rate_output_by_output_value(
         input_currency_value=None,
         input_rate=None,
         input_value=None,
-        difference=difference,
+        difference=0,
         commission=0,
         rate=rate,
         rate_decimal=rate_decimal,
