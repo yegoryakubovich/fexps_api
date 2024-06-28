@@ -107,7 +107,18 @@ async def run():
         else:
             need_value = await calculations_requisites_need_output_value(request=request)
             custom_logger.info(text=f'create orders need_value={need_value}', request=request)
-            await get_new_requisite_by_value(request=request, need_value=need_value)
+            result = await get_new_requisite_by_value(request=request, need_value=need_value)
+            if request.output_value == 0:
+                logging.critical(0)
+                await RequestRepository().update(request, output_currency_value=0)
+            if result:
+                order_currency_value_sum = 0
+                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
+                    if order.state == OrderStates.CANCELED:
+                        continue
+                    order_currency_value_sum += order.currency_value
+                await RequestRepository().update(request, output_currency_value=order_currency_value_sum)
+
     await asyncio.sleep(1)
 
 

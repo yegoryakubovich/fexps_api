@@ -69,6 +69,7 @@ class Settings(BaseSettings):
     test_sync_db_url: str
 
     version: str = '0.1'
+    coin_name: str = 'YACoin'
     path_texts_packs: str = 'assets/texts_packs'
     path_files: str = 'assets/files'
     path_telegram: str = 'assets/telegram'
