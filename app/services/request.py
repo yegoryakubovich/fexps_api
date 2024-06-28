@@ -22,7 +22,7 @@ from typing import Optional
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
     NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
-    CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository
+    CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
@@ -37,7 +37,6 @@ from app.utils.calculations.request.rate.input import calculate_request_rate_inp
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
-from app.utils.service_addons.order import order_cancel_related
 from config import settings
 
 
@@ -68,6 +67,7 @@ class RequestService(BaseService):
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
+        wallet_ban = None
         if type_ == RequestTypes.INPUT:
             input_currency_value, input_value = start_value, end_value
             calculate = await calculate_request_rate_input(
@@ -98,7 +98,7 @@ class RequestService(BaseService):
                     }
                 )
             await WalletService().check_balance(wallet=wallet, value=-calculate.output_value)
-            await WalletBanService().create_related(
+            wallet_ban = await WalletBanService().create_related(
                 wallet=wallet,
                 value=calculate.output_value,
                 reason=WalletBanReasons.BY_REQUEST,
@@ -126,7 +126,7 @@ class RequestService(BaseService):
             type=type_,
             rate_decimal=calculate.rate_decimal,
             rate_fixed=True,
-            difference=calculate.difference,
+            difference=0,
             difference_rate=0,
             commission=calculate.commission,
             rate=calculate.rate,
@@ -140,6 +140,8 @@ class RequestService(BaseService):
             output_value=calculate.output_value,
             output_rate=calculate.output_rate,
         )
+        if wallet_ban:
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
             notification_type=NotificationTypes.REQUEST,
@@ -185,7 +187,6 @@ class RequestService(BaseService):
             input_method_id: int = None,
             output_method_id: int = None,
     ) -> dict:
-        account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method, output_method = None, None
         if input_method_id:
@@ -309,26 +310,41 @@ class RequestService(BaseService):
                 },
             ),
         )
-        found_order_count = 0
-        for order in await OrderRepository().get_list(request=request):
-            if order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
-                continue
-            found_order_count += 1
-            if order.type == OrderTypes.INPUT and order.state == OrderStates.PAYMENT:
-                found_order_count -= 1
-                await OrderRequestService().create(
-                    session=session,
-                    token=token,
-                    order_id=order.id,
-                    type_=OrderRequestTypes.CANCEL,
-                    value=None,
+        orders = await OrderRepository().get_list(request=request)
+        if not orders:
+            input_types = [RequestTypes.INPUT, RequestTypes.ALL]
+            if request.type in input_types and request.state == RequestStates.INPUT_RESERVATION:
+                await RequestRepository().update(request, state=RequestStates.CANCELED)
+            output_types = [RequestTypes.OUTPUT]
+            if request.type in output_types and request.state == RequestStates.OUTPUT_RESERVATION:
+                wallet_ban = await WalletBanService().create_related(
+                    wallet=request.wallet,
+                    value=-request.output_value,
+                    reason=WalletBanReasons.BY_REQUEST,
                 )
-        if found_order_count > 0:
-            raise RequestFoundOrders(
-                kwargs={
-                    'id_value': request.id,
-                },
-            )
+                await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
+                await RequestRepository().update(request, state=RequestStates.CANCELED)
+        else:
+            found_order_count = 0
+            for order in orders:
+                if order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                    continue
+                found_order_count += 1
+                if order.type == OrderTypes.INPUT and order.state == OrderStates.PAYMENT:
+                    found_order_count -= 1
+                    await OrderRequestService().create(
+                        session=session,
+                        token=token,
+                        order_id=order.id,
+                        type_=OrderRequestTypes.CANCEL,
+                        value=None,
+                    )
+            if found_order_count > 0:
+                raise RequestFoundOrders(
+                    kwargs={
+                        'id_value': request.id,
+                    },
+                )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -348,12 +364,11 @@ class RequestService(BaseService):
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        if answer:
+        if answer and request.type in [RequestTypes.INPUT, RequestTypes.ALL]:
             next_state = RequestStates.INPUT_RESERVATION
-            if request.type == RequestTypes.OUTPUT:
-                next_state = RequestStates.OUTPUT_RESERVATION
+        elif answer and request.type == RequestTypes.OUTPUT:
+            next_state = RequestStates.OUTPUT_RESERVATION
         else:
-            await self.cancel_related(request=request)
             next_state = RequestStates.CANCELED
         await WalletService().check_permission(
             account=account,
@@ -365,7 +380,7 @@ class RequestService(BaseService):
                 }
             )
         )
-        if request.state != RequestStates.CONFIRMATION:
+        if request.state not in [RequestStates.CONFIRMATION]:
             raise RequestStateWrong(
                 kwargs={
                     'id_value': request.id,
@@ -373,6 +388,13 @@ class RequestService(BaseService):
                     'need_state': RequestStates.CONFIRMATION,
                 },
             )
+        if not answer and request.type == RequestTypes.OUTPUT:
+            wallet_ban = await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-request.output_value,
+                reason=WalletBanReasons.BY_REQUEST,
+            )
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await RequestRepository().update(request, state=next_state)
         await BotNotification().send_notification_by_wallet(
             wallet=request.wallet,
@@ -429,29 +451,6 @@ class RequestService(BaseService):
             },
         )
         return {}
-
-    @staticmethod
-    async def cancel_related(request: Request) -> None:
-        for order in await OrderRepository().get_list(request=request):
-            if order.state == OrderStates.CANCELED:
-                continue
-            await order_cancel_related(order=order)
-            await OrderRepository().update(order, state=OrderStates.CANCELED)
-            bot_notification = BotNotification()
-            await bot_notification.send_notification_by_wallet(
-                wallet=order.request.wallet,
-                notification_type=NotificationTypes.ORDER,
-                text_key='notification_order_update_state',
-                order_id=order.id,
-                state=OrderStates.CANCELED,
-            )
-            await bot_notification.send_notification_by_wallet(
-                wallet=order.requisite.wallet,
-                notification_type=NotificationTypes.ORDER,
-                text_key='notification_order_update_state',
-                order_id=order.id,
-                state=OrderStates.CANCELED,
-            )
 
     @staticmethod
     async def generate_request_dict(request: Request) -> dict:
