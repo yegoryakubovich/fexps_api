@@ -29,6 +29,8 @@ from app.services.request import RequestService
 from app.services.requisite import RequisiteService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
+from app.utils.calculations.request.states.input import request_check_state_input
+from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.service_addons.method import check_input_field
@@ -264,7 +266,6 @@ class OrderService(BaseService):
             )
         await OrderRequestService().check_have_order_request(order=order)
         await check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
-
         await OrderRepository().update(order, state=next_state)
         connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
@@ -390,6 +391,10 @@ class OrderService(BaseService):
                 'state': next_state,
             },
         )
+        if order.type == OrderTypes.INPUT:
+            await request_check_state_input(request=order.request)
+        elif order.type == OrderTypes.OUTPUT:
+            await request_check_state_output(request=order.request)
         return {}
 
     @staticmethod
