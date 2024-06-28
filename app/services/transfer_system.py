@@ -71,7 +71,7 @@ class TransferSystemService(BaseService):
             await WalletBanService().create_related(
                 wallet=request.wallet,
                 value=-request.commission,
-                reason=WalletBanReasons.BY_ORDER,
+                reason=WalletBanReasons.BY_REQUEST,
                 ignore_balance=True,
             )
         await self.create_transfer(
@@ -87,11 +87,13 @@ class TransferSystemService(BaseService):
             value: int,
             from_banned_value: bool = False,
     ) -> None:
+        if not value:
+            return
         if from_banned_value:
             await WalletBanService().create_related(
                 wallet=request.wallet,
                 value=-value,
-                reason=WalletBanReasons.BY_ORDER,
+                reason=WalletBanReasons.BY_REQUEST,
                 ignore_balance=True,
             )
         await self.create_transfer(

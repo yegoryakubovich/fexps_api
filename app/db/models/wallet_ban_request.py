@@ -21,18 +21,12 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
-class WalletBanReasons:
-    BY_ADMIN = 'by_admin'
-    BY_REQUEST = 'by_request'
-    BY_REQUISITE = 'by_requisite'
-
-
-class WalletBan(Base):
-    __tablename__ = 'wallets_bans'
+class WalletBanRequest(Base):
+    __tablename__ = 'wallets_bans_requests'
 
     id = Column(BigInteger, primary_key=True)
-    wallet_id = Column(BigInteger, ForeignKey('wallets.id', ondelete='SET NULL'))
-    wallet = relationship('Wallet', foreign_keys=wallet_id, uselist=False, lazy='selectin')
-    value = Column(BigInteger, default=0)
-    reason = Column(String(length=16))
+    wallet_ban_id = Column(BigInteger, ForeignKey('wallets_bans.id', ondelete='SET NULL'))
+    wallet_ban = relationship('WalletBan', foreign_keys=wallet_ban_id, uselist=False, lazy='selectin')
+    request_id = Column(BigInteger, ForeignKey('requests.id', ondelete='SET NULL'))
+    request = relationship('Request', foreign_keys=request_id, uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

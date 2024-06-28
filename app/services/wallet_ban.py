@@ -15,16 +15,18 @@
 #
 
 
-from app.db.models import Session, Actions, WalletBan, Wallet, WalletBanReasons
+from typing import Optional
+
+from app.db.models import Session, Actions, WalletBanRequest, Wallet, WalletBanReasons
 from app.repositories.wallet import WalletRepository
 from app.repositories.wallet_ban import WalletBanRepository
-from app.services import WalletService
 from app.services.base import BaseService
+from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 
 
 class WalletBanService(BaseService):
-    model = WalletBan
+    model = WalletBanRequest
 
     @session_required(permissions=['wallets_bans'])
     async def create_by_admin(
@@ -34,28 +36,35 @@ class WalletBanService(BaseService):
             value: int,
     ) -> dict:
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        wallet_ban = await self.create_related(wallet=wallet, value=value, reason=WalletBanReasons.BY_ADMIN)
-        await self.create_action(
-            model=wallet_ban,
-            action=Actions.CREATE,
-            parameters={
-                'deleter': f'session_{session.id}',
-                'wallet_id': wallet_id,
-                'value': value,
-                'reason': WalletBanReasons.BY_ADMIN,
-            },
+        wallet_ban = await self.create_related(
+            wallet=wallet,
+            value=value,
+            reason=WalletBanReasons.BY_ADMIN,
+            ignore_balance=True,
+            session=session,
         )
         return {
             'id': wallet_ban.id,
         }
 
-    @staticmethod
     async def create_related(
+            self,
             wallet: Wallet,
             value: int,
             reason: str,
             ignore_balance: bool = False,
-    ) -> WalletBan:
+            session: Optional[Session] = None,
+    ) -> WalletBanRequest:
+        """
+        :param wallet: Wallet object
+        :param value:
+        if value to ban: +value
+        if value to unban: -value
+        :param reason: WalletBanReasons string
+        :param ignore_balance: True if ignore balance else False
+        :param session: Session object if need
+        :return: WalletBan object
+        """
         wallet = await WalletRepository().get_by_id(id_=wallet.id)
         if not ignore_balance:
             await WalletService().check_balance(wallet=wallet, value=-value)
@@ -65,6 +74,16 @@ class WalletBanService(BaseService):
             value_banned=wallet.value_banned + value,
         )
         wallet_ban = await WalletBanRepository().create(wallet=wallet, value=value, reason=reason)
+        await self.create_action(
+            model=wallet_ban,
+            action=Actions.CREATE,
+            parameters={
+                'creator': f'session_{session.id}' if session else 'system',
+                'wallet_id': wallet.id,
+                'value': value,
+                'reason': reason,
+            },
+        )
         return wallet_ban
 
     @session_required(permissions=['wallets_bans'])
@@ -74,24 +93,34 @@ class WalletBanService(BaseService):
             id_: int,
     ) -> dict:
         wallet_ban = await WalletBanRepository().get_by_id(id_=id_)
-        await self.delete_related(wallet_ban=wallet_ban)
+        await self.delete_related(wallet_ban=wallet_ban, ignore_balance=True, session=session)
+        return {}
+
+    async def delete_related(
+            self,
+            wallet_ban: WalletBanRequest,
+            ignore_balance: bool = False,
+            session: Optional[Session] = None,
+    ) -> None:
+        """
+        :param wallet_ban: WalletBan object
+        :param ignore_balance: True if ignore balance else False
+        :param session: Session object if need
+        :return: None
+        """
+        wallet = wallet_ban.wallet
+        if not ignore_balance:
+            await WalletService().check_balance(wallet=wallet_ban.wallet, value=wallet)
+        await WalletRepository().update(
+            wallet,
+            value=wallet.value + wallet_ban.value,
+            value_banned=wallet.value_banned - wallet_ban.value
+        )
         await WalletBanRepository().delete(wallet_ban)
         await self.create_action(
             model=wallet_ban,
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
-                'id': id_,
             },
-        )
-        return {}
-
-    @staticmethod
-    async def delete_related(wallet_ban: WalletBan) -> None:
-        wallet = wallet_ban.wallet
-        await WalletService().check_balance(wallet=wallet_ban.wallet, value=wallet)
-        await WalletRepository().update(
-            wallet,
-            value=wallet.value + wallet_ban.value,
-            value_banned=wallet.value_banned - wallet_ban.value
         )
