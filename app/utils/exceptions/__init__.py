@@ -27,7 +27,7 @@ from .method import MethodFieldsMissing, MethodFieldsParameterMissing, MethodPar
 from .notification import NotificationTelegramAlreadyLinked
 from .order import OrderRequestFieldsMissing, OrderRequestAlreadyExists, OrderStateWrong, OrderStateNotPermission, \
     OrderNotPermission, OrderRequestStateNotPermission, OrderRequestMaxValueError
-from .request import RequestStateWrong, RequestStateNotPermission, RequestRateNotFound
+from .request import RequestStateWrong, RequestStateNotPermission, RequestRateNotFound, RequestFoundOrders
 from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong, \
     RequisiteNotEnough
 from .role import RoleAlreadyExist
