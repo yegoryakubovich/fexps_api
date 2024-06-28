@@ -18,18 +18,16 @@
 import asyncio
 import math
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, Request, RequestTypes, NotificationTypes
-from app.repositories.order import OrderRepository
-from app.repositories.request import RequestRepository
-from app.repositories.requisite import RequisiteRepository
-from app.services import TransferSystemService
+from app.db.models import RequestStates, OrderTypes, OrderStates, Request, NotificationTypes
+from app.repositories import OrderRepository, RequestRepository, RequisiteRepository
+from app.services.transfer_system import TransferSystemService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.requisites.find import calculate_requisite_output_by_currency_value, \
     calculate_requisite_output_by_value
 from app.utils.calculations.requisites.need_value import calculations_requisites_need_output_currency_value, \
     calculations_requisites_need_output_value
-from app.utils.service_addons.order import order_banned_value, waited_order
+from app.utils.service_addons.order import waited_order
 from app.utils.value import value_to_int
 
 custom_logger = RequestLogger(prefix='request_state_output_reserved_check')
@@ -53,9 +51,6 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
-                if request.type == RequestTypes.OUTPUT:
-                    custom_logger.info(text=f'banned value = {wait_order.value}', order=wait_order)
-                    await order_banned_value(wallet=request.wallet, value=wait_order.value)
                 custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
                 bot_notification = BotNotification()
@@ -90,13 +85,14 @@ async def run():
             result = await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
             if result:
                 difference_rate = request.difference_rate
-                order_currency_value_sum = 0
+                order_value_sum = 0
                 for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
                     if order.state == OrderStates.CANCELED:
                         continue
-                    order_currency_value_sum += order.currency_value
-                if order_currency_value_sum != request.output_currency_value:
-                    difference = order_currency_value_sum - request.output_currency_value
+                    order_value_sum += order.value
+                difference = request.output_value - order_value_sum
+                if difference < 0:
+                    difference = order_value_sum - request.output_value
                     await TransferSystemService().payment_difference(
                         request=request,
                         value=difference,
@@ -109,7 +105,6 @@ async def run():
             custom_logger.info(text=f'create orders need_value={need_value}', request=request)
             result = await get_new_requisite_by_value(request=request, need_value=need_value)
             if request.output_value == 0:
-                logging.critical(0)
                 await RequestRepository().update(request, output_currency_value=0)
             if result:
                 order_currency_value_sum = 0
