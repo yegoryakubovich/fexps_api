@@ -27,14 +27,12 @@ async def calculate_requisite_suitable_from_value(
         need_value: int,
 ) -> Optional[tuple[int, int]]:
     value = need_value
-    if requisite.value_min and value < requisite.value_min:
-        return
     if value > requisite.value:
         value = requisite.value
-    if requisite.value_max and value > requisite.value_max:
-        value = requisite.value_max
     rate_float = value_to_float(value=requisite.rate, decimal=requisite.currency.rate_decimal)
     currency_value = value * rate_float // requisite.currency.div * requisite.currency.div
+    if requisite.currency_value_max and currency_value > requisite.currency_value_max:
+        value = requisite.currency_value_max
     if requisite.type == RateTypes.INPUT:
         value = math.ceil(currency_value / rate_float)
     elif requisite.type == RateTypes.OUTPUT:

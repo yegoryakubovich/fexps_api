@@ -49,9 +49,17 @@ class Requisite(Base):
 
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
-    output_requisite_data_id = Column(BigInteger, ForeignKey('requisites_datas.id', ondelete='SET NULL'), nullable=True)
-    output_requisite_data = relationship('RequisiteData', foreign_keys=output_requisite_data_id,
-                                         uselist=False, lazy='selectin')
+    output_requisite_data_id = Column(
+        BigInteger,
+        ForeignKey('requisites_datas.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    output_requisite_data = relationship(
+        'RequisiteData',
+        foreign_keys=output_requisite_data_id,
+        uselist=False,
+        lazy='selectin',
+    )
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     output_method = relationship('Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')
 
@@ -63,7 +71,5 @@ class Requisite(Base):
 
     currency_value_min = Column(BigInteger, nullable=True)
     currency_value_max = Column(BigInteger, nullable=True)
-    value_min = Column(BigInteger, nullable=True)
-    value_max = Column(BigInteger, nullable=True)
     in_process = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

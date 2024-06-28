@@ -35,7 +35,7 @@ async def order_banned_value(
         wallet=wallet,
         value=value,
         reason=WalletBanReasons.BY_ORDER,
-        ignore_bal=ignore_bal,
+        ignore_balance=ignore_bal,
     )
 
 

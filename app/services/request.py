@@ -30,6 +30,7 @@ from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
+from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.rate.all import calculate_request_rate_all
 from app.utils.calculations.request.rate.input import calculate_request_rate_input

@@ -20,7 +20,6 @@ import math
 from app.db.models import OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
     NotificationTypes
 from app.repositories import OrderRepository, OrderRequestRepository
-from app.services.request import RequestService
 from app.utils.bot.notification import BotNotification
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related, order_recreate_related
@@ -34,6 +33,7 @@ async def order_request_update_type_cancel(
         canceled_reason: str,
         connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
+    from app.services.request import RequestService
     order = order_request.order
     if state == OrderRequestStates.COMPLETED:
         await order_cancel_related(order=order)
@@ -69,6 +69,7 @@ async def order_request_update_type_recreate(
         canceled_reason: str,
         connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
+    from app.services.request import RequestService
     order: Order = order_request.order
     if state == OrderRequestStates.COMPLETED:
         await order_recreate_related(order=order)
@@ -103,6 +104,7 @@ async def order_request_update_type_update_value(
         state: str,
         connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
+    from app.services.request import RequestService
     order = order_request.order
     requisite = order.requisite
     if state == OrderRequestStates.COMPLETED:
