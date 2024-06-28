@@ -20,7 +20,7 @@ from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes
+    NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
     CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository
 from app.services.action import ActionService
@@ -36,8 +36,7 @@ from app.utils.calculations.request.rate.all import calculate_request_rate_all
 from app.utils.calculations.request.rate.input import calculate_request_rate_input
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
 from app.utils.decorators import session_required
-from app.utils.exceptions import RequestRateNotFound
-from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
+from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
 from app.utils.service_addons.order import order_cancel_related
 from config import settings
 
@@ -61,7 +60,6 @@ class RequestService(BaseService):
             input_value: Optional[int],
             output_value: Optional[int],
     ) -> dict:
-        account = session.account
         start_value, end_value = input_value, output_value
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method, output_method, output_requisite_data = None, None, None
@@ -70,7 +68,6 @@ class RequestService(BaseService):
         if output_requisite_data_id:
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
-        input_method_name, output_method_name = '', ''
         if type_ == RequestTypes.INPUT:
             input_currency_value, input_value = start_value, end_value
             calculate = await calculate_request_rate_input(
@@ -101,6 +98,11 @@ class RequestService(BaseService):
                     }
                 )
             await WalletService().check_balance(wallet=wallet, value=-calculate.output_value)
+            await WalletBanService().create_related(
+                wallet=wallet,
+                value=calculate.output_value,
+                reason=WalletBanReasons.BY_REQUEST,
+            )
         else:
             input_currency_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_all(
@@ -424,35 +426,6 @@ class RequestService(BaseService):
                 'updater': f'session_{session.id}',
                 'type': 'name',
                 'name': name,
-            },
-        )
-        return {}
-
-    @session_required()
-    async def update_cancellation(
-            self,
-            session: Session,
-            id_: int,
-    ):
-        account = session.account
-        request = await RequestRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
-            account=account,
-            wallets=[request.wallet],
-            exception=RequestStateNotPermission(
-                kwargs={
-                    'id_value': request.id,
-                    'action': f'Update name',
-                },
-            ),
-        )
-
-        await self.create_action(
-            model=request,
-            action=Actions.UPDATE,
-            parameters={
-                'updater': f'session_{session.id}',
-                'type': 'cancellation',
             },
         )
         return {}
