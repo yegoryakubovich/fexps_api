@@ -19,6 +19,7 @@ from inflection import underscore
 
 from app.db.base_class import Base
 from app.db.models import TransferSystem, Request, TransferTypes, TransferSystemTypes, WalletBanReasons
+from app.db.models.transfer_system import TransferSystemReasons
 from app.repositories import WalletBanRequestRepository, TransferSystemRepository, WalletRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
