@@ -17,13 +17,13 @@
 
 import math
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
-    RequestRequisiteTypes, RequestTypes, Requisite, NotificationTypes
-from app.repositories import OrderRepository, OrderRequestRepository, RequestRepository, RequestRequisiteRepository
+from app.db.models import OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
+    NotificationTypes
+from app.repositories import OrderRepository, OrderRequestRepository
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.commissions import get_input_commission
 from app.utils.exceptions import RequisiteNotEnough
-from app.utils.service_addons.order import order_cancel_related, order_edit_value_related
+from app.utils.service_addons.order import order_cancel_related, order_edit_value_related, order_recreate_related
+from app.utils.service_addons.request import request_off_rate_fixed
 from app.utils.value import value_to_float
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
@@ -34,31 +34,16 @@ async def order_request_update_type_cancel(
         canceled_reason: str,
         connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
-    order: Order = order_request.order
-    request: Request = order.request
+    order = order_request.order
     if state == OrderRequestStates.COMPLETED:
-        if order.type == OrderTypes.INPUT:
-            await RequestRepository().update(
-                request,
-                input_currency_value=request.input_currency_value - order.currency_value,
-                input_value=request.input_value - order.value,
-            )
-        elif order.type == OrderTypes.OUTPUT:
-            await RequestRepository().update(
-                request,
-                output_currency_value=request.output_currency_value - order.currency_value,
-                output_value=request.output_value - order.value,
-            )
         await order_cancel_related(order=order)
         await OrderRepository().update(
             order,
             state=OrderStates.CANCELED,
             canceled_reason=canceled_reason,
         )
-        await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_fixed=False)
-    elif state == OrderRequestStates.CANCELED:
-        await OrderRequestRepository().update(order_request, state=state)
+        await request_off_rate_fixed(request=order_request.order.request)
+    await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
@@ -86,21 +71,14 @@ async def order_request_update_type_recreate(
 ):
     order: Order = order_request.order
     if state == OrderRequestStates.COMPLETED:
-        await order_cancel_related(order=order)
-        await RequestRequisiteRepository().create(
-            request=order.request,
-            requisite=order.requisite,
-            type=RequestRequisiteTypes.BLACKLIST,
-        )
+        await order_recreate_related(order=order)
         await OrderRepository().update(
             order,
             state=OrderStates.CANCELED,
             canceled_reason=canceled_reason,
         )
-        await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_fixed=False)
-    elif state == OrderRequestStates.CANCELED:
-        await OrderRequestRepository().update(order_request, state=state)
+        await request_off_rate_fixed(request=order_request.order.request)
+    await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
@@ -125,9 +103,8 @@ async def order_request_update_type_update_value(
         state: str,
         connections_manager_aiohttp: ChatConnectionManagerAiohttp,
 ):
-    order: Order = order_request.order
-    request: Request = order.request
-    requisite: Requisite = order.requisite
+    order = order_request.order
+    requisite = order.requisite
     if state == OrderRequestStates.COMPLETED:
         currency_value = int(order_request.data['currency_value'])
         value = round(currency_value / order.rate * 10 ** order.request.rate_decimal)
@@ -144,33 +121,6 @@ async def order_request_update_type_update_value(
                     'value': value_to_float(value=requisite.currency_value, decimal=requisite.currency.decimal),
                 },
             )
-        params = {}
-        if order.type == OrderTypes.INPUT:
-            if delta_value > 0:
-                delta_commission = await get_input_commission(
-                    value=delta_value,
-                    commission_pack=request.wallet.commission_pack,
-                )
-            else:
-                delta_commission = -await get_input_commission(
-                    value=-delta_value,
-                    commission_pack=request.wallet.commission_pack,
-                )
-            params.update(
-                input_currency_value=request.input_currency_value - delta_currency_value,
-                input_value=request.input_value - delta_value + delta_commission,
-                commission_value=request.commission - delta_commission,
-            )
-        elif order.type == OrderTypes.OUTPUT:
-            params.update(
-                output_currency_value=request.output_currency_value - delta_currency_value,
-                output_value=request.output_value - delta_value,
-            )
-            if order.request.type == RequestTypes.ALL:
-                params.update(
-                    input_value=request.input_value - delta_value,
-                )
-        await RequestRepository().update(request, **params)
         await order_edit_value_related(
             order=order,
             delta_value=delta_value,
@@ -181,10 +131,8 @@ async def order_request_update_type_update_value(
             value=value,
             currency_value=currency_value,
         )
-        await OrderRequestRepository().update(order_request, state=state)
-        await RequestRepository().update(order_request.order.request, rate_fixed=False)
-    elif state == OrderRequestStates.CANCELED:
-        await OrderRequestRepository().update(order_request, state=state)
+        await request_off_rate_fixed(request=order_request.order.request)
+    await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
         text=f'order_request_finished_{order_request.type}_{state}',

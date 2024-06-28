@@ -24,6 +24,7 @@ from app.repositories.request import RequestRepository
 from app.services import ActionService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
+from app.utils.service_addons.request import request_off_rate_fixed
 from config import settings
 
 custom_logger = RequestLogger(prefix='request_rate_fixed_check')
@@ -38,7 +39,7 @@ async def run():
         request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
         if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
             custom_logger.info(text=f'rate_fixed=False', request=request)
-            await RequestRepository().update(request, rate_fixed=False)
+            await request_off_rate_fixed(request=request)
             await BotNotification().send_notification_by_wallet(
                 wallet=request.wallet,
                 notification_type=NotificationTypes.REQUEST,

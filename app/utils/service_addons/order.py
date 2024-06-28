@@ -15,7 +15,11 @@
 #
 
 
-from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes
+import math
+
+from app.db.models import Request, OrderTypes, OrderStates, Order, Requisite, WalletBanReasons, Wallet, TransferTypes, \
+    RequestRequisiteTypes
+from app.repositories import RequestRepository, RequestRequisiteRepository
 from app.repositories.order import OrderRepository
 from app.repositories.requisite import RequisiteRepository
 from app.services.wallet_ban import WalletBanService
@@ -75,6 +79,42 @@ async def waited_order(
 
 
 async def order_cancel_related(order: Order) -> None:
+    request = order.request
+    if order.type == OrderTypes.INPUT:
+        current_currency_value = request.input_currency_value - order.currency_value
+        current_value = request.input_value - order.value
+        current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
+        await RequestRepository().update(
+            request,
+            commission=current_commission,
+            input_currency_value=current_currency_value,
+            input_value=current_value,
+        )
+    elif order.type == OrderTypes.OUTPUT:
+        await RequestRepository().update(
+            request,
+            output_currency_value=request.output_currency_value - order.currency_value,
+            output_value=request.output_value - order.value,
+        )
+        if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+            await WalletBanService().create_related(
+                wallet=request.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_ORDER,
+            )
+    await RequisiteRepository().update(
+        order.requisite,
+        currency_value=round(order.requisite.currency_value + order.currency_value),
+        value=round(order.requisite.value + order.value),
+    )
+
+
+async def order_recreate_related(order: Order) -> None:
+    await RequestRequisiteRepository().create(
+        request=order.request,
+        requisite=order.requisite,
+        type=RequestRequisiteTypes.BLACKLIST,
+    )
     if order.type == OrderTypes.OUTPUT:
         if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
             await WalletBanService().create_related(
@@ -94,10 +134,26 @@ async def order_edit_value_related(
         delta_value: int,
         delta_currency_value: int,
 ) -> None:
-    if order.type == OrderTypes.OUTPUT:
+    request = order.request
+    if order.type == OrderTypes.INPUT:
+        current_currency_value = request.input_currency_value - delta_currency_value
+        current_value = request.input_value - delta_value
+        current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
+        await RequestRepository().update(
+            request,
+            commission=current_commission,
+            input_currency_value=current_currency_value,
+            input_value=current_value,
+        )
+    elif order.type == OrderTypes.OUTPUT:
+        await RequestRepository().update(
+            request,
+            output_currency_value=request.output_currency_value - delta_currency_value,
+            output_value=request.output_value - delta_value,
+        )
         if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
             await WalletBanService().create_related(
-                wallet=order.request.wallet,
+                wallet=request.wallet,
                 value=-delta_value,
                 reason=WalletBanReasons.BY_ORDER,
             )

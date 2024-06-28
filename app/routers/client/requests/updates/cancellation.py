@@ -15,27 +15,26 @@
 #
 
 
-# from pydantic import Field, BaseModel
-#
-# from app.services import RequestService
-# from app.utils import Response, Router
-#
-#
-# router = Router(
-#     prefix='/cancellation',
-# )
-#
-#
-# class RequestUpdateCancellationSchema(BaseModel):
-#     token: str = Field(min_length=32, max_length=64)
-#     id_: int = Field()
-#     answer: bool = Field()
-#
-#
-# @router.post()
-# async def route(schema: RequestUpdateCancellationSchema):
-#     result = await RequestService().update_cancellation(
-#         token=schema.token,
-#         id_=schema.id_,
-#     )
-#     return Response(**result)
+from pydantic import Field, BaseModel
+
+from app.services import RequestService
+from app.utils import Response, Router
+
+
+router = Router(
+    prefix='/cancellation',
+)
+
+
+class RequestUpdateCancellationSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.post()
+async def route(schema: RequestUpdateCancellationSchema):
+    result = await RequestService().update_cancellation(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

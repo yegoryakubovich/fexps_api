@@ -13,22 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from app.db.models import Request, OrderTypes
-from app.repositories.order import OrderRepository
 
 
-async def request_get_need_value(
-        request: Request,
-        type_: OrderTypes,
-        currency_value: int = None,
-        value: int = None,
-) -> int:
-    if not value and not currency_value:
-        return 0
-    result = value or currency_value
-    for order in await OrderRepository().get_list(request=request, type=type_):
-        if value:  # value
-            result -= order.value
-        else:  # currency value
-            result -= order.currency_value
-    return result
+from app.db.models import Request
+from app.repositories import RequestRepository
+
+
+async def request_off_rate_fixed(request: Request):
+    await RequestRepository().update(
+        request,
+        rate_fixed=False,
+        difference=0,
+        output_value=request.output_value + request.difference,
+    )

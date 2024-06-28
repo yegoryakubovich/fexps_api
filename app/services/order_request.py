@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
     OrderCanceledReasons, MessageRoles, NotificationTypes, OrderTypes
 from app.repositories.order import OrderRepository
@@ -42,10 +44,11 @@ class OrderRequestService(BaseService):
             token: str,
             order_id: int,
             type_: str,
-            value: int,
+            value: Optional[int],
     ) -> dict:
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
+        request = order.request
         wallet = order.request.wallet
         await wallet_check_permission(
             account=account,
@@ -69,6 +72,7 @@ class OrderRequestService(BaseService):
         order_request, data = None, {}
         await self.check_have_order_request(order=order)
         connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
+        bot_notification = BotNotification()
         if type_ == OrderRequestTypes.CANCEL:
             if order.type == OrderTypes.INPUT:
                 if order.state in [OrderStates.WAITING, OrderStates.PAYMENT]:
@@ -79,15 +83,15 @@ class OrderRequestService(BaseService):
                         state=OrderRequestStates.WAIT,
                         data=data,
                     )
-                    await connections_manager_aiohttp.send(
-                        role=MessageRoles.SYSTEM,
-                        text=f'order_request_create_{type_}',
-                    )
                     await order_request_update_type_cancel(
                         order_request=order_request,
                         state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
                         connections_manager_aiohttp=connections_manager_aiohttp,
+                    )
+                    await connections_manager_aiohttp.send(
+                        role=MessageRoles.SYSTEM,
+                        text=f'order_request_create_{type_}',
                     )
         elif type_ == OrderRequestTypes.RECREATE:
             if order.type == OrderTypes.INPUT:
@@ -99,18 +103,23 @@ class OrderRequestService(BaseService):
                         state=OrderRequestStates.WAIT,
                         data=data,
                     )
-                    await connections_manager_aiohttp.send(
-                        role=MessageRoles.SYSTEM,
-                        text=f'order_request_create_{type_}',
-                    )
                     await order_request_update_type_recreate(
                         order_request=order_request,
                         state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
                         connections_manager_aiohttp=connections_manager_aiohttp,
                     )
+                    await connections_manager_aiohttp.send(
+                        role=MessageRoles.SYSTEM,
+                        text=f'order_request_create_{type_}',
+                    )
         elif type_ == OrderRequestTypes.UPDATE_VALUE:
-            data['currency_value'] = value
+            data['currency_value'] = currency_value = value
+            if currency_value == order.currency_value:
+                return {}
+            if order.type == OrderTypes.OUTPUT and currency_value > order.currency_value:
+                example_value = round(currency_value / order.rate * 10 ** request.rate_decimal)
+                await WalletService().check_balance(wallet=order.request.wallet, value=example_value)
         if not order_request:
             order_request = await OrderRequestRepository().create(
                 wallet=wallet,
@@ -123,19 +132,18 @@ class OrderRequestService(BaseService):
                 role=MessageRoles.SYSTEM,
                 text=f'order_request_create_{type_}',
             )
-            bot_notification = BotNotification()
-            await bot_notification.send_notification_by_wallet(
-                wallet=order.request.wallet,
-                notification_type=NotificationTypes.ORDER,
-                text_key=f'notification_order_request_create_{type_}',
-                order_id=order.id,
-            )
-            await bot_notification.send_notification_by_wallet(
-                wallet=order.requisite.wallet,
-                notification_type=NotificationTypes.ORDER,
-                text_key=f'notification_order_request_create_{type_}',
-                order_id=order.id,
-            )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.request.wallet,
+            notification_type=NotificationTypes.ORDER,
+            text_key=f'notification_order_request_create_{type_}',
+            order_id=order.id,
+        )
+        await bot_notification.send_notification_by_wallet(
+            wallet=order.requisite.wallet,
+            notification_type=NotificationTypes.ORDER,
+            text_key=f'notification_order_request_create_{type_}',
+            order_id=order.id,
+        )
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,

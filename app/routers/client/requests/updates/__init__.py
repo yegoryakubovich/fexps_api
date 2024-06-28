@@ -16,8 +16,8 @@
 
 
 from app.utils import Router
+from .cancellation import router as router_cancellation
 from .confirmation import router as router_confirmation
-# from .cancellation import router as router_cancellation
 from .name import router as router_name
 
 
@@ -26,6 +26,6 @@ router = Router(
     routes_included=[
         router_name,
         router_confirmation,
-        # router_cancellation,
+        router_cancellation,
     ],
 )

@@ -20,15 +20,14 @@ from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    NotificationTypes, RateTypes
+    NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
-    CommissionPackValueRepository, RateRepository
-from app.repositories.request import RequestRepository
-from app.repositories.wallet import WalletRepository
+    CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
 from app.services.method import MethodService
+from app.services.order_request import OrderRequestService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
@@ -37,7 +36,7 @@ from app.utils.calculations.request.rate.input import calculate_request_rate_inp
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound
-from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission
+from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
 from app.utils.service_addons.order import order_cancel_related
 from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
@@ -45,6 +44,10 @@ from config import settings
 
 class RequestService(BaseService):
     model = Request
+
+    """
+    CLIENT
+    """
 
     @session_required()
     async def create(
@@ -76,7 +79,13 @@ class RequestService(BaseService):
                 input_currency_value=input_currency_value,
                 input_value=input_value,
             )
-            input_method_name = input_method.name_text.value_default
+            if not calculate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': input_method.name_text.value_default,
+                        'output_method': settings.coin_name,
+                    }
+                )
         elif type_ == RequestTypes.OUTPUT:
             output_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_output(
@@ -84,7 +93,14 @@ class RequestService(BaseService):
                 output_value=output_value,
                 output_currency_value=output_currency_value,
             )
-            output_method_name = output_method.name_text.value_default
+            if not calculate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': settings.coin_name,
+                        'output_method': output_method.name_text.value_default,
+                    }
+                )
+            await WalletService().check_balance(wallet=wallet, value=calculate.output_value)
         else:
             input_currency_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_all(
@@ -94,17 +110,13 @@ class RequestService(BaseService):
                 input_currency_value=input_currency_value,
                 output_currency_value=output_currency_value,
             )
-            input_method_name = input_method.name_text.value_default
-            output_method_name = output_method.name_text.value_default
-        if not calculate:
-            raise RequestRateNotFound(
-                kwargs={
-                    'input_method': input_method_name,
-                    'output_method': output_method_name,
-                }
-            )
-        if type_ == RequestTypes.OUTPUT:
-            await WalletService().check_balance(wallet=wallet, value=calculate.output_value)
+            if not calculate:
+                raise RequestRateNotFound(
+                    kwargs={
+                        'input_method': input_method.name_text.value_default,
+                        'output_method': output_method.name_text.value_default,
+                    }
+                )
         request = await RequestRepository().create(
             name=name,
             wallet=wallet,
@@ -275,6 +287,55 @@ class RequestService(BaseService):
             'page': page,
             'items_per_page': settings.items_per_page,
         }
+
+    @session_required(return_token=True)
+    async def update_cancellation(
+            self,
+            session: Session,
+            token: str,
+            id_: int,
+    ):
+        account = session.account
+        request = await RequestRepository().get_by_id(id_=id_)
+        await wallet_check_permission(
+            account=account,
+            wallets=[request.wallet],
+            exception=RequestStateNotPermission(
+                kwargs={
+                    'id_value': request.id,
+                    'action': f'Cancellation',
+                },
+            ),
+        )
+        found_order_count = 0
+        for order in await OrderRepository().get_list(request=request):
+            if order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                continue
+            found_order_count += 1
+            if order.type == OrderTypes.INPUT and order.state == OrderStates.PAYMENT:
+                found_order_count -= 1
+                await OrderRequestService().create(
+                    session=session,
+                    token=token,
+                    order_id=order.id,
+                    type_=OrderRequestTypes.CANCEL,
+                    value=None,
+                )
+        if found_order_count > 0:
+            raise RequestFoundOrders(
+                kwargs={
+                    'id_value': request.id,
+                },
+            )
+        await self.create_action(
+            model=request,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'type': 'cancellation',
+            },
+        )
+        return {}
 
     @session_required()
     async def update_confirmation(

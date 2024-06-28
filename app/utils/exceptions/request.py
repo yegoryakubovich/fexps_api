@@ -31,3 +31,8 @@ class RequestStateNotPermission(ApiException):
 class RequestRateNotFound(ApiException):
     code = 10002
     message = 'Rate pair {input_method}-{output_method} not found'
+
+
+class RequestFoundOrders(ApiException):
+    code = 10003
+    message = 'Request.{id_value} found not completed/cancelled orders'
