@@ -70,13 +70,13 @@ async def calculate_request_rate_all_by_output_currency_value(
 
     return RequestCalculateScheme(
         input_currency_value=input_currency_value,
-        input_rate=input_rate,
+        input_rate=input_rate * 10 ** (rate_decimal - input_method.currency.rate_decimal),
         input_value=input_value,
         difference=difference,
         commission=commission,
         rate=rate,
         rate_decimal=rate_decimal,
         output_currency_value=output_currency_value,
-        output_rate=output_rate,
+        output_rate=output_rate * 10 ** (rate_decimal - output_method.currency.rate_decimal),
         output_value=output_value,
     )

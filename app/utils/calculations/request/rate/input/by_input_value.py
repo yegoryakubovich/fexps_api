@@ -59,7 +59,7 @@ async def calculate_request_rate_input_by_input_value(
 
     return RequestCalculateScheme(
         input_currency_value=input_currency_value,
-        input_rate=input_rate,
+        input_rate=input_rate * 10 ** (rate_decimal - input_method.currency.rate_decimal),
         input_value=input_value,
         difference=difference,
         commission=commission,

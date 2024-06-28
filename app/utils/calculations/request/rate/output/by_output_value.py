@@ -57,6 +57,6 @@ async def calculate_request_rate_output_by_output_value(
         rate=rate,
         rate_decimal=rate_decimal,
         output_currency_value=output_currency_value,
-        output_rate=output_rate,
+        output_rate=output_rate * 10 ** (rate_decimal - output_method.currency.rate_decimal),
         output_value=output_value,
     )
