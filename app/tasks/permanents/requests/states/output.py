@@ -95,8 +95,7 @@ async def run():
             text_key=f'notification_request_update_state_{RequestStates.COMPLETED}',
             request_id=request.id,
         )
-        await asyncio.sleep(1)
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
 
 async def request_state_output_check():

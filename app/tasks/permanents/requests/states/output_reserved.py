@@ -108,8 +108,7 @@ async def run():
             need_value = await calculations_requisites_need_output_value(request=request)
             custom_logger.info(text=f'create orders need_value={need_value}', request=request)
             await get_new_requisite_by_value(request=request, need_value=need_value)
-        await asyncio.sleep(1)
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
 
 async def get_new_requisite_by_currency_value(

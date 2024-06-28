@@ -45,7 +45,6 @@ async def run():
                 text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
                 request_id=request.id,
             )
-        await asyncio.sleep(0.5)
     await asyncio.sleep(1)
 
 

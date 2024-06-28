@@ -75,8 +75,7 @@ async def run():
             continue
         # create missing orders
         await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
-        await asyncio.sleep(1)
-    await asyncio.sleep(5)
+    await asyncio.sleep(1)
 
 
 async def get_new_requisite_by_currency_value(
