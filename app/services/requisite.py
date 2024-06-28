@@ -49,12 +49,10 @@ class RequisiteService(BaseService):
             output_requisite_data_id: int,
             input_method_id: int,
             currency_value: int,
-            currency_value_min: int,
-            currency_value_max: int,
             rate: int,
             value: int,
-            value_min: int,
-            value_max: int,
+            currency_value_min: int,
+            currency_value_max: int,
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
@@ -97,8 +95,6 @@ class RequisiteService(BaseService):
             rate=rate_result,
             value=value_result,
             total_value=value_result,
-            value_min=value_min,
-            value_max=value_max,
         )
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
@@ -125,8 +121,6 @@ class RequisiteService(BaseService):
                 'rate_result': rate_result,
                 'value': value,
                 'value_result': value_result,
-                'value_min': value_min,
-                'value_max': value_max,
             },
         )
         return {
@@ -407,6 +401,4 @@ class RequisiteService(BaseService):
             'rate': requisite.rate,
             'value': requisite.value,
             'total_value': requisite.total_value,
-            'value_min': requisite.value_min,
-            'value_max': requisite.value_max,
         }
