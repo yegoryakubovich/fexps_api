@@ -16,7 +16,7 @@
 
 
 from app.db.models import Timezone, Session, Actions
-from app.repositories.timezone import TimezoneRepository
+from app.repositories import TimezoneRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions import ModelAlreadyExist

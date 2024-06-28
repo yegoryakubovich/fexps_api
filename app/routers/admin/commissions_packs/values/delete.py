@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import CommissionPackValueService
+from app.services.commission_pack_value import CommissionPackValueService
 from app.utils import Router, Response
 
 

@@ -19,8 +19,7 @@ import asyncio
 import datetime
 
 from app.db.models import RequestStates, Actions, Request, NotificationTypes
-from app.repositories.action_parameter import ActionParameterRepository
-from app.repositories.request import RequestRepository
+from app.repositories import ActionParameterRepository, RequestRepository
 from app.services.action import ActionService
 from app.services.request import RequestService
 from app.tasks.permanents.requests.logger import RequestLogger

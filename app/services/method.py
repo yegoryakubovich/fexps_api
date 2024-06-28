@@ -18,11 +18,8 @@
 from typing import Optional
 
 from app.db.models import Method, Session, Actions
-from app.repositories import TextPackRepository
-from app.repositories.currency import CurrencyRepository
-from app.repositories.method import MethodRepository
-from app.repositories.text import TextRepository
-from app.services import CurrencyService
+from app.repositories import TextPackRepository, CurrencyRepository, MethodRepository, TextRepository
+from app.services.currency import CurrencyService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required

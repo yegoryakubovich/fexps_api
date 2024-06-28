@@ -15,7 +15,7 @@
 #
 
 
-from app.services import MethodService
+from app.services.method import MethodService
 from app.utils import Router, Response
 
 

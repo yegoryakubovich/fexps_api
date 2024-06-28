@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import CommissionPackService
+from app.services.commission_pack import CommissionPackService
 from app.utils import Router, Response
 
 

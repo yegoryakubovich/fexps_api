@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import NotificationSetting, Session, Actions
-from app.repositories.notification_setting import NotificationSettingRepository
+from app.repositories import NotificationSettingRepository
 from app.services.base import BaseService
 from app.utils.bot.username import get_bot_username, get_chat_username
 from app.utils.crypto import create_id_str

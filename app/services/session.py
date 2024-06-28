@@ -16,9 +16,8 @@
 
 
 from app.db.models import Session, Actions, NotificationTypes
-from app.repositories.account import AccountRepository
-from app.repositories.session import SessionRepository
-from app.services import ActionService, AccountService
+from app.repositories import AccountRepository, SessionRepository
+from app.services.account import AccountService
 from app.services.base import BaseService
 from app.utils.bot.notification import BotNotification
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt

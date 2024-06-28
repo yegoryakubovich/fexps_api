@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services import AccountContactService
+from app.services.account_contact import AccountContactService
 from app.utils import Router
 from app.utils.response import Response
 

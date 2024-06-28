@@ -18,9 +18,7 @@
 from typing import Optional
 
 from app.db.models import Session, Contact, Actions
-from app.repositories import TextPackRepository
-from app.repositories.contact import ContactRepository
-from app.repositories.text import TextRepository
+from app.repositories import TextPackRepository, ContactRepository, TextRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required

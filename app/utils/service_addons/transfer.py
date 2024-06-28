@@ -16,9 +16,7 @@
 
 
 from app.db.models import Transfer, Wallet, Order, Actions
-from app.repositories import OrderTransferRepository
-from app.repositories.transfer import TransferRepository
-from app.repositories.wallet import WalletRepository
+from app.repositories import OrderTransferRepository, WalletRepository, TransferRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 

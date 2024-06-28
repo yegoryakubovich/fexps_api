@@ -17,7 +17,7 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import LanguageService
+from app.services.language import LanguageService
 from app.utils import Router, Response
 
 

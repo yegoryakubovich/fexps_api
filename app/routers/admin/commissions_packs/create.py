@@ -19,7 +19,7 @@ from typing import Optional
 
 from pydantic import Field, BaseModel
 
-from app.services import CommissionPackService
+from app.services.commission_pack import CommissionPackService
 from app.utils import Router, Response
 
 

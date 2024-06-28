@@ -15,13 +15,11 @@
 #
 
 
-from pydantic import Field, field_validator, model_validator, BaseModel
+from pydantic import Field, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
-from app.db.models import WalletBanReasons
-from app.services import WalletBanService
+from app.services.wallet_ban import WalletBanService
 from app.utils import Router, Response
-from app.utils.exceptions.main import ParameterContainError
 from app.utils.exceptions.main import ValueMustBePositive
 
 

@@ -19,8 +19,7 @@ from fastapi import Request
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from app.repositories import TextRepository
-from app.repositories.file_key import FileKeyRepository
+from app.repositories import TextRepository, FileKeyRepository
 from app.utils import Router
 
 

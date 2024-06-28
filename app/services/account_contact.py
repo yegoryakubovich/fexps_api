@@ -16,8 +16,7 @@
 
 
 from app.db.models import AccountContact, Session, Actions
-from app.repositories.account_contact import AccountContactRepository
-from app.repositories.contact import ContactRepository
+from app.repositories import AccountContactRepository, ContactRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions import AccountContactsAlreadyExists

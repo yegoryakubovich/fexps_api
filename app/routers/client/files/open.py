@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import FileService
+from app.services.file import FileService
 from app.utils import Router
 
 

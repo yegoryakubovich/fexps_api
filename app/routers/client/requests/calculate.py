@@ -17,14 +17,12 @@
 
 from typing import Optional
 
-from pydantic import Field, model_validator, BaseModel, field_validator
-from pydantic_core.core_schema import ValidationInfo
+from pydantic import Field, model_validator, BaseModel
 
 from app.db.models import RequestTypes
-from app.services import RequestService
+from app.services.request import RequestService
 from app.utils import Response, Router
-from app.utils.exceptions import ValueMustBePositive
-from app.utils.exceptions.main import ParameterContainError, ParameterOneContainError, ParametersAllContainError
+from app.utils.exceptions.main import ParameterContainError, ParametersAllContainError
 
 
 router = Router(

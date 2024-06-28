@@ -19,7 +19,7 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from pydantic import Field, BaseModel
 
 from app.repositories.file_key import FileKeyRepository
-from app.services import FileKeyService
+from app.services.file_key import FileKeyService
 from app.utils import Response, Router
 from app.utils.websockets.file import file_connections_manager_fastapi
 

@@ -20,7 +20,7 @@ from typing import Optional
 from pydantic import Field, model_validator, field_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
-from app.services import CommissionPackValueService
+from app.services.commission_pack_value import CommissionPackValueService
 from app.utils import Router, Response
 from app.utils.exceptions.commission_pack import CommissionIntervalValidationError
 from app.utils.exceptions.main import ParameterOneContainError, ValueMustBePositive

@@ -19,7 +19,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.services import TextService
+from app.services.text import TextService
 from app.utils import Response, Router
 
 

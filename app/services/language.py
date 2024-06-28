@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import Language, Session, Actions
-from app.repositories.language import LanguageRepository
+from app.repositories import LanguageRepository
 from app.services.base import BaseService
 from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required

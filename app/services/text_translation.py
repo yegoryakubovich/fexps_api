@@ -17,10 +17,10 @@
 
 from app.db.models import Language, Session, Text, TextTranslation, Actions
 from app.repositories import LanguageRepository, TextRepository, TextTranslationRepository
-from app.services import TextPackService
 from app.services.base import BaseService
+from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required
-from app.utils.exceptions import ModelAlreadyExist, ModelDoesNotExist
+from app.utils.exceptions import ModelAlreadyExist
 
 
 class TextTranslationService(BaseService):

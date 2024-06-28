@@ -26,6 +26,7 @@ from .contact import ContactRepository
 from .country import CountryRepository
 from .currency import CurrencyRepository
 from .file import FileRepository
+from .file_key import FileKeyRepository
 from .language import LanguageRepository
 from .message import MessageRepository
 from .message_file import MessageFileRepository

@@ -20,7 +20,7 @@ from typing import Optional
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import WalletService
+from app.services.wallet import WalletService
 from app.utils import Router, Response
 
 

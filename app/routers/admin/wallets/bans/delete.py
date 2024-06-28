@@ -17,9 +17,9 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import WalletBanService
-
+from app.services.wallet_ban import WalletBanService
 from app.utils import Router, Response
+
 
 router = Router(
     prefix='/delete',

@@ -15,7 +15,7 @@
 #
 
 
-from app.services import CurrencyService
+from app.services.currency import CurrencyService
 from app.utils import Router, Response
 
 

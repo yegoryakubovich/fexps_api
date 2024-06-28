@@ -19,11 +19,8 @@ from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
     MessageRoles, NotificationTypes
-from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository
-from app.repositories.file_key import FileKeyRepository
-from app.repositories.order import OrderRepository
-from app.repositories.request import RequestRepository
-from app.repositories.requisite import RequisiteRepository
+from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
+    FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService

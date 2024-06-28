@@ -21,7 +21,7 @@ from pydantic import Field, field_validator, model_validator, BaseModel
 from pydantic_core.core_schema import ValidationInfo
 
 from app.db.models import RequestTypes
-from app.services import RequestService
+from app.services.request import RequestService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ParametersAllContainError
 from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError, ParameterOneContainError

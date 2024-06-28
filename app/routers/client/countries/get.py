@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import CountryService
+from app.services.country import CountryService
 from app.utils import Router, Response
 
 

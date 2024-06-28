@@ -19,8 +19,7 @@ from typing import Optional
 
 from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions, NotificationTypes
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, MessageFileRepository, \
-    OrderFileRepository
-from app.repositories.file_key import FileKeyRepository
+    OrderFileRepository, FileKeyRepository
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.file import FileService

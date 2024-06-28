@@ -18,10 +18,8 @@
 from typing import Optional
 
 from app.db.models import Session, CommissionPack, Actions
-from app.repositories import TextPackRepository, WalletRepository
-from app.repositories.commission_pack import CommissionPackRepository
-from app.repositories.commission_pack_value import CommissionPackValueRepository
-from app.repositories.text import TextRepository
+from app.repositories import TextPackRepository, WalletRepository, CommissionPackRepository, \
+    CommissionPackValueRepository, TextRepository
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
 from app.utils.crypto import create_id_str

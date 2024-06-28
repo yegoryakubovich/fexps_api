@@ -15,11 +15,9 @@
 #
 
 
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
-from app.services import AccountService
+from app.services.account import AccountService
 from app.utils import Router, Response
 
 

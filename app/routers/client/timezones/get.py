@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import TimezoneService
+from app.services.timezone import TimezoneService
 from app.utils import Router, Response
 
 

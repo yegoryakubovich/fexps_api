@@ -20,9 +20,7 @@ from typing import Optional
 
 from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet, NotificationTypes
 from app.db.models.transfer import TransferOperations
-from app.repositories import WalletAccountRepository, OrderTransferRepository
-from app.repositories.transfer import TransferRepository
-from app.repositories.wallet import WalletRepository
+from app.repositories import WalletAccountRepository, OrderTransferRepository, TransferRepository, WalletRepository
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.wallet import WalletService

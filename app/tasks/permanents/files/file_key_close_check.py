@@ -19,8 +19,8 @@ import asyncio
 import datetime
 
 from app.db.models import Actions
-from app.repositories.file_key import FileKeyRepository
-from app.services import ActionService
+from app.repositories import FileKeyRepository
+from app.services.action import ActionService
 from app.tasks.permanents.files.logger import FileLogger
 from config import settings
 

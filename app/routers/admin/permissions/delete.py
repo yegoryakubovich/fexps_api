@@ -17,8 +17,9 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import PermissionService
+from app.services.permission import PermissionService
 from app.utils import Router, Response
+
 
 router = Router(
     prefix='/delete',

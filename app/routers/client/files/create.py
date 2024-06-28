@@ -21,8 +21,9 @@ from fastapi import UploadFile, Form, Request
 from starlette.responses import HTMLResponse
 from starlette.templating import Jinja2Templates
 
-from app.services import FileService
+from app.services.file import FileService
 from app.utils import Router
+
 
 router = Router(
     prefix='/create',

@@ -17,7 +17,7 @@
 
 from typing import Optional
 from app.db.models import Session, Currency, Actions
-from app.repositories.currency import CurrencyRepository
+from app.repositories import CurrencyRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions import ModelAlreadyExist, NoRequiredParameters

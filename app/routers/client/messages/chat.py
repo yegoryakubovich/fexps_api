@@ -17,7 +17,7 @@
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from app.services import MessageService
+from app.services.message import MessageService
 from app.utils import Router
 from app.utils.websockets.chat import chat_connections_manager_fastapi
 

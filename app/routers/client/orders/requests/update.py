@@ -18,7 +18,7 @@
 from pydantic import Field, BaseModel, model_validator
 
 from app.db.models import OrderRequestStates
-from app.services import OrderRequestService
+from app.services.order_request import OrderRequestService
 from app.utils import Response, Router
 from app.utils.exceptions.main import ParameterContainError
 

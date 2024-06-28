@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import FileKeyService
+from app.services.file_key import FileKeyService
 from app.utils import Response, Router
 
 

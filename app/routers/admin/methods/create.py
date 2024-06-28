@@ -18,7 +18,7 @@
 from pydantic import Field, BaseModel, field_validator
 
 from app.db.models import MethodFieldTypes
-from app.services import MethodService
+from app.services.method import MethodService
 from app.utils import Router, Response
 from app.utils.exceptions.method import MethodParametersMissing, MethodParametersValidationError
 

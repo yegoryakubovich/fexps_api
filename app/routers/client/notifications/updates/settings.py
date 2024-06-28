@@ -17,8 +17,9 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import NotificationService
+from app.services.notification import NotificationService
 from app.utils import Response, Router
+
 
 router = Router(
     prefix='/settings',

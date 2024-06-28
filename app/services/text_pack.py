@@ -15,12 +15,10 @@
 #
 
 
-import logging
 from json import loads
 
 from app.db.models import TextPack, Session, Actions
-from app.repositories.language import LanguageRepository
-from app.repositories.text_pack import TextPackRepository
+from app.repositories import LanguageRepository, TextPackRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from config import settings

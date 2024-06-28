@@ -18,7 +18,7 @@
 from addict import Dict
 
 from app.db.models import Session
-from app.repositories.session import SessionRepository
+from app.repositories import SessionRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_hash_by_string_and_salt
 from app.utils.exceptions.main import WrongTokenFormat, WrongToken

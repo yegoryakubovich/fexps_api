@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import AccountContactService
+from app.services.account_contact import AccountContactService
 from app.utils import Response, Router
 
 

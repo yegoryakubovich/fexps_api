@@ -16,8 +16,7 @@
 
 
 from app.db.models import Session, Text, Actions
-from app.repositories.text import TextRepository
-from app.repositories.text_translation import TextTranslationRepository
+from app.repositories import TextRepository, TextTranslationRepository
 from app.services.base import BaseService
 from app.services.text_pack import TextPackService
 from app.utils.decorators import session_required
@@ -68,7 +67,7 @@ class TextService(BaseService):
             return text
         return {
             'key': text.key,
-                }
+        }
 
     @session_required(return_model=False, permissions=['texts'])
     async def get(

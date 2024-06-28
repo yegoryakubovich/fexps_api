@@ -21,7 +21,7 @@ from typing import Optional
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates, \
     NotificationTypes
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteRepository, \
-    RequisiteDataRepository, WalletRepository
+    RequisiteDataRepository, WalletRepository, WalletBanRequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
@@ -75,8 +75,9 @@ class RequisiteService(BaseService):
             value=value,
             rate=rate,
         )
+        wallet_ban = None
         if type_ == RequisiteTypes.OUTPUT:
-            await WalletBanService().create_related(
+            wallet_ban = await WalletBanService().create_related(
                 wallet=wallet,
                 value=value_result,
                 reason=WalletBanReasons.BY_REQUISITE,
@@ -96,6 +97,8 @@ class RequisiteService(BaseService):
             value=value_result,
             total_value=value_result,
         )
+        if wallet_ban:
+            await WalletBanRequisiteRepository().create(wallet_ban=wallet_ban, requisite=requisite)
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
             notification_type=NotificationTypes.REQUISITE,
@@ -357,11 +360,12 @@ class RequisiteService(BaseService):
         new_total_currency_value = round(new_total_value * requisite.rate / 10 ** currency.rate_decimal)
         new_currency_value = round(new_value * requisite.rate / 10 ** currency.rate_decimal)
         if requisite.type == RequisiteTypes.OUTPUT:
-            await WalletBanService().create_related(
+            wallet_ban = await WalletBanService().create_related(
                 wallet=wallet,
                 value=value,
                 reason=WalletBanReasons.BY_REQUISITE,
             )
+            await WalletBanRequisiteRepository().create(wallet_ban=wallet_ban, requisite=requisite)
         await RequisiteRepository().update(
             requisite,
             total_value=new_total_value,

@@ -18,7 +18,7 @@
 from pydantic import Field, BaseModel, field_validator
 from pydantic_core.core_schema import ValidationInfo
 
-from app.services import TransferService
+from app.services.transfer import TransferService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ValueMustBePositive
 

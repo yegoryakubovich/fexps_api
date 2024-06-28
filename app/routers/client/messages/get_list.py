@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services import MessageService
+from app.services.message import MessageService
 from app.utils import Response, Router
 
 

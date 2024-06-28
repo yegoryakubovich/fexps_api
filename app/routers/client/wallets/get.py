@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services import WalletService
+from app.services.wallet import WalletService
 from app.utils import Router, Response
 
 

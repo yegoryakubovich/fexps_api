@@ -20,7 +20,7 @@ from typing import Optional
 from pydantic import Field, model_validator, BaseModel
 
 from app.db.models import OrderRequestTypes
-from app.services import OrderRequestService
+from app.services.order import OrderRequestService
 from app.utils import Router, Response
 from app.utils.exceptions.main import ValueMustBePositive, ParameterContainError
 

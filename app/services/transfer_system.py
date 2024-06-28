@@ -19,9 +19,7 @@ from inflection import underscore
 
 from app.db.base_class import Base
 from app.db.models import TransferSystem, Request, TransferTypes, TransferSystemTypes, WalletBanReasons
-from app.db.models.transfer_system import TransferSystemReasons
-from app.repositories.transfer_system import TransferSystemRepository
-from app.repositories.wallet import WalletRepository
+from app.repositories import WalletBanRequestRepository, TransferSystemRepository, WalletRepository
 from app.services.base import BaseService
 from app.services.wallet_ban import WalletBanService
 from app.utils.service_addons.transfer import create_transfer
@@ -68,12 +66,13 @@ class TransferSystemService(BaseService):
         if not request.commission:
             return
         if from_banned_value:
-            await WalletBanService().create_related(
+            wallet_ban = await WalletBanService().create_related(
                 wallet=request.wallet,
                 value=-request.commission,
                 reason=WalletBanReasons.BY_REQUEST,
                 ignore_balance=True,
             )
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await self.create_transfer(
             model=request,
             wallet_id=request.wallet_id,
@@ -90,12 +89,13 @@ class TransferSystemService(BaseService):
         if not value:
             return
         if from_banned_value:
-            await WalletBanService().create_related(
+            wallet_ban = await WalletBanService().create_related(
                 wallet=request.wallet,
                 value=-value,
                 reason=WalletBanReasons.BY_REQUEST,
                 ignore_balance=True,
             )
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await self.create_transfer(
             model=request,
             wallet_id=request.wallet_id,

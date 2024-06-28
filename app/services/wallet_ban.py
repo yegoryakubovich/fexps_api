@@ -17,16 +17,15 @@
 
 from typing import Optional
 
-from app.db.models import Session, Actions, WalletBanRequest, Wallet, WalletBanReasons
-from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_ban import WalletBanRepository
+from app.db.models import Session, Actions, WalletBan, Wallet, WalletBanReasons
+from app.repositories import WalletRepository, WalletBanRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.decorators import session_required
 
 
 class WalletBanService(BaseService):
-    model = WalletBanRequest
+    model = WalletBan
 
     @session_required(permissions=['wallets_bans'])
     async def create_by_admin(
@@ -54,7 +53,7 @@ class WalletBanService(BaseService):
             reason: str,
             ignore_balance: bool = False,
             session: Optional[Session] = None,
-    ) -> WalletBanRequest:
+    ) -> WalletBan:
         """
         :param wallet: Wallet object
         :param value:
@@ -98,7 +97,7 @@ class WalletBanService(BaseService):
 
     async def delete_related(
             self,
-            wallet_ban: WalletBanRequest,
+            wallet_ban: WalletBan,
             ignore_balance: bool = False,
             session: Optional[Session] = None,
     ) -> None:

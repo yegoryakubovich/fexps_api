@@ -22,8 +22,7 @@ from inflection import underscore
 
 from app.db.base_class import Base
 from app.db.models import Action, Actions
-from app.repositories import ActionParameterRepository
-from app.repositories.action import ActionRepository
+from app.repositories import ActionParameterRepository, ActionRepository
 
 
 class ActionService:

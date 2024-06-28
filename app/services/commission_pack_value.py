@@ -18,8 +18,7 @@
 from typing import Optional
 
 from app.db.models import CommissionPackValue, Session, Actions, CommissionPack
-from app.repositories.commission_pack import CommissionPackRepository
-from app.repositories.commission_pack_value import CommissionPackValueRepository
+from app.repositories import CommissionPackRepository, CommissionPackValueRepository
 from app.services.base import BaseService
 from app.utils.decorators import session_required
 from app.utils.exceptions import CommissionIntervalAlreadyTaken

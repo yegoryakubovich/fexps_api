@@ -20,9 +20,10 @@ from typing import Optional
 from pydantic import Field, BaseModel, field_validator
 
 from app.db.models import MethodFieldTypes
-from app.services import MethodService
+from app.services.method import MethodService
 from app.utils import Response, Router
 from app.utils.exceptions import MethodParametersMissing, MethodParametersValidationError, MethodFieldsMissing
+
 
 router = Router(
     prefix='/update',
@@ -43,7 +44,6 @@ class MethodUpdateSchema(BaseModel):
     color: Optional[str] = Field(min_length=2, max_length=7, default='#1D1D1D')
     bgcolor: Optional[str] = Field(min_length=2, max_length=7, default='#FFFCEF')
     is_rate_default: Optional[bool] = Field(default=None)
-
 
     @field_validator('fields')
     @classmethod

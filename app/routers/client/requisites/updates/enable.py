@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import RequisiteService
+from app.services.requisite import RequisiteService
 from app.utils import Router, Response
 
 

@@ -17,7 +17,7 @@
 
 from pydantic import BaseModel, Field
 
-from app.services import SessionService
+from app.services.session import SessionService
 from app.utils import Response, Router
 
 

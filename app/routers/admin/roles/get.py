@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import RoleService
+from app.services.role import RoleService
 from app.utils import Router, Response
 
 

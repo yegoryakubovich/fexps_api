@@ -17,7 +17,7 @@
 
 from pydantic import Field, BaseModel
 
-from app.services import TextPackService
+from app.services.text_pack import TextPackService
 from app.utils import Response, Router
 
 

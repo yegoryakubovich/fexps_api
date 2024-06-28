@@ -17,10 +17,11 @@
 
 from time import time
 from typing import Optional
+
 from app.db.models import File, Session, Actions, FileKey
-from app.repositories.file_key import FileKeyRepository
-from app.services import FileService
+from app.repositories import FileKeyRepository
 from app.services.base import BaseService
+from app.services.file import FileService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 from config import settings

@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import BaseModel, Field
 
-from app.services import RolePermissionService
+from app.services.role_permission import RolePermissionService
 from app.utils import Router, Response
 
 

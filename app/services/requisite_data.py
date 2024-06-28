@@ -18,10 +18,10 @@
 from typing import Optional
 
 from app.db.models import Session, RequisiteData, Actions
-from app.repositories.method import MethodRepository
-from app.repositories.requisite_data import RequisiteDataRepository
-from app.services import CurrencyService, MethodService
+from app.repositories import MethodRepository, RequisiteDataRepository
 from app.services.base import BaseService
+from app.services.currency import CurrencyService
+from app.services.method import MethodService
 from app.utils.decorators import session_required
 from app.utils.service_addons.method import method_check_validation_scheme
 

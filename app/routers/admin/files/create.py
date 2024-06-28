@@ -17,7 +17,7 @@
 
 from fastapi import UploadFile
 
-from app.services import FileService
+from app.services.file import FileService
 from app.utils import Response, Router
 
 
