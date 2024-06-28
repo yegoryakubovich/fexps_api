@@ -38,7 +38,6 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound
 from app.utils.exceptions.request import RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
 from app.utils.service_addons.order import order_cancel_related
-from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -100,7 +99,7 @@ class RequestService(BaseService):
                         'output_method': output_method.name_text.value_default,
                     }
                 )
-            await WalletService().check_balance(wallet=wallet, value=calculate.output_value)
+            await WalletService().check_balance(wallet=wallet, value=-calculate.output_value)
         else:
             input_currency_value, output_currency_value = start_value, end_value
             calculate = await calculate_request_rate_all(
@@ -244,7 +243,7 @@ class RequestService(BaseService):
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[request.wallet],
             exception=RequestStateNotPermission(
@@ -297,7 +296,7 @@ class RequestService(BaseService):
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[request.wallet],
             exception=RequestStateNotPermission(
@@ -353,7 +352,7 @@ class RequestService(BaseService):
         else:
             await self.cancel_related(request=request)
             next_state = RequestStates.CANCELED
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[request.wallet],
             exception=RequestStateNotPermission(
@@ -399,7 +398,7 @@ class RequestService(BaseService):
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[request.wallet],
             exception=RequestStateNotPermission(
@@ -535,3 +534,12 @@ class RequestService(BaseService):
             'confirmation_delta': confirmation_delta,
             'rate_fixed_delta': rate_fixed_delta,
         }
+
+    @staticmethod
+    async def rate_fixed_off(request: Request):
+        await RequestRepository().update(
+            request,
+            rate_fixed=False,
+            difference=0,
+            output_value=request.output_value + request.difference,
+        )

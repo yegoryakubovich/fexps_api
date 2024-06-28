@@ -21,12 +21,13 @@ from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPosi
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, MessageFileRepository, \
     OrderFileRepository
 from app.repositories.file_key import FileKeyRepository
-from app.services import ActionService, FileService
+from app.services.action import ActionService
 from app.services.base import BaseService
+from app.services.file import FileService
+from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
-from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -94,7 +95,7 @@ class MessageService(BaseService):
     ) -> dict:
         account = session.account
         message = await MessageRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[message.order.request.wallet, message.order.requisite.wallet],
             exception=OrderNotPermission(
@@ -116,7 +117,7 @@ class MessageService(BaseService):
     ) -> dict:
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(

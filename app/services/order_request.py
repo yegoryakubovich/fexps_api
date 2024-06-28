@@ -19,9 +19,7 @@ from typing import Optional
 
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
     OrderCanceledReasons, MessageRoles, NotificationTypes, OrderTypes
-from app.repositories.order import OrderRepository
-from app.repositories.order_request import OrderRequestRepository
-from app.repositories.wallet_account import WalletAccountRepository
+from app.repositories import OrderRepository, OrderRequestRepository, WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
@@ -30,7 +28,6 @@ from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderReque
     OrderRequestAlreadyExists
 from app.utils.service_addons.order_request import order_request_update_type_cancel, \
     order_request_update_type_update_value, order_request_update_type_recreate
-from app.utils.service_addons.wallet import wallet_check_permission
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
@@ -50,7 +47,7 @@ class OrderRequestService(BaseService):
         order = await OrderRepository().get_by_id(id_=order_id)
         request = order.request
         wallet = order.request.wallet
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[wallet],
             exception=OrderNotPermission(
@@ -119,7 +116,7 @@ class OrderRequestService(BaseService):
                 return {}
             if order.type == OrderTypes.OUTPUT and currency_value > order.currency_value:
                 example_value = round(currency_value / order.rate * 10 ** request.rate_decimal)
-                await WalletService().check_balance(wallet=order.request.wallet, value=example_value)
+                await WalletService().check_balance(wallet=order.request.wallet, value=-example_value)
         if not order_request:
             order_request = await OrderRequestRepository().create(
                 wallet=wallet,
@@ -167,7 +164,7 @@ class OrderRequestService(BaseService):
         account = session.account
         order_request = await OrderRequestRepository().get_by_id(id_=id_)
         order = order_request.order
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(
@@ -189,7 +186,7 @@ class OrderRequestService(BaseService):
     ) -> dict:
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(
@@ -217,7 +214,7 @@ class OrderRequestService(BaseService):
         account = session.account
         order_request = await OrderRequestRepository().get_by_id(id_=id_, state=OrderRequestStates.WAIT)
         order = order_request.order
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(

@@ -20,11 +20,8 @@ from typing import Optional
 
 from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBanReasons, RequisiteStates, OrderStates, \
     NotificationTypes
-from app.repositories import WalletAccountRepository, OrderRepository
-from app.repositories.method import MethodRepository
-from app.repositories.requisite import RequisiteRepository
-from app.repositories.requisite_data import RequisiteDataRepository
-from app.repositories.wallet import WalletRepository
+from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteRepository, \
+    RequisiteDataRepository, WalletRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
@@ -37,7 +34,6 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
 from app.utils.exceptions.wallet import WalletPermissionError
-from app.utils.service_addons.wallet import wallet_check_permission
 from config import settings
 
 
@@ -62,11 +58,11 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[wallet],
         )
-        input_method,output_method, output_requisite_data, currency = None, None, None, None
+        input_method, output_method, output_requisite_data, currency = None, None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
             currency = input_method.currency
@@ -145,7 +141,7 @@ class RequisiteService(BaseService):
     ):
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[requisite.wallet],
         )
@@ -203,7 +199,10 @@ class RequisiteService(BaseService):
         need_state = RequisiteStates.ENABLE
         next_state = RequisiteStates.STOP
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        await WalletService().check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+        )
         if requisite.state != need_state:
             raise RequisiteStateWrong(
                 kwargs={
@@ -239,7 +238,7 @@ class RequisiteService(BaseService):
         need_state = RequisiteStates.STOP
         next_state = RequisiteStates.ENABLE
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[requisite.wallet],
         )
@@ -278,7 +277,10 @@ class RequisiteService(BaseService):
         need_state = RequisiteStates.STOP
         next_state = RequisiteStates.DISABLE
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(account=account, wallets=[requisite.wallet])
+        await WalletService().check_permission(
+            account=account,
+            wallets=[requisite.wallet],
+        )
         if requisite.state != need_state:
             raise RequisiteStateWrong(
                 kwargs={
@@ -325,7 +327,7 @@ class RequisiteService(BaseService):
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[requisite.wallet],
         )

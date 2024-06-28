@@ -21,9 +21,6 @@ from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
 from app.services.base import BaseService
 from app.services.wallet import WalletService
-from app.utils.exceptions.wallet import WalletLimitReached
-from app.utils.service_addons.wallet import wallet_get_available_value
-from config import settings
 
 
 async def create_transfer(
@@ -40,14 +37,8 @@ async def create_transfer(
         value = -value
         wallet_from, wallet_to = wallet_to, wallet_from
     if not ignore_bal:
-        await WalletService().check_balance(wallet=wallet_from, value=value)
-    available_value = await wallet_get_available_value(wallet=wallet_to)
-    if not ignore_bal and value > available_value:
-        raise WalletLimitReached(
-            kwargs={
-                'wallet_max_value': settings.wallet_max_value,
-            },
-        )
+        await WalletService().check_balance(wallet=wallet_from, value=-value)
+        await WalletService().check_balance(wallet=wallet_to, value=value)
     await WalletRepository().update(wallet_from, value=wallet_from.value - value)
     transfer = await TransferRepository().create(
         type=type_,

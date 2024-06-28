@@ -20,10 +20,10 @@ import math
 from app.db.models import OrderTypes, OrderStates, Order, OrderRequest, OrderRequestStates, MessageRoles, \
     NotificationTypes
 from app.repositories import OrderRepository, OrderRequestRepository
+from app.services.request import RequestService
 from app.utils.bot.notification import BotNotification
 from app.utils.exceptions import RequisiteNotEnough
 from app.utils.service_addons.order import order_cancel_related, order_edit_value_related, order_recreate_related
-from app.utils.service_addons.request import request_off_rate_fixed
 from app.utils.value import value_to_float
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
@@ -42,7 +42,7 @@ async def order_request_update_type_cancel(
             state=OrderStates.CANCELED,
             canceled_reason=canceled_reason,
         )
-        await request_off_rate_fixed(request=order_request.order.request)
+        await RequestService().rate_fixed_off(request=order_request.order.request)
     await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
@@ -77,7 +77,7 @@ async def order_request_update_type_recreate(
             state=OrderStates.CANCELED,
             canceled_reason=canceled_reason,
         )
-        await request_off_rate_fixed(request=order_request.order.request)
+        await RequestService().rate_fixed_off(request=order_request.order.request)
     await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,
@@ -131,7 +131,7 @@ async def order_request_update_type_update_value(
             value=value,
             currency_value=currency_value,
         )
-        await request_off_rate_fixed(request=order_request.order.request)
+        await RequestService().rate_fixed_off(request=order_request.order.request)
     await OrderRequestRepository().update(order_request, state=state)
     await connections_manager_aiohttp.send(
         role=MessageRoles.SYSTEM,

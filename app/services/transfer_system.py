@@ -72,7 +72,7 @@ class TransferSystemService(BaseService):
                 wallet=request.wallet,
                 value=-request.commission,
                 reason=WalletBanReasons.BY_ORDER,
-                ignore_bal=True,
+                ignore_balance=True,
             )
         await self.create_transfer(
             model=request,
@@ -92,7 +92,7 @@ class TransferSystemService(BaseService):
                 wallet=request.wallet,
                 value=-value,
                 reason=WalletBanReasons.BY_ORDER,
-                ignore_bal=True,
+                ignore_balance=True,
             )
         await self.create_transfer(
             model=request,

@@ -23,12 +23,12 @@ from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository, OrderTransferRepository
 from app.repositories.transfer import TransferRepository
 from app.repositories.wallet import WalletRepository
-from app.services import ActionService
+from app.services.action import ActionService
 from app.services.base import BaseService
+from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.service_addons.transfer import create_transfer
-from app.utils.service_addons.wallet import wallet_check_permission
 from app.utils.value import value_to_float
 from config import settings
 
@@ -51,7 +51,10 @@ class TransferService(BaseService):
     ) -> dict:
         account = session.account
         wallet_from = await WalletRepository().get_by_id(id_=wallet_from_id)
-        await wallet_check_permission(account=account, wallets=[wallet_from])
+        await WalletService().check_permission(
+            account=account,
+            wallets=[wallet_from],
+        )
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
         transfer = await create_transfer(
             type_=TransferTypes.PAYMENT,
@@ -87,7 +90,7 @@ class TransferService(BaseService):
     ):
         account = session.account
         transfer = await TransferRepository().get_by_id(id_=id_)
-        wallet = await wallet_check_permission(
+        wallet = await WalletService().check_permission(
             account=account,
             wallets=[transfer.wallet_from, transfer.wallet_to],
         )
@@ -106,7 +109,10 @@ class TransferService(BaseService):
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
-        await wallet_check_permission(account=account, wallets=[wallet])
+        await WalletService().check_permission(
+            account=account,
+            wallets=[wallet],
+        )
         _transfers, results = await TransferRepository().search_by_wallet(
             wallet=wallet,
             is_sender=is_sender,

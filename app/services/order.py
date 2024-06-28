@@ -30,12 +30,12 @@ from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.request import RequestService
 from app.services.requisite import RequisiteService
+from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.service_addons.method import check_input_field
 from app.utils.service_addons.order import order_compete_related
-from app.utils.service_addons.wallet import wallet_check_permission
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
@@ -50,7 +50,7 @@ class OrderService(BaseService):
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=id_)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[order.request.wallet, order.requisite.wallet],
             exception=OrderNotPermission(
@@ -114,7 +114,7 @@ class OrderService(BaseService):
     ) -> dict:
         account = session.account
         request = await RequestRepository().get_by_id(id_=request_id)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[request.wallet],
             exception=OrderNotPermission(
@@ -139,7 +139,7 @@ class OrderService(BaseService):
     ) -> dict:
         account = session.account
         requisite = await RequisiteRepository().get_by_id(id_=requisite_id)
-        await wallet_check_permission(
+        await WalletService().check_permission(
             account=account,
             wallets=[requisite.wallet],
             exception=OrderNotPermission(kwargs={'field': 'Requisite', 'id_value': requisite.id}),
@@ -163,7 +163,7 @@ class OrderService(BaseService):
         next_state = OrderStates.PAYMENT
         order = await OrderRepository().get_by_id(id_=id_)
         if order.type == OrderTypes.INPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.requisite.wallet],
                 exception=OrderStateNotPermission(
@@ -174,7 +174,7 @@ class OrderService(BaseService):
                 )
             )
         elif order.type == OrderTypes.OUTPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.request.wallet],
                 exception=OrderStateNotPermission(
@@ -236,7 +236,7 @@ class OrderService(BaseService):
         next_state = OrderStates.CONFIRMATION
         order = await OrderRepository().get_by_id(id_=id_)
         if order.type == OrderTypes.INPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.request.wallet],
                 exception=OrderStateNotPermission(
@@ -247,7 +247,7 @@ class OrderService(BaseService):
                 )
             )
         elif order.type == OrderTypes.OUTPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.requisite.wallet],
                 exception=OrderStateNotPermission(
@@ -334,7 +334,7 @@ class OrderService(BaseService):
         next_state = OrderStates.COMPLETED
         order = await OrderRepository().get_by_id(id_=id_)
         if order.type == OrderTypes.INPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.requisite.wallet],
                 exception=OrderStateNotPermission(
@@ -345,7 +345,7 @@ class OrderService(BaseService):
                 )
             )
         elif order.type == OrderTypes.OUTPUT:
-            await wallet_check_permission(
+            await WalletService().check_permission(
                 account=account,
                 wallets=[order.request.wallet],
                 exception=OrderStateNotPermission(

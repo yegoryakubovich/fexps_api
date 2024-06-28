@@ -15,18 +15,17 @@
 #
 
 
-from typing import Optional
+from typing import Optional, List
 
-from app.db.models import Wallet, Session, WalletAccountRoles, Actions
-from app.repositories import CommissionPackRepository, AccountRepository
-from app.repositories.wallet import WalletRepository
-from app.repositories.wallet_account import WalletAccountRepository
+from app.db.models import Wallet, Session, WalletAccountRoles, Actions, Account
+from app.repositories import CommissionPackRepository, AccountRepository, WalletRepository, WalletAccountRepository
 from app.services.base import BaseService
 from app.services.wallet_account import WalletAccountService
+from app.utils import ApiException
 from app.utils.decorators import session_required
-from app.utils.exceptions import NotEnoughFundsOnBalance
+from app.utils.exceptions import NotEnoughFundsOnBalance, WalletLimitReached
 from app.utils.exceptions.wallet import WalletCountLimitReached, WalletPermissionError
-from app.utils.service_addons.wallet import wallet_check_permission
+from app.utils.value import value_to_float
 from config import settings
 
 
@@ -86,7 +85,7 @@ class WalletService(BaseService):
             commission_pack = await CommissionPackRepository().get(is_default=True)
             if commission_pack:
                 await WalletRepository().update(wallet, commission_pack=commission_pack)
-        await wallet_check_permission(
+        await self.check_permission(
             account=account,
             wallets=[wallet],
         )
@@ -232,14 +231,44 @@ class WalletService(BaseService):
         }
 
     @staticmethod
+    async def check_permission(
+            account: Account,
+            wallets: List[Wallet],
+            exception: ApiException = WalletPermissionError(),
+    ) -> Wallet:
+        for wallet in wallets:
+            if await WalletAccountRepository().get(account=account, wallet=wallet):
+                return wallet
+        raise exception
+
+    @staticmethod
     async def check_balance(
             wallet: Wallet,
             value: int,
             error: bool = True,
     ) -> bool:
-        current_balance = wallet.value + wallet.value_can_minus
-        if current_balance >= value:
-            return True
-        if not error:
+        """
+        :param wallet: Wallet object
+        :param value: int
+        + if add value
+        - if remove value
+        :param error: bool
+        Raised error
+        :return:
+        If error is True then return raise
+        Else return True or False
+        """
+        current_value = wallet.value + value
+        if current_value < -wallet.value_can_minus:
+            if error:
+                raise NotEnoughFundsOnBalance()
             return False
-        raise NotEnoughFundsOnBalance()
+        if current_value > settings.wallet_max_value:
+            if error:
+                raise WalletLimitReached(
+                    kwargs={
+                        'wallet_max_value': value_to_float(value=settings.wallet_max_value),
+                    },
+                )
+            return False
+        return True

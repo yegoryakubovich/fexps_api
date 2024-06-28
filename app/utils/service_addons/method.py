@@ -52,10 +52,6 @@ async def method_check_validation_scheme(method: Method, fields: dict):
             )
 
 
-async def method_check_input_field(method: Method, fields: dict):
-    await check_input_field(schema_input_fields=method.schema_input_fields, fields=fields)
-
-
 async def check_input_field(schema_input_fields: list, fields: dict):
     for field in schema_input_fields:
         field_key = field.get('key')
