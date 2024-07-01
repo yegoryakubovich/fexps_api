@@ -263,7 +263,7 @@ class WalletService(BaseService):
             if error:
                 raise NotEnoughFundsOnBalance()
             return False
-        if current_value > settings.wallet_max_value:
+        if (current_value + wallet.value_banned) > settings.wallet_max_value:
             if error:
                 raise WalletLimitReached(
                     kwargs={
