@@ -23,7 +23,6 @@ from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
 from app.utils.decorators import session_required
-from app.utils.service_addons.method import method_check_validation_scheme
 
 
 class RequisiteDataService(BaseService):
@@ -39,7 +38,7 @@ class RequisiteDataService(BaseService):
     ) -> dict:
         account = session.account
         method = await MethodRepository().get_by_id(id_=method_id)
-        await method_check_validation_scheme(method=method, fields=fields)
+        await MethodService().method_check_validation_scheme(method=method, fields=fields)
         requisite_data = await RequisiteDataRepository().create(
             account=account,
             name=name,
@@ -100,7 +99,7 @@ class RequisiteDataService(BaseService):
     ) -> dict:
         account = session.account
         requisite_data = await RequisiteDataRepository().get_by_id(id_=id_, account=account)
-        await method_check_validation_scheme(method=requisite_data.method, fields=fields)
+        await MethodService().method_check_validation_scheme(method=requisite_data.method, fields=fields)
         await RequisiteDataRepository().update(
             requisite_data,
             fields=fields,

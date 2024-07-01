@@ -18,7 +18,7 @@
 from math import ceil
 from typing import Optional
 
-from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet, NotificationTypes
+from app.db.models import Transfer, Session, Actions, TransferTypes, Wallet, NotificationTypes, Order
 from app.db.models.transfer import TransferOperations
 from app.repositories import WalletAccountRepository, OrderTransferRepository, TransferRepository, WalletRepository
 from app.services.action import ActionService
@@ -26,7 +26,6 @@ from app.services.base import BaseService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
-from app.utils.service_addons.transfer import create_transfer
 from app.utils.value import value_to_float
 from config import settings
 
@@ -54,7 +53,7 @@ class TransferService(BaseService):
             wallets=[wallet_from],
         )
         wallet_to = await WalletRepository().get_by_id(id_=wallet_to_id)
-        transfer = await create_transfer(
+        transfer = await self.create_transfer(
             type_=TransferTypes.PAYMENT,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
@@ -171,3 +170,45 @@ class TransferService(BaseService):
             'value': transfer.value,
             'date': action.datetime.strftime(settings.datetime_format),
         }
+
+    @staticmethod
+    async def create_transfer(
+            type_: str,
+            wallet_from: Wallet,
+            wallet_to: Wallet,
+            value: int,
+            order: Order = None,
+            ignore_bal: bool = False,
+    ) -> Transfer:
+        wallet_from = await WalletRepository().get_by_id(id_=wallet_from.id)
+        wallet_to = await WalletRepository().get_by_id(id_=wallet_to.id)
+        if value < 0:
+            value = -value
+            wallet_from, wallet_to = wallet_to, wallet_from
+        if not ignore_bal:
+            await WalletService().check_balance(wallet=wallet_from, value=-value)
+            await WalletService().check_balance(wallet=wallet_to, value=value)
+        await WalletRepository().update(wallet_from, value=wallet_from.value - value)
+        transfer = await TransferRepository().create(
+            type=type_,
+            wallet_from=wallet_from,
+            wallet_to=wallet_to,
+            value=value,
+        )
+        if order:
+            await OrderTransferRepository().create(order=order, transfer=transfer)
+        await WalletRepository().update(wallet_to, value=wallet_to.value + value)
+        await BaseService().create_action(
+            model=transfer,
+            action=Actions.CREATE,
+            parameters={
+                'id': transfer.id,
+                'type': type_,
+                'wallet_from_id': wallet_from.id,
+                'wallet_to_id': wallet_to.id,
+                'value': value,
+                'order': order,
+                'ignore_bal': ignore_bal,
+            },
+        )
+        return transfer

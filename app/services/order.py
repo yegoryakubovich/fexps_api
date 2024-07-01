@@ -15,26 +15,28 @@
 #
 
 
+import math
 from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
-    MessageRoles, NotificationTypes
+    MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
-    FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository
+    FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
+    RequestRequisiteRepository, WalletBanRequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.request import RequestService
 from app.services.requisite import RequisiteService
+from app.services.transfer import TransferService
 from app.services.wallet import WalletService
+from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.states.input import request_check_state_input
 from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
-from app.utils.service_addons.method import check_input_field
-from app.utils.service_addons.order import order_compete_related
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
@@ -265,7 +267,7 @@ class OrderService(BaseService):
                 },
             )
         await OrderRequestService().check_have_order_request(order=order)
-        await check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
+        await MethodService().check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
         await OrderRepository().update(order, state=next_state)
         connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
@@ -363,7 +365,7 @@ class OrderService(BaseService):
             )
         connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
-        await order_compete_related(order=order)
+        await self.order_compete_related(order=order)
         await OrderRepository().update(order, state=next_state)
         await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
         bot_notification = BotNotification()
@@ -423,3 +425,169 @@ class OrderService(BaseService):
             'input_fields': order.input_fields,
             'order_request': order_request,
         }
+
+    @staticmethod
+    async def waited_order(
+            request: Request,
+            requisite: Requisite,
+            currency_value: int,
+            value: int,
+            rate: int,
+            order_type: str,
+            order_state: str = OrderStates.WAITING,
+    ) -> Order:
+        await RequisiteRepository().update(
+            requisite,
+            currency_value=round(requisite.currency_value - currency_value),
+            value=round(requisite.value - value),
+            in_process=False,
+        )
+        requisite_scheme_fields, requisite_fields, input_scheme_fields, input_fields = None, None, None, None
+        if order_type == OrderTypes.INPUT:
+            requisite_scheme_fields = requisite.output_requisite_data.method.schema_fields
+            requisite_fields = requisite.output_requisite_data.fields
+            input_scheme_fields = requisite.output_requisite_data.method.schema_input_fields
+        elif order_type == OrderTypes.OUTPUT:
+            requisite_scheme_fields = request.output_requisite_data.method.schema_fields
+            requisite_fields = request.output_requisite_data.fields
+            input_scheme_fields = request.output_requisite_data.method.schema_input_fields
+        return await OrderRepository().create(
+            type=order_type,
+            state=order_state,
+            request=request,
+            requisite=requisite,
+            currency_value=currency_value,
+            value=value,
+            rate=rate,
+            requisite_scheme_fields=requisite_scheme_fields,
+            requisite_fields=requisite_fields,
+            input_scheme_fields=input_scheme_fields,
+            input_fields=input_fields,
+        )
+
+    @staticmethod
+    async def order_cancel_related(order: Order) -> None:
+        request = order.request
+        if order.type == OrderTypes.INPUT:
+            current_currency_value = request.input_currency_value - order.currency_value
+            current_value = request.input_value - order.value
+            current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
+            await RequestRepository().update(
+                request,
+                commission=current_commission,
+                input_currency_value=current_currency_value,
+                input_value=current_value,
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await RequestRepository().update(
+                request,
+                output_currency_value=request.output_currency_value - order.currency_value,
+                output_value=request.output_value - order.value,
+            )
+            if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                wallet_ban = await WalletBanService().create_related(
+                    wallet=request.wallet,
+                    value=-order.value,
+                    reason=WalletBanReasons.BY_REQUEST,
+                )
+                await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
+        await RequisiteRepository().update(
+            order.requisite,
+            currency_value=round(order.requisite.currency_value + order.currency_value),
+            value=round(order.requisite.value + order.value),
+        )
+
+    @staticmethod
+    async def order_recreate_related(order: Order) -> None:
+        await RequestRequisiteRepository().create(
+            request=order.request,
+            requisite=order.requisite,
+            type=RequestRequisiteTypes.BLACKLIST,
+        )
+        if order.type == OrderTypes.OUTPUT:
+            if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                wallet_ban = await WalletBanService().create_related(
+                    wallet=order.request.wallet,
+                    value=-order.value,
+                    reason=WalletBanReasons.BY_REQUEST,
+                )
+                await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=order.request)
+
+        await RequisiteRepository().update(
+            order.requisite,
+            currency_value=round(order.requisite.currency_value + order.currency_value),
+            value=round(order.requisite.value + order.value),
+        )
+
+    @staticmethod
+    async def order_edit_value_related(
+            order: Order,
+            delta_value: int,
+            delta_currency_value: int,
+    ) -> None:
+        request = order.request
+        if order.type == OrderTypes.INPUT:
+            current_currency_value = request.input_currency_value - delta_currency_value
+            current_value = request.input_value - delta_value
+            current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
+            await RequestRepository().update(
+                request,
+                commission=current_commission,
+                input_currency_value=current_currency_value,
+                input_value=current_value,
+            )
+        elif order.type == OrderTypes.OUTPUT:
+            await RequestRepository().update(
+                request,
+                output_currency_value=request.output_currency_value - delta_currency_value,
+                output_value=request.output_value - delta_value,
+            )
+            if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                wallet_ban = await WalletBanService().create_related(
+                    wallet=request.wallet,
+                    value=-delta_value,
+                    reason=WalletBanReasons.BY_REQUEST,
+                )
+                await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
+        await RequisiteRepository().update(
+            order.requisite,
+            currency_value=round(order.requisite.currency_value + delta_currency_value),
+            value=round(order.requisite.value + delta_value),
+        )
+
+    @staticmethod
+    async def order_compete_related(order: Order) -> None:
+        if order.type == OrderTypes.INPUT:
+            wallet_ban = await WalletBanService().create_related(
+                wallet=order.requisite.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_REQUEST,
+            )
+            await WalletBanRequisiteRepository().create(wallet_ban=wallet_ban, requisite=order.requisite)
+            await TransferService().create_transfer(
+                type_=TransferTypes.IN_ORDER,
+                wallet_from=order.requisite.wallet,
+                wallet_to=order.request.wallet,
+                value=order.value,
+                order=order,
+            )
+            wallet_ban = await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=order.value,
+                reason=WalletBanReasons.BY_REQUEST,
+            )
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=order.request)
+        elif order.type == OrderTypes.OUTPUT:
+            wallet_ban = await WalletBanService().create_related(
+                wallet=order.request.wallet,
+                value=-order.value,
+                reason=WalletBanReasons.BY_REQUEST,
+            )
+            await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=order.request)
+            await TransferService().create_transfer(
+                type_=TransferTypes.IN_ORDER,
+                wallet_from=order.request.wallet,
+                wallet_to=order.requisite.wallet,
+                value=order.value,
+                order=order,
+            )

@@ -21,13 +21,13 @@ import math
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, \
     NotificationTypes
 from app.repositories import OrderRepository, RequestRepository, RequisiteRepository
+from app.services.order import OrderService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.requisites.find import calculate_requisite_input_by_currency_value, \
     calculate_requisite_input_by_value
 from app.utils.calculations.requisites.need_value import calculations_requisites_need_input_currency_value, \
     calculations_requisites_need_input_value
-from app.utils.service_addons.order import waited_order
 from app.utils.value import value_to_int
 
 custom_logger = RequestLogger(prefix='request_state_input_reserved_check')
@@ -103,7 +103,7 @@ async def get_new_requisite_by_currency_value(
         requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
         rate_float = requisite_item.currency_value / requisite_item.value
         _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
-        await waited_order(
+        await OrderService().waited_order(
             request=request,
             requisite=requisite,
             currency_value=requisite_item.currency_value,
@@ -129,7 +129,7 @@ async def get_new_requisite_by_value(
         requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
         rate_float = requisite_item.currency_value / requisite_item.value
         _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
-        await waited_order(
+        await OrderService().waited_order(
             request=request,
             requisite=requisite,
             currency_value=requisite_item.currency_value,

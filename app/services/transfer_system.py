@@ -22,8 +22,8 @@ from app.db.models import TransferSystem, Request, TransferTypes, TransferSystem
 from app.db.models.transfer_system import TransferSystemReasons
 from app.repositories import WalletBanRequestRepository, TransferSystemRepository, WalletRepository
 from app.services.base import BaseService
+from app.services.transfer import TransferService
 from app.services.wallet_ban import WalletBanService
-from app.utils.service_addons.transfer import create_transfer
 
 
 class TransferSystemService(BaseService):
@@ -42,7 +42,7 @@ class TransferSystemService(BaseService):
             return
         wallet_from = await WalletRepository().get_by_id(id_=wallet_id)
         wallet_to = await WalletRepository().get_system_wallet()
-        transfer = await create_transfer(
+        transfer = await TransferService().create_transfer(
             type_=TransferTypes.IN_ORDER,
             wallet_from=wallet_from,
             wallet_to=wallet_to,
