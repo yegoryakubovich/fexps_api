@@ -19,7 +19,7 @@ from app.db.models import Request, OrderTypes, OrderStates
 from app.repositories import OrderRepository
 
 
-async def calculations_requisites_need_input_value(request: Request) -> int:
+async def calculations_requisites_input_need_value(request: Request) -> int:
     need_value = request.input_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.INPUT):
         if order.state in [OrderStates.CANCELED]:

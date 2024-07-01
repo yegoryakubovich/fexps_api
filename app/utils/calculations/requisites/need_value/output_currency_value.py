@@ -19,7 +19,7 @@ from app.db.models import Request, OrderTypes, OrderStates
 from app.repositories import OrderRepository
 
 
-async def calculations_requisites_need_output_currency_value(request: Request) -> int:
+async def calculations_requisites_output_need_currency_value(request: Request) -> int:
     need_currency_value = request.output_currency_value
     for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
         if order.state in [OrderStates.CANCELED]:
