@@ -16,6 +16,7 @@
 
 
 import datetime
+import logging
 from math import ceil
 from typing import Optional
 
@@ -35,6 +36,8 @@ from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.rate.all import calculate_request_rate_all
 from app.utils.calculations.request.rate.input import calculate_request_rate_input
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
+from app.utils.calculations.request.states.input import request_check_state_input
+from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
 from config import settings
@@ -310,13 +313,39 @@ class RequestService(BaseService):
                 },
             ),
         )
-        orders = await OrderRepository().get_list(request=request)
-        if not orders:
+        cancel_order_count, all_order_count = 0, 0
+        for order in await OrderRepository().get_list(request=request):
+            all_order_count += 1
+            if order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
+                cancel_order_count += 1
+                continue
+            if order.type == OrderTypes.INPUT and order.state == OrderStates.PAYMENT:
+                cancel_order_count += 1
+                await OrderRequestService().create(
+                    session=session,
+                    token=token,
+                    order_id=order.id,
+                    type_=OrderRequestTypes.CANCEL,
+                    value=None,
+                )
+        logging.critical(0)
+        if (all_order_count - cancel_order_count) > 0:
+            logging.critical(0)
+            raise RequestFoundOrders(
+                kwargs={
+                    'id_value': request.id,
+                },
+            )
+        if all_order_count == 0:
+            logging.critical(0)
             input_types = [RequestTypes.INPUT, RequestTypes.ALL]
-            if request.type in input_types and request.state == RequestStates.INPUT_RESERVATION:
+            input_states = [RequestStates.INPUT_RESERVATION]
+            if request.type in input_types and request.state in input_states:
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
+                return
             output_types = [RequestTypes.OUTPUT]
-            if request.type in output_types and request.state == RequestStates.OUTPUT_RESERVATION:
+            output_states = [RequestStates.OUTPUT_RESERVATION]
+            if request.type in output_types and request.state == output_states:
                 wallet_ban = await WalletBanService().create_related(
                     wallet=request.wallet,
                     value=-request.output_value,
@@ -324,27 +353,11 @@ class RequestService(BaseService):
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
-        else:
-            found_order_count = 0
-            for order in orders:
-                if order.state in [OrderStates.COMPLETED, OrderStates.CANCELED]:
-                    continue
-                found_order_count += 1
-                if order.type == OrderTypes.INPUT and order.state == OrderStates.PAYMENT:
-                    found_order_count -= 1
-                    await OrderRequestService().create(
-                        session=session,
-                        token=token,
-                        order_id=order.id,
-                        type_=OrderRequestTypes.CANCEL,
-                        value=None,
-                    )
-            if found_order_count > 0:
-                raise RequestFoundOrders(
-                    kwargs={
-                        'id_value': request.id,
-                    },
-                )
+                return
+        if request.state in [RequestStates.INPUT]:
+            await request_check_state_input(request=request)
+        elif request.state in [RequestStates.OUTPUT]:
+            await request_check_state_output(request=request)
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -509,10 +522,11 @@ class RequestService(BaseService):
         }
 
     @staticmethod
-    async def rate_fixed_off(request: Request):
+    async def rate_fixed_off(request: Request, **kwargs):
         await RequestRepository().update(
             request,
             rate_fixed=False,
             difference=0,
             output_value=request.output_value + request.difference,
+            **kwargs
         )

@@ -24,10 +24,11 @@ from app.services.order import OrderService
 from app.services.transfer_system import TransferSystemService
 from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
+from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.calculations.requisites.find import calculate_requisite_output_by_currency_value, \
     calculate_requisite_output_by_value
-from app.utils.calculations.requisites.need_value import calculations_requisites_need_output_currency_value, \
-    calculations_requisites_need_output_value
+from app.utils.calculations.requisites.need_value import calculations_requisites_output_need_currency_value, \
+    calculations_requisites_output_need_value
 from app.utils.value import value_to_int
 
 custom_logger = RequestLogger(prefix='request_state_output_reserved_check')
@@ -37,14 +38,40 @@ async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
         custom_logger.info(text='start check', request=request)
         request = await RequestRepository().get_by_id(id_=request.id)
+        currency = request.output_method.currency
+        # get need values
         if request.rate_fixed:
-            need_currency_value = await calculations_requisites_need_output_currency_value(request=request)
-            need_bool = not need_currency_value or need_currency_value < request.output_method.currency.div
+            need_currency_value = await calculations_requisites_output_need_currency_value(request=request)
         else:
-            need_value = await calculations_requisites_need_output_value(request=request)
-            need_bool = not need_value or need_value < 100
+            need_value = await calculations_requisites_output_need_value(request=request)
+            need_currency_value = round(need_value * request.output_rate / 10 ** request.rate_decimal)
         # check wait orders / complete state
-        if need_bool:
+        if need_currency_value < currency.div:
+            active_order = False
+            order_value = 0
+            for order in await OrderRepository().get_list(type=OrderTypes.OUTPUT):
+                if order.state == OrderStates.CANCELED:
+                    continue
+                elif order.state == OrderStates.COMPLETED:
+                    order_value += order.value
+                    continue
+                active_order = True
+                break
+            if not active_order:
+                difference = request.output_value
+                if difference:
+                    await TransferSystemService().payment_difference(
+                        request=request,
+                        value=difference,
+                        from_banned_value=True,
+                    )
+                    await RequestRepository().update(
+                        request,
+                        output_value=request.output_value - difference,
+                        difference_rate=request.difference_rate + difference,
+                    )
+                await request_check_state_output(request=request)
+                continue
             waiting_orders = await OrderRepository().get_list(
                 request=request,
                 type=OrderTypes.OUTPUT,
@@ -80,9 +107,9 @@ async def run():
             continue
         # create missing orders
         if request.rate_fixed:
-            need_currency_value = await calculations_requisites_need_output_currency_value(request=request)
+            need_currency_value = await calculations_requisites_output_need_currency_value(request=request)
             custom_logger.info(text=f'create orders need_currency_value={need_currency_value}', request=request)
-            result = await get_new_requisite_by_currency_value(request=request, need_currency_value=need_currency_value)
+            result = await get_new_requisite(request=request, need_currency_value=need_currency_value)
             if result:
                 difference_rate = request.difference_rate
                 order_value_sum = 0
@@ -101,11 +128,9 @@ async def run():
                     difference_rate += difference
                     await RequestRepository().update(request, difference_rate=difference_rate)
         else:
-            need_value = await calculations_requisites_need_output_value(request=request)
+            need_value = await calculations_requisites_output_need_value(request=request)
             custom_logger.info(text=f'create orders need_value={need_value}', request=request)
-            result = await get_new_requisite_by_value(request=request, need_value=need_value)
-            if request.output_value == 0:
-                await RequestRepository().update(request, output_currency_value=0)
+            result = await get_new_requisite(request=request, need_value=need_value)
             if result:
                 order_currency_value_sum = 0
                 for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
@@ -113,47 +138,29 @@ async def run():
                         continue
                     order_currency_value_sum += order.currency_value
                 await RequestRepository().update(request, output_currency_value=order_currency_value_sum)
-
     await asyncio.sleep(1)
 
 
-async def get_new_requisite_by_currency_value(
+async def get_new_requisite(
         request: Request,
-        need_currency_value: int,
+        need_currency_value: int = None,
+        need_value: int = None,
 ) -> bool:
-    result = await calculate_requisite_output_by_currency_value(
-        method=request.output_method,
-        currency_value=need_currency_value,
-        process=True,
-        request=request,
-    )
-    if not result:
-        return False
-    for requisite_item in result.requisite_items:
-        requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
-        rate_float = requisite_item.currency_value / requisite_item.value
-        _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.ceil)
-        await OrderService().waited_order(
+    result = None
+    if need_currency_value:
+        result = await calculate_requisite_output_by_currency_value(
+            method=request.output_method,
+            currency_value=need_currency_value,
+            process=True,
             request=request,
-            requisite=requisite,
-            currency_value=requisite_item.currency_value,
-            value=requisite_item.value,
-            rate=_rate,
-            order_type=OrderTypes.OUTPUT,
         )
-    return True
-
-
-async def get_new_requisite_by_value(
-        request: Request,
-        need_value: int,
-) -> bool:
-    result = await calculate_requisite_output_by_value(
-        method=request.output_method,
-        value=need_value,
-        process=True,
-        request=request,
-    )
+    if need_value:
+        result = await calculate_requisite_output_by_value(
+            method=request.output_method,
+            value=need_value,
+            process=True,
+            request=request,
+        )
     if not result:
         return False
     for requisite_item in result.requisite_items:

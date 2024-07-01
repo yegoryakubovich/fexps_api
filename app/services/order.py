@@ -19,7 +19,8 @@ import math
 from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
-    MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes
+    MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes, \
+    RequestTypes
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
     FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
     RequestRequisiteRepository, WalletBanRequisiteRepository
@@ -468,21 +469,35 @@ class OrderService(BaseService):
     @staticmethod
     async def order_cancel_related(order: Order) -> None:
         request = order.request
+        currency = order.requisite.currency
+        request_kwargs = {}
         if order.type == OrderTypes.INPUT:
-            current_currency_value = request.input_currency_value - order.currency_value
-            current_value = request.input_value - order.value
-            current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
-            await RequestRepository().update(
-                request,
-                commission=current_commission,
-                input_currency_value=current_currency_value,
-                input_value=current_value,
+            input_current_currency_value = request.input_currency_value - order.currency_value
+            input_current_value = request.input_value - order.value
+            current_commission = math.ceil(
+                request.commission / request.input_currency_value * input_current_currency_value
             )
+            request_kwargs.update(
+                commission=current_commission,
+                input_currency_value=input_current_currency_value,
+                input_value=input_current_value,
+            )
+            if request.type in [RequestTypes.ALL]:
+                output_current_value = input_current_value - current_commission
+                output_current_currency_value = round(
+                    output_current_value * request.output_rate / 10 ** request.rate_decimal
+                )
+                output_current_currency_value = math.floor(output_current_currency_value // currency.div) * currency.div
+                request_kwargs.update(
+                    output_currency_value=output_current_currency_value,
+                    output_value=output_current_value,
+                )
         elif order.type == OrderTypes.OUTPUT:
-            await RequestRepository().update(
-                request,
-                output_currency_value=request.output_currency_value - order.currency_value,
-                output_value=request.output_value - order.value,
+            output_current_currency_value = request.output_currency_value - order.currency_value
+            output_current_value = request.output_value - order.value
+            request_kwargs.update(
+                output_currency_value=output_current_currency_value,
+                output_value=output_current_value,
             )
             if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
                 wallet_ban = await WalletBanService().create_related(
@@ -496,6 +511,7 @@ class OrderService(BaseService):
             currency_value=round(order.requisite.currency_value + order.currency_value),
             value=round(order.requisite.value + order.value),
         )
+        await RequestRepository().update(request, **request_kwargs)
 
     @staticmethod
     async def order_recreate_related(order: Order) -> None:
@@ -512,7 +528,6 @@ class OrderService(BaseService):
                     reason=WalletBanReasons.BY_REQUEST,
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=order.request)
-
         await RequisiteRepository().update(
             order.requisite,
             currency_value=round(order.requisite.currency_value + order.currency_value),
@@ -526,21 +541,35 @@ class OrderService(BaseService):
             delta_currency_value: int,
     ) -> None:
         request = order.request
+        currency = order.requisite.currency
+        request_kwargs = {}
         if order.type == OrderTypes.INPUT:
-            current_currency_value = request.input_currency_value - delta_currency_value
-            current_value = request.input_value - delta_value
-            current_commission = math.ceil(request.commission / request.input_currency_value * current_currency_value)
-            await RequestRepository().update(
-                request,
-                commission=current_commission,
-                input_currency_value=current_currency_value,
-                input_value=current_value,
+            current_input_currency_value = request.input_currency_value - delta_currency_value
+            input_current_value = request.input_value - delta_value
+            current_commission = math.ceil(
+                request.commission / request.input_currency_value * current_input_currency_value
             )
+            request_kwargs.update(
+                commission=current_commission,
+                input_currency_value=current_input_currency_value,
+                input_value=input_current_value,
+            )
+            if request.type == RequestTypes.ALL:
+                output_current_value = input_current_value - current_commission
+                output_current_currency_value = round(
+                    output_current_value * request.output_rate / 10 ** request.rate_decimal
+                )
+                output_current_currency_value = math.floor(output_current_currency_value // currency.div) * currency.div
+                request_kwargs.update(
+                    output_currency_value=output_current_currency_value,
+                    output_value=output_current_value,
+                )
         elif order.type == OrderTypes.OUTPUT:
-            await RequestRepository().update(
-                request,
-                output_currency_value=request.output_currency_value - delta_currency_value,
-                output_value=request.output_value - delta_value,
+            output_current_currency_value = request.output_currency_value - delta_currency_value
+            output_current_value = request.output_value - delta_value
+            request_kwargs.update(
+                output_currency_value=output_current_currency_value,
+                output_value=output_current_value,
             )
             if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
                 wallet_ban = await WalletBanService().create_related(
@@ -554,6 +583,7 @@ class OrderService(BaseService):
             currency_value=round(order.requisite.currency_value + delta_currency_value),
             value=round(order.requisite.value + delta_value),
         )
+        await RequestRepository().update(request, **request_kwargs)
 
     @staticmethod
     async def order_compete_related(order: Order) -> None:
