@@ -15,6 +15,7 @@
 #
 
 
+import asyncio
 import logging
 
 from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
@@ -25,5 +26,6 @@ async def request_state_output_reserved_check():
     while True:
         try:
             await fexps_api_client.task.requests.states.output_reserved()
+            await asyncio.sleep(2)
         except ValueError as e:
             logging.critical(f'Exception \n {e}')
