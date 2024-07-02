@@ -22,7 +22,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.db.init_db import init_db
-from app.tasks.permanents.files.file_key_close_check import file_key_close_check
+from app.tasks.permanents.files.keys.close_check import file_key_close_check
 from app.tasks.permanents.rates.bybit import rate_keep_bybit_parse
 from app.tasks.permanents.rates.keep import rate_keep
 from app.tasks.permanents.rates.keep_pair import rate_keep_pair

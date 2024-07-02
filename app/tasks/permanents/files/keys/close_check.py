@@ -15,28 +15,17 @@
 #
 
 
+import asyncio
 import logging
 
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-class FileLogger:
-    def __init__(self, prefix: str):
-        self.prefix = prefix
 
-    def send(
-            self,
-            func: callable,
-            text: str,
-    ) -> None:
-        log_list = [f'[{self.prefix}]']
-
-        log_list += [text]
-        func(f' '.join(log_list))
-
-    def info(self, **kwargs) -> None:
-        self.send(func=logging.info, **kwargs)
-
-    def warning(self, **kwargs) -> None:
-        self.send(func=logging.warning, **kwargs)
-
-    def critical(self, **kwargs) -> None:
-        self.send(func=logging.critical, **kwargs)
+async def file_key_close_check():
+    logging.info(f'start file_key_close_check')
+    while True:
+        try:
+            await fexps_api_client.task.files.keys.close()
+            await asyncio.sleep(2)
+        except ValueError as e:
+            logging.critical(f'Exception \n {e}')

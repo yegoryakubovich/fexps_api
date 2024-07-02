@@ -13,19 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .telegrams import router as router_telegrams
-
-
-router = Router(
-    prefix='/task',
-    routes_included=[
-        router_files,
-        router_requests,
-        router_telegrams,
-    ],
-)

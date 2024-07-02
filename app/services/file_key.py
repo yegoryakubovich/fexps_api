@@ -13,13 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import datetime
 from time import time
 from typing import Optional
 
 from app.db.models import File, Session, Actions, FileKey
 from app.repositories import FileKeyRepository
+from app.services import ActionService
 from app.services.base import BaseService
 from app.services.file import FileService
 from app.utils.crypto import create_id_str
@@ -68,6 +68,19 @@ class FileKeyService(BaseService):
                 for file_key in await FileKeyRepository().get_list(key=key)
             ],
         }
+
+    @session_required(permissions=['files'], can_root=True)
+    async def close_by_task(self, session: Session):
+        time_now = datetime.datetime.now(datetime.timezone.utc)
+        for file_key in await FileKeyRepository().get_list():
+            file_key_action = await ActionService().get_action(file_key, action=Actions.CREATE)
+            if not file_key_action:
+                continue
+            file_key_action_delta = time_now.replace(tzinfo=None) - file_key_action.datetime.replace(tzinfo=None)
+            if file_key_action_delta < datetime.timedelta(minutes=settings.file_key_close_minutes):
+                continue
+            await FileKeyRepository().delete(file_key)
+        return {}
 
     @staticmethod
     async def generate_file_key_dict(file_key: FileKey) -> Optional[dict]:

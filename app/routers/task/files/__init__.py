@@ -16,16 +16,13 @@
 
 
 from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .telegrams import router as router_telegrams
+from .keys import router as router_keys
 
 
 router = Router(
-    prefix='/task',
+    prefix='/files',
     routes_included=[
-        router_files,
-        router_requests,
-        router_telegrams,
+        router_keys,
     ],
+    tags=['Files'],
 )

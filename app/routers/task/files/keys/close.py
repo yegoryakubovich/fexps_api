@@ -15,17 +15,23 @@
 #
 
 
-from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .telegrams import router as router_telegrams
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services import FileKeyService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/task',
-    routes_included=[
-        router_files,
-        router_requests,
-        router_telegrams,
-    ],
+    prefix='/close',
 )
+
+
+class FileKeyCloseSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: FileKeyCloseSchema = Depends()):
+    result = await FileKeyService().close_by_task(token=schema.token)
+    return Response(**result)
