@@ -465,6 +465,28 @@ class RequestService(BaseService):
         )
         return {}
 
+    @session_required(permissions=['requests'], can_root=True)
+    async def rate_fixed_by_task(self, session: Session):
+        time_now = datetime.datetime.now(datetime.timezone.utc)
+        for request in await RequestRepository().get_list_not_finished(rate_fixed=True):
+            request_action = await ActionService().get_action(
+                model=request,
+                action=Actions.UPDATE,
+                state=RequestStates.INPUT_RESERVATION,
+            )
+            if not request_action:
+                continue
+            request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
+            if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
+                await RequestService().rate_fixed_off(request=request)
+                await BotNotification().send_notification_by_wallet(
+                    wallet=request.wallet,
+                    notification_type=NotificationTypes.REQUEST,
+                    text_key=f'notification_request_rate_fixed_stop',
+                    request_id=request.id,
+                )
+        return {}
+
     @staticmethod
     async def generate_request_dict(request: Request) -> dict:
         create_action = await ActionService().get_action(model=request, action=Actions.CREATE)
@@ -526,7 +548,12 @@ class RequestService(BaseService):
         await RequestRepository().update(
             request,
             rate_fixed=False,
-            difference=0,
-            output_value=request.output_value + request.difference,
             **kwargs
+        )
+        await BaseService.create_action(
+            model=request,
+            action=Actions.UPDATE,
+            parameters={
+                'rate_fixed': False,
+            },
         )

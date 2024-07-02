@@ -16,54 +16,16 @@
 
 
 import asyncio
-import datetime
+import logging
 
-from app.db.models import RequestStates, Actions, Request, NotificationTypes
-from app.repositories import ActionParameterRepository, RequestRepository
-from app.services.action import ActionService
-from app.services.request import RequestService
-from app.tasks.permanents.requests.logger import RequestLogger
-from app.utils.bot.notification import BotNotification
-from config import settings
-
-custom_logger = RequestLogger(prefix='request_rate_fixed_check')
-
-
-async def run():
-    time_now = datetime.datetime.now(datetime.UTC)
-    for request in await RequestRepository().get_list_not_finished(rate_fixed=True):
-        request_action = await get_action_by_state(request, state=RequestStates.INPUT_RESERVATION)
-        if not request_action:
-            continue
-        request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
-        if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
-            custom_logger.info(text=f'rate_fixed=False', request=request)
-            await RequestService().rate_fixed_off(request=request)
-            await BotNotification().send_notification_by_wallet(
-                wallet=request.wallet,
-                notification_type=NotificationTypes.REQUEST,
-                text_key=f'notification_request_rate_fixed_stop',
-                request_id=request.id,
-            )
-        await asyncio.sleep(1)
-    await asyncio.sleep(5)
-
-
-async def get_action_by_state(request: Request, state: str):
-    actions_update = await ActionService().get_actions(request, action=Actions.UPDATE)
-    if not actions_update:
-        return
-    for action in actions_update:
-        action_param = await ActionParameterRepository().get(action=action, key='state', value=state)
-        if not action_param:
-            continue
-        return action
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
 async def request_rate_fixed_check():
-    custom_logger.info(text=f'started...')
+    logging.info(f'started...')
     while True:
         try:
-            await run()
+            await fexps_api_client.task.requests.rate_fixed()
+            await asyncio.sleep(2)
         except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
+            logging.info(f'Exception \n {e}')

@@ -15,15 +15,23 @@
 #
 
 
-from app.utils import Router
-from .requests import router as router_requests
-from .telegram import router as router_telegram
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services.request import RequestService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/task',
-    routes_included=[
-        router_requests,
-        router_telegram,
-    ],
+    prefix='/rate/fixed',
 )
+
+
+class RequestRateFixedSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: RequestRateFixedSchema = Depends()):
+    result = await RequestService().rate_fixed_by_task(token=schema.token)
+    return Response(**result)

@@ -16,14 +16,15 @@
 
 
 from app.utils import Router
-from .requests import router as router_requests
-from .telegram import router as router_telegram
+# from .states import router as router_states
+from .rate_fixed import router as router_check_rate_fixed
 
 
 router = Router(
-    prefix='/task',
+    prefix='/requests',
     routes_included=[
-        router_requests,
-        router_telegram,
+        # router_states,
+        router_check_rate_fixed,
     ],
+    tags=['Requests'],
 )
