@@ -118,11 +118,8 @@ class NotificationService(BaseService):
         )
         return {}
 
-    @session_required(can_root=True)
-    async def send_notification_by_task(
-            self,
-            session: Session,
-    ):
+    @session_required(permissions=['notifications'], can_root=True)
+    async def send_notification_by_task(self, session: Session):
         bot = Bot(token=settings.telegram_token)
         for notification in await NotificationHistoryRepository().get_list(state=NotificationStates.WAIT):
             notification_setting = notification.notification_setting
@@ -164,11 +161,8 @@ class NotificationService(BaseService):
             )
         return {}
 
-    @session_required(can_root=True)
-    async def send_image_by_task(
-            self,
-            session: Session,
-    ):
+    @session_required(permissions=['notifications'], can_root=True)
+    async def send_image_by_task(self, session: Session):
         bot = Bot(token=settings.telegram_token)
         image_path = await image_create()
         if not image_path:
@@ -190,17 +184,17 @@ class NotificationService(BaseService):
         )
         return {}
 
-    @session_required(can_root=True)
-    async def update_image_by_task(
-            self,
-            session: Session,
-    ):
+    @session_required(permissions=['notifications'], can_root=True)
+    async def update_image_by_task(self, session: Session):
         bot = Bot(token=settings.telegram_token)
         telegram_post = await TelegramPostRepository().get()
         if not telegram_post:
             logging.critical('Not found telegram_post')
             return
         image_path = await image_create()
+        if not image_path:
+            logging.critical('Not found image_path')
+            return
         await bot.edit_message_media(
             chat_id=settings.telegram_chat_id,
             message_id=telegram_post.message_id,
