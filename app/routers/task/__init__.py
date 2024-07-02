@@ -17,13 +17,13 @@
 
 from app.utils import Router
 from .requests import router as router_requests
-from .telegram import router as router_telegram
+from .telegrams import router as router_telegrams
 
 
 router = Router(
     prefix='/task',
     routes_included=[
         router_requests,
-        router_telegram,
+        router_telegrams,
     ],
 )
