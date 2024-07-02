@@ -34,8 +34,8 @@ from app.services.transfer import TransferService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.states.input import request_check_state_input
-from app.utils.calculations.request.states.output import request_check_state_output
+from app.utils.calcs.request.states.input import request_check_state_input
+from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp

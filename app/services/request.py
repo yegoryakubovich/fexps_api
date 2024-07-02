@@ -38,6 +38,11 @@ from app.utils.calculations.request.rate.input import calculate_request_rate_inp
 from app.utils.calculations.request.rate.output import calculate_request_rate_output
 from app.utils.calculations.request.states.input import request_check_state_input
 from app.utils.calculations.request.states.output import request_check_state_output
+from app.utils.calcs.request.rate.all import calcs_request_rate_all
+from app.utils.calcs.request.rate.input import calcs_request_rate_input
+from app.utils.calcs.request.rate.output import calcs_request_rate_output
+from app.utils.calcs.request.states.input import request_check_state_input
+from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
 from config import settings
@@ -73,7 +78,7 @@ class RequestService(BaseService):
         wallet_ban = None
         if type_ == RequestTypes.INPUT:
             input_currency_value, input_value = start_value, end_value
-            calculate = await calculate_request_rate_input(
+            calculate = await calcs_request_rate_input(
                 input_method=input_method,
                 commission_pack=wallet.commission_pack,
                 input_currency_value=input_currency_value,
@@ -88,7 +93,7 @@ class RequestService(BaseService):
                 )
         elif type_ == RequestTypes.OUTPUT:
             output_value, output_currency_value = start_value, end_value
-            calculate = await calculate_request_rate_output(
+            calculate = await calcs_request_rate_output(
                 output_method=output_method,
                 output_value=output_value,
                 output_currency_value=output_currency_value,
@@ -108,7 +113,7 @@ class RequestService(BaseService):
             )
         else:
             input_currency_value, output_currency_value = start_value, end_value
-            calculate = await calculate_request_rate_all(
+            calculate = await calcs_request_rate_all(
                 input_method=input_method,
                 output_method=output_method,
                 commission_pack=wallet.commission_pack,

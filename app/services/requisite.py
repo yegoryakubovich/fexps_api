@@ -29,7 +29,7 @@ from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.requisites.value import calculations_requisites_values_calc
+from app.utils.calcs.requisites.value import calcs_requisites_values_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
@@ -68,7 +68,7 @@ class RequisiteService(BaseService):
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
             currency = output_method.currency
-        currency_value_result, value_result, rate_result = await calculations_requisites_values_calc(
+        currency_value_result, value_result, rate_result = await calcs_requisites_values_calc(
             type_=type_,
             rate_decimal=currency.rate_decimal,
             currency_value=currency_value,

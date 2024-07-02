@@ -19,16 +19,15 @@ import asyncio
 import logging
 import math
 
-from app.db.models import RequestStates, OrderTypes, OrderStates, Request, NotificationTypes
+from app.db.models import RequestStates, OrderTypes, OrderStates, NotificationTypes
 from app.repositories import OrderRepository, RequestRepository, RequisiteRepository
 from app.services.order import OrderService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.states.input import request_check_state_input
-from app.utils.calculations.requisites.find import calculate_requisite_input_by_currency_value, \
-    calculate_requisite_input_by_value
-from app.utils.calculations.requisites.need_value.input_currency_value import \
-    calculations_requisites_input_need_currency_value
-from app.utils.calculations.requisites.need_value.input_value import calculations_requisites_input_need_value
+from app.utils.calcs.request.states.input import request_check_state_input
+from app.utils.calcs.requisites.find.input_by_currency_value import calcs_requisite_input_by_currency_value
+from app.utils.calcs.requisites.find.input_by_value import calcs_requisite_input_by_value
+from app.utils.calcs.requisites.need_value.input_currency_value import calcs_requisites_input_need_currency_value
+from app.utils.calcs.requisites.need_value.input_value import calcs_requisites_input_need_value
 from app.utils.value import value_to_int
 
 
@@ -39,9 +38,9 @@ async def run():
         currency = request.input_method.currency
         # get need values
         if request.rate_fixed:
-            need_currency_value = await calculations_requisites_input_need_currency_value(request=request)
+            need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
         else:
-            need_value = await calculations_requisites_input_need_value(request=request)
+            need_value = await calcs_requisites_input_need_value(request=request)
             need_currency_value = round(need_value * request.input_rate / 10 ** request.rate_decimal)
         # check / change states
         if need_currency_value < currency.div:
@@ -83,48 +82,38 @@ async def run():
         # create missing orders
         need_currency_value, need_value = None, None
         if request.rate_fixed:
-            need_currency_value = await calculations_requisites_input_need_currency_value(request=request)
+            need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
         else:
-            need_value = await calculations_requisites_input_need_value(request=request)
-        await get_new_requisite(request=request, need_currency_value=need_currency_value, need_value=need_value)
-
-    await asyncio.sleep(1)
-
-
-async def get_new_requisite(
-        request: Request,
-        need_currency_value: int = None,
-        need_value: int = None,
-) -> None:
-    result = None
-    if need_currency_value:
-        result = await calculate_requisite_input_by_currency_value(
-            method=request.input_method,
-            currency_value=need_currency_value,
-            process=True,
-            request=request,
-        )
-    if need_value:
-        result = await calculate_requisite_input_by_value(
-            method=request.input_method,
-            value=need_value,
-            process=True,
-            request=request,
-        )
-    if not result:
-        return
-    for requisite_item in result.requisite_items:
-        requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
-        rate_float = requisite_item.currency_value / requisite_item.value
-        _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
-        await OrderService().waited_order(
-            request=request,
-            requisite=requisite,
-            currency_value=requisite_item.currency_value,
-            value=requisite_item.value,
-            rate=_rate,
-            order_type=OrderTypes.INPUT,
-        )
+            need_value = await calcs_requisites_input_need_value(request=request)
+        result = None
+        if need_currency_value:
+            result = await calcs_requisite_input_by_currency_value(
+                method=request.input_method,
+                currency_value=need_currency_value,
+                process=True,
+                request=request,
+            )
+        if need_value:
+            result = await calcs_requisite_input_by_value(
+                method=request.input_method,
+                value=need_value,
+                process=True,
+                request=request,
+            )
+        if not result:
+            return
+        for requisite_item in result.requisite_items:
+            requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
+            rate_float = requisite_item.currency_value / requisite_item.value
+            _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
+            await OrderService().waited_order(
+                request=request,
+                requisite=requisite,
+                currency_value=requisite_item.currency_value,
+                value=requisite_item.value,
+                rate=_rate,
+                order_type=OrderTypes.INPUT,
+            )
 
 
 async def request_state_input_reserved_check():
@@ -132,5 +121,6 @@ async def request_state_input_reserved_check():
     while True:
         try:
             await run()
+            await asyncio.sleep(2)
         except ValueError as e:
             logging.critical(f'Exception \n {e}')

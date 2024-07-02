@@ -16,14 +16,13 @@
 
 
 import asyncio
-import logging
 
 from app.db.models import RateTypes, RateSources, Method
 from app.repositories import RateRepository, MethodRepository
 from app.tasks.permanents.rates.logger import RateLogger
-from app.utils.calculations.rates.bybit import calculate_rate_bybit
-from app.utils.calculations.rates.default import calculate_rate_default
-from app.utils.calculations.rates.requisite import calculate_rate_requisite
+from app.utils.calcs.rates.bybit import calcs_rate_bybit
+from app.utils.calcs.rates.default import calcs_rate_default
+from app.utils.calcs.rates.requisite import calcs_rate_requisite
 
 custom_logger = RateLogger(prefix='rate_our_keep')
 
@@ -37,13 +36,13 @@ async def rate_keep():
 
 
 async def update_rate(method: Method, rate_type: str):
-    rate = await calculate_rate_requisite(method=method, rate_type=rate_type)
+    rate = await calcs_rate_requisite(method=method, rate_type=rate_type)
     source = RateSources.REQUISITE
     if not rate:
-        rate = await calculate_rate_default(method=method, rate_type=rate_type)
+        rate = await calcs_rate_default(method=method, rate_type=rate_type)
         source = RateSources.DEFAULT
     if not rate:
-        rate = await calculate_rate_bybit(method=method, rate_type=rate_type)
+        rate = await calcs_rate_bybit(method=method, rate_type=rate_type)
         source = RateSources.BYBIT
     if not rate:
         return
