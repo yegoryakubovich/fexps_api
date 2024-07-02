@@ -15,15 +15,23 @@
 #
 
 
-import logging
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.services.request import RequestService
+from app.utils import Router, Response
 
 
-async def request_state_output_reserved_check():
-    logging.info(f'start request_state_output_reserved_check')
-    while True:
-        try:
-            await fexps_api_client.task.requests.states.output_reserved()
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+router = Router(
+    prefix='/reserved/output',
+)
+
+
+class RequestInputReservationSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: RequestInputReservationSchema = Depends()):
+    result = await RequestService().state_input_reserved_by_task(token=schema.token)
+    return Response(**result)

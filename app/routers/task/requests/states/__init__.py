@@ -15,15 +15,17 @@
 #
 
 
-import logging
+from app.utils import Router
+from .confirmation import router as router_confirmation
+from .input_reserved import router as router_input_reserved
+from .output_reserved import router as router_output_reserved
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-
-async def request_state_output_reserved_check():
-    logging.info(f'start request_state_output_reserved_check')
-    while True:
-        try:
-            await fexps_api_client.task.requests.states.output_reserved()
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+router = Router(
+    prefix='/states',
+    routes_included=[
+        router_confirmation,
+        router_input_reserved,
+        router_output_reserved,
+    ],
+)

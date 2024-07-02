@@ -17,34 +17,42 @@
 
 import datetime
 import logging
+import math
 from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
     NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
-    CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository
+    CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository, \
+    RequisiteRepository
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
 from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.requisite_data import RequisiteDataService
+from app.services.transfer_system import TransferSystemService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
-from app.utils.calculations.request.rate.all import calculate_request_rate_all
-from app.utils.calculations.request.rate.input import calculate_request_rate_input
-from app.utils.calculations.request.rate.output import calculate_request_rate_output
-from app.utils.calculations.request.states.input import request_check_state_input
-from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.calcs.request.rate.all import calcs_request_rate_all
 from app.utils.calcs.request.rate.input import calcs_request_rate_input
 from app.utils.calcs.request.rate.output import calcs_request_rate_output
 from app.utils.calcs.request.states.input import request_check_state_input
 from app.utils.calcs.request.states.output import request_check_state_output
+from app.utils.calcs.requisites.find.input_by_currency_value import calcs_requisite_input_by_currency_value
+from app.utils.calcs.requisites.find.input_by_value import calcs_requisite_input_by_value
+from app.utils.calcs.requisites.find.output_by_currency_value import calcs_requisite_output_by_currency_value
+from app.utils.calcs.requisites.find.output_by_value import calcs_requisite_output_by_value
+from app.utils.calcs.requisites.need_value.input_currency_value import \
+    calcs_requisites_input_need_currency_value
+from app.utils.calcs.requisites.need_value.input_value import calcs_requisites_input_need_value
+from app.utils.calcs.requisites.need_value.output_currency_value import calcs_requisites_output_need_currency_value
+from app.utils.calcs.requisites.need_value.output_value import calcs_requisites_output_need_value
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
+from app.utils.value import value_to_int
 from config import settings
 
 
@@ -347,7 +355,7 @@ class RequestService(BaseService):
             input_states = [RequestStates.INPUT_RESERVATION]
             if request.type in input_types and request.state in input_states:
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
-                return
+                return {}
             output_types = [RequestTypes.OUTPUT]
             output_states = [RequestStates.OUTPUT_RESERVATION]
             if request.type in output_types and request.state == output_states:
@@ -358,7 +366,7 @@ class RequestService(BaseService):
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
-                return
+                return {}
         if request.state in [RequestStates.INPUT]:
             await request_check_state_input(request=request)
         elif request.state in [RequestStates.OUTPUT]:
@@ -490,6 +498,254 @@ class RequestService(BaseService):
                     text_key=f'notification_request_rate_fixed_stop',
                     request_id=request.id,
                 )
+        return {}
+
+    @session_required(permissions=['requests'], can_root=True)
+    async def state_confirmation_by_task(self, session: Session):
+        time_now = datetime.datetime.now(tz=datetime.timezone.utc)
+        for request in await RequestRepository().get_list_by_asc(state=RequestStates.CONFIRMATION):
+            request_action = await ActionService().get_action(request, action=Actions.CREATE)
+            if not request_action:
+                continue
+            request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            if request_action_delta < datetime.timedelta(minutes=settings.request_confirmation_check):
+                continue
+            logging.info(f'request #{request.id}    {request.state}->{RequestStates.CANCELED}')
+            if request.type == RequestTypes.OUTPUT:
+                wallet_ban = await WalletBanService().create_related(
+                    wallet=request.wallet,
+                    value=-request.output_value,
+                    reason=WalletBanReasons.BY_REQUEST,
+                )
+                await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
+            await RequestRepository().update(request, state=RequestStates.CANCELED)
+            await BotNotification().send_notification_by_wallet(
+                wallet=request.wallet,
+                notification_type=NotificationTypes.REQUEST,
+                text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
+                request_id=request.id,
+            )
+        return {}
+
+    @session_required(permissions=['requests'], can_root=True)
+    async def state_input_reserved_by_task(self, session: Session):
+        from app.services.order import OrderService
+        for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
+            logging.info(f'request #{request.id}    start check')
+            request = await RequestRepository().get_by_id(id_=request.id)
+            currency = request.input_method.currency
+            # get need values
+            if request.rate_fixed:
+                need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
+            else:
+                need_value = await calcs_requisites_input_need_value(request=request)
+                need_currency_value = round(need_value * request.input_rate / 10 ** request.rate_decimal)
+            # check / change states
+            if need_currency_value < currency.div:
+                if not await OrderRepository().get_list(type=OrderTypes.INPUT):
+                    await request_check_state_input(request=request)
+                    continue
+                waiting_orders = await OrderRepository().get_list(
+                    request=request,
+                    type=OrderTypes.INPUT,
+                    state=OrderStates.WAITING,
+                )
+                for wait_order in waiting_orders:
+                    logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
+                    await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                    bot_notification = BotNotification()
+                    await bot_notification.send_notification_by_wallet(
+                        wallet=wait_order.request.wallet,
+                        notification_type=NotificationTypes.ORDER,
+                        text_key='notification_order_update_state',
+                        order_id=wait_order.id,
+                        state=OrderStates.PAYMENT,
+                    )
+                    await bot_notification.send_notification_by_wallet(
+                        wallet=wait_order.requisite.wallet,
+                        notification_type=NotificationTypes.ORDER,
+                        text_key='notification_order_update_state',
+                        order_id=wait_order.id,
+                        state=OrderStates.PAYMENT,
+                    )
+                logging.info(f'request #{request.id}   {request.state}->{RequestStates.INPUT}')
+                await RequestRepository().update(request, state=RequestStates.INPUT)
+                await BotNotification().send_notification_by_wallet(
+                    wallet=request.wallet,
+                    notification_type=NotificationTypes.REQUEST,
+                    text_key=f'notification_request_update_state_{RequestStates.INPUT}',
+                    request_id=request.id,
+                )
+                continue
+            # create missing orders
+            need_currency_value, need_value, result = None, None, None
+            if request.rate_fixed:
+                need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
+            else:
+                need_value = await calcs_requisites_input_need_value(request=request)
+            if need_currency_value:
+                result = await calcs_requisite_input_by_currency_value(
+                    method=request.input_method,
+                    currency_value=need_currency_value,
+                    process=True,
+                    request=request,
+                )
+            if need_value:
+                result = await calcs_requisite_input_by_value(
+                    method=request.input_method,
+                    value=need_value,
+                    process=True,
+                    request=request,
+                )
+            if not result:
+                continue
+            for requisite_item in result.requisite_items:
+                requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
+                rate_float = requisite_item.currency_value / requisite_item.value
+                _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
+                await OrderService().waited_order(
+                    request=request,
+                    requisite=requisite,
+                    currency_value=requisite_item.currency_value,
+                    value=requisite_item.value,
+                    rate=_rate,
+                    order_type=OrderTypes.INPUT,
+                )
+        return {}
+
+    @session_required(permissions=['requests'], can_root=True)
+    async def state_output_reserved_by_task(self, session: Session):
+        from app.services.order import OrderService
+        for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
+            logging.info(f'request #{request.id}    start check')
+            request = await RequestRepository().get_by_id(id_=request.id)
+            currency = request.output_method.currency
+            # get need values
+            if request.rate_fixed:
+                need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
+            else:
+                need_value = await calcs_requisites_output_need_value(request=request)
+                need_currency_value = round(need_value * request.output_rate / 10 ** request.rate_decimal)
+            # check wait orders / complete state
+            if need_currency_value < currency.div:
+                active_order = False
+                order_value = 0
+                for order in await OrderRepository().get_list(type=OrderTypes.OUTPUT):
+                    if order.state == OrderStates.CANCELED:
+                        continue
+                    elif order.state == OrderStates.COMPLETED:
+                        order_value += order.value
+                        continue
+                    active_order = True
+                    break
+                if not active_order:
+                    difference = request.output_value
+                    if difference:
+                        await TransferSystemService().payment_difference(
+                            request=request,
+                            value=difference,
+                            from_banned_value=True,
+                        )
+                        await RequestRepository().update(
+                            request,
+                            output_value=request.output_value - difference,
+                            difference_rate=request.difference_rate + difference,
+                        )
+                    await request_check_state_output(request=request)
+                    continue
+                waiting_orders = await OrderRepository().get_list(
+                    request=request,
+                    type=OrderTypes.OUTPUT,
+                    state=OrderStates.WAITING,
+                )
+                for wait_order in waiting_orders:
+                    logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
+                    await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                    bot_notification = BotNotification()
+                    await bot_notification.send_notification_by_wallet(
+                        wallet=wait_order.request.wallet,
+                        notification_type=NotificationTypes.ORDER,
+                        text_key='notification_order_update_state',
+                        order_id=wait_order.id,
+                        state=OrderStates.PAYMENT,
+                    )
+                    await bot_notification.send_notification_by_wallet(
+                        wallet=wait_order.requisite.wallet,
+                        notification_type=NotificationTypes.ORDER,
+                        text_key='notification_order_update_state',
+                        order_id=wait_order.id,
+                        state=OrderStates.PAYMENT,
+                    )
+                if not waiting_orders:
+                    logging.info(f'request #{request.id}    {request.state}->{RequestStates.OUTPUT}')
+                    await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
+                    await BotNotification().send_notification_by_wallet(
+                        wallet=request.wallet,
+                        notification_type=NotificationTypes.REQUEST,
+                        text_key=f'notification_request_update_state_{RequestStates.OUTPUT}',
+                        request_id=request.id,
+                    )
+                continue
+            # create missing orders
+            need_currency_value, need_value, result = None, None, None
+            if request.rate_fixed:
+                need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
+                logging.info(f'request #{request.id}    create orders need_currency_value={need_currency_value}')
+            else:
+                need_value = await calcs_requisites_output_need_value(request=request)
+                logging.info(f'request #{request.id}    create orders need_value={need_value}')
+            if need_currency_value:
+                result = await calcs_requisite_output_by_currency_value(
+                    method=request.output_method,
+                    currency_value=need_currency_value,
+                    process=True,
+                    request=request,
+                )
+            if need_value:
+                result = await calcs_requisite_output_by_value(
+                    method=request.output_method,
+                    value=need_value,
+                    process=True,
+                    request=request,
+                )
+            if not result:
+                continue
+            for requisite_item in result.requisite_items:
+                requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
+                rate_float = requisite_item.currency_value / requisite_item.value
+                _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.ceil)
+                await OrderService().waited_order(
+                    request=request,
+                    requisite=requisite,
+                    currency_value=requisite_item.currency_value,
+                    value=requisite_item.value,
+                    rate=_rate,
+                    order_type=OrderTypes.OUTPUT,
+                )
+            if request.rate_fixed:
+                difference_rate = request.difference_rate
+                order_value_sum = 0
+                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
+                    if order.state == OrderStates.CANCELED:
+                        continue
+                    order_value_sum += order.value
+                difference = request.output_value - order_value_sum
+                if difference < 0:
+                    difference = order_value_sum - request.output_value
+                    await TransferSystemService().payment_difference(
+                        request=request,
+                        value=difference,
+                        from_banned_value=True,
+                    )
+                    difference_rate += difference
+                    await RequestRepository().update(request, difference_rate=difference_rate)
+            else:
+                order_currency_value_sum = 0
+                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
+                    if order.state == OrderStates.CANCELED:
+                        continue
+                    order_currency_value_sum += order.currency_value
+                await RequestRepository().update(request, output_currency_value=order_currency_value_sum)
         return {}
 
     @staticmethod

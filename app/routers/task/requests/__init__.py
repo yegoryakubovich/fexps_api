@@ -16,14 +16,14 @@
 
 
 from app.utils import Router
-# from .states import router as router_states
 from .rate_fixed import router as router_check_rate_fixed
+from .states import router as router_states
 
 
 router = Router(
     prefix='/requests',
     routes_included=[
-        # router_states,
+        router_states,
         router_check_rate_fixed,
     ],
     tags=['Requests'],
