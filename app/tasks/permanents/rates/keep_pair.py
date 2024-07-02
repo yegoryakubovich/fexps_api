@@ -16,47 +16,14 @@
 
 
 import asyncio
+import logging
 
 from app.db.models import Method
 from app.repositories import CurrencyRepository, RatePairRepository, MethodRepository, CommissionPackRepository
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 from app.utils.calcs.rates.basic.data_rate import calcs_data_rate
 
 
 async def rate_keep_pair():
-    input_methods: list[Method] = []
-    for input_currency in await CurrencyRepository().get_list():
-        input_methods += [
-            input_method
-            for input_method in await MethodRepository().get_list(currency=input_currency)
-        ]
-    output_methods: list[Method] = []
-    for output_currency in await CurrencyRepository().get_list():
-        output_methods += [
-            output_method
-            for output_method in await MethodRepository().get_list(currency=output_currency)
-        ]
-    for input_method in input_methods:
-        for output_method in output_methods:
-            if input_method.currency.id_str == output_method.currency.id_str:
-                continue
-            await update_rate(input_method=input_method, output_method=output_method)
-            await asyncio.sleep(0.1)
-        await asyncio.sleep(0.25)
-
-
-async def update_rate(input_method: Method, output_method: Method):
-    commission_pack = await CommissionPackRepository().get(is_default=True)
-    result = await calcs_data_rate(
-        input_method=input_method,
-        output_method=output_method,
-        commission_pack=commission_pack,
-        input_value=3_000_00,
-    )
-    if not result:
-        return
-    await RatePairRepository().create(
-        input_method=input_method,
-        output_method=output_method,
-        rate_decimal=result.rate_decimal,
-        rate=result.rate,
-    )
+    logging.info('start rate_keep_pair')
+    await fexps_api_client.task.rates.keep_pair()

@@ -15,11 +15,17 @@
 #
 
 
+import asyncio
 import logging
 
 from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
-async def rate_keep():
-    logging.info('start rate_keep')
-    await fexps_api_client.task.rates.keep()
+async def rate_parse_bybit():
+    logging.info(f'start rate_parse_bybit')
+    while True:
+        try:
+            await fexps_api_client.task.rates.parsers.bybit()
+            await asyncio.sleep(60)
+        except ValueError as e:
+            logging.critical(f'Exception \n {e}')

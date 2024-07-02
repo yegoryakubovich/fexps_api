@@ -15,11 +15,23 @@
 #
 
 
-import logging
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.services.rate import RateService
+from app.utils import Router, Response
 
 
-async def rate_keep():
-    logging.info('start rate_keep')
-    await fexps_api_client.task.rates.keep()
+router = Router(
+    prefix='/bybit',
+)
+
+
+class RateParseBybitSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: RateParseBybitSchema = Depends()):
+    result = await RateService().parse_bybit_by_task(token=schema.token)
+    return Response(**result)

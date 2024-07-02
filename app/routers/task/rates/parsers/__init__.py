@@ -15,11 +15,13 @@
 #
 
 
-import logging
+from app.utils import Router
+from .bybit import router as router_bybit
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-
-async def rate_keep():
-    logging.info('start rate_keep')
-    await fexps_api_client.task.rates.keep()
+router = Router(
+    prefix='/parsers',
+    routes_included=[
+        router_bybit,
+    ],
+)

@@ -14,8 +14,6 @@
 # limitations under the License.
 #
 
-# create-check-get-get list-search-update-delete-*other*
-
 
 from .account import AccountService
 from .account_contact import AccountContactService
@@ -35,6 +33,7 @@ from .notification import NotificationService
 from .order import OrderService
 from .order_request import OrderRequestService
 from .permission import PermissionService
+from .rate import RateService
 from .request import RequestService
 from .requisite import RequisiteService
 from .requisite_data import RequisiteDataService

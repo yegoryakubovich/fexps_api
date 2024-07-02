@@ -15,11 +15,18 @@
 #
 
 
-import logging
+from app.utils import Router
+from .parsers import router as router_parsers
+from .keep import router as router_keep
+from .keep_pair import router as router_keep_pair
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-
-async def rate_keep():
-    logging.info('start rate_keep')
-    await fexps_api_client.task.rates.keep()
+router = Router(
+    prefix='/rates',
+    routes_included=[
+        router_keep,
+        router_keep_pair,
+        router_parsers,
+    ],
+    tags=['Rates'],
+)
