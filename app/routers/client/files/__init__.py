@@ -20,7 +20,7 @@ from .create import router as router_create
 from .get import router as router_get
 from .open import router as router_open
 from .upload import router as router_upload
-from .key import router as router_key
+from .keys import router as router_keys
 
 
 router = Router(
@@ -30,7 +30,7 @@ router = Router(
         router_create,
         router_get,
         router_open,
-        router_key,
+        router_keys,
     ],
     tags=['Files'],
 )
