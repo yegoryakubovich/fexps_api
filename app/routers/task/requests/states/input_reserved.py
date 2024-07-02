@@ -27,11 +27,11 @@ router = Router(
 )
 
 
-class RequestInputReservationSchema(BaseModel):
+class RequestStateInputReservationSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: RequestInputReservationSchema = Depends()):
+async def route(schema: RequestStateInputReservationSchema = Depends()):
     result = await RequestService().state_input_reserved_by_task(token=schema.token)
     return Response(**result)
