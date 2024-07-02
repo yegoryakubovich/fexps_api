@@ -13,29 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import logging
-
-from app.db.models import Request, Order
-
-
-class RateLogger:
-    def __init__(self, prefix: str):
-        self.prefix = prefix
-
-    def send(
-            self,
-            func: callable,
-            text: str,
-    ) -> None:
-        log_list = [f'[{self.prefix}]']
-
-        log_list += [text]
-        func(f' '.join(log_list))
-
-    def info(self, **kwargs) -> None:
-        self.send(func=logging.info, **kwargs)
-
-    def critical(self, **kwargs) -> None:
-        self.send(func=logging.critical, **kwargs)

@@ -16,13 +16,11 @@
 
 
 import asyncio
+import logging
 
 from app.db.models import Currency, RateSources, RateTypes
 from app.repositories import CurrencyRepository, RateParseRepository
-from app.tasks.permanents.rates.bybit.utils import rate_get_bybit
-from app.tasks.permanents.rates.logger import RateLogger
-
-custom_logger = RateLogger(prefix='rate_bybit_keep')
+from app.utils.parsers.bybit import parser_bybit_get
 
 
 async def run():
@@ -33,8 +31,8 @@ async def run():
 
 
 async def update_rate(currency: Currency, rate_type: str):
-    custom_logger.info(text=f'update {currency.id_str.upper()} {rate_type}')
-    rate = await rate_get_bybit(currency=currency, rate_type=rate_type)
+    logging.info(f'update {currency.id_str.upper()} {rate_type}')
+    rate = await parser_bybit_get(currency=currency, rate_type=rate_type)
     if not rate:
         return
     await RateParseRepository().create(
@@ -47,9 +45,9 @@ async def update_rate(currency: Currency, rate_type: str):
 
 
 async def rate_keep_bybit_parse():
-    custom_logger.info(text=f'started...')
+    logging.info(f'started rate_keep_bybit_parse')
     while True:
         try:
             await run()
         except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
+            logging.critical(f'Exception \n {e}')

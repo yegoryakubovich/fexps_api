@@ -16,19 +16,17 @@
 
 
 import asyncio
+import logging
 
 from app.db.models import RateTypes, RateSources, Method
 from app.repositories import RateRepository, MethodRepository
-from app.tasks.permanents.rates.logger import RateLogger
 from app.utils.calcs.rates.bybit import calcs_rate_bybit
 from app.utils.calcs.rates.default import calcs_rate_default
 from app.utils.calcs.rates.requisite import calcs_rate_requisite
 
-custom_logger = RateLogger(prefix='rate_our_keep')
-
 
 async def rate_keep():
-    custom_logger.info(text='started')
+    logging.info('started')
     for method in await MethodRepository().get_list():
         await update_rate(method=method, rate_type=RateTypes.INPUT)
         await update_rate(method=method, rate_type=RateTypes.OUTPUT)

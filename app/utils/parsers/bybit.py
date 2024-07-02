@@ -33,7 +33,11 @@ PAYMENT_IDS_LIST = [
 ]
 
 
-async def rate_get_bybit(currency: Currency, rate_type: str):
+async def parser_bybit_get(
+        currency: Currency,
+        rate_type: str,
+        token_id: str = 'USDT',
+):
     rates = []
     async with aiohttp.ClientSession() as session:
         for value in VALUES_LIST:
@@ -42,7 +46,7 @@ async def rate_get_bybit(currency: Currency, rate_type: str):
                     url='https://api2.bybit.com/fiat/otc/item/online',
                     json={
                         'userId': '',
-                        'tokenId': 'USDT',
+                        'tokenId': token_id,
                         'currencyId': currency.id_str.upper(),
                         'side': '1' if rate_type == RateTypes.INPUT else '0',
                         'payment': [str(payment_id)],
