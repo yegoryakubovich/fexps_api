@@ -28,7 +28,7 @@ custom_logger = FileLogger(prefix='file_key_close_check')
 
 
 async def run():
-    time_now = datetime.datetime.now(datetime.UTC)
+    time_now = datetime.datetime.now(datetime.timezone.utc)
     for file_key in await FileKeyRepository().get_list():
         await asyncio.sleep(0.5)
         file_key_action = await ActionService().get_action(file_key, action=Actions.CREATE)

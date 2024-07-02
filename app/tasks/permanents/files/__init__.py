@@ -13,5 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from .file_key_close_check import file_key_close_check

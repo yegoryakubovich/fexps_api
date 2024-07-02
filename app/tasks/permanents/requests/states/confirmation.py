@@ -17,28 +17,26 @@
 
 import asyncio
 import datetime
+import logging
 
 from app.db.models import RequestStates, Actions, NotificationTypes, RequestTypes, WalletBanReasons
 from app.repositories import WalletBanRequestRepository, RequestRepository
 from app.services.action import ActionService
 from app.services.wallet_ban import WalletBanService
-from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from config import settings
 
-custom_logger = RequestLogger(prefix='request_confirmation_check')
-
 
 async def run():
-    time_now = datetime.datetime.now(datetime.UTC)
+    time_now = datetime.datetime.now(datetime.timezone.utc)
     for request in await RequestRepository().get_list_by_asc(state=RequestStates.CONFIRMATION):
         request_action = await ActionService().get_action(request, action=Actions.CREATE)
         if not request_action:
             continue
-        request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.UTC)
+        request_action_delta = time_now - request_action.datetime.replace(tzinfo=datetime.timezone.utc)
         if request_action_delta < datetime.timedelta(minutes=settings.request_confirmation_check):
             continue
-        custom_logger.info(text=f'{request.state}->{RequestStates.CANCELED}', request=request)
+        logging.info(f'request #{request.id}    {request.state}->{RequestStates.CANCELED}')
         if request.type == RequestTypes.OUTPUT:
             wallet_ban = await WalletBanService().create_related(
                 wallet=request.wallet,
@@ -57,9 +55,9 @@ async def run():
 
 
 async def request_confirmation_check():
-    custom_logger.info(text=f'started...')
+    logging.info(f'start request_confirmation_check')
     while True:
         try:
             await run()
         except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
+            logging.critical(f'Exception \n {e}')

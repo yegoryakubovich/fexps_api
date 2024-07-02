@@ -16,27 +16,26 @@
 
 
 import asyncio
+import logging
 import math
 
 from app.db.models import RequestStates, OrderTypes, OrderStates, Request, NotificationTypes
 from app.repositories import OrderRepository, RequestRepository, RequisiteRepository
 from app.services.order import OrderService
 from app.services.transfer_system import TransferSystemService
-from app.tasks.permanents.requests.logger import RequestLogger
 from app.utils.bot.notification import BotNotification
 from app.utils.calculations.request.states.output import request_check_state_output
 from app.utils.calculations.requisites.find import calculate_requisite_output_by_currency_value, \
     calculate_requisite_output_by_value
-from app.utils.calculations.requisites.need_value import calculations_requisites_output_need_currency_value, \
-    calculations_requisites_output_need_value
+from app.utils.calculations.requisites.need_value.output_currency_value import \
+    calculations_requisites_output_need_currency_value
+from app.utils.calculations.requisites.need_value.output_value import calculations_requisites_output_need_value
 from app.utils.value import value_to_int
-
-custom_logger = RequestLogger(prefix='request_state_output_reserved_check')
 
 
 async def run():
     for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
-        custom_logger.info(text='start check', request=request)
+        logging.info(f'request #{request.id}    start check')
         request = await RequestRepository().get_by_id(id_=request.id)
         currency = request.output_method.currency
         # get need values
@@ -78,7 +77,7 @@ async def run():
                 state=OrderStates.WAITING,
             )
             for wait_order in waiting_orders:
-                custom_logger.info(text=f'{wait_order.state}->{OrderStates.PAYMENT}', order=wait_order)
+                logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
                 await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
                 bot_notification = BotNotification()
                 await bot_notification.send_notification_by_wallet(
@@ -96,7 +95,7 @@ async def run():
                     state=OrderStates.PAYMENT,
                 )
             if not waiting_orders:
-                custom_logger.info(text=f'{request.state}->{RequestStates.OUTPUT}', request=request)
+                logging.info(f'request #{request.id}    {request.state}->{RequestStates.OUTPUT}')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
                 await BotNotification().send_notification_by_wallet(
                     wallet=request.wallet,
@@ -108,7 +107,7 @@ async def run():
         # create missing orders
         if request.rate_fixed:
             need_currency_value = await calculations_requisites_output_need_currency_value(request=request)
-            custom_logger.info(text=f'create orders need_currency_value={need_currency_value}', request=request)
+            logging.info(f'request #{request.id}    create orders need_currency_value={need_currency_value}')
             result = await get_new_requisite(request=request, need_currency_value=need_currency_value)
             if result:
                 difference_rate = request.difference_rate
@@ -129,7 +128,7 @@ async def run():
                     await RequestRepository().update(request, difference_rate=difference_rate)
         else:
             need_value = await calculations_requisites_output_need_value(request=request)
-            custom_logger.info(text=f'create orders need_value={need_value}', request=request)
+            logging.info(f'request #{request.id}    create orders need_value={need_value}')
             result = await get_new_requisite(request=request, need_value=need_value)
             if result:
                 order_currency_value_sum = 0
@@ -179,9 +178,9 @@ async def get_new_requisite(
 
 
 async def request_state_output_reserved_check():
-    custom_logger.info(text=f'started...')
+    logging.info(f'start request_state_output_reserved_check')
     while True:
         try:
             await run()
         except ValueError as e:
-            custom_logger.critical(text=f'Exception \n {e}')
+            logging.critical(f'Exception \n {e}')

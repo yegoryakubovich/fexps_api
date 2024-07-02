@@ -13,9 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from .input_currency_value import calculations_requisites_input_need_currency_value
-from .input_value import calculations_requisites_input_need_value
-from .output_currency_value import calculations_requisites_output_need_currency_value
-from .output_value import calculations_requisites_output_need_value

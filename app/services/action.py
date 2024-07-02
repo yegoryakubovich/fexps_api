@@ -55,15 +55,27 @@ class ActionService:
             action: Actions,
             **parameters,
     ) -> Optional[Action]:
-        action_db = await ActionRepository().get(
-            model=underscore(model.__class__.__name__),
-            model_id=model.id,
-            action=action,
-        )
+        """
+        :param model: Model object
+        :param action: action
+        :param parameters: Only one parameter
+        :return: Action if found else None
+        """
+        parameter = None
         for key, value in parameters.items():
-            if not await ActionParameterRepository().get(action=action_db, key=key, value=value):
-                return
-        return action_db
+            parameter = key, value
+            break
+        for action_db in await ActionService().get_actions(model, action=action):
+            action_param = await ActionParameterRepository().get(action=action_db)
+            if parameter:
+                action_param = await ActionParameterRepository().get(
+                    action=action_db,
+                    key=parameter[0],
+                    value=parameter[1],
+                )
+            if not action_param:
+                continue
+            return action_db
 
     @staticmethod
     async def get_actions(

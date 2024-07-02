@@ -21,8 +21,8 @@ from datetime import datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app import config_logger, init_db
-from app.tasks.permanents.files import file_key_close_check
+from app.db.init_db import init_db
+from app.tasks.permanents.files.file_key_close_check import file_key_close_check
 from app.tasks.permanents.rates.bybit import rate_keep_bybit_parse
 from app.tasks.permanents.rates.keep import rate_keep
 from app.tasks.permanents.rates.keep_pair import rate_keep_pair
@@ -34,6 +34,7 @@ from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram.send_image import telegram_send_image
 from app.tasks.permanents.telegram.send_notification import telegram_send_notification
 from app.tasks.permanents.telegram.update_image import telegram_update_image
+from app.utils.logger import config_logger
 
 TASKS = []
 # Request
