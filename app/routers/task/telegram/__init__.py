@@ -15,5 +15,18 @@
 #
 
 
-from .fexps_api_client import fexps_api_client
-from .google_sheets_api_client import google_sheets_api_client
+from app.utils import Router
+from .send_image import router as router_send_image
+from .send_notification import router as router_send_notification
+from .update_image import router as router_update_image
+
+
+router = Router(
+    prefix='/telegrams',
+    routes_included=[
+        router_send_image,
+        router_send_notification,
+        router_update_image,
+    ],
+    tags=['Telegrams'],
+)

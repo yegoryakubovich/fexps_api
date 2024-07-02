@@ -20,7 +20,7 @@ import logging
 
 from gspread import Spreadsheet
 
-from ..utils.google_sheets_api_client import google_sheets_api_client
+from app.tasks.permanents.utils.google_sheets_api_client import google_sheets_api_client
 
 
 async def sync_base(

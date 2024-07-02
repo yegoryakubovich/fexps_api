@@ -65,6 +65,4 @@ class GoogleSheetsApiClient:
         return Dict(**data).rows
 
 
-google_sheets_api_client = GoogleSheetsApiClient(
-    filename='google_creds.json',
-)
+google_sheets_api_client = GoogleSheetsApiClient(filename='google_creds.json')

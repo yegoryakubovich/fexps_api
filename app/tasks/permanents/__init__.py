@@ -23,13 +23,17 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app import config_logger, init_db
 from app.tasks.permanents.files import file_key_close_check
-from app.tasks.permanents.rates import rate_keep_bybit_parse, rate_keep, rate_keep_pair
-from app.tasks.permanents.requests import request_confirmation_check, request_rate_fixed_check, \
-    request_state_input_reserved_check, request_state_output_reserved_check
+from app.tasks.permanents.rates.bybit import rate_keep_bybit_parse
+from app.tasks.permanents.rates.keep import rate_keep
+from app.tasks.permanents.rates.keep_pair import rate_keep_pair
+from app.tasks.permanents.requests.rate_fixed_check import request_rate_fixed_check
+from app.tasks.permanents.requests.states.confirmation import request_confirmation_check
+from app.tasks.permanents.requests.states.input_reserved import request_state_input_reserved_check
+from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
 from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
-from app.tasks.permanents.telegram import telegram_image_poster
-from app.tasks.permanents.telegram.image_poster import telegram_image_poster
-from app.tasks.permanents.telegram.image_updater import telegram_image_updater
+from app.tasks.permanents.telegram.send_image import telegram_send_image
+from app.tasks.permanents.telegram.send_notification import telegram_send_notification
+from app.tasks.permanents.telegram.update_image import telegram_update_image
 
 TASKS = []
 # Request
@@ -46,6 +50,10 @@ TASKS += [
 # Rate
 TASKS += [
     rate_keep_bybit_parse,
+]
+# Telegram
+TASKS += [
+    telegram_send_notification,
 ]
 
 
@@ -82,7 +90,7 @@ async def start_app() -> None:
     )
     scheduler.add_job(
         name='telegram_image_poster',
-        func=telegram_image_poster,
+        func=telegram_send_image,
         misfire_grace_time=30,
         trigger='cron',
         hour=12,
@@ -90,7 +98,7 @@ async def start_app() -> None:
     )
     scheduler.add_job(
         name='telegram_image_updater',
-        func=telegram_image_updater,
+        func=telegram_update_image,
         misfire_grace_time=30,
         trigger='cron',
         minute=1,

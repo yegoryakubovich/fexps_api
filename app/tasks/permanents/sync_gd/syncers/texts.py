@@ -21,8 +21,8 @@ import logging
 from addict import Dict
 from gspread import Spreadsheet
 
-from ..utils.fexps_api_client import fexps_api_client
-from ..utils.google_sheets_api_client import google_sheets_api_client
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.tasks.permanents.utils.google_sheets_api_client import google_sheets_api_client
 
 PREFIXES = [
     'permission_',

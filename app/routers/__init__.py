@@ -18,10 +18,12 @@
 from .admin import router as router_admin
 from .client import router as router_client
 from .favicon import router as router_favicon
+from .task import router as router_task
 
 
 routers = [
     router_favicon,
+    router_task,
     router_admin,
     router_client,
 ]

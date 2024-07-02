@@ -15,15 +15,8 @@
 #
 
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from config import settings
+from fexps_api_client import FexpsApiClient
 
 
-async def sync_roles_permissions(role_id):
-    role = await fexps_api_client.admin.roles.get(id_=role_id)
-    permissions = await fexps_api_client.admin.permissions.get_list()
-    for permission in permissions:
-        if permission not in role.permissions:
-            await fexps_api_client.admin.roles.permissions.create(
-                role_id=role_id,
-                permission=permission.id_str,
-            )
+fexps_api_client = FexpsApiClient(url=settings.get_sync_db_url(), token=f'0:{settings.root_token}')

@@ -15,15 +15,23 @@
 #
 
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services.notification import NotificationService
+from app.utils import Router, Response
 
 
-async def sync_roles_permissions(role_id):
-    role = await fexps_api_client.admin.roles.get(id_=role_id)
-    permissions = await fexps_api_client.admin.permissions.get_list()
-    for permission in permissions:
-        if permission not in role.permissions:
-            await fexps_api_client.admin.roles.permissions.create(
-                role_id=role_id,
-                permission=permission.id_str,
-            )
+router = Router(
+    prefix='/images/update',
+)
+
+
+class TelegramUpdateImageSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: TelegramUpdateImageSchema = Depends()):
+    result = await NotificationService().update_image_by_task(token=schema.token)
+    return Response(**result)

@@ -31,6 +31,7 @@ class NotificationTypes:
 
 
 class NotificationStates:
+    WAIT = 'wait'
     SUCCESS = 'success'
     ERROR = 'error'
     BLOCKED = 'blocked'

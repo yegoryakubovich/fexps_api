@@ -13,16 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
-
-from config import settings
-from fexps_api_client import FexpsApiClient
 
 
-TOKEN = f'0:{settings.root_token}'
-logging.critical(TOKEN)
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
-fexps_api_client = FexpsApiClient(
-    url=settings.get_sync_db_url(),
-    token=TOKEN,
+from app.services.notification import NotificationService
+from app.utils import Router, Response
+
+
+router = Router(
+    prefix='/images/send',
 )
+
+
+class TelegramSendImageSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: TelegramSendImageSchema = Depends()):
+    result = await NotificationService().send_image_by_task(token=schema.token)
+    return Response(**result)

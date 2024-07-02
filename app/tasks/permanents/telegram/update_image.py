@@ -17,22 +17,9 @@
 
 import logging
 
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-class TelegramLogger:
-    def __init__(self, prefix: str):
-        self.prefix = prefix
 
-    def send(
-            self,
-            func: callable,
-            text: str,
-    ) -> None:
-        log_list = [f'[{self.prefix}]']
-        log_list += [text]
-        func(f' '.join(log_list))
-
-    def info(self, **kwargs) -> None:
-        self.send(func=logging.info, **kwargs)
-
-    def critical(self, **kwargs) -> None:
-        self.send(func=logging.critical, **kwargs)
+async def telegram_update_image():
+    logging.info('Start telegram_update_image')
+    await fexps_api_client.task.telegrams.update_image()

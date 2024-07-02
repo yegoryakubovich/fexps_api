@@ -15,15 +15,11 @@
 #
 
 
+import logging
+
 from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
-async def sync_roles_permissions(role_id):
-    role = await fexps_api_client.admin.roles.get(id_=role_id)
-    permissions = await fexps_api_client.admin.permissions.get_list()
-    for permission in permissions:
-        if permission not in role.permissions:
-            await fexps_api_client.admin.roles.permissions.create(
-                role_id=role_id,
-                permission=permission.id_str,
-            )
+async def telegram_send_image():
+    logging.info('Start telegram_send_image')
+    await fexps_api_client.task.telegrams.send_image()

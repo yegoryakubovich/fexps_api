@@ -183,7 +183,7 @@ class AccountService(BaseService):
             password_salt = await create_salt()
             password_hash = await create_hash_by_string_and_salt(string=new_password, salt=password_salt)
         await AccountRepository().update(account, password_salt=password_salt, password_hash=password_hash)
-        await BotNotification().send_notification(
+        await BotNotification().create_notification(
             account=account,
             notification_type=NotificationTypes.GLOBAL,
             text_key='notification_global_password_change',

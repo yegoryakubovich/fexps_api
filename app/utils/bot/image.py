@@ -19,11 +19,16 @@ import datetime
 from typing import Optional
 
 from PIL import Image, ImageDraw, ImageFont
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.db.models import Method
 from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository
 from app.utils.value import value_to_float
 from config import settings
+
+WEEK_DAY = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
+MONTH_DAY = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня']
+MONTH_DAY += ['июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
 
 COORDINATES_RATES = {
     'usdrub': [[1455, 280], [1792, 415]],
@@ -31,10 +36,32 @@ COORDINATES_RATES = {
     'usdtusd': [[1455, 590], [1792, 725]],
     'usdusdt': [[1455, 745], [1792, 880]],
 }
-
 FONT_MONTSERRAT_SEMIBOLD = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_semibold.ttf', 70)
 FONT_MONTSERRAT_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/montserrat_regular.ttf', 36)
 FONT_JETBRAINSMONO_REGULAR = ImageFont.truetype(f'{settings.path_telegram}/fonts/jetbrainsmono_regular.ttf', 42)
+
+
+def get_post_text() -> str:
+    date_now = datetime.datetime.now(tz=datetime.timezone.utc)
+    return '\n'.join([
+        f'🗓 Наступило {date_now.day} {MONTH_DAY[date_now.month - 1]}, {WEEK_DAY[date_now.weekday()]}.',
+        f'',
+        f'🤝 Прекрасная возможность обменять деньги по ВЫГОДНОМУ КУРСУ вместе с Sowa Pay.',
+    ])
+
+
+def get_post_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager)],
+            [
+                InlineKeyboardButton(text='🤔 О НАС', url=settings.telegram_about),
+                InlineKeyboardButton(text='💬 ОТЗЫВЫ', url=settings.telegram_reviews),
+            ],
+            [InlineKeyboardButton(text='💰 КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info)],
+        ],
+    )
+    return keyboard
 
 
 def image_draw_center(image_draw, coordinates, text):

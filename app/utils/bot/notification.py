@@ -16,11 +16,8 @@
 
 
 import asyncio
-import logging
 
 from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.db.models import NotificationStates, Account, NotificationTypes, Actions, Language, Wallet
 from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, WalletAccountRepository, \
@@ -56,7 +53,7 @@ class BotNotification:
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=wallet):
             if account.id in account_id_black_list:
                 continue
-            await self.send_notification(
+            await self.create_notification(
                 account=account,
                 notification_type=notification_type,
                 text_key=text_key,
@@ -64,7 +61,7 @@ class BotNotification:
             )
             await asyncio.sleep(0.5)
 
-    async def send_notification(
+    async def create_notification(
             self,
             account: Account,
             notification_type: str,
@@ -88,28 +85,8 @@ class BotNotification:
             return
         if notification_type == NotificationTypes.GLOBAL and not notification_setting.is_global:
             return
-        state = NotificationStates.SUCCESS
         text = await self.get_text(key=text_key, language=account.language, **kwargs)
-        try:
-            await self.bot.send_message(
-                chat_id=notification_setting.telegram_id,
-                text=text,
-                reply_markup=InlineKeyboardMarkup(
-                    inline_keyboard=[
-                        [
-                            InlineKeyboardButton(
-                                text=await self.get_text(key='notification_site_button', language=account.language),
-                                url=settings.site_url,
-                            ),
-                        ],
-                    ],
-                ),
-            )
-        except TelegramForbiddenError:
-            state = NotificationStates.BLOCKED
-        except Exception as e:
-            logging.critical(e)
-            state = NotificationStates.ERROR
+        state = NotificationStates.WAIT
         notification_history = await NotificationHistoryRepository().create(
             notification_setting=notification_setting,
             type=notification_type,

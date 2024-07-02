@@ -15,15 +15,21 @@
 #
 
 
+import asyncio
+import logging
+
+from aiogram.types import FSInputFile, Message
+
+from app.repositories import TelegramPostRepository
 from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.utils.bot.image import image_create
 
 
-async def sync_roles_permissions(role_id):
-    role = await fexps_api_client.admin.roles.get(id_=role_id)
-    permissions = await fexps_api_client.admin.permissions.get_list()
-    for permission in permissions:
-        if permission not in role.permissions:
-            await fexps_api_client.admin.roles.permissions.create(
-                role_id=role_id,
-                permission=permission.id_str,
-            )
+async def telegram_send_notification():
+    logging.info('Start telegram_send_notification')
+    while True:
+        try:
+            await fexps_api_client.task.telegrams.send_notification()
+            await asyncio.sleep(2)
+        except ValueError as e:
+            logging.critical(f'Exception \n {e}')

@@ -15,15 +15,23 @@
 #
 
 
+import logging
 from typing import Optional
 
-from app.db.models import NotificationSetting, Session, Actions
-from app.repositories import NotificationSettingRepository
+from aiogram import Bot
+from aiogram.exceptions import TelegramForbiddenError
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile, InputMediaPhoto
+
+from app.db.models import NotificationSetting, Session, Actions, NotificationStates
+from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, TextRepository, \
+    TelegramPostRepository
 from app.services.base import BaseService
+from app.utils.bot.image import image_create, get_post_keyboard, get_post_text
 from app.utils.bot.username import get_bot_username, get_chat_username
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 from app.utils.exceptions import NotificationTelegramAlreadyLinked
+from config import settings
 
 
 class NotificationService(BaseService):
@@ -107,6 +115,97 @@ class NotificationService(BaseService):
                 'is_global': is_global,
                 'is_active': is_active,
             },
+        )
+        return {}
+
+    @session_required(can_root=True)
+    async def send_notification_by_task(
+            self,
+            session: Session,
+    ):
+        bot = Bot(token=settings.telegram_token)
+        for notification in await NotificationHistoryRepository().get_list(state=NotificationStates.WAIT):
+            notification_setting = notification.notification_setting
+            account = notification_setting.account
+            state = NotificationStates.SUCCESS
+            error = None
+            try:
+                await bot.send_message(
+                    chat_id=notification_setting.telegram_id,
+                    text=notification.text,
+                    reply_markup=InlineKeyboardMarkup(
+                        inline_keyboard=[
+                            [
+                                InlineKeyboardButton(
+                                    text=await TextRepository().get_by_key_or_none(
+                                        key='notification_site_button',
+                                        language=account.language,
+                                    ),
+                                    url=settings.site_url,
+                                ),
+                            ],
+                        ],
+                    ),
+                )
+            except TelegramForbiddenError:
+                state = NotificationStates.BLOCKED
+            except Exception as e:
+                error = e
+                state = NotificationStates.ERROR
+            await NotificationHistoryRepository().update(notification, state=state)
+            await self.create_action(
+                model=notification_setting,
+                action=Actions.UPDATE,
+                parameters={
+                    'notification_history': notification.id,
+                    'state': state,
+                    'error': error,
+                },
+            )
+        return {}
+
+    @session_required(can_root=True)
+    async def send_image_by_task(
+            self,
+            session: Session,
+    ):
+        bot = Bot(token=settings.telegram_token)
+        image_path = await image_create()
+        if not image_path:
+            logging.critical('Not found image')
+            return {}
+        message = await bot.send_photo(
+            chat_id=settings.telegram_chat_id,
+            photo=FSInputFile(path=image_path),
+            caption=get_post_text(),
+            reply_markup=get_post_keyboard(),
+        )
+        if not message:
+            logging.critical('Not found message')
+            return
+        await TelegramPostRepository().create(
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            text=message.caption,
+        )
+        return {}
+
+    @session_required(can_root=True)
+    async def update_image_by_task(
+            self,
+            session: Session,
+    ):
+        bot = Bot(token=settings.telegram_token)
+        telegram_post = await TelegramPostRepository().get()
+        if not telegram_post:
+            logging.critical('Not found telegram_post')
+            return
+        image_path = await image_create()
+        await bot.edit_message_media(
+            chat_id=settings.telegram_chat_id,
+            message_id=telegram_post.message_id,
+            media=InputMediaPhoto(media=FSInputFile(path=image_path), caption=telegram_post.text),
+            reply_markup=get_post_keyboard(),
         )
         return {}
 

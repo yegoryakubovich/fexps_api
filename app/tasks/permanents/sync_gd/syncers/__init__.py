@@ -18,38 +18,29 @@
 import logging
 
 from app.tasks.permanents.sync_gd.syncers.texts import sync_texts
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.tasks.permanents.utils.google_sheets_api_client import google_sheets_api_client
 from config import settings
 from .base import sync_base
 from .roles_permissions import sync_roles_permissions
-from ..utils import google_sheets_api_client, fexps_api_client
 
 
 async def sync():
     logging.info(f'Start sync')
+
     async def create_permission(obj):
-        await fexps_api_client.admin.permissions.create(
-            id_str=obj.get('id_str'),
-            name=obj.get('name'),
-        )
+        await fexps_api_client.admin.permissions.create(id_str=obj.get('id_str'), name=obj.get('name'))
 
     async def create_roles(obj):
-        role_id = await fexps_api_client.admin.roles.create(
-            name=obj.get('name'),
-        )
+        role_id = await fexps_api_client.admin.roles.create(name=obj.get('name'))
         if role_id == 1:
             await sync_roles_permissions(role_id=role_id)
 
     async def create_language(obj):
-        await fexps_api_client.admin.languages.create(
-            id_str=obj.get('id_str'),
-            name=obj.get('name'),
-        )
+        await fexps_api_client.admin.languages.create(id_str=obj.get('id_str'), name=obj.get('name'))
 
     async def create_timezone(obj):
-        await fexps_api_client.admin.timezones.create(
-            id_str=obj.get('id_str'),
-            deviation=obj.get('deviation'),
-        )
+        await fexps_api_client.admin.timezones.create(id_str=obj.get('id_str'), deviation=obj.get('deviation'))
 
     async def create_currency(obj):
         await fexps_api_client.admin.currencies.create(
@@ -126,6 +117,4 @@ async def sync():
     )
 
     # Texts
-    await sync_texts(
-        table=table,
-    )
+    await sync_texts(table=table)

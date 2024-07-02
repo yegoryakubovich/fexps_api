@@ -35,7 +35,7 @@ class SessionService(BaseService):
         token_hash = await create_hash_by_string_and_salt(string=token, salt=token_salt)
         # Create session and action
         session = await SessionRepository().create(account=account, token_hash=token_hash, token_salt=token_salt)
-        await BotNotification().send_notification(
+        await BotNotification().create_notification(
             account=account,
             notification_type=NotificationTypes.GLOBAL,
             text_key='notification_global_new_session',
