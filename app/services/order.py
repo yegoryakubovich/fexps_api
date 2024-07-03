@@ -38,6 +38,7 @@ from app.utils.calcs.request.states.input import request_check_state_input
 from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
+from app.utils.value import value_to_float
 from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
@@ -472,10 +473,22 @@ class OrderService(BaseService):
         currency = order.requisite.currency
         request_kwargs = {}
         if order.type == OrderTypes.INPUT:
-            input_current_currency_value = request.input_currency_value - order.currency_value
-            input_current_value = request.input_value - order.value
+            if request.rate_decimal:
+                input_current_currency_value = request.input_currency_value - order.currency_value
+                input_current_value = round(
+                    input_current_currency_value /
+                    (request.input_rate * 10 ** request.rate_decimal)
+                )
+            else:
+                input_current_value = request.input_value - order.value
+                input_current_currency_value = round(
+                    input_current_value *
+                    (request.input_rate / 10 ** request.rate_decimal)
+                )
             current_commission = math.ceil(
-                request.commission / request.input_currency_value * input_current_currency_value
+                request.commission /
+                request.input_currency_value *
+                input_current_currency_value
             )
             request_kwargs.update(
                 commission=current_commission,
@@ -485,16 +498,30 @@ class OrderService(BaseService):
             if request.type in [RequestTypes.ALL]:
                 output_current_value = input_current_value - current_commission
                 output_current_currency_value = round(
-                    output_current_value * request.output_rate / 10 ** request.rate_decimal
+                    output_current_value *
+                    (request.output_rate / 10 ** request.rate_decimal)
                 )
-                output_current_currency_value = math.floor(output_current_currency_value // currency.div) * currency.div
+                output_current_currency_value = (
+                        math.floor(output_current_currency_value // currency.div) *
+                        currency.div
+                )
                 request_kwargs.update(
                     output_currency_value=output_current_currency_value,
                     output_value=output_current_value,
                 )
         elif order.type == OrderTypes.OUTPUT:
-            output_current_currency_value = request.output_currency_value - order.currency_value
-            output_current_value = request.output_value - order.value
+            if request.rate_decimal:
+                output_current_currency_value = request.output_currency_value - order.currency_value
+                output_current_value = round(
+                    output_current_currency_value /
+                    (request.output_rate * 10 ** request.rate_decimal)
+                )
+            else:
+                output_current_value = request.output_value - order.value
+                output_current_currency_value = round(
+                    output_current_value *
+                    (request.output_rate / 10 ** request.rate_decimal)
+                )
             request_kwargs.update(
                 output_currency_value=output_current_currency_value,
                 output_value=output_current_value,
@@ -557,7 +584,8 @@ class OrderService(BaseService):
             if request.type == RequestTypes.ALL:
                 output_current_value = input_current_value - current_commission
                 output_current_currency_value = round(
-                    output_current_value * request.output_rate / 10 ** request.rate_decimal
+                    output_current_value *
+                    value_to_float(value=request.output_rate, decimal=request.rate_decimal)
                 )
                 output_current_currency_value = math.floor(output_current_currency_value // currency.div) * currency.div
                 request_kwargs.update(
