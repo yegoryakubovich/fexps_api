@@ -473,7 +473,7 @@ class OrderService(BaseService):
         currency = order.requisite.currency
         request_kwargs = {}
         if order.type == OrderTypes.INPUT:
-            if request.rate_decimal:
+            if request.rate_fixed:
                 input_current_currency_value = request.input_currency_value - order.currency_value
                 input_current_value = round(
                     input_current_currency_value /
@@ -510,7 +510,7 @@ class OrderService(BaseService):
                     output_value=output_current_value,
                 )
         elif order.type == OrderTypes.OUTPUT:
-            if request.rate_decimal:
+            if request.rate_fixed:
                 output_current_currency_value = request.output_currency_value - order.currency_value
                 output_current_value = round(
                     output_current_currency_value /
