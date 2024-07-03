@@ -63,6 +63,7 @@ class RateService(BaseService):
                     rate_decimal=result.rate_decimal,
                     rate=result.rate,
                 )
+        return {}
 
     @session_required(permissions=['rates'], can_root=True)
     async def keep_by_task(self, session: Session):
@@ -79,6 +80,7 @@ class RateService(BaseService):
                 if not rate:
                     continue
                 await RateRepository().create(method=method, type=rate_type, source=source, rate=rate)
+        return {}
 
     @session_required(permissions=['rates'], can_root=True)
     async def parse_bybit_by_task(self, session: Session):
@@ -93,3 +95,4 @@ class RateService(BaseService):
                 source=RateSources.BYBIT,
                 rate=rate,
             )
+        return {}
