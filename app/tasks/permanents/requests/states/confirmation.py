@@ -26,6 +26,6 @@ async def request_confirmation_check():
     while True:
         try:
             await fexps_api_client.task.requests.states.confirmation()
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)
         except ValueError as e:
             logging.critical(f'Exception \n {e}')

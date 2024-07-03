@@ -33,5 +33,5 @@ class RequestStateOutputReservationSchema(BaseModel):
 
 @router.get()
 async def route(schema: RequestStateOutputReservationSchema = Depends()):
-    result = await RequestService().state_input_reserved_by_task(token=schema.token)
+    result = await RequestService().state_output_reserved_by_task(token=schema.token)
     return Response(**result)
