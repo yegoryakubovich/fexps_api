@@ -42,6 +42,15 @@ class RequisiteRepository(BaseRepository[Requisite]):
             )
             return result.scalars().all()
 
+    async def get_list_empty(self, requisite_state: str) -> List[Requisite]:
+        result: List[Requisite] = []
+        for requisite in await self.get_list(state=requisite_state):
+            if requisite.currency_value < requisite.currency.div:
+                result.append(requisite)
+            elif bool(requisite.currency_value_min) and requisite.currency_value < requisite.currency_value_min:
+                result.append(requisite)
+        return result
+
     async def search(
             self,
             wallets: List[Wallet],

@@ -15,19 +15,23 @@
 #
 
 
-from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .requisites import router as router_requisites
-from .telegrams import router as router_telegrams
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services.requisite import RequisiteService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/task',
-    routes_included=[
-        router_files,
-        router_requests,
-        router_requisites,
-        router_telegrams,
-    ],
+    prefix='/empty',
 )
+
+
+class RequisiteEmptySchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: RequisiteEmptySchema = Depends()):
+    result = await RequisiteService().empty_by_task(token=schema.token)
+    return Response(**result)

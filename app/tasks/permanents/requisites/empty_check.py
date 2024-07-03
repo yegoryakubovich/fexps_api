@@ -15,19 +15,17 @@
 #
 
 
-from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .requisites import router as router_requisites
-from .telegrams import router as router_telegrams
+import asyncio
+import logging
+
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
-router = Router(
-    prefix='/task',
-    routes_included=[
-        router_files,
-        router_requests,
-        router_requisites,
-        router_telegrams,
-    ],
-)
+async def empty_check():
+    logging.info('start empty_check')
+    while True:
+        try:
+            await fexps_api_client.task.requisites.empty()
+            await asyncio.sleep(2)
+        except ValueError as e:
+            logging.critical(f'Exception \n {e}')

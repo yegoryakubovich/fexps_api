@@ -23,13 +23,14 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.db.init_db import init_db
 from app.tasks.permanents.files.keys.close_check import file_key_close_check
-from app.tasks.permanents.rates.parsers.bybit import rate_parse_bybit
 from app.tasks.permanents.rates.keep import rate_keep
 from app.tasks.permanents.rates.keep_pair import rate_keep_pair
+from app.tasks.permanents.rates.parsers.bybit import rate_parse_bybit
 from app.tasks.permanents.requests.rate_fixed_check import request_rate_fixed_check
 from app.tasks.permanents.requests.states.confirmation import request_confirmation_check
 from app.tasks.permanents.requests.states.input_reserved import request_state_input_reserved_check
 from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
+from app.tasks.permanents.requisites.empty_check import empty_check
 from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
 from app.tasks.permanents.telegram.send_image import telegram_send_image
 from app.tasks.permanents.telegram.send_notification import telegram_send_notification
@@ -37,13 +38,6 @@ from app.tasks.permanents.telegram.update_image import telegram_update_image
 from app.utils.logger import config_logger
 
 TASKS = []
-# Request
-TASKS += [
-    request_rate_fixed_check,
-    request_confirmation_check,
-    request_state_input_reserved_check,
-    request_state_output_reserved_check,
-]
 # File
 TASKS += [
     file_key_close_check,
@@ -51,6 +45,17 @@ TASKS += [
 # Rate
 TASKS += [
     rate_parse_bybit,
+]
+# Request
+TASKS += [
+    request_rate_fixed_check,
+    request_confirmation_check,
+    request_state_input_reserved_check,
+    request_state_output_reserved_check,
+]
+# Requisite
+TASKS += [
+    empty_check,
 ]
 # Telegram
 TASKS += [

@@ -16,18 +16,13 @@
 
 
 from app.utils import Router
-from .files import router as router_files
-from .requests import router as router_requests
-from .requisites import router as router_requisites
-from .telegrams import router as router_telegrams
+from .empty import router as router_empty
 
 
 router = Router(
-    prefix='/task',
+    prefix='/requisites',
     routes_included=[
-        router_files,
-        router_requests,
-        router_requisites,
-        router_telegrams,
+        router_empty,
     ],
+    tags=['Requisites'],
 )

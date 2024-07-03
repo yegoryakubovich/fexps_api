@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 from math import ceil
 from typing import Optional
 
@@ -373,6 +371,17 @@ class RequisiteService(BaseService):
             total_currency_value=new_total_currency_value,
             currency_value=new_currency_value,
         )
+
+    @session_required(permissions=['requisites'], can_root=True)
+    async def empty_by_task(self, session: Session):
+        for requisite in await RequisiteRepository().get_list_empty(requisite_state=RequisiteStates.ENABLE):
+            await RequisiteRepository().update(requisite, state=RequisiteStates.STOP)
+            await BotNotification().send_notification_by_wallet(
+                wallet=requisite.wallet,
+                notification_type=NotificationTypes.REQUISITE,
+                text_key='notification_requisite_auto_update_state_stop',
+                requisite_id=requisite.id,
+            )
 
     @staticmethod
     async def generate_requisites_dict(requisite: Requisite) -> Optional[dict]:
