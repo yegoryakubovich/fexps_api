@@ -67,16 +67,15 @@ async def calcs_request_rate_all_by_output_currency_value(
     if rate_float < 1:
         rate_decimal *= 2
     rate = value_to_int(value=rate_float, decimal=rate_decimal, round_method=math.ceil)
-
     return RequestCalculateScheme(
         input_currency_value=input_currency_value,
-        input_rate=input_rate * 10 ** (rate_decimal - input_method.currency.rate_decimal),
+        input_rate=value_to_int(value=input_currency_value / input_value, decimal=rate_decimal),
         input_value=input_value,
         difference=0,
         commission=commission,
         rate=rate,
         rate_decimal=rate_decimal,
         output_currency_value=output_currency_value,
-        output_rate=output_rate * 10 ** (rate_decimal - output_method.currency.rate_decimal),
+        output_rate=value_to_int(value=output_currency_value / output_value, decimal=rate_decimal),
         output_value=output_value,
     )
