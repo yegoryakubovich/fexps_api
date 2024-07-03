@@ -151,7 +151,7 @@ class NotificationService(BaseService):
                 state = NotificationStates.ERROR
             await NotificationHistoryRepository().update(notification, state=state)
             await self.create_action(
-                model=notification_setting,
+                model=notification,
                 action=Actions.UPDATE,
                 parameters={
                     'notification_history': notification.id,
