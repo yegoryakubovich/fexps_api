@@ -22,7 +22,7 @@ from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
 async def file_key_close_check():
-    logging.info(f'start file_key_close_check')
+    logging.info('start file_key_close_check')
     while True:
         try:
             await fexps_api_client.task.files.keys.close()

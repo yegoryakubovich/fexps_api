@@ -26,7 +26,7 @@ from .roles_permissions import sync_roles_permissions
 
 
 async def sync():
-    logging.info(f'Start sync')
+    logging.info('Start sync')
 
     async def create_permission(obj):
         await fexps_api_client.admin.permissions.create(id_str=obj.get('id_str'), name=obj.get('name'))

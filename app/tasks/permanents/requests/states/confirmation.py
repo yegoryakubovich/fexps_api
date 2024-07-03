@@ -22,7 +22,7 @@ from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
 async def request_confirmation_check():
-    logging.info(f'start request_confirmation_check')
+    logging.info('start request_confirmation_check')
     while True:
         try:
             await fexps_api_client.task.requests.states.confirmation()

@@ -22,10 +22,10 @@ from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
 async def request_rate_fixed_check():
-    logging.info(f'started...')
+    logging.info('start request_rate_fixed_check')
     while True:
         try:
             await fexps_api_client.task.requests.rate_fixed()
             await asyncio.sleep(2)
         except ValueError as e:
-            logging.info(f'Exception \n {e}')
+            logging.critical(f'Exception \n {e}')

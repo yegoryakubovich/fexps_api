@@ -22,7 +22,7 @@ from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
 async def request_state_output_reserved_check():
-    logging.info(f'start request_state_output_reserved_check')
+    logging.info('start request_state_output_reserved_check')
     while True:
         try:
             await fexps_api_client.task.requests.states.output_reserved()
