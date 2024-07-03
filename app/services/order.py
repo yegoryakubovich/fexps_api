@@ -26,6 +26,7 @@ from app.repositories import WalletAccountRepository, TextRepository, OrderReque
     RequestRequisiteRepository, WalletBanRequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
+from app.services.message import MessageService
 from app.services.method import MethodService
 from app.services.order_request import OrderRequestService
 from app.services.request import RequestService
@@ -39,7 +40,6 @@ from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
 from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
 from app.utils.value import value_to_float
-from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
 class OrderService(BaseService):
@@ -195,10 +195,14 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
-        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
         await OrderRepository().update(order, state=next_state)
-        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
+            role=MessageRoles.SYSTEM,
+            text=f'order_update_state_{next_state}',
+        )
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,
@@ -271,7 +275,6 @@ class OrderService(BaseService):
         await OrderRequestService().check_have_order_request(order=order)
         await MethodService().check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
         await OrderRepository().update(order, state=next_state)
-        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         for field_scheme in order.input_scheme_fields:
             field_key = field_scheme['key']
             field_value = input_fields.get(field_key)
@@ -283,19 +286,28 @@ class OrderService(BaseService):
                     if not file_key.file:
                         continue
                     await OrderFileRepository().create(order=order, file=file_key.file)
-                await connections_manager_aiohttp.send(
+                await MessageService().send_to_chat(
+                    token=token,
+                    order_id=order.id,
                     role=MessageRoles.USER,
                     text=text.value_default,
                     files_key=field_value,
                 )
                 input_fields[field_key] = 'added'
             else:
-                await connections_manager_aiohttp.send(
+                await MessageService().send_to_chat(
+                    token=token,
+                    order_id=order.id,
                     role=MessageRoles.USER,
                     text=f'{text.value_default}: {field_value}',
                 )
         await OrderRepository().update(order, input_fields=input_fields)
-        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
+            role=MessageRoles.SYSTEM,
+            text=f'order_update_state_{next_state}',
+        )
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,
@@ -365,11 +377,15 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
-        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         await OrderRequestService().check_have_order_request(order=order)
         await self.order_compete_related(order=order)
         await OrderRepository().update(order, state=next_state)
-        await connections_manager_aiohttp.send(role=MessageRoles.SYSTEM, text=f'order_update_state_{next_state}')
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
+            role=MessageRoles.SYSTEM,
+            text=f'order_update_state_{next_state}',
+        )
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
             wallet=order.request.wallet,

@@ -22,13 +22,13 @@ from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, Ord
     OrderCanceledReasons, MessageRoles, NotificationTypes, OrderTypes, RequestStates
 from app.repositories import OrderRepository, OrderRequestRepository, WalletAccountRepository
 from app.services.base import BaseService
+from app.services.message import MessageService
 from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
     OrderRequestAlreadyExists, RequisiteNotEnough
 from app.utils.value import value_to_float
-from app.utils.websockets.chat import ChatConnectionManagerAiohttp
 
 
 class OrderRequestService(BaseService):
@@ -68,7 +68,6 @@ class OrderRequestService(BaseService):
             )
         order_request, data = None, {}
         await self.check_have_order_request(order=order)
-        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         bot_notification = BotNotification()
         if type_ == OrderRequestTypes.CANCEL:
             if order.type == OrderTypes.INPUT:
@@ -82,11 +81,13 @@ class OrderRequestService(BaseService):
                     )
                     await self.order_request_update_type_cancel(
                         order_request=order_request,
+                        token=token,
                         state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
-                        connections_manager_aiohttp=connections_manager_aiohttp,
                     )
-                    await connections_manager_aiohttp.send(
+                    await MessageService().send_to_chat(
+                        token=token,
+                        order_id=order.id,
                         role=MessageRoles.SYSTEM,
                         text=f'order_request_create_{type_}',
                     )
@@ -102,11 +103,13 @@ class OrderRequestService(BaseService):
                     )
                     await self.order_request_update_type_recreate(
                         order_request=order_request,
+                        token=token,
                         state=OrderRequestStates.COMPLETED,
                         canceled_reason=OrderCanceledReasons.ONE_SIDED,
-                        connections_manager_aiohttp=connections_manager_aiohttp,
                     )
-                    await connections_manager_aiohttp.send(
+                    await MessageService().send_to_chat(
+                        token=token,
+                        order_id=order.id,
                         role=MessageRoles.SYSTEM,
                         text=f'order_request_create_{type_}',
                     )
@@ -125,7 +128,9 @@ class OrderRequestService(BaseService):
                 state=OrderRequestStates.WAIT,
                 data=data,
             )
-            await connections_manager_aiohttp.send(
+            await MessageService().send_to_chat(
+                token=token,
+                order_id=order.id,
                 role=MessageRoles.SYSTEM,
                 text=f'order_request_create_{type_}',
             )
@@ -235,26 +240,25 @@ class OrderRequestService(BaseService):
                     'action': f'Change OrderRequest to state "{state}"',
                 },
             )
-        connections_manager_aiohttp = ChatConnectionManagerAiohttp(token=token, order_id=order.id)
         if order_request.type == OrderRequestTypes.CANCEL:
             await self.order_request_update_type_cancel(
                 order_request=order_request,
+                token=token,
                 state=state,
                 canceled_reason=OrderCanceledReasons.TWO_SIDED,
-                connections_manager_aiohttp=connections_manager_aiohttp,
             )
         elif order_request.type == OrderRequestTypes.RECREATE:
             await self.order_request_update_type_recreate(
                 order_request=order_request,
+                token=token,
                 state=state,
                 canceled_reason=OrderCanceledReasons.TWO_SIDED,
-                connections_manager_aiohttp=connections_manager_aiohttp,
             )
         elif order_request.type == OrderRequestTypes.UPDATE_VALUE:
             await self.order_request_update_type_update_value(
                 order_request=order_request,
+                token=token,
                 state=state,
-                connections_manager_aiohttp=connections_manager_aiohttp,
             )
         await OrderRequestRepository().update(order_request, state=state)
         await self.create_action(
@@ -310,9 +314,9 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def order_request_update_type_cancel(
             order_request: OrderRequest,
+            token: str,
             state: str,
             canceled_reason: str,
-            connections_manager_aiohttp: ChatConnectionManagerAiohttp,
     ):
         from app.services.request import RequestService
         from app.services.order import OrderService
@@ -331,7 +335,9 @@ class OrderRequestService(BaseService):
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
         await OrderRequestRepository().update(order_request, state=state)
-        await connections_manager_aiohttp.send(
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         )
@@ -352,9 +358,9 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def order_request_update_type_recreate(
             order_request: OrderRequest,
+            token: str,
             state: str,
             canceled_reason: str,
-            connections_manager_aiohttp: ChatConnectionManagerAiohttp,
     ):
         from app.services.request import RequestService
         from app.services.order import OrderService
@@ -373,7 +379,9 @@ class OrderRequestService(BaseService):
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
         await OrderRequestRepository().update(order_request, state=state)
-        await connections_manager_aiohttp.send(
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
         )
@@ -394,8 +402,8 @@ class OrderRequestService(BaseService):
     @staticmethod
     async def order_request_update_type_update_value(
             order_request: OrderRequest,
+            token: str,
             state: str,
-            connections_manager_aiohttp: ChatConnectionManagerAiohttp,
     ):
         from app.services.request import RequestService
         from app.services.order import OrderService
@@ -429,7 +437,9 @@ class OrderRequestService(BaseService):
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
         await OrderRequestRepository().update(order_request, state=state)
-        await connections_manager_aiohttp.send(
+        await MessageService().send_to_chat(
+            token=token,
+            order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}',
         )

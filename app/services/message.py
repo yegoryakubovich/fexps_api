@@ -27,11 +27,60 @@ from app.services.wallet import WalletService
 from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
+from app.utils.websockets.chat import chat_connections_manager_fastapi
 from config import settings
 
 
 class MessageService(BaseService):
     model = Message
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        message = await MessageRepository().get_by_id(id_=id_)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[message.order.request.wallet, message.order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': message.order.id,
+                },
+            ),
+        )
+        return {
+            'message': await self.generate_message_dict(message=message),
+        }
+
+    @session_required()
+    async def get_list(
+            self,
+            session: Session,
+            order_id: int,
+    ) -> dict:
+        account = session.account
+        order = await OrderRepository().get_by_id(id_=order_id)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id,
+                },
+            ),
+        )
+        messages = await MessageRepository().get_list(order_id=order_id)
+        return {
+            'messages': [
+                await self.generate_message_dict(message=message)
+                for message in messages
+            ]
+        }
 
     @session_required()
     async def chat(
@@ -86,53 +135,16 @@ class MessageService(BaseService):
         )
         return await self.generate_message_dict(message=message)
 
-    @session_required()
-    async def get(
+    async def send_to_chat(
             self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        account = session.account
-        message = await MessageRepository().get_by_id(id_=id_)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[message.order.request.wallet, message.order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Order',
-                    'id_value': message.order.id,
-                },
-            ),
-        )
-        return {
-            'message': await self.generate_message_dict(message=message),
-        }
-
-    @session_required()
-    async def get_list(
-            self,
-            session: Session,
+            token: str,
             order_id: int,
-    ) -> dict:
-        account = session.account
-        order = await OrderRepository().get_by_id(id_=order_id)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[order.request.wallet, order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Order',
-                    'id_value': order.id,
-                },
-            ),
-        )
-        messages = await MessageRepository().get_list(order_id=order_id)
-        return {
-            'messages': [
-                await self.generate_message_dict(message=message)
-                for message in messages
-            ]
-        }
+            role: str,
+            text: str = None,
+            files_key: str = None,
+    ):
+        message = await self.chat(token=token, order_id=order_id, text=text, role=role, files_key=files_key)
+        await chat_connections_manager_fastapi.send(data=message, order_id=order_id)
 
     @staticmethod
     async def generate_message_dict(message: Message) -> Optional[dict]:
