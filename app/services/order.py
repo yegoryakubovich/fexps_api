@@ -516,7 +516,12 @@ class OrderService(BaseService):
                     output_current_currency_value /
                     (request.output_rate * 10 ** request.rate_decimal)
                 )
+                order_value = round(
+                    request.output_currency_value /
+                    (request.output_rate * 10 ** request.rate_decimal)
+                )
             else:
+                order_value = order.value
                 output_current_value = request.output_value - order.value
                 output_current_currency_value = round(
                     output_current_value *
@@ -529,7 +534,7 @@ class OrderService(BaseService):
             if order.state in [OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
                 wallet_ban = await WalletBanService().create_related(
                     wallet=request.wallet,
-                    value=-order.value,
+                    value=-order_value,
                     reason=WalletBanReasons.BY_REQUEST,
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
