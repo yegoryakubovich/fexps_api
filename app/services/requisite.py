@@ -382,6 +382,7 @@ class RequisiteService(BaseService):
                 text_key='notification_requisite_auto_update_state_stop',
                 requisite_id=requisite.id,
             )
+        return {}
 
     @staticmethod
     async def generate_requisites_dict(requisite: Requisite) -> Optional[dict]:
