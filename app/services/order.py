@@ -493,13 +493,13 @@ class OrderService(BaseService):
                 input_current_currency_value = request.input_currency_value - order.currency_value
                 input_current_value = round(
                     input_current_currency_value /
-                    (request.input_rate * 10 ** request.rate_decimal)
+                    value_to_float(value=request.input_rate, decimal=request.rate_decimal)
                 )
             else:
                 input_current_value = request.input_value - order.value
                 input_current_currency_value = round(
                     input_current_value *
-                    (request.input_rate / 10 ** request.rate_decimal)
+                    value_to_float(value=request.input_rate, decimal=request.rate_decimal)
                 )
             current_commission = math.ceil(
                 request.commission /
@@ -515,7 +515,7 @@ class OrderService(BaseService):
                 output_current_value = input_current_value - current_commission
                 output_current_currency_value = round(
                     output_current_value *
-                    (request.output_rate / 10 ** request.rate_decimal)
+                    value_to_float(value=request.output_rate, decimal=request.rate_decimal)
                 )
                 output_current_currency_value = (
                         math.floor(output_current_currency_value // currency.div) *
@@ -527,21 +527,21 @@ class OrderService(BaseService):
                 )
         elif order.type == OrderTypes.OUTPUT:
             if request.rate_fixed:
+                order_value = round(
+                    order.currency_value /
+                    value_to_float(value=request.output_rate, decimal=request.rate_decimal)
+                )
                 output_current_currency_value = request.output_currency_value - order.currency_value
                 output_current_value = round(
                     output_current_currency_value /
-                    (request.output_rate * 10 ** request.rate_decimal)
-                )
-                order_value = round(
-                    request.output_currency_value /
-                    (request.output_rate * 10 ** request.rate_decimal)
+                    value_to_float(value=request.output_rate, decimal=request.rate_decimal)
                 )
             else:
                 order_value = order.value
                 output_current_value = request.output_value - order.value
                 output_current_currency_value = round(
                     output_current_value *
-                    (request.output_rate / 10 ** request.rate_decimal)
+                    value_to_float(value=request.output_rate, decimal=request.rate_decimal)
                 )
             request_kwargs.update(
                 output_currency_value=output_current_currency_value,
