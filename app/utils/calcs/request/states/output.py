@@ -35,14 +35,12 @@ async def request_check_state_output(request: Request):
     if await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT, state=OrderStates.CONFIRMATION):
         return
     order_value_sum = sum([
-        order.value if order.state != OrderStates.CANCELED else 0
+        order.value if order.state == OrderStates.COMPLETED else 0
         for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT)
     ])
     difference_rate = request.difference_rate
-    logging.critical(f'difference_rate = {difference_rate}')
     difference = request.output_value - order_value_sum
-    logging.critical(f'difference = {difference} = {request.output_value} - {order_value_sum}')
-    if request.rate_fixed and difference:
+    if difference:
         await TransferSystemService().payment_difference(request=request, value=difference, from_banned_value=True)
         difference_rate += difference
     # if request.difference:
