@@ -33,4 +33,5 @@ class Country(Base):
     timezone_default = relationship('Timezone', uselist=False, lazy='selectin')
     currency_default_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency_default = relationship('Currency', uselist=False, lazy='selectin')
+    is_default = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

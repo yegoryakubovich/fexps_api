@@ -163,4 +163,5 @@ class CountryService(BaseService):
             'language': country.language_default.id_str,
             'timezone': country.timezone_default.id_str,
             'currency': country.currency_default.id_str,
+            'is_default': country.is_default,
         }

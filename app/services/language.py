@@ -109,4 +109,5 @@ class LanguageService(BaseService):
             'id': language.id,
             'id_str': language.id_str,
             'name': language.name,
+            'is_default': language.is_default,
         }

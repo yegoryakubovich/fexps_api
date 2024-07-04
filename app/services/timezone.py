@@ -59,28 +59,16 @@ class TimezoneService(BaseService):
             'id_str': timezone.id_str,
         }
 
-    @staticmethod
-    async def get(
-            id_str: str,
-    ):
+    async def get(self, id_str: str):
         timezone = await TimezoneRepository().get_by_id_str(id_str=id_str)
         return {
-            'timezone': {
-                'id': timezone.id,
-                'id_str': timezone.id_str,
-                'deviation': timezone.deviation,
-            }
+            'timezone': await self.generate_transfer_dict(timezone=timezone),
         }
 
-    @staticmethod
-    async def get_list() -> dict:
+    async def get_list(self) -> dict:
         timezones = {
             'timezones': [
-                {
-                    'id': timezone.id,
-                    'id_str': timezone.id_str,
-                    'deviation': timezone.deviation
-                }
+                await self.generate_transfer_dict(timezone=timezone)
                 for timezone in await TimezoneRepository().get_list()
             ],
         }
@@ -104,3 +92,12 @@ class TimezoneService(BaseService):
             }
         )
         return {}
+
+    @staticmethod
+    async def generate_transfer_dict(timezone: Timezone) -> dict:
+        return {
+            'id': timezone.id,
+            'id_str': timezone.id_str,
+            'deviation': timezone.deviation,
+            'is_default': timezone.is_default,
+        }
