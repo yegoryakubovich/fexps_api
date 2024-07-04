@@ -99,5 +99,4 @@ class TimezoneService(BaseService):
             'id': timezone.id,
             'id_str': timezone.id_str,
             'deviation': timezone.deviation,
-            'is_default': timezone.is_default,
         }
