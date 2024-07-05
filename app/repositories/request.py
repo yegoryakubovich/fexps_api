@@ -41,6 +41,7 @@ class RequestRepository(BaseRepository[Request]):
             wallets: List[Wallet],
             is_completed: bool,
             is_canceled: bool,
+            is_partner: bool,
             page: int,
     ) -> tuple[list[Request], int]:
         states = []
@@ -48,17 +49,18 @@ class RequestRepository(BaseRepository[Request]):
             states.append(RequestStates.COMPLETED)
         if is_canceled:
             states.append(RequestStates.CANCELED)
-        states_where = and_(self.model.state != RequestStates.COMPLETED, self.model.state != RequestStates.CANCELED)
+        custom_where = and_(self.model.state != RequestStates.COMPLETED, self.model.state != RequestStates.CANCELED)
         if states:
-            states_where = self.model.state == states.pop()
+            custom_where = self.model.state == states.pop()
             for state in states:
-                states_where = or_(states_where, self.model.state == state)
-        if not wallets:
-            return [], 0
-        wallets_where = self.model.wallet_id == wallets.pop().id
-        for wallet in wallets:
-            wallets_where = or_(wallets_where, self.model.wallet_id == wallet.id)
-        custom_where = and_(states_where, wallets_where)
+                custom_where = or_(custom_where, self.model.state == state)
+        if not is_partner:
+            if not wallets:
+                return [], 0
+            wallets_where = self.model.wallet_id == wallets.pop().id
+            for wallet in wallets:
+                wallets_where = or_(wallets_where, self.model.wallet_id == wallet.id)
+            custom_where = and_(custom_where, wallets_where)
         custom_limit = settings.items_per_page
         custom_offset = settings.items_per_page * (page - 1)
         result = await self.get_list(

@@ -32,6 +32,7 @@ class RequestSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     is_completed: Optional[bool] = Field(default=True)
     is_canceled: Optional[bool] = Field(default=True)
+    is_partner: Optional[bool] = Field(default=False)
     page: Optional[int] = Field(default=1)
 
 
@@ -41,6 +42,7 @@ async def route(schema: RequestSearchSchema):
         token=schema.token,
         is_completed=schema.is_completed,
         is_canceled=schema.is_canceled,
+        is_partner=schema.is_partner,
         page=schema.page,
     )
     return Response(**result)

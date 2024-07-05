@@ -283,6 +283,7 @@ class RequestService(BaseService):
             session: Session,
             is_completed: bool,
             is_canceled: bool,
+            is_partner: bool,
             page: int,
     ) -> dict:
         account = session.account
@@ -294,6 +295,7 @@ class RequestService(BaseService):
             wallets=wallets,
             is_completed=is_completed,
             is_canceled=is_canceled,
+            is_partner=is_partner,
             page=page,
         )
         requests = []
