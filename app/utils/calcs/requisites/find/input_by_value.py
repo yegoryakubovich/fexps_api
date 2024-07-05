@@ -32,7 +32,7 @@ async def calcs_requisite_input_by_value(
         method: Method,
         value: int,
         process: bool = False,
-request: Request = None,
+        request: Request = None,
 ) -> Optional[RequisiteDataScheme]:
     need_value = value
     requisite_items = []
@@ -42,17 +42,13 @@ request: Request = None,
         requisite_params['in_process'] = False
     for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
         await calcs_requisite_process_change(requisite=requisite, in_process=True, process=process)
-        if request:
-            if request.wallet.id == requisite.wallet.id:
-                await calcs_requisite_process_change(requisite=requisite, in_process=False, process=process)
-                continue
-            if await RequestRequisiteRepository().get(
-                    request=request,
-                    requisite=requisite,
-                    type=RequestRequisiteTypes.BLACKLIST,
-            ):
-                await calcs_requisite_process_change(requisite=requisite, in_process=False, process=process)
-                continue
+        if request and await RequestRequisiteRepository().get(
+                request=request,
+                requisite=requisite,
+                type=RequestRequisiteTypes.BLACKLIST,
+        ):
+            await calcs_requisite_process_change(requisite=requisite, in_process=False, process=process)
+            continue
         # Check need_value
         if not need_value:
             await calcs_requisite_process_change(requisite=requisite, in_process=False, process=process)
