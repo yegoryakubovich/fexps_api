@@ -15,13 +15,14 @@
 #
 
 
-from .get import router as router_get
-from .create import router as router_create
-from .check_username import router as router_check_username
-from .check_password import router as router_check_password
-from .change_password import router as router_change_password
-from .contacts import router as router_contacts
 from app.utils import Router
+from .change_password import router as router_change_password
+from .check_password import router as router_check_password
+from .check_username import router as router_check_username
+from .contacts import router as router_contacts
+from .create import router as router_create
+from .get import router as router_get
+from .update import router as router_update
 
 
 router = Router(
@@ -29,8 +30,9 @@ router = Router(
     routes_included=[
         router_get,
         router_create,
-        router_check_username,
         router_change_password,
+        router_update,
+        router_check_username,
         router_check_password,
         router_contacts,
     ],

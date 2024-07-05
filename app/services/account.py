@@ -23,9 +23,11 @@ from typing import Optional
 
 from app.db.models import Account, Session, Actions, NotificationTypes
 from app.repositories import AccountRepository, CountryRepository, LanguageRepository, TimezoneRepository, \
-    CurrencyRepository, TextPackRepository, NotificationSettingRepository, WalletRepository, WalletAccountRepository
+    CurrencyRepository, TextPackRepository, NotificationSettingRepository, WalletRepository, WalletAccountRepository, \
+    FileKeyRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
+from app.services.file import FileService
 from app.utils.bot.notification import BotNotification
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
@@ -108,29 +110,47 @@ class AccountService(BaseService):
     async def get_by_admin(self, id_: int) -> dict:
         account = await AccountRepository().get_by_id(id_=id_)
         return {
-            'account': await self._generate_account_dict(account=account),
+            'account': await self.generate_account_dict(account=account),
         }
 
     @session_required(return_account=True)
     async def get(self, account: Account) -> dict:
         return {
-            'account': await self._generate_account_dict(account=account),
+            'account': await self.generate_account_dict(account=account),
         }
 
-    @session_required(return_model=False, permissions=['accounts'])
-    async def search_by_admin(self, id_, username: str, page: int) -> dict:
-        accounts, results = await AccountRepository().search(id_=id_, username=username, page=page)
-        accounts = [
-            await self._generate_account_dict(account=account)
-            for account in accounts
-        ]
-        return {
-            'accounts': accounts,
-            'results': results,
-            'pages': ceil(results / settings.items_per_page),
-            'page': page,
-            'items_per_page': settings.items_per_page,
-        }
+    @session_required()
+    async def update(
+            self,
+            session: Session,
+            firstname: Optional[str] = None,
+            lastname: Optional[str] = None,
+            file_key: Optional[str] = None,
+    ):
+        account: Account = session.account
+        updates = {}
+        if firstname and firstname != account.firstname:
+            updates['firstname'] = firstname
+        if lastname and lastname != account.lastname:
+            updates['lastname'] = lastname
+        if file_key:
+            for file_key in await FileKeyRepository().get_list(key=file_key):
+                if not file_key.file:
+                    continue
+                updates['file'] = file_key.file
+        if updates:
+            await AccountRepository().update(account, **updates)
+            await self.create_action(
+                model=account,
+                action=Actions.UPDATE,
+                parameters={
+                    'updater': f'session_{session.id}',
+                    'account_id': account.id,
+                    **updates
+                },
+                with_client=True,
+            )
+        return {}
 
     @session_required(permissions=['accounts'])
     async def change_password_by_admin(
@@ -143,6 +163,21 @@ class AccountService(BaseService):
             account_id=account_id,
             by_admin=True,
         )
+
+    @session_required(return_model=False, permissions=['accounts'])
+    async def search_by_admin(self, id_, username: str, page: int) -> dict:
+        accounts, results = await AccountRepository().search(id_=id_, username=username, page=page)
+        accounts = [
+            await self.generate_account_dict(account=account)
+            for account in accounts
+        ]
+        return {
+            'accounts': accounts,
+            'results': results,
+            'pages': ceil(results / settings.items_per_page),
+            'page': page,
+            'items_per_page': settings.items_per_page,
+        }
 
     @session_required()
     async def change_password(
@@ -263,7 +298,7 @@ class AccountService(BaseService):
             raise WrongPassword()
 
     @staticmethod
-    async def _generate_account_dict(account: Account) -> Optional[dict]:
+    async def generate_account_dict(account: Account) -> Optional[dict]:
         if not account:
             return
         text_pack = await TextPackRepository().get_current(language=account.language)
@@ -277,6 +312,7 @@ class AccountService(BaseService):
             'language': account.language.id_str,
             'timezone': account.timezone.id_str,
             'currency': account.currency.id_str,
+            'file': await FileService().generate_file_dict(file=account.file),
             'permissions': permissions,
             'text_pack_id': text_pack.id,
         }

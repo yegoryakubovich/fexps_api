@@ -38,5 +38,7 @@ class Account(Base):
     timezone = relationship('Timezone', foreign_keys=timezone_id, uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
+    file_id = Column(BigInteger, ForeignKey('files.id', ondelete='SET NULL'), nullable=True)
+    file = relationship('File', foreign_keys=file_id, uselist=False, lazy='selectin')
     is_active = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
