@@ -30,6 +30,8 @@ router = Router(
 
 class RequestSearchSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    id_: Optional[str] = Field(default=None)
+    is_active: Optional[bool] = Field(default=True)
     is_completed: Optional[bool] = Field(default=True)
     is_canceled: Optional[bool] = Field(default=True)
     is_partner: Optional[bool] = Field(default=False)
@@ -40,6 +42,8 @@ class RequestSearchSchema(BaseModel):
 async def route(schema: RequestSearchSchema):
     result = await RequestService().search(
         token=schema.token,
+        id_=schema.id_,
+        is_active=schema.is_active,
         is_completed=schema.is_completed,
         is_canceled=schema.is_canceled,
         is_partner=schema.is_partner,

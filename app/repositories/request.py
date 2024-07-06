@@ -13,10 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from operator import or_
-from typing import List
+from typing import List, Optional
 
 from sqlalchemy.sql.operators import and_
 
@@ -39,34 +38,32 @@ class RequestRepository(BaseRepository[Request]):
     async def search(
             self,
             wallets: List[Wallet],
+            id_: str,
+            is_active: bool,
             is_completed: bool,
             is_canceled: bool,
             is_partner: bool,
             page: int,
     ) -> tuple[list[Request], int]:
+        if not id_:
+            id_ = ''
+        custom_where = self.model.id.like(f'%{id_}%')
         states = []
+        if is_active:
+            states += [RequestStates.CONFIRMATION, RequestStates.INPUT_RESERVATION, RequestStates.INPUT]
+            states += [RequestStates.OUTPUT_RESERVATION, RequestStates.OUTPUT]
         if is_completed:
-            states.append(RequestStates.COMPLETED)
+            states += [RequestStates.COMPLETED]
         if is_canceled:
-            states.append(RequestStates.CANCELED)
-        custom_where = and_(self.model.state != RequestStates.COMPLETED, self.model.state != RequestStates.CANCELED)
-        if states:
-            custom_where = self.model.state == states.pop()
-            for state in states:
-                custom_where = or_(custom_where, self.model.state == state)
-        if not is_partner:
-            if not wallets:
-                return [], 0
-            wallets_where = self.model.wallet_id == wallets.pop().id
-            for wallet in wallets:
-                wallets_where = or_(wallets_where, self.model.wallet_id == wallet.id)
-            custom_where = and_(custom_where, wallets_where)
+            states += [RequestStates.CANCELED]
+        logging.critical(states)
+        custom_where = and_(custom_where, self.model.state.in_(states))
+        if is_partner:
+            custom_where = and_(custom_where, ~self.model.wallet_id.in_([wallet.id for wallet in wallets]))
+        else:
+            custom_where = and_(custom_where, self.model.wallet_id.in_([wallet.id for wallet in wallets]))
         custom_limit = settings.items_per_page
         custom_offset = settings.items_per_page * (page - 1)
-        result = await self.get_list(
-            custom_where=custom_where,
-            custom_limit=custom_limit,
-            custom_offset=custom_offset,
-        )
+        result = await self.get_list(custom_where=custom_where, custom_limit=custom_limit, custom_offset=custom_offset)
         result_count = len(await self.get_list(custom_where=custom_where))
         return result, result_count

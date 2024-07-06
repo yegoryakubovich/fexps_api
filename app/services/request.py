@@ -281,6 +281,8 @@ class RequestService(BaseService):
     async def search(
             self,
             session: Session,
+            id_: Optional[str],
+            is_active: bool,
             is_completed: bool,
             is_canceled: bool,
             is_partner: bool,
@@ -293,6 +295,8 @@ class RequestService(BaseService):
         ]
         _requests, results = await RequestRepository().search(
             wallets=wallets,
+            id_=id_,
+            is_active=is_active,
             is_completed=is_completed,
             is_canceled=is_canceled,
             is_partner=is_partner,
