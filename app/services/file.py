@@ -25,10 +25,10 @@ from starlette.responses import FileResponse
 
 from app.db.models import File, Session, Actions
 from app.repositories import FileRepository, OrderRepository, RequestRepository, MessageRepository, FileKeyRepository
+from app.services import FileKeyService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-from app.utils.websockets.file import FileConnectionManagerAiohttp
 from config import settings
 
 
@@ -87,7 +87,7 @@ class FileService(BaseService):
                     'extension': extension,
                 },
             )
-        await FileConnectionManagerAiohttp().send(key=key)
+        await FileKeyService().send_file(key=key)
         await FileKeyRepository().delete(await FileKeyRepository().get(file_id=None, key=key))
         return {}
 

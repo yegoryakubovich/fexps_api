@@ -15,24 +15,7 @@
 #
 
 
-import aiohttp
 from fastapi import WebSocket
-
-from config import settings
-
-
-class FileConnectionManagerAiohttp:
-    def __init__(self):
-        self.url = f'{settings.get_self_url()}/files/keys/get/ws'
-
-    async def send(self, key: str):
-        async with aiohttp.ClientSession() as session:
-            async with session.ws_connect(self.url) as ws:
-                await ws.send_json(
-                    data={
-                        'key': key,
-                    },
-                )
 
 
 class FileConnectionManagerFastApi:

@@ -24,6 +24,7 @@ from app.services.base import BaseService
 from app.services.file import FileService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
+from app.utils.websockets.file import file_connections_manager_fastapi
 from config import settings
 
 
@@ -82,6 +83,14 @@ class FileKeyService(BaseService):
             await FileKeyRepository().delete(file_key)
         return {}
 
+    async def get_ws(self, key: str):
+        files = [
+            await self.generate_file_key_dict(file_key=file_key)
+            for file_key in await FileKeyRepository().get_list(key=key)
+        ]
+        [files.remove({}) for i in range(files.count({}))]
+        return files
+
     @staticmethod
     async def generate_file_key_dict(file_key: FileKey) -> Optional[dict]:
         if not file_key.file:
@@ -91,3 +100,11 @@ class FileKeyService(BaseService):
             'file_key_id': file_key.id,
             **await FileService().generate_file_dict(file=file_key.file),
         }
+
+    async def send_file(self, key: str):
+        await file_connections_manager_fastapi.send(
+            data={
+                'key': key,
+                'files': await self.get_ws(key=key),
+            },
+        )

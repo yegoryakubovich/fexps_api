@@ -49,11 +49,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             data = await websocket.receive_json()
-            files = [
-                await FileKeyService().generate_file_key_dict(file_key=file_key)
-                for file_key in await FileKeyRepository().get_list(key=data['key'])
-            ]
-            [files.remove({}) for i in range(files.count({}))]
+            files = FileKeyService().get_ws(key=data['key'])
             await file_connections_manager_fastapi.send(
                 data={
                     'key': data['key'],
