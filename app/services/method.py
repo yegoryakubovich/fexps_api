@@ -17,8 +17,9 @@
 
 from typing import Optional
 
-from app.db.models import Method, Session, Actions, MethodFieldTypes
-from app.repositories import TextPackRepository, CurrencyRepository, MethodRepository, TextRepository
+from app.db.models import Method, Session, Actions, MethodFieldTypes, RequisiteTypes, RequisiteStates
+from app.repositories import TextPackRepository, CurrencyRepository, MethodRepository, TextRepository, \
+    RequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.utils.crypto import create_id_str
@@ -205,6 +206,22 @@ class MethodService(BaseService):
     async def generate_method_dict(method: Method) -> Optional[dict]:
         if not method:
             return
+        input_requisites_sum = sum([
+            requisite.currency_value
+            for requisite in await RequisiteRepository().get_list(
+                type=RequisiteTypes.OUTPUT,
+                output_method=method,
+                state=RequisiteStates.ENABLE,
+            )
+        ])
+        output_requisites_sum = sum([
+            requisite.currency_value
+            for requisite in await RequisiteRepository().get_list(
+                type=RequisiteTypes.INPUT,
+                input_method=method,
+                state=RequisiteStates.ENABLE,
+            )
+        ])
         return {
             'id': method.id,
             'currency': await CurrencyService().generate_currency_dict(currency=method.currency),
@@ -217,6 +234,8 @@ class MethodService(BaseService):
             'output_rate_percent': method.output_rate_percent,
             'color': method.color,
             'bgcolor': method.bgcolor,
+            'input_requisites_sum': input_requisites_sum,
+            'output_requisites_sum': output_requisites_sum,
             'is_rate_default': method.is_rate_default,
             'is_active': method.is_active,
         }

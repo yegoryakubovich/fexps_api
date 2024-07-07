@@ -537,7 +537,7 @@ class RequestService(BaseService):
     async def state_input_reserved_by_task(self, session: Session):
         from app.services.order import OrderService
         for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
-            logging.info(f'request #{request.id}    start check')
+            logging.info(f'request input reservation #{request.id}    start check')
             request = await RequestRepository().get_by_id(id_=request.id)
             currency = request.input_method.currency
             # get need values
@@ -546,6 +546,7 @@ class RequestService(BaseService):
             else:
                 need_value = await calcs_requisites_input_need_value(request=request)
                 need_currency_value = round(need_value * request.input_rate / 10 ** request.rate_decimal)
+            logging.info(f'request input reservation #{request.id}    need_currency_value={need_currency_value}')
             # check / change states
             if need_currency_value < currency.div:
                 if not await OrderRepository().get_list(type=OrderTypes.INPUT):
@@ -582,6 +583,7 @@ class RequestService(BaseService):
                     text_key=f'notification_request_update_state_{RequestStates.INPUT}',
                     request_id=request.id,
                 )
+                logging.info(f'request input reservation #{request.id}    finished')
                 continue
             # create missing orders
             need_currency_value, need_value, result = None, None, None
@@ -604,6 +606,7 @@ class RequestService(BaseService):
                     request=request,
                 )
             if not result:
+                logging.info(f'request input reservation #{request.id}    not result')
                 continue
             for requisite_item in result.requisite_items:
                 requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
@@ -617,13 +620,14 @@ class RequestService(BaseService):
                     rate=_rate,
                     order_type=OrderTypes.INPUT,
                 )
+            logging.info(f'request input reservation #{request.id}    finished')
         return {}
 
     @session_required(permissions=['requests'], can_root=True)
     async def state_output_reserved_by_task(self, session: Session):
         from app.services.order import OrderService
         for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
-            logging.info(f'request #{request.id}    start check')
+            logging.info(f'request output reservation #{request.id}    start check')
             request = await RequestRepository().get_by_id(id_=request.id)
             currency = request.output_method.currency
             # get need values

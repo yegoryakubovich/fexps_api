@@ -377,6 +377,13 @@ class RequisiteService(BaseService):
     @session_required(permissions=['requisites'], can_root=True)
     async def empty_by_task(self, session: Session):
         for requisite in await RequisiteRepository().get_list_empty(requisite_state=RequisiteStates.ENABLE):
+            active_order = False
+            for state in [OrderStates.WAITING, OrderStates.PAYMENT, OrderStates.CONFIRMATION]:
+                if OrderRepository().get_list(requisite=requisite, state=state):
+                    active_order = True
+                    break
+            if active_order:
+                continue
             await RequisiteRepository().update(requisite, state=RequisiteStates.STOP)
             await BotNotification().send_notification_by_wallet(
                 wallet=requisite.wallet,
