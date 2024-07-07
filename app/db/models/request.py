@@ -26,8 +26,6 @@ class RequestTypes:
     OUTPUT = 'output'
     ALL = 'all'
 
-    choices = [INPUT, OUTPUT, ALL]
-
 
 class RequestStates:
     CONFIRMATION = 'confirmation'
@@ -37,10 +35,6 @@ class RequestStates:
     OUTPUT = 'output'
     COMPLETED = 'completed'
     CANCELED = 'canceled'
-
-    choices = [CONFIRMATION, INPUT_RESERVATION, INPUT, OUTPUT_RESERVATION, OUTPUT, COMPLETED, CANCELED]
-    choices_rate_fixed = [INPUT_RESERVATION, INPUT]
-    choices_finished = [COMPLETED, CANCELED]
 
 
 class Request(Base):

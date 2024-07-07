@@ -25,8 +25,6 @@ class OrderTypes:
     INPUT = 'input'
     OUTPUT = 'output'
 
-    choices = [INPUT, OUTPUT]
-
 
 class OrderStates:
     WAITING = 'waiting'

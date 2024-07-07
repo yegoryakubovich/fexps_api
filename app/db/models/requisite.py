@@ -25,15 +25,11 @@ class RequisiteTypes:
     INPUT = 'input'
     OUTPUT = 'output'
 
-    choices = [INPUT, OUTPUT]
-
 
 class RequisiteStates:
     ENABLE = 'enable'
     STOP = 'stop'
     DISABLE = 'disable'
-
-    choices = [ENABLE, STOP, DISABLE]
 
 
 class Requisite(Base):
