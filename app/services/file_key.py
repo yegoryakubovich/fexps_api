@@ -49,7 +49,7 @@ class FileKeyService(BaseService):
         return {
             'id': file_key.id,
             'key': file_key.key,
-            'url': f'{settings.get_file_upload_url()}?key={file_key.key}',
+            'url': f'{settings.get_self_url()}/files/upload?key={file_key.key}',
         }
 
     @session_required()

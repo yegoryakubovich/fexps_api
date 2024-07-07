@@ -135,6 +135,15 @@ class FileService(BaseService):
             filename=file.filename,
         )
 
+    @staticmethod
+    async def download(id_str: str):
+        file = await FileRepository().get_by_id_str(id_str=id_str)
+        return FileResponse(
+            path=f'{settings.path_files}/{file.id_str}.{file.extension}',
+            filename=file.filename,
+            media_type='application/octet-stream',
+        )
+
     async def get(self, id_str: str):
         file = await FileRepository().get_by_id_str(id_str=id_str)
         return {
@@ -200,6 +209,7 @@ class FileService(BaseService):
             'id_str': file.id_str,
             'filename': file.filename,
             'extension': file.extension,
-            'url': f'{settings.get_file_open_url()}?id_str={file.id_str}',
+            'open_url': f'{settings.get_self_url()}/files/open?id_str={file.id_str}',
+            'download_url': f'{settings.get_self_url()}/files/download?id_str={file.id_str}',
             'value': file_byte.decode('ISO-8859-1'),
         }

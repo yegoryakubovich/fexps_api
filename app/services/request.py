@@ -347,16 +347,13 @@ class RequestService(BaseService):
                     type_=OrderRequestTypes.CANCEL,
                     value=None,
                 )
-        logging.critical(0)
         if (all_order_count - cancel_order_count) > 0:
-            logging.critical(0)
             raise RequestFoundOrders(
                 kwargs={
                     'id_value': request.id,
                 },
             )
         if all_order_count == 0:
-            logging.critical(0)
             input_types = [RequestTypes.INPUT, RequestTypes.ALL]
             input_states = [RequestStates.INPUT_RESERVATION]
             if request.type in input_types and request.state in input_states:

@@ -17,10 +17,11 @@
 
 from app.utils import Router
 from .create import router as router_create
+from .download import router as router_download
 from .get import router as router_get
+from .keys import router as router_keys
 from .open import router as router_open
 from .upload import router as router_upload
-from .keys import router as router_keys
 
 
 router = Router(
@@ -29,6 +30,7 @@ router = Router(
         router_upload,
         router_create,
         router_get,
+        router_download,
         router_open,
         router_keys,
     ],

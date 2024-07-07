@@ -23,7 +23,7 @@ from config import settings
 
 class FileConnectionManagerAiohttp:
     def __init__(self):
-        self.url = f'{settings.get_file_url()}'
+        self.url = f'{settings.get_self_url()}/files/keys/get/ws'
 
     async def send(self, key: str):
         async with aiohttp.ClientSession() as session:

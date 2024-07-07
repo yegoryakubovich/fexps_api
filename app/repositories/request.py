@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
+
+
 from operator import or_
-from typing import List, Optional
+from typing import List
 
 from sqlalchemy.sql.operators import and_
 
@@ -56,7 +57,6 @@ class RequestRepository(BaseRepository[Request]):
             states += [RequestStates.COMPLETED]
         if is_canceled:
             states += [RequestStates.CANCELED]
-        logging.critical(states)
         custom_where = and_(custom_where, self.model.state.in_(states))
         if is_partner:
             custom_where = and_(custom_where, ~self.model.wallet_id.in_([wallet.id for wallet in wallets]))

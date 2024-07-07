@@ -51,22 +51,14 @@ class Settings(BaseSettings):
 
     root_token: str
     site_url: str
-    file_open_url: str
-    file_upload_url: str
-    chat_url: str
-    file_url: str
-    sync_db_url: str
+    self_url: str
     sync_db_table_name: str
     debug: int
     wallet_max_count: int
     wallet_max_value: int
 
     test: bool
-    test_file_open_url: str
-    test_file_upload_url: str
-    test_chat_url: str
-    test_file_url: str
-    test_sync_db_url: str
+    test_self_url: str
 
     version: str = '0.1'
     coin_name: str = 'YACoin'
@@ -89,30 +81,10 @@ class Settings(BaseSettings):
             return '127.0.0.1'
         return self.mysql_host
 
-    def get_file_open_url(self):
+    def get_self_url(self):
         if self.test:
-            return self.test_file_open_url
-        return self.file_open_url
-
-    def get_file_upload_url(self):
-        if self.test:
-            return self.test_file_upload_url
-        return self.file_upload_url
-
-    def get_chat_url(self):
-        if self.test:
-            return self.test_chat_url
-        return self.chat_url
-
-    def get_file_url(self):
-        if self.test:
-            return self.test_file_url
-        return self.file_url
-
-    def get_sync_db_url(self):
-        if self.test:
-            return self.test_sync_db_url
-        return self.sync_db_url
+            return self.test_self_url
+        return self.self_url
 
 
 settings = Settings()

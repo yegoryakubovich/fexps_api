@@ -19,4 +19,4 @@ from config import settings
 from fexps_api_client import FexpsApiClient
 
 
-fexps_api_client = FexpsApiClient(url=settings.get_sync_db_url(), token=f'0:{settings.root_token}')
+fexps_api_client = FexpsApiClient(url=settings.get_self_url(), token=f'0:{settings.root_token}')
