@@ -25,7 +25,6 @@ from starlette.responses import FileResponse
 
 from app.db.models import File, Session, Actions
 from app.repositories import FileRepository, OrderRepository, RequestRepository, MessageRepository, FileKeyRepository
-from app.services import FileKeyService
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -65,6 +64,7 @@ class FileService(BaseService):
             key: str,
             files: List[UploadFile],
     ):
+        from app.services.file_key import FileKeyService
         if not await FileKeyRepository().get(file_id=None, key=key):
             return {
                 'error': 'key_not_found',
