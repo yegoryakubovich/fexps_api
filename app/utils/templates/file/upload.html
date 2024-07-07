@@ -102,9 +102,10 @@
 <script>
     const fileInput = document.getElementById('file-input');
     const fileButton = document.getElementById('file-button');
-    const continueButton = document.getElementById('continue-button')
+    // const continueButton = document.getElementById('continue-button')
     const imageContainer = document.getElementById('image-container');
     const fileMaxCount = 10;
+    const maxAllowedSizeMB = 5;
 
     fileButton.addEventListener('click', () => {
         fileInput.click();
@@ -112,12 +113,15 @@
 
     fileInput.addEventListener('change', () => {
         const files = fileInput.files;
+        let totalSize = 0;
+
         imageContainer.innerHTML = '';
         if (files.length > fileMaxCount) {
             alert('max files / макс. файлов ' + fileMaxCount);
             return
         }
         for (const file of files) {
+            totalSize += file.size;
             const imgWrapper = document.createElement('div');
             imgWrapper.className = 'image-wrapper';
             const img = document.createElement('img');
@@ -134,12 +138,13 @@
             imgWrapper.appendChild(img);
             imageContainer.appendChild(imgWrapper);
         }
+        if (totalSize > maxAllowedSizeMB * 1024 * 1024) {
+            alert("Files is too big! Max size = "+ maxAllowedSizeMB + "MB");
+            imageContainer.innerHTML = '';
+
+        }
     });
 
-    continueButton.addEventListener('click', () => {
-        console.log('close');
-        window.history.back();
-    });
 </script>
 </body>
 </html>
