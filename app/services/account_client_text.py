@@ -60,13 +60,17 @@ class AccountClientTextService(BaseService):
     async def get(
             self,
             session: Session,
-            id_: int
+            key: str,
     ) -> dict:
         account = session.account
-        account_client_text = await AccountClientTextRepository().get_by_account_and_id(account=account, id_=id_)
+        client_text = await ClientTextRepository().get(key=key)
+        if not client_text:
+            return {}
+        account_client_text = await AccountClientTextRepository().get(account=account, client_text=client_text)
         return {
             'account_client_text': await self.generate_account_client_text_dict(
-                account_client_text=account_client_text),
+                account_client_text=account_client_text,
+            ),
         }
 
     @session_required()

@@ -30,13 +30,13 @@ router = Router(
 
 class AccountClientTextGetSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    id_: int = Field()
+    key: str = Field(min_length=1, max_length=128)
 
 
 @router.get()
 async def route(schema: AccountClientTextGetSchema = Depends()):
     result = await AccountClientTextService().get(
         token=schema.token,
-        id_=schema.id_
+        key=schema.key,
     )
     return Response(**result)
