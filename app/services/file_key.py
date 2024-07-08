@@ -21,7 +21,7 @@ from typing import Optional
 
 from app.db.models import File, Session, Actions, FileKey
 from app.repositories import FileKeyRepository
-from app.services import ActionService
+from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.file import FileService
 from app.utils.crypto import create_id_str

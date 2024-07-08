@@ -50,7 +50,6 @@ class CommissionPackService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': commission_pack.id,
                 'name_text': name_text.key,
                 'is_default': is_default,
             },

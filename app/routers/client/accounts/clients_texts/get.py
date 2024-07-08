@@ -15,17 +15,28 @@
 #
 
 
-import asyncio
-import logging
+from fastapi import Depends
+from pydantic import Field, BaseModel
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.services.account_client_text import AccountClientTextService
+from app.utils import Router
+from app.utils.response import Response
 
 
-async def telegram_send_notification():
-    logging.info('Start telegram_send_notification')
-    while True:
-        try:
-            await fexps_api_client.task.telegrams.send_notification()
-            await asyncio.sleep(2)
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+router = Router(
+    prefix='/get',
+)
+
+
+class AccountClientTextGetSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.get()
+async def route(schema: AccountClientTextGetSchema = Depends()):
+    result = await AccountClientTextService().get(
+        token=schema.token,
+        id_=schema.id_
+    )
+    return Response(**result)

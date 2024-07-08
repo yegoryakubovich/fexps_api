@@ -19,6 +19,7 @@ from app.utils import Router
 from .change_password import router as router_change_password
 from .check_password import router as router_check_password
 from .check_username import router as router_check_username
+from .clients_texts import router as router_clients_texts
 from .contacts import router as router_contacts
 from .create import router as router_create
 from .get import router as router_get
@@ -34,6 +35,7 @@ router = Router(
         router_update,
         router_check_username,
         router_check_password,
+        router_clients_texts,
         router_contacts,
     ],
     tags=['Accounts'],

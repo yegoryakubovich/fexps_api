@@ -16,7 +16,7 @@
 
 
 from .account import WrongPassword, InvalidUsername, AccountWithUsernameDoesNotExist, AccountMissingPermission, \
-    AccountContactsAlreadyExists, InvalidPassword
+    AccountContactsAlreadyExists, InvalidPassword, AccountClientTextsAlreadyExists
 from .base import ApiException
 from .commission_pack import CommissionIntervalAlreadyTaken, CommissionIntervalValidationError, IntervalNotExistsError
 from .main import ModelDoesNotExist, NotEnoughPermissions, NoRequiredParameters, ParameterContainError, \

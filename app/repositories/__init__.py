@@ -16,10 +16,12 @@
 
 
 from .account import AccountRepository
+from .account_client_text import AccountClientTextRepository
 from .account_contact import AccountContactRepository
 from .account_role import AccountRoleRepository
 from .action import ActionRepository
 from .action_parameter import ActionParameterRepository
+from .client_text import ClientTextRepository
 from .commission_pack import CommissionPackRepository
 from .commission_pack_value import CommissionPackValueRepository
 from .contact import ContactRepository

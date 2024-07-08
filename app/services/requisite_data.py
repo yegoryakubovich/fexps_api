@@ -50,7 +50,6 @@ class RequisiteDataService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': requisite_data.id,
                 'name': name,
                 'method_id': method.id,
                 'fields': fields,

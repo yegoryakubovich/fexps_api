@@ -38,12 +38,12 @@ class AccountContactService(BaseService):
             raise AccountContactsAlreadyExists()
         account_contact = await AccountContactRepository().create(account=account, contact=contact, value=value)
         await self.create_action(
-            model=contact,
+            model=account_contact,
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': f'{account_contact.id}',
                 'contact_id': f'{contact.id}',
+                'value': f'{account_contact.value}',
             },
         )
         return {

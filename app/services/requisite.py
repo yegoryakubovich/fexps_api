@@ -110,7 +110,6 @@ class RequisiteService(BaseService):
             action=Actions.CREATE,
             parameters={
                 'creator': f'session_{session.id}',
-                'id': requisite.id,
                 'type': type_,
                 'wallet_id': wallet_id,
                 'output_requisite_data_id': output_requisite_data_id,

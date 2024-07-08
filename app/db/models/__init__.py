@@ -16,6 +16,7 @@
 
 
 from .action import Action, Actions
+from .client_text import ClientText
 from .commission_pack import CommissionPack
 from .currency import Currency
 from .file import File
@@ -44,6 +45,7 @@ from .role_permission import RolePermission
 from .transfer import Transfer, TransferTypes
 from .wallet_ban import WalletBan, WalletBanReasons
 
+from .account_client_text import AccountClientText
 from .account_contact import AccountContact
 from .account_role import AccountRole
 from .notification_history import NotificationHistory, NotificationTypes, NotificationStates

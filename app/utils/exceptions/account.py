@@ -48,3 +48,7 @@ class InvalidPassword(ApiException):
     message = 'Invalid password. The correct password must contain at least one lowercase letter, one uppercase ' \
               'letter, one digit and one special character, and include between 6 and 32 characters.'
 
+
+class AccountClientTextsAlreadyExists(ApiException):
+    code = 2006
+    message = 'Account Client Text has already exists'

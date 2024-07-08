@@ -15,23 +15,28 @@
 #
 
 
-from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services.file_key import FileKeyService
-from app.utils import Router, Response
+from app.services.account_client_text import AccountClientTextService
+from app.utils import Response, Router
 
 
 router = Router(
-    prefix='/close',
+    prefix='/create',
 )
 
 
-class FileKeyCloseSchema(BaseModel):
+class AccountClientTextCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    client_text_id: int = Field()
+    value: str = Field(min_length=1, max_length=128)
 
 
-@router.get()
-async def route(schema: FileKeyCloseSchema = Depends()):
-    result = await FileKeyService().close_by_task(token=schema.token)
+@router.post()
+async def route(schema: AccountClientTextCreateSchema):
+    result = await AccountClientTextService().create(
+        token=schema.token,
+        client_text_id=schema.client_text_id,
+        value=schema.value,
+    )
     return Response(**result)

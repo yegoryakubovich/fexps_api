@@ -28,6 +28,9 @@ from app.tasks.permanents.sync_gd.roles_permissions import sync_roles_permission
 async def sync():
     logging.info('Start sync')
 
+    async def create_client_text(obj):
+        await fexps_api_client.admin.clients_texts.create(key=obj.get('key'), name=obj.get('name'))
+
     async def create_permission(obj):
         await fexps_api_client.admin.permissions.create(id_str=obj.get('id_str'), name=obj.get('name'))
 
@@ -60,6 +63,15 @@ async def sync():
         )
 
     table = await google_sheets_api_client.get_table_by_name(name=settings.sync_db_table_name)
+
+    # ClientText
+    await sync_base(
+        table=table,
+        sheet_name='ClientsTexts',
+        api_method_get_list=fexps_api_client.client.clients_texts.get_list,
+        api_method_delete=fexps_api_client.admin.clients_texts.delete,
+        api_method_create=create_client_text,
+    )
 
     # Permissions
     await sync_base(

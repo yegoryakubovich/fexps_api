@@ -15,17 +15,26 @@
 #
 
 
-import asyncio
-import logging
+from pydantic import Field, BaseModel
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.services.account_client_text import AccountClientTextService
+from app.utils import Router, Response
 
 
-async def telegram_send_notification():
-    logging.info('Start telegram_send_notification')
-    while True:
-        try:
-            await fexps_api_client.task.telegrams.send_notification()
-            await asyncio.sleep(2)
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+router = Router(
+    prefix='/delete',
+)
+
+
+class AccountClientTextDeleteSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
+
+
+@router.post()
+async def route(schema: AccountClientTextDeleteSchema):
+    result = await AccountClientTextService().delete(
+        token=schema.token,
+        id_=schema.id_,
+    )
+    return Response(**result)

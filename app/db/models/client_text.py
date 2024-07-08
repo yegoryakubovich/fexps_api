@@ -15,17 +15,17 @@
 #
 
 
-import asyncio
-import logging
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
+from sqlalchemy.orm import relationship
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.db.base_class import Base
 
 
-async def telegram_send_notification():
-    logging.info('Start telegram_send_notification')
-    while True:
-        try:
-            await fexps_api_client.task.telegrams.send_notification()
-            await asyncio.sleep(2)
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+class ClientText(Base):
+    __tablename__ = 'clients_texts'
+
+    id = Column(BigInteger, primary_key=True)
+    key = Column(String(length=128))
+    name_text_id = Column(BigInteger, ForeignKey('texts.id', ondelete='SET NULL'), nullable=True)
+    name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
+    is_deleted = Column(Boolean, default=False)

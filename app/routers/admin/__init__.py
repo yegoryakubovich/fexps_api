@@ -17,6 +17,7 @@
 
 from app.utils import Router
 from .accounts import router as router_accounts
+from .clients_texts import router as router_clients_texts
 from .commissions_packs import router as router_commissions_packs
 from .contacts import router as router_contacts
 from .countries import router as router_countries
@@ -36,6 +37,7 @@ router = Router(
     prefix='/admin',
     routes_included=[
         router_accounts,
+        router_clients_texts,
         router_commissions_packs,
         router_contacts,
         router_countries,

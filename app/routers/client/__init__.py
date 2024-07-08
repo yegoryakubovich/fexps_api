@@ -17,6 +17,7 @@
 
 from app.utils import Router
 from .accounts import router as router_accounts
+from .clients_texts import router as router_clients_texts
 from .contacts import router as router_contacts
 from .countries import router as router_countries
 from .currencies import router as router_currencies
@@ -39,13 +40,14 @@ from .wallets import router as router_wallets
 
 router = Router(
     routes_included=[
-        router_messages,
         router_accounts,
+        router_clients_texts,
         router_contacts,
         router_countries,
         router_currencies,
         router_files,
         router_languages,
+        router_messages,
         router_methods,
         router_notifications,
         router_orders,

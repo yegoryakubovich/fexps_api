@@ -15,17 +15,21 @@
 #
 
 
-import asyncio
-import logging
+from app.utils import Router
+from .create import router as router_create
+from .delete import router as router_delete
+from .get import router as router_get
+from .get_list import router as router_get_list
+from .update import router as router_update
 
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
-
-async def telegram_send_notification():
-    logging.info('Start telegram_send_notification')
-    while True:
-        try:
-            await fexps_api_client.task.telegrams.send_notification()
-            await asyncio.sleep(2)
-        except ValueError as e:
-            logging.critical(f'Exception \n {e}')
+router = Router(
+    prefix='/clients/texts',
+    routes_included=[
+        router_create,
+        router_get,
+        router_get_list,
+        router_update,
+        router_delete,
+    ],
+)
