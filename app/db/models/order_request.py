@@ -26,16 +26,11 @@ class OrderRequestTypes:
     CANCEL = 'cancel'
     RECREATE = 'recreate'
 
-    choices = [UPDATE_VALUE, CANCEL, RECREATE]
-
 
 class OrderRequestStates:
     WAIT = 'wait'
     COMPLETED = 'completed'
     CANCELED = 'canceled'
-
-    choices = [WAIT, COMPLETED, CANCELED]
-    choices_update = [COMPLETED, CANCELED]
 
 
 class OrderRequest(Base):

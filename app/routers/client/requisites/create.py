@@ -59,11 +59,11 @@ class RequisiteCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     def check_type(self) -> 'RequisiteCreateSchema':
-        if self.type_ not in RequisiteTypes.choices:
+        if self.type_ not in [RequisiteTypes.INPUT, RequisiteTypes.OUTPUT]:
             raise ParameterContainError(
                 kwargs={
                     'field_name': 'type_',
-                    'parameters': RequisiteTypes.choices,
+                    'parameters': [RequisiteTypes.INPUT, RequisiteTypes.OUTPUT],
                 },
             )
 

@@ -38,11 +38,11 @@ class OrderRequestCreateSchema(BaseModel):
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestCreateSchema':
-        if self.type_ not in OrderRequestTypes.choices:
+        if self.type_ not in [OrderRequestTypes.UPDATE_VALUE, OrderRequestTypes.CANCEL, OrderRequestTypes.RECREATE]:
             raise ParameterContainError(
                 kwargs={
                     'field_name': 'type_',
-                    'parameters': OrderRequestTypes.choices,
+                    'parameters': [OrderRequestTypes.UPDATE_VALUE, OrderRequestTypes.CANCEL, OrderRequestTypes.RECREATE],
                 },
             )
         if self.type_ == OrderRequestTypes.UPDATE_VALUE:

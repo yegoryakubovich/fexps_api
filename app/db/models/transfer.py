@@ -27,8 +27,6 @@ class TransferTypes:
     IN_ORDER = 'in_order'
     PAYMENT = 'payment'
 
-    choices = [IN_ORDER, PAYMENT]
-
 
 class TransferOperations:
     SEND = 'send'

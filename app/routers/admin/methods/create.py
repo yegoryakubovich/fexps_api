@@ -67,13 +67,13 @@ class MethodCreateSchema(BaseModel):
                         'parameters': ['true', 'false'],
                     },
                 )
-            if field.get('type') not in MethodFieldTypes.choices_field:
+            if field.get('type') not in [MethodFieldTypes.INT, MethodFieldTypes.STR]:
                 raise MethodParametersValidationError(
                     kwargs={
                         'field_name': 'fields',
                         'number': i,
                         'param_name': 'type',
-                        'parameters': MethodFieldTypes.choices_field,
+                        'parameters': [MethodFieldTypes.INT, MethodFieldTypes.STR],
                     },
                 )
         return fields
@@ -100,13 +100,13 @@ class MethodCreateSchema(BaseModel):
                         'parameters': ['true', 'false'],
                     },
                 )
-            if field.get('type') not in MethodFieldTypes.choices:
+            if field.get('type') not in [MethodFieldTypes.INT, MethodFieldTypes.STR, MethodFieldTypes.IMAGE]:
                 raise MethodParametersValidationError(
                     kwargs={
                         'field_name': 'input_fields',
                         'number': i,
                         'param_name': 'type',
-                        'parameters': MethodFieldTypes.choices,
+                        'parameters': [MethodFieldTypes.INT, MethodFieldTypes.STR, MethodFieldTypes.IMAGE],
                     },
                 )
 

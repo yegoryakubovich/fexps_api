@@ -35,11 +35,11 @@ class OrderRequestUpdateSchema(BaseModel):
 
     @model_validator(mode='after')
     def check_type(self) -> 'OrderRequestUpdateSchema':
-        if self.state not in OrderRequestStates.choices_update:
+        if self.state not in [OrderRequestStates.CANCELED, OrderRequestStates.COMPLETED]:
             raise ParameterContainError(
                 kwargs={
                     'field_name': 'state',
-                    'parameters': OrderRequestStates.choices_update,
+                    'parameters': [OrderRequestStates.CANCELED, OrderRequestStates.COMPLETED],
                 },
             )
         return self

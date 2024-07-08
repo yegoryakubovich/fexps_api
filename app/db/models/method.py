@@ -26,9 +26,6 @@ class MethodFieldTypes:
     INT = 'int'
     IMAGE = 'image'
 
-    choices = [STR, INT, IMAGE]
-    choices_field = [STR, INT]
-
 
 class Method(Base):
     __tablename__ = 'methods'

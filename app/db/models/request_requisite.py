@@ -24,8 +24,6 @@ from app.db.base_class import Base
 class RequestRequisiteTypes:
     BLACKLIST = 'blacklist'
 
-    choices = [BLACKLIST]
-
 
 class RequestRequisite(Base):
     __tablename__ = 'requests_requisites'

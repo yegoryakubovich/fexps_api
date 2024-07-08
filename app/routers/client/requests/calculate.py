@@ -40,11 +40,11 @@ class RequestCalculateSchema(BaseModel):
     @model_validator(mode='after')
     def check_type(self) -> 'RequestCreateSchema':
         # check type
-        if self.type_ not in RequestTypes.choices:
+        if self.type_ not in [RequestTypes.INPUT, RequestTypes.OUTPUT, RequestTypes.ALL]:
             raise ParameterContainError(
                 kwargs={
                     'field_name': 'type_',
-                    'parameters': RequestTypes.choices,
+                    'parameters': [RequestTypes.INPUT, RequestTypes.OUTPUT, RequestTypes.ALL],
                 },
             )
         # check method and requisite data
