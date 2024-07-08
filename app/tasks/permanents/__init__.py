@@ -31,7 +31,7 @@ from app.tasks.permanents.requests.states.confirmation import request_confirmati
 from app.tasks.permanents.requests.states.input_reserved import request_state_input_reserved_check
 from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
 from app.tasks.permanents.requisites.empty_check import empty_check
-from app.tasks.permanents.sync_gd.syncers import sync as go_sync_gd
+from app.tasks.permanents.sync_gd import sync as go_sync_gd
 from app.tasks.permanents.telegram.send_image import telegram_send_image
 from app.tasks.permanents.telegram.send_notification import telegram_send_notification
 from app.tasks.permanents.telegram.update_image import telegram_update_image

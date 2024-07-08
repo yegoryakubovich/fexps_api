@@ -25,13 +25,14 @@ from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 from app.tasks.permanents.utils.google_sheets_api_client import google_sheets_api_client
 
 PREFIXES = [
-    'permission_',
-    'role_',
+    'client_text_',
     'commission_pack_',
     'contact_',
     'method_',
     'method_field_',
     'method_input_field_',
+    'permission_',
+    'role_',
 ]
 DEFAULT_LANGUAGE = 'eng'
 
