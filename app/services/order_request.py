@@ -219,27 +219,17 @@ class OrderRequestService(BaseService):
         account = session.account
         order_request = await OrderRequestRepository().get_by_id(id_=id_, state=OrderRequestStates.WAIT)
         order = order_request.order
+        wallet = order.requisite.wallet
         await WalletService().check_permission(
             account=account,
-            wallets=[order.request.wallet, order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'OrderRequest',
-                    'id_value': order_request.id
-                },
-            ),
-        )
-        if await WalletAccountRepository().get(account=account, wallet=order.request.wallet):
-            wallet = order.request.wallet
-        else:
-            wallet = order.requisite.wallet
-        if wallet.id == order_request.wallet.id:
-            raise OrderRequestStateNotPermission(
+            wallets=[wallet],
+            exception=OrderRequestStateNotPermission(
                 kwargs={
                     'id_value': order_request.id,
                     'action': f'Change OrderRequest to state "{state}"',
                 },
-            )
+            ),
+        )
         if order_request.type == OrderRequestTypes.CANCEL:
             await self.order_request_update_type_cancel(
                 order_request=order_request,
