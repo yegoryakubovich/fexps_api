@@ -51,3 +51,8 @@ class OrderRequestStateNotPermission(ApiException):
 class OrderRequestMaxValueError(ApiException):
     code = 5006
     message = 'The value must be less than {max_value}'
+
+
+class OrderFlexRateEmpty(ApiException):
+    code = 5007
+    message = 'Field Rate must be filled in'

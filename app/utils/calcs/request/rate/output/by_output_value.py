@@ -38,9 +38,7 @@ async def calcs_request_rate_output_by_output_value(
     output_value_float = value_to_float(value=output_value)
     output_currency_value_float = output_value_float * output_rate_float
     output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.decimal)
-    output_currency_value_temp = output_currency_value
     output_currency_value = math.floor(output_currency_value / output_method.currency.div) * output_method.currency.div
-    difference = math.floor((output_currency_value_temp - output_currency_value) / output_rate_float)
     # calculate rate
     rate_float = output_currency_value / output_value
     rate_decimal = max([output_method.currency.rate_decimal])

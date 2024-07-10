@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -26,11 +28,11 @@ class DataRateScheme(BaseModel):
 class RequisiteItemScheme(BaseModel):
     requisite_id: int
     currency_value: int
-    value: int
+    value: Optional[int]
 
 
 class RequisiteDataScheme(BaseModel):
     requisite_items: list[RequisiteItemScheme]
     currency_value: int
-    rate: int
-    value: int
+    # rate: int
+    # value: int

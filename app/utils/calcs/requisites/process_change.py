@@ -29,9 +29,7 @@ async def calcs_requisite_process_change_list(
     if not process:
         return
     for requisite in requisites:
-        if isinstance(requisite, int):
-            requisite = await RequisiteRepository().get_by_id(id_=requisite)
-        await RequisiteRepository().update(requisite, in_process=in_process)
+        await calcs_requisite_process_change(requisite=requisite, in_process=in_process, process=process)
 
 
 async def calcs_requisite_process_change(

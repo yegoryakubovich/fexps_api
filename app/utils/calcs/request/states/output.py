@@ -43,10 +43,7 @@ async def request_check_state_output(request: Request):
     if difference:
         await TransferSystemService().payment_difference(request=request, value=difference, from_banned_value=True)
         difference_rate += difference
-    # if request.difference:
-    #     await TransferSystemService().payment_difference(request=request, value=request.difference)
-    logging.info(f'Request #{request.id}    {request.state}->{RequestStates.COMPLETED}')
-    await RequestRepository().update(request, state=RequestStates.COMPLETED)
+    await RequestRepository().update(request, state=RequestStates.COMPLETED, difference_rate=difference_rate)
     await BotNotification().send_notification_by_wallet(
         wallet=request.wallet,
         notification_type=NotificationTypes.REQUEST,

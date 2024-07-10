@@ -15,7 +15,6 @@
 #
 
 
-import math
 from typing import Optional
 
 from app.db.models import Method, RequisiteStates, RequisiteTypes, Request, RequestRequisiteTypes
@@ -25,7 +24,6 @@ from app.utils.calcs.requisites.process_change import calcs_requisite_process_ch
     calcs_requisite_process_change_list
 from app.utils.calcs.requisites.suitable_value import calcs_requisite_suitable_from_currency_value
 from app.utils.schemes.calcs.rate import RequisiteDataScheme, RequisiteItemScheme
-from app.utils.value import value_to_int
 
 
 async def calcs_requisite_input_by_currency_value(
@@ -66,21 +64,25 @@ async def calcs_requisite_input_by_currency_value(
             await calcs_requisite_process_change(requisite=requisite, in_process=False, process=process)
             continue
         suitable_currency_value, suitable_value = suitable_result
-        requisite_items.append(RequisiteItemScheme(
-            requisite_id=requisite.id,
-            currency_value=suitable_currency_value,
-            value=suitable_value,
-        ))
+        # Finish find requisite
+        requisite_items += [
+            RequisiteItemScheme(
+                requisite_id=requisite.id,
+                currency_value=suitable_currency_value,
+                value=suitable_value,
+            ),
+        ]
         need_currency_value -= suitable_currency_value
         result_currency_value += suitable_currency_value
-        result_value += suitable_value
-    if not result_currency_value or not result_value:
+    # check exist result_currency_value
+    if not result_currency_value:
         await calcs_requisite_process_change_list(
             requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
             in_process=False,
             process=process,
         )
         return
+    # check fill need currency value complete
     if need_currency_value > method.currency.div:
         await calcs_requisite_process_change_list(
             requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
@@ -88,11 +90,5 @@ async def calcs_requisite_input_by_currency_value(
             process=process,
         )
         return
-    rate_float = result_currency_value / result_value
-    rate = value_to_int(value=rate_float, decimal=method.currency.rate_decimal, round_method=math.ceil)
-    return RequisiteDataScheme(
-        requisite_items=requisite_items,
-        currency_value=result_currency_value,
-        rate=rate,
-        value=result_value,
-    )
+
+    return RequisiteDataScheme(requisite_items=requisite_items, currency_value=result_currency_value)

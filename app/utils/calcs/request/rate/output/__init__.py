@@ -19,7 +19,7 @@ from typing import Optional
 
 from app.db.models import Method
 from app.utils.schemes.calcs.requests.rate import RequestCalculateScheme
-from .by_output_currency_value import calcs_request_rate_all_by_output_currency_value
+from .by_output_currency_value import calcs_request_rate_output_by_output_currency_value
 from .by_output_value import calcs_request_rate_output_by_output_value
 
 
@@ -29,7 +29,7 @@ async def calcs_request_rate_output(
         output_value: Optional[int] = None,
 ) -> Optional['RequestCalculateScheme']:
     if output_currency_value:
-        return await calcs_request_rate_all_by_output_currency_value(
+        return await calcs_request_rate_output_by_output_currency_value(
             output_method=output_method,
             output_currency_value=output_currency_value,
         )

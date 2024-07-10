@@ -22,32 +22,11 @@ from app.db.models import Requisite, RateTypes
 from app.utils.value import value_to_float
 
 
-async def calcs_requisite_suitable_from_value(
-        requisite: Requisite,
-        need_value: int,
-) -> Optional[tuple[int, int]]:
-    value = need_value
-    if value > requisite.value:
-        value = requisite.value
-    rate_float = value_to_float(value=requisite.rate, decimal=requisite.currency.rate_decimal)
-    currency_value = value * rate_float // requisite.currency.div * requisite.currency.div
-    if requisite.currency_value_max and currency_value > requisite.currency_value_max:
-        value = requisite.currency_value_max
-    if requisite.type == RateTypes.INPUT:
-        value = math.ceil(currency_value / rate_float)
-    elif requisite.type == RateTypes.OUTPUT:
-        value = math.floor(currency_value / rate_float)
-    if not value or not currency_value:
-        return
-    return currency_value, value
-
-
 async def calcs_requisite_suitable_from_currency_value(
         requisite: Requisite,
         need_currency_value: int,
 ) -> Optional[tuple[int, int]]:
     currency_value = need_currency_value
-    value = None
     if currency_value < requisite.currency.div:
         return
     if requisite.currency_value_min and currency_value < requisite.currency_value_min:
@@ -58,10 +37,12 @@ async def calcs_requisite_suitable_from_currency_value(
         currency_value = requisite.currency_value_max
     rate_float = value_to_float(value=requisite.rate, decimal=requisite.currency.rate_decimal)
     currency_value = currency_value // requisite.currency.div * requisite.currency.div
-    if requisite.type == RateTypes.INPUT:
-        value = math.ceil(currency_value / rate_float)
-    elif requisite.type == RateTypes.OUTPUT:
-        value = math.floor(currency_value / rate_float)
-    if not value or not currency_value:
-        return
+    value = None
+    if not requisite.is_flex:
+        if requisite.type == RateTypes.INPUT:
+            value = math.ceil(currency_value / rate_float)
+        elif requisite.type == RateTypes.OUTPUT:
+            value = math.floor(currency_value / rate_float)
+        if not value or not currency_value:
+            return
     return currency_value, value

@@ -24,7 +24,7 @@ from app.utils.schemes.calcs.requests.rate import RequestCalculateScheme
 from app.utils.value import value_to_float, value_to_int
 
 
-async def calcs_request_rate_all_by_output_currency_value(
+async def calcs_request_rate_output_by_output_currency_value(
         output_method: Method,
         output_currency_value: int,
 ) -> Optional['RequestCalculateScheme']:

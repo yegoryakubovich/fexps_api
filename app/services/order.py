@@ -38,8 +38,8 @@ from app.utils.bot.notification import BotNotification
 from app.utils.calcs.request.states.input import request_check_state_input
 from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
-from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission
-from app.utils.value import value_to_float
+from app.utils.exceptions.order import OrderNotPermission, OrderStateWrong, OrderStateNotPermission, OrderFlexRateEmpty
+from app.utils.value import value_to_float, value_to_int
 
 
 class OrderService(BaseService):
@@ -236,16 +236,18 @@ class OrderService(BaseService):
             session: Session,
             token: str,
             id_: int,
+            rate: Optional[int],
             input_fields: dict,
     ) -> dict:
         account = session.account
         need_state = OrderStates.PAYMENT
         next_state = OrderStates.CONFIRMATION
         order = await OrderRepository().get_by_id(id_=id_)
+        request = order.request
         if order.type == OrderTypes.INPUT:
             await WalletService().check_permission(
                 account=account,
-                wallets=[order.request.wallet],
+                wallets=[request.wallet],
                 exception=OrderStateNotPermission(
                     kwargs={
                         'id_value': order.id,
@@ -272,7 +274,16 @@ class OrderService(BaseService):
                     'need_state': need_state,
                 },
             )
+        order_data = {}
         await OrderRequestService().check_have_order_request(order=order)
+        if order.requisite.is_flex:
+            if not rate:
+                raise OrderFlexRateEmpty()
+            order_data['rate'] = rate
+            order_data['value'] = round(
+                order.currency_value /
+                value_to_float(value=rate, decimal=request.rate_decimal)
+            )
         await MethodService().check_input_field(schema_input_fields=order.input_scheme_fields, fields=input_fields)
         await OrderRepository().update(order, state=next_state)
         for field_scheme in order.input_scheme_fields:
@@ -301,7 +312,8 @@ class OrderService(BaseService):
                     role=MessageRoles.USER,
                     text=f'{text.value_default}: {field_value}',
                 )
-        await OrderRepository().update(order, input_fields=input_fields)
+        order_data['input_fields'] = input_fields
+        await OrderRepository().update(order, **order_data)
         await MessageService().send_to_chat(
             token=token,
             order_id=order.id,
@@ -310,7 +322,7 @@ class OrderService(BaseService):
         )
         bot_notification = BotNotification()
         await bot_notification.send_notification_by_wallet(
-            wallet=order.request.wallet,
+            wallet=request.wallet,
             notification_type=NotificationTypes.ORDER,
             account_id_black_list=[account.id],
             text_key='notification_order_update_state',
@@ -449,26 +461,35 @@ class OrderService(BaseService):
             request: Request,
             requisite: Requisite,
             currency_value: int,
-            value: int,
-            rate: int,
+            value: Optional[int],
             order_type: str,
             order_state: str = OrderStates.WAITING,
     ) -> Order:
-        await RequisiteRepository().update(
-            requisite,
-            currency_value=round(requisite.currency_value - currency_value),
-            value=round(requisite.value - value),
-            in_process=False,
-        )
         requisite_scheme_fields, requisite_fields, input_scheme_fields, input_fields = None, None, None, None
+        round_method = round
+        rate = None
         if order_type == OrderTypes.INPUT:
             requisite_scheme_fields = requisite.output_requisite_data.method.schema_fields
             requisite_fields = requisite.output_requisite_data.fields
             input_scheme_fields = requisite.output_requisite_data.method.schema_input_fields
+            round_method = math.floor
         elif order_type == OrderTypes.OUTPUT:
             requisite_scheme_fields = request.output_requisite_data.method.schema_fields
             requisite_fields = request.output_requisite_data.fields
             input_scheme_fields = request.output_requisite_data.method.schema_input_fields
+            round_method = math.ceil
+        requisite_data = {
+            'currency_value': round(requisite.currency_value - currency_value),
+            'in_process': False,
+        }
+        if not requisite.is_flex:
+            requisite_data['value'] = round(requisite.value - value)
+            rate = value_to_int(
+                value=(currency_value / value),
+                decimal=request.rate_decimal,
+                round_method=round_method,
+            )
+        await RequisiteRepository().update(requisite, **requisite_data)
         return await OrderRepository().create(
             type=order_type,
             state=order_state,
@@ -588,7 +609,7 @@ class OrderService(BaseService):
             delta_value: int,
             delta_currency_value: int,
     ) -> None:
-        request = order.request
+        request: Request = order.request
         currency = order.requisite.currency
         request_kwargs = {}
         if order.type == OrderTypes.INPUT:
@@ -603,12 +624,16 @@ class OrderService(BaseService):
                 input_value=input_current_value,
             )
             if request.type == RequestTypes.ALL:
+                output_currency = request.output_method.currency
                 output_current_value = input_current_value - current_commission
                 output_current_currency_value = round(
                     output_current_value *
                     value_to_float(value=request.output_rate, decimal=request.rate_decimal)
                 )
-                output_current_currency_value = math.floor(output_current_currency_value // currency.div) * currency.div
+                output_current_currency_value = (
+                        math.floor(output_current_currency_value // output_currency.div) *
+                        output_currency.div
+                )
                 request_kwargs.update(
                     output_currency_value=output_current_currency_value,
                     output_value=output_current_value,

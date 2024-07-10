@@ -42,7 +42,6 @@ class Requisite(Base):
     wallet = relationship('Wallet', uselist=False, lazy='selectin')
     currency_id = Column(BigInteger, ForeignKey('currencies.id', ondelete='SET NULL'), nullable=True)
     currency = relationship('Currency', foreign_keys=currency_id, uselist=False, lazy='selectin')
-
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     input_method = relationship('Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     output_requisite_data_id = Column(
@@ -58,14 +57,13 @@ class Requisite(Base):
     )
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     output_method = relationship('Method', foreign_keys=output_method_id, uselist=False, lazy='selectin')
-
     currency_value = Column(BigInteger)
     total_currency_value = Column(BigInteger)
-    rate = Column(BigInteger)
-    value = Column(BigInteger)
-    total_value = Column(BigInteger)
-
+    rate = Column(BigInteger, nullable=True)
+    value = Column(BigInteger, nullable=True)
+    total_value = Column(BigInteger, nullable=True)
     currency_value_min = Column(BigInteger, nullable=True)
     currency_value_max = Column(BigInteger, nullable=True)
     in_process = Column(Boolean, default=False)
+    is_flex = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

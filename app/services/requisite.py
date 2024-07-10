@@ -22,6 +22,7 @@ from app.db.models import Session, Requisite, RequisiteTypes, Actions, WalletBan
     NotificationTypes
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteRepository, \
     RequisiteDataRepository, WalletRepository, WalletBanRequisiteRepository
+from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
@@ -34,6 +35,7 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
 from app.utils.exceptions.requisite import RequisiteMinimumValueError
 from app.utils.exceptions.wallet import WalletPermissionError
+from app.utils.value import value_to_float
 from config import settings
 
 
@@ -53,6 +55,7 @@ class RequisiteService(BaseService):
             value: int,
             currency_value_min: int,
             currency_value_max: int,
+            is_flex: bool,
     ) -> dict:
         account = session.account
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
@@ -60,6 +63,8 @@ class RequisiteService(BaseService):
             account=account,
             wallets=[wallet],
         )
+        if is_flex:
+            await AccountRoleCheckPermissionService().check_permission(account=account, id_str='requisite_flex')
         input_method, output_method, output_requisite_data, currency = None, None, None, None
         if input_method_id:
             input_method = await MethodRepository().get_by_id(id_=input_method_id)
@@ -68,13 +73,16 @@ class RequisiteService(BaseService):
             output_requisite_data = await RequisiteDataRepository().get_by_id(id_=output_requisite_data_id)
             output_method = output_requisite_data.method
             currency = output_method.currency
-        currency_value_result, value_result, rate_result = await calcs_requisites_values_calc(
-            type_=type_,
-            rate_decimal=currency.rate_decimal,
-            currency_value=currency_value,
-            value=value,
-            rate=rate,
-        )
+        if is_flex:
+            currency_value_result, value_result, rate_result = currency_value, None, None
+        else:
+            currency_value_result, value_result, rate_result = await calcs_requisites_values_calc(
+                type_=type_,
+                rate_decimal=currency.rate_decimal,
+                currency_value=currency_value,
+                value=value,
+                rate=rate,
+            )
         wallet_ban = None
         if type_ == RequisiteTypes.OUTPUT:
             wallet_ban = await WalletBanService().create_related(
@@ -96,6 +104,7 @@ class RequisiteService(BaseService):
             rate=rate_result,
             value=value_result,
             total_value=value_result,
+            is_flex=is_flex,
         )
         if wallet_ban:
             await WalletBanRequisiteRepository().create(wallet_ban=wallet_ban, requisite=requisite)
@@ -123,6 +132,7 @@ class RequisiteService(BaseService):
                 'rate_result': rate_result,
                 'value': value,
                 'value_result': value_result,
+                'is_flex': is_flex,
             },
         )
         return {
@@ -293,10 +303,17 @@ class RequisiteService(BaseService):
                         'action': f'Change state to {next_state}',
                     },
                 )
-        await self.update_value_related(
-            requisite=requisite,
-            value=-requisite.value,
-        )
+        if requisite.type == RequisiteTypes.INPUT and requisite.is_flex:
+            await RequisiteRepository().update(
+                requisite,
+                total_currency_value=requisite.total_currency_value - requisite.currency_value,
+                currency_value=requisite.currency_value - requisite.currency_value,
+            )
+        else:
+            await self.update_value_related(
+                requisite=requisite,
+                value=-requisite.value,
+            )
         await RequisiteRepository().update(requisite, state=next_state)
         await BotNotification().send_notification_by_wallet(
             wallet=requisite.wallet,
@@ -327,7 +344,10 @@ class RequisiteService(BaseService):
             account=account,
             wallets=[requisite.wallet],
         )
-        total_value = round(total_currency_value / requisite.rate * 10 ** requisite.currency.rate_decimal)
+        total_value = round(
+            total_currency_value /
+            value_to_float(value=requisite.rate, decimal=requisite.currency.rate_decimal)
+        )
         access_change_balance = requisite.total_value - requisite.value
         if total_value < access_change_balance:
             raise RequisiteMinimumValueError(
@@ -356,8 +376,14 @@ class RequisiteService(BaseService):
         currency = requisite.currency
         new_total_value = requisite.total_value + value
         new_value = requisite.value + value
-        new_total_currency_value = round(new_total_value * requisite.rate / 10 ** currency.rate_decimal)
-        new_currency_value = round(new_value * requisite.rate / 10 ** currency.rate_decimal)
+        new_total_currency_value = round(
+            new_total_value *
+            value_to_float(value=requisite.rate, decimal=currency.rate_decimal)
+        )
+        new_currency_value = round(
+            new_value *
+            value_to_float(value=requisite.rate, decimal=currency.rate_decimal)
+        )
         if requisite.type == RequisiteTypes.OUTPUT:
             wallet_ban = await WalletBanService().create_related(
                 wallet=wallet,
@@ -371,6 +397,14 @@ class RequisiteService(BaseService):
             value=new_value,
             total_currency_value=new_total_currency_value,
             currency_value=new_currency_value,
+        )
+
+    @staticmethod
+    async def update_only_currency_value_related(requisite: Requisite, currency_value: int):
+        await RequisiteRepository().update(
+            requisite,
+            total_currency_value=requisite.total_currency_value + currency_value,
+            currency_value=requisite.currency_value + currency_value,
         )
 
     @session_required(permissions=['requisites'], can_root=True)
@@ -423,4 +457,5 @@ class RequisiteService(BaseService):
             'rate': requisite.rate,
             'value': requisite.value,
             'total_value': requisite.total_value,
+            'is_flex': requisite.is_flex,
         }

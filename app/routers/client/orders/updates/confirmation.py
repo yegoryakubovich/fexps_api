@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+from typing import Optional
 
 from pydantic import Field, BaseModel
 
@@ -29,6 +29,7 @@ router = Router(
 class OrderUpdateConfirmationSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     id_: int = Field()
+    rate: Optional[int] = Field(default=None)
     input_fields: dict = Field()
 
 
@@ -37,6 +38,7 @@ async def route(schema: OrderUpdateConfirmationSchema):
     result = await OrderService().update_confirmation(
         token=schema.token,
         id_=schema.id_,
+        rate=schema.rate,
         input_fields=schema.input_fields,
     )
     return Response(**result)

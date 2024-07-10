@@ -17,7 +17,6 @@
 
 import datetime
 import logging
-import math
 from math import ceil
 from typing import Optional
 
@@ -26,6 +25,7 @@ from app.db.models import Session, Request, Actions, RequestStates, RequestTypes
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
     CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository, \
     RequisiteRepository
+from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
@@ -37,22 +37,18 @@ from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
 from app.utils.bot.notification import BotNotification
 from app.utils.calcs.request.rate.all import calcs_request_rate_all
+from app.utils.calcs.request.rate.check import calcs_request_check_rate
 from app.utils.calcs.request.rate.input import calcs_request_rate_input
 from app.utils.calcs.request.rate.output import calcs_request_rate_output
 from app.utils.calcs.request.states.input import request_check_state_input
 from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.calcs.requisites.find.input_by_currency_value import calcs_requisite_input_by_currency_value
-from app.utils.calcs.requisites.find.input_by_value import calcs_requisite_input_by_value
 from app.utils.calcs.requisites.find.output_by_currency_value import calcs_requisite_output_by_currency_value
-from app.utils.calcs.requisites.find.output_by_value import calcs_requisite_output_by_value
 from app.utils.calcs.requisites.need_value.input_currency_value import \
     calcs_requisites_input_need_currency_value
-from app.utils.calcs.requisites.need_value.input_value import calcs_requisites_input_need_value
 from app.utils.calcs.requisites.need_value.output_currency_value import calcs_requisites_output_need_currency_value
-from app.utils.calcs.requisites.need_value.output_value import calcs_requisites_output_need_value
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
-from app.utils.value import value_to_int
 from config import settings
 
 
@@ -150,11 +146,11 @@ class RequestService(BaseService):
             output_requisite_data=output_requisite_data,
             output_method=output_method,
             input_currency_value=calculate.input_currency_value,
-            input_value=calculate.input_value,
             input_rate=calculate.input_rate,
+            input_value=calculate.input_value,
             output_currency_value=calculate.output_currency_value,
-            output_value=calculate.output_value,
             output_rate=calculate.output_rate,
+            output_value=calculate.output_value,
         )
         if wallet_ban:
             await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
@@ -216,7 +212,7 @@ class RequestService(BaseService):
                 raise RequestRateNotFound(
                     kwargs={
                         'input_method': output_method.name_text.value_default,
-                        'output_method': '',
+                        'output_method': settings.coin_name,
                     }
                 )
             input_rate = input_rate.rate
@@ -225,7 +221,7 @@ class RequestService(BaseService):
             if not output_rate:
                 raise RequestRateNotFound(
                     kwargs={
-                        'input_method': '',
+                        'input_method': settings.coin_name,
                         'output_method': output_method.name_text.value_default,
                     }
                 )
@@ -293,6 +289,9 @@ class RequestService(BaseService):
             wallet_account.wallet
             for wallet_account in await WalletAccountRepository().get_list(account=account)
         ]
+        if is_partner:
+            if 'requests_partner' not in await AccountRoleCheckPermissionService().get_permissions(account=account):
+                is_partner = False
         _requests, results = await RequestRepository().search(
             wallets=wallets,
             id_=id_,
@@ -534,15 +533,12 @@ class RequestService(BaseService):
     async def state_input_reserved_by_task(self, session: Session):
         from app.services.order import OrderService
         for request in await RequestRepository().get_list(state=RequestStates.INPUT_RESERVATION):
-            logging.info(f'request input reservation #{request.id}    start check')
             request = await RequestRepository().get_by_id(id_=request.id)
+            logging.info(f'request input reservation #{request.id}    start check')
+            await calcs_request_check_rate(request=request)
             currency = request.input_method.currency
             # get need values
-            if request.rate_fixed:
-                need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
-            else:
-                need_value = await calcs_requisites_input_need_value(request=request)
-                need_currency_value = round(need_value * request.input_rate / 10 ** request.rate_decimal)
+            need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
             logging.info(f'request input reservation #{request.id}    need_currency_value={need_currency_value}')
             # check / change states
             if need_currency_value < currency.div:
@@ -583,38 +579,23 @@ class RequestService(BaseService):
                 logging.info(f'request input reservation #{request.id}    finished')
                 continue
             # create missing orders
-            need_currency_value, need_value, result = None, None, None
-            if request.rate_fixed:
-                need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
-            else:
-                need_value = await calcs_requisites_input_need_value(request=request)
-            if need_currency_value:
-                result = await calcs_requisite_input_by_currency_value(
-                    method=request.input_method,
-                    currency_value=need_currency_value,
-                    process=True,
-                    request=request,
-                )
-            if need_value:
-                result = await calcs_requisite_input_by_value(
-                    method=request.input_method,
-                    value=need_value,
-                    process=True,
-                    request=request,
-                )
+            need_currency_value = await calcs_requisites_input_need_currency_value(request=request)
+            result = await calcs_requisite_input_by_currency_value(
+                method=request.input_method,
+                currency_value=need_currency_value,
+                process=True,
+                request=request,
+            )
             if not result:
                 logging.info(f'request input reservation #{request.id}    not result')
                 continue
             for requisite_item in result.requisite_items:
                 requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
-                rate_float = requisite_item.currency_value / requisite_item.value
-                _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.floor)
                 await OrderService().waited_order(
                     request=request,
                     requisite=requisite,
                     currency_value=requisite_item.currency_value,
                     value=requisite_item.value,
-                    rate=_rate,
                     order_type=OrderTypes.INPUT,
                 )
             logging.info(f'request input reservation #{request.id}    finished')
@@ -624,15 +605,12 @@ class RequestService(BaseService):
     async def state_output_reserved_by_task(self, session: Session):
         from app.services.order import OrderService
         for request in await RequestRepository().get_list(state=RequestStates.OUTPUT_RESERVATION):
-            logging.info(f'request output reservation #{request.id}    start check')
             request = await RequestRepository().get_by_id(id_=request.id)
+            logging.info(f'request output reservation #{request.id}    start check')
+            await calcs_request_check_rate(request=request)
             currency = request.output_method.currency
             # get need values
-            if request.rate_fixed:
-                need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
-            else:
-                need_value = await calcs_requisites_output_need_value(request=request)
-                need_currency_value = round(need_value * request.output_rate / 10 ** request.rate_decimal)
+            need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
             # check wait orders / complete state
             if need_currency_value < currency.div:
                 active_order = False
@@ -694,65 +672,41 @@ class RequestService(BaseService):
                     )
                 continue
             # create missing orders
-            need_currency_value, need_value, result = None, None, None
-            if request.rate_fixed:
-                need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
-                logging.info(f'request #{request.id}    create orders need_currency_value={need_currency_value}')
-            else:
-                need_value = await calcs_requisites_output_need_value(request=request)
-                logging.info(f'request #{request.id}    create orders need_value={need_value}')
-            if need_currency_value:
-                result = await calcs_requisite_output_by_currency_value(
-                    method=request.output_method,
-                    currency_value=need_currency_value,
-                    process=True,
-                    request=request,
-                )
-            if need_value:
-                result = await calcs_requisite_output_by_value(
-                    method=request.output_method,
-                    value=need_value,
-                    process=True,
-                    request=request,
-                )
+            need_currency_value = await calcs_requisites_output_need_currency_value(request=request)
+            logging.info(f'request #{request.id}    create orders need_currency_value={need_currency_value}')
+            result = await calcs_requisite_output_by_currency_value(
+                method=request.output_method,
+                currency_value=need_currency_value,
+                process=True,
+                request=request,
+            )
             if not result:
                 continue
             for requisite_item in result.requisite_items:
                 requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
-                rate_float = requisite_item.currency_value / requisite_item.value
-                _rate = value_to_int(value=rate_float, decimal=request.rate_decimal, round_method=math.ceil)
                 await OrderService().waited_order(
                     request=request,
                     requisite=requisite,
                     currency_value=requisite_item.currency_value,
                     value=requisite_item.value,
-                    rate=_rate,
                     order_type=OrderTypes.OUTPUT,
                 )
-            if request.rate_fixed:
-                difference_rate = request.difference_rate
-                order_value_sum = 0
-                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
-                    if order.state == OrderStates.CANCELED:
-                        continue
-                    order_value_sum += order.value
-                difference = request.output_value - order_value_sum
-                if difference < 0:
-                    difference = order_value_sum - request.output_value
-                    await TransferSystemService().payment_difference(
-                        request=request,
-                        value=difference,
-                        from_banned_value=True,
-                    )
-                    difference_rate += difference
-                    await RequestRepository().update(request, difference_rate=difference_rate)
-            else:
-                order_currency_value_sum = 0
-                for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
-                    if order.state == OrderStates.CANCELED:
-                        continue
-                    order_currency_value_sum += order.currency_value
-                await RequestRepository().update(request, output_currency_value=order_currency_value_sum)
+            # difference_rate = request.difference_rate
+            # order_value_sum = 0
+            # for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
+            #     if order.state == OrderStates.CANCELED:
+            #         continue
+            #     order_value_sum += order.value
+            # difference = request.output_value - order_value_sum
+            # if difference < 0:
+            #     difference = order_value_sum - request.output_value
+            #     await TransferSystemService().payment_difference(
+            #         request=request,
+            #         value=difference,
+            #         from_banned_value=True,
+            #     )
+            #     difference_rate += difference
+            #     await RequestRepository().update(request, difference_rate=difference_rate)
         return {}
 
     @staticmethod

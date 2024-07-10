@@ -55,9 +55,7 @@ async def calcs_request_rate_all_by_input_currency_value(
     output_value = value_to_int(value=output_value_float)
     output_currency_value_float = output_value_float * output_rate_float
     output_currency_value = value_to_int(value=output_currency_value_float, decimal=output_method.currency.decimal)
-    output_currency_value_temp = output_currency_value
     output_currency_value = math.floor(output_currency_value / output_method.currency.div) * output_method.currency.div
-    difference = math.floor((output_currency_value_temp - output_currency_value) / output_rate_float)
     # calculate rate
     rate_float = output_currency_value / input_currency_value
     rate_decimal = max([input_method.currency.rate_decimal, output_method.currency.rate_decimal])

@@ -43,6 +43,7 @@ class RequisiteCreateSchema(BaseModel):
     value: Optional[int] = Field(default=None)
     currency_value_min: Optional[int] = Field(default=None)
     currency_value_max: Optional[int] = Field(default=None)
+    is_flex: bool = Field(default=False)
 
     @field_validator('currency_value', 'rate', 'value', 'currency_value_min', 'currency_value_max')
     @classmethod
@@ -85,8 +86,12 @@ class RequisiteCreateSchema(BaseModel):
             )
         value_optional = [self.currency_value, self.value, self.rate]
         value_optional_names = ['currency_value', 'value', 'rate']
-        if (len(value_optional) - value_optional.count(None)) != 2:
-            raise ParameterTwoContainError(kwargs={'parameters': value_optional_names})
+        if self.is_flex:
+            if (len(value_optional) - value_optional.count(None)) != 1:
+                raise ParameterTwoContainError(kwargs={'parameters': value_optional_names})
+        else:
+            if (len(value_optional) - value_optional.count(None)) != 2:
+                raise ParameterTwoContainError(kwargs={'parameters': value_optional_names})
         return self
 
 
@@ -103,5 +108,6 @@ async def route(schema: RequisiteCreateSchema):
         value=schema.value,
         currency_value_min=schema.currency_value_min,
         currency_value_max=schema.currency_value_max,
+        is_flex=schema.is_flex,
     )
     return Response(**result)
