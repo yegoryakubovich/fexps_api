@@ -76,11 +76,6 @@ async def calcs_requisite_output_by_currency_value(
         need_currency_value -= suitable_currency_value
         result_currency_value += suitable_currency_value
     # check exist result_currency_value
-    logging.critical('\n'.join([
-        f'need_currency_value={need_currency_value}',
-        f'result_currency_value={result_currency_value}',
-        f'requisite_items={requisite_items} ({len(requisite_items)})',
-    ]))
     if not result_currency_value:
         await calcs_requisite_process_change_list(
             requisites=[requisite_item.requisite_id for requisite_item in requisite_items],
