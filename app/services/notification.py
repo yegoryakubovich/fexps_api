@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import asyncio
 import logging
 from typing import Optional
 
@@ -144,6 +143,7 @@ class NotificationService(BaseService):
                         ],
                     ),
                 )
+                await asyncio.sleep(0.2)
             except TelegramForbiddenError:
                 state = NotificationStates.BLOCKED
             except Exception as e:

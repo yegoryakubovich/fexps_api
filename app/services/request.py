@@ -259,16 +259,17 @@ class RequestService(BaseService):
     ):
         account = session.account
         request = await RequestRepository().get_by_id(id_=id_)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[request.wallet],
-            exception=RequestStateNotPermission(
-                kwargs={
-                    'id_value': request.id,
-                    'action': f'Get by id',
-                },
+        if 'requests_partner' not in await AccountRoleCheckPermissionService().get_permissions(account=account):
+            await WalletService().check_permission(
+                account=account,
+                wallets=[request.wallet],
+                exception=RequestStateNotPermission(
+                    kwargs={
+                        'id_value': request.id,
+                        'action': f'Get by id',
+                    },
+                )
             )
-        )
         return {
             'request': await self.generate_request_dict(request=request)
         }
@@ -691,22 +692,6 @@ class RequestService(BaseService):
                     value=requisite_item.value,
                     order_type=OrderTypes.OUTPUT,
                 )
-            # difference_rate = request.difference_rate
-            # order_value_sum = 0
-            # for order in await OrderRepository().get_list(request=request, type=OrderTypes.OUTPUT):
-            #     if order.state == OrderStates.CANCELED:
-            #         continue
-            #     order_value_sum += order.value
-            # difference = request.output_value - order_value_sum
-            # if difference < 0:
-            #     difference = order_value_sum - request.output_value
-            #     await TransferSystemService().payment_difference(
-            #         request=request,
-            #         value=difference,
-            #         from_banned_value=True,
-            #     )
-            #     difference_rate += difference
-            #     await RequestRepository().update(request, difference_rate=difference_rate)
         return {}
 
     @staticmethod

@@ -24,6 +24,7 @@ from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, Meth
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
     FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
     RequestRequisiteRepository, WalletBanRequisiteRepository
+from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.message import MessageService
@@ -53,18 +54,19 @@ class OrderService(BaseService):
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=id_)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[order.request.wallet, order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Order',
-                    'id_value': order.id
-                },
-            ),
-        )
+        if 'requests_partner' not in await AccountRoleCheckPermissionService().get_permissions(account=account):
+            await WalletService().check_permission(
+                account=account,
+                wallets=[order.request.wallet, order.requisite.wallet],
+                exception=OrderNotPermission(
+                    kwargs={
+                        'field': 'Order',
+                        'id_value': order.id
+                    },
+                ),
+            )
         return {
-            'order': await self.generate_order_dict(order=order)
+            'order': await self.generate_order_dict(order=order),
         }
 
     @session_required()
@@ -106,7 +108,7 @@ class OrderService(BaseService):
         return {
             'orders': [
                 await self.generate_order_dict(order=order) for order in orders
-            ]
+            ],
         }
 
     @session_required()
@@ -117,21 +119,22 @@ class OrderService(BaseService):
     ) -> dict:
         account = session.account
         request = await RequestRepository().get_by_id(id_=request_id)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[request.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Request',
-                    'id_value': request.id
-                },
-            ),
-        )
+        if 'requests_partner' not in await AccountRoleCheckPermissionService().get_permissions(account=account):
+            await WalletService().check_permission(
+                account=account,
+                wallets=[request.wallet],
+                exception=OrderNotPermission(
+                    kwargs={
+                        'field': 'Request',
+                        'id_value': request.id
+                    },
+                ),
+            )
         return {
             'orders': [
                 await self.generate_order_dict(order=order)
                 for order in await OrderRepository().get_list(request=request)
-            ]
+            ],
         }
 
     @session_required()
@@ -151,7 +154,7 @@ class OrderService(BaseService):
             'orders': [
                 await self.generate_order_dict(order=order)
                 for order in await OrderRepository().get_list(requisite=requisite)
-            ]
+            ],
         }
 
     @session_required(return_token=True)
@@ -173,8 +176,8 @@ class OrderService(BaseService):
                     kwargs={
                         'id_value': order.id,
                         'action': f'Update state to {next_state}',
-                    }
-                )
+                    },
+                ),
             )
         elif order.type == OrderTypes.OUTPUT:
             await WalletService().check_permission(
@@ -184,8 +187,8 @@ class OrderService(BaseService):
                     kwargs={
                         'id_value': order.id,
                         'action': f'Update state to {next_state}',
-                    }
-                )
+                    },
+                ),
             )
         if order.state != need_state:
             raise OrderStateWrong(
@@ -252,8 +255,8 @@ class OrderService(BaseService):
                     kwargs={
                         'id_value': order.id,
                         'action': f'Update state to {next_state}',
-                    }
-                )
+                    },
+                ),
             )
         elif order.type == OrderTypes.OUTPUT:
             await WalletService().check_permission(
@@ -263,8 +266,8 @@ class OrderService(BaseService):
                     kwargs={
                         'id_value': order.id,
                         'action': f'Update state to {next_state}',
-                    }
-                )
+                    },
+                ),
             )
         if order.state != need_state:
             raise OrderStateWrong(
