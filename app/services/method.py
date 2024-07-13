@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from typing import Optional
 
 from app.db.models import Method, Session, Actions, MethodFieldTypes, RequisiteTypes, RequisiteStates
@@ -197,7 +196,6 @@ class MethodService(BaseService):
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
-                'id': id_,
             },
         )
         return {}
@@ -215,6 +213,14 @@ class MethodService(BaseService):
             )
         ])
         output_requisites_sum = sum([
+            requisite.currency_value
+            for requisite in await RequisiteRepository().get_list(
+                type=RequisiteTypes.INPUT,
+                input_method=method,
+                state=RequisiteStates.ENABLE,
+            )
+        ])
+        logging.critical([
             requisite.currency_value
             for requisite in await RequisiteRepository().get_list(
                 type=RequisiteTypes.INPUT,

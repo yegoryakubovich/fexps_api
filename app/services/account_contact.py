@@ -127,7 +127,6 @@ class AccountContactService(BaseService):
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
-                'id': id_,
             },
         )
         return {}

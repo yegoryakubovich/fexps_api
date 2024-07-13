@@ -207,7 +207,6 @@ class WalletService(BaseService):
             action=Actions.DELETE,
             parameters={
                 'deleter': f'session_{session.id}',
-                'id': id_,
             },
         )
         await WalletAccountService().delete(
