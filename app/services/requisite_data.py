@@ -18,7 +18,7 @@
 from typing import Optional
 
 from app.db.models import Session, RequisiteData, Actions
-from app.repositories import MethodRepository, RequisiteDataRepository
+from app.repositories import MethodRepository, RequisiteDataRepository, RequestRepository, RequisiteRepository
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
@@ -32,18 +32,22 @@ class RequisiteDataService(BaseService):
     async def create(
             self,
             session: Session,
-            name: str,
+            name: Optional[str],
             method_id: int,
             fields: dict,
+            is_disposable: bool,
     ) -> dict:
         account = session.account
+        if not name:
+            name = None
         method = await MethodRepository().get_by_id(id_=method_id)
         await MethodService().method_check_validation_scheme(method=method, fields=fields)
         requisite_data = await RequisiteDataRepository().create(
             account=account,
             name=name,
             method=method,
-            fields=fields
+            fields=fields,
+            is_disposable=is_disposable,
         )
         await self.create_action(
             model=requisite_data,
@@ -53,6 +57,7 @@ class RequisiteDataService(BaseService):
                 'name': name,
                 'method_id': method.id,
                 'fields': fields,
+                'is_disposable': is_disposable,
             },
         )
         return {
@@ -136,6 +141,12 @@ class RequisiteDataService(BaseService):
     async def generate_requisite_data_dict(requisite_data: RequisiteData) -> Optional[dict]:
         if not requisite_data:
             return
+        allow = True
+        if requisite_data.is_disposable:
+            if await RequestRepository().get(output_requisite_data=requisite_data):
+                allow = False
+            if await RequisiteRepository().get(output_requisite_data=requisite_data):
+                allow = False
         return {
             'id': requisite_data.id,
             'account': requisite_data.account_id,
@@ -143,4 +154,6 @@ class RequisiteDataService(BaseService):
             'method': await MethodService().generate_method_dict(method=requisite_data.method),
             'currency': await CurrencyService().generate_currency_dict(currency=requisite_data.method.currency),
             'fields': requisite_data.fields,
+            'is_disposable': requisite_data.is_disposable,
+            'allow': allow,
         }

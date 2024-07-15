@@ -15,6 +15,8 @@
 #
 
 
+from typing import Optional
+
 from pydantic import Field, BaseModel
 
 from app.services.requisite_data import RequisiteDataService
@@ -28,9 +30,10 @@ router = Router(
 
 class RequisiteDataCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
-    name: str = Field(min_length=1, max_length=32)
+    name: Optional[str] = Field(default=None)
     method_id: int = Field()
     fields: dict = Field()
+    is_disposable: bool = Field(default=False)
 
 
 @router.post()
@@ -40,5 +43,6 @@ async def route(schema: RequisiteDataCreateSchema):
         name=schema.name,
         method_id=schema.method_id,
         fields=schema.fields,
+        is_disposable=schema.is_disposable,
     )
     return Response(**result)

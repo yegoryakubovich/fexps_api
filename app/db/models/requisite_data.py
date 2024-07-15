@@ -31,4 +31,5 @@ class RequisiteData(Base):
     method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'), nullable=True)
     method = relationship('Method', foreign_keys=method_id, uselist=False, lazy='selectin')
     fields = Column(JSON())
+    is_disposable = Column(Boolean)
     is_deleted = Column(Boolean, default=False)
