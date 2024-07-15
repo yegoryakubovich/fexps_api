@@ -32,13 +32,13 @@ services:
       - ./assets/telegram:/app/assets/telegram
     env_file:
       - .env
-#  bot:
-#    build:
-#      dockerfile: bot.dockerfile
-#    env_file:
-#      - .env
-#    depends_on:
-#      - api
+  bot:
+    build:
+      dockerfile: bot.dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - api
   tasks_permanents:
     build:
       dockerfile: tasks_permanents.dockerfile
