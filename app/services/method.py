@@ -220,14 +220,6 @@ class MethodService(BaseService):
                 state=RequisiteStates.ENABLE,
             )
         ])
-        logging.critical([
-            requisite.currency_value
-            for requisite in await RequisiteRepository().get_list(
-                type=RequisiteTypes.INPUT,
-                input_method=method,
-                state=RequisiteStates.ENABLE,
-            )
-        ])
         return {
             'id': method.id,
             'currency': await CurrencyService().generate_currency_dict(currency=method.currency),
