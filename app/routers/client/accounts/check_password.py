@@ -28,7 +28,7 @@ router = Router(
 
 
 class CheckAccountPasswordSchema(BaseModel):
-    password: str = Field()
+    password: str = Field(min_length=6, max_length=32)
 
 
 @router.get()

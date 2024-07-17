@@ -28,7 +28,7 @@ router = Router(
 
 
 class CheckAccountUsernameSchema(BaseModel):
-    username: str = Field(min_length=6, max_length=32)
+    username: str = Field(min_length=5, max_length=32)
 
 
 @router.get()

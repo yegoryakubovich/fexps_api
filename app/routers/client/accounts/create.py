@@ -27,8 +27,8 @@ router = Router(
 
 
 class CreateAccountSchema(BaseModel):
-    username: str = Field(min_length=6, max_length=32)
-    password: str = Field(min_length=6, max_length=128)
+    username: str = Field(min_length=5, max_length=32)
+    password: str = Field(min_length=6, max_length=32)
     firstname: str = Field(min_length=2, max_length=32)
     lastname: str = Field(min_length=2, max_length=32)
     country: str = Field(max_length=16)

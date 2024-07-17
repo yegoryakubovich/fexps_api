@@ -243,7 +243,7 @@ class AccountService(BaseService):
 
     @staticmethod
     async def is_valid_username(username: str):
-        register = '^[a-zA-Z][a-zA-Z0-9_]{4,32}$'
+        register = '^[a-zA-Z][a-zA-Z0-9_]{5,32}$'
         pattern = compile(register)
         if search(pattern, username):
             return True
@@ -269,10 +269,9 @@ class AccountService(BaseService):
             self,
             password: str,
     ):
-        if await self._is_valid_password(password=password):
-            return {}
-        else:
+        if not await self._is_valid_password(password=password):
             raise InvalidPassword()
+        return {}
 
     @staticmethod
     async def _is_valid_password(password: str):
