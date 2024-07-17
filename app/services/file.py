@@ -206,6 +206,7 @@ class FileService(BaseService):
         with open(f'{settings.path_files}/{file.id_str}.{file.extension}', 'rb') as f:
             file_byte = f.read()
         return {
+            'id': file.id,
             'id_str': file.id_str,
             'filename': file.filename,
             'extension': file.extension,
