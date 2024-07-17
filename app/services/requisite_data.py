@@ -147,10 +147,14 @@ class RequisiteDataService(BaseService):
                 allow = False
             if await RequisiteRepository().get(output_requisite_data=requisite_data):
                 allow = False
+        name = requisite_data.name
+        if not name:
+            for key, value in requisite_data.fields.items():
+                name = value
         return {
             'id': requisite_data.id,
             'account': requisite_data.account_id,
-            'name': requisite_data.name,
+            'name': name,
             'method': await MethodService().generate_method_dict(method=requisite_data.method),
             'currency': await CurrencyService().generate_currency_dict(currency=requisite_data.method.currency),
             'fields': requisite_data.fields,
