@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import asyncio
 import logging
 from typing import Optional
@@ -29,7 +31,7 @@ from app.utils.bot.image import image_create, get_post_keyboard, get_post_text
 from app.utils.bot.username import get_bot_username, get_chat_username
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
-from app.utils.exceptions import NotificationTelegramAlreadyLinked
+from app.utils.exceptions import NotificationTelegramAlreadyLinked, NotificationAccountNotFound
 from config import settings
 
 
@@ -48,6 +50,34 @@ class NotificationService(BaseService):
         return {
             'notification': await self.generate_notification_dict(notification_setting=notification_setting),
         }
+
+    @session_required(permissions=['notifications'], can_root=True)
+    async def update_by_admin(
+            self,
+            session: Session,
+            code: str,
+            telegram_id: int,
+    ) -> dict:
+        account = session.account
+        notification_setting = await NotificationSettingRepository().get(code=code)
+        if not notification_setting:
+            raise NotificationAccountNotFound()
+        code = await create_id_str()
+        await NotificationSettingRepository().update(
+            notification_setting,
+            telegram_id=telegram_id,
+            code=None,
+        )
+        await self.create_action(
+            model=notification_setting,
+            action=Actions.UPDATE,
+            parameters={
+                'updater': f'session_{session.id}',
+                'code': code,
+                'telegram_id': telegram_id,
+            },
+        )
+        return {}
 
     @session_required()
     async def update_code(

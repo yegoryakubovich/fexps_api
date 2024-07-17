@@ -25,6 +25,7 @@ from .currencies import router as router_currencies
 from .files import router as router_files
 from .languages import router as router_languages
 from .methods import router as router_methods
+from .notifications import router as router_notifications
 from .orders import router as router_orders
 from .permissions import router as router_permissions
 from .roles import router as router_roles
@@ -45,6 +46,7 @@ router = Router(
         router_files,
         router_languages,
         router_methods,
+        router_notifications,
         router_orders,
         router_permissions,
         router_roles,

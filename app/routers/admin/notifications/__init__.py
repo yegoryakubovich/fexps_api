@@ -15,14 +15,14 @@
 #
 
 
-from .base import ApiException
+from app.utils import Router
+from .update import router as router_update
 
 
-class NotificationTelegramAlreadyLinked(ApiException):
-    code = 12000
-    message = 'Telegram is already linked'
-
-
-class NotificationAccountNotFound(ApiException):
-    code = 12001
-    message = 'Account by code not found'
+router = Router(
+    prefix='/notifications',
+    routes_included=[
+        router_update,
+    ],
+    tags=['Notifications'],
+)

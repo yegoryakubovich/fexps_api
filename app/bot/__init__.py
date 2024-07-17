@@ -22,18 +22,11 @@ from aiogram.types import BotCommand
 from app import config_logger
 from app.bot import misc
 from app.bot.handlers.routers import main_router
-from app.db.init_db import init_db
 
 
 async def on_startup():
     config_logger()
     logging.info(msg='Bot starting...')
-    try:
-        await init_db()
-        logging.info('Success connect to database')
-    except ConnectionRefusedError:
-        logging.error('Failed to connect to database')
-        exit(1)
     await misc.bot.set_my_commands(
         commands=[
             BotCommand(command="start", description="Start"),

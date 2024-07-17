@@ -15,14 +15,28 @@
 #
 
 
-from .base import ApiException
+from pydantic import Field, BaseModel
+
+from app.services.notification import NotificationService
+from app.utils import Response, Router
 
 
-class NotificationTelegramAlreadyLinked(ApiException):
-    code = 12000
-    message = 'Telegram is already linked'
+router = Router(
+    prefix='/update',
+)
 
 
-class NotificationAccountNotFound(ApiException):
-    code = 12001
-    message = 'Account by code not found'
+class NotificationUpdateCodeSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+    code: str = Field(min_length=1, max_length=128)
+    telegram_id: int = Field()
+
+
+@router.post()
+async def route(schema: NotificationUpdateCodeSchema):
+    result = await NotificationService().update_by_admin(
+        token=schema.token,
+        code=schema.code,
+        telegram_id=schema.telegram_id,
+    )
+    return Response(**result)

@@ -20,7 +20,8 @@ from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from app.repositories import NotificationSettingRepository
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
+from app.utils import ApiException
 
 start_router = Router()
 
@@ -31,18 +32,8 @@ async def start_menu_handler(message: Message, state: FSMContext, command: Comma
     if not command_code:
         await message.answer(text='Not found params')
         return
-    account_notification = await NotificationSettingRepository().get(code=command_code)
-    if not account_notification:
-        await message.answer(text='Not found account')
-        return
-    await NotificationSettingRepository().update(
-        account_notification,
-        telegram_id=message.chat.id,
-        code=None,
-    )
-    await message.answer(
-        text='\n'.join([
-            f'{account_notification.account.username}',
-            f'Account verified',
-        ])
-    )
+    try:
+        await fexps_api_client.admin.notifications.update(code=command_code, telegram_id=message.chat.id)
+        await message.answer(text='Account verified')
+    except ApiException as exception:
+        await message.answer(text=exception.message)
