@@ -21,7 +21,7 @@ from typing import Optional
 from PIL import Image, ImageDraw, ImageFont
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from app.db.models import Method
+from app.db.models import Method, CommissionPack
 from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository
 from app.utils.value import value_to_float
 from config import settings
@@ -82,10 +82,10 @@ def image_draw_center(image_draw, coordinates, text):
     )
 
 
-async def image_create():
+async def image_create(commission_pack: CommissionPack, ):
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
-    image_input_path = f'{settings.path_telegram}/source/sowapay.png'
-    image_output_path = f'{settings.path_telegram}/images/sowapay.png'
+    image_input_path = f'{settings.path_telegram}/source/{commission_pack.filename}'
+    image_output_path = f'{settings.path_telegram}/images/{commission_pack.filename}'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
     for input_currency_id_str, output_currency_id_str in settings.telegram_rate_pairs:
@@ -97,7 +97,11 @@ async def image_create():
         output_method = await MethodRepository().get(currency=output_currency, is_rate_default=True)
         if not output_method:
             continue
-        rate_raw = await get_pair_rate(input_method=input_method, output_method=output_method)
+        rate_raw = await get_pair_rate(
+            commission_pack=commission_pack,
+            input_method=input_method,
+            output_method=output_method,
+        )
         if not rate_raw:
             continue
         rate, type_ = rate_raw
@@ -119,8 +123,16 @@ async def image_create():
     return image_output_path
 
 
-async def get_pair_rate(input_method: Method, output_method: Method) -> Optional[tuple]:
-    rate_pair = await RatePairRepository().get_actual(input_method=input_method, output_method=output_method)
+async def get_pair_rate(
+        commission_pack: CommissionPack,
+        input_method: Method,
+        output_method: Method,
+) -> Optional[tuple]:
+    rate_pair = await RatePairRepository().get_actual(
+        commission_pack=commission_pack,
+        input_method=input_method,
+        output_method=output_method,
+    )
     if not rate_pair:
         return
     rate_float = value_to_float(value=rate_pair.rate, decimal=rate_pair.rate_decimal)

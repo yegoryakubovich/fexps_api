@@ -21,7 +21,6 @@ from .commission_pack import CommissionPack
 from .currency import Currency
 from .file import File
 from .language import Language
-from .telegram_post import TelegramPost
 from .text import Text
 from .timezone import Timezone
 
@@ -36,6 +35,7 @@ from .rate import Rate, RateTypes, RateSources
 from .rate_pair import RatePair
 from .rate_parse import RateParse
 from .role import Role
+from .telegram_post import TelegramPost
 from .text_pack import TextPack
 from .text_translation import TextTranslation
 from .wallet import Wallet

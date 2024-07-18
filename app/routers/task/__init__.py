@@ -17,6 +17,7 @@
 
 from app.utils import Router
 from .files import router as router_files
+from .notifications import router as router_notifications
 from .rates import router as router_rates
 from .requests import router as router_requests
 from .requisites import router as router_requisites
@@ -27,6 +28,7 @@ router = Router(
     prefix='/task',
     routes_included=[
         router_files,
+        router_notifications,
         router_rates,
         router_requests,
         router_requisites,

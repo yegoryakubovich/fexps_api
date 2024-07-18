@@ -16,18 +16,15 @@
 
 
 import asyncio
-import logging
 from typing import Optional
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramForbiddenError
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile, InputMediaPhoto
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from app.db.models import NotificationSetting, Session, Actions, NotificationStates
-from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, TextRepository, \
-    TelegramPostRepository
+from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, TextRepository
 from app.services.base import BaseService
-from app.utils.bot.image import image_create, get_post_keyboard, get_post_text
 from app.utils.bot.username import get_bot_username, get_chat_username
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -189,48 +186,6 @@ class NotificationService(BaseService):
                     'error': error,
                 },
             )
-        return {}
-
-    @session_required(permissions=['notifications'], can_root=True)
-    async def send_image_by_task(self, session: Session):
-        bot = Bot(token=settings.telegram_token)
-        image_path = await image_create()
-        if not image_path:
-            logging.critical('Not found image')
-            return {}
-        message = await bot.send_photo(
-            chat_id=settings.telegram_chat_id,
-            photo=FSInputFile(path=image_path),
-            caption=get_post_text(),
-            reply_markup=get_post_keyboard(),
-        )
-        if not message:
-            logging.critical('Not found message')
-            return
-        await TelegramPostRepository().create(
-            chat_id=message.chat.id,
-            message_id=message.message_id,
-            text=message.caption,
-        )
-        return {}
-
-    @session_required(permissions=['notifications'], can_root=True)
-    async def update_image_by_task(self, session: Session):
-        bot = Bot(token=settings.telegram_token)
-        telegram_post = await TelegramPostRepository().get()
-        if not telegram_post:
-            logging.critical('Not found telegram_post')
-            return
-        image_path = await image_create()
-        if not image_path:
-            logging.critical('Not found image_path')
-            return
-        await bot.edit_message_media(
-            chat_id=settings.telegram_chat_id,
-            message_id=telegram_post.message_id,
-            media=InputMediaPhoto(media=FSInputFile(path=image_path), caption=telegram_post.text),
-            reply_markup=get_post_keyboard(),
-        )
         return {}
 
     @staticmethod

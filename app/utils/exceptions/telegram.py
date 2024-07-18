@@ -15,16 +15,19 @@
 #
 
 
-from app.utils import Router
-from .create import router as router_send_image
-from .update import router as router_update_image
+from .base import ApiException
 
 
-router = Router(
-    prefix='/telegrams',
-    routes_included=[
-        router_send_image,
-        router_update_image,
-    ],
-    tags=['Telegrams'],
-)
+class TelegramImagePathNotFound(ApiException):
+    code = 13000
+    message = 'CommissionPack #{commission_pack_id} not found file {filename}'
+
+
+class TelegramMessageNotFound(ApiException):
+    code = 13001
+    message = 'CommissionPack #{commission_pack_id} message not found'
+
+
+class TelegramPostNotFound(ApiException):
+    code = 13002
+    message = 'CommissionPack #{commission_pack_id} not found post #{message_id}'

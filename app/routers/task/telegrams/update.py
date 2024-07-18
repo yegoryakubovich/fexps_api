@@ -19,19 +19,20 @@ from fastapi import Depends
 from pydantic import Field, BaseModel
 
 from app.services.notification import NotificationService
+from app.services.telegram_post import TelegramPostService
 from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/images/update',
+    prefix='/update',
 )
 
 
-class TelegramUpdateImageSchema(BaseModel):
+class TelegramUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: TelegramUpdateImageSchema = Depends()):
-    result = await NotificationService().update_image_by_task(token=schema.token)
+async def route(schema: TelegramUpdateSchema = Depends()):
+    result = await TelegramPostService().update_by_task(token=schema.token)
     return Response(**result)

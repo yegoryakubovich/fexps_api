@@ -32,37 +32,38 @@ class RateService(BaseService):
 
     @session_required(permissions=['rates'], can_root=True)
     async def keep_pair_by_task(self, session: Session):
-        input_methods: list[Method] = []
-        for input_currency in await CurrencyRepository().get_list():
-            input_methods += [
-                input_method
-                for input_method in await MethodRepository().get_list(currency=input_currency)
-            ]
-        output_methods: list[Method] = []
-        for output_currency in await CurrencyRepository().get_list():
-            output_methods += [
-                output_method
-                for output_method in await MethodRepository().get_list(currency=output_currency)
-            ]
-        for input_method in input_methods:
-            for output_method in output_methods:
-                if input_method.currency.id_str == output_method.currency.id_str:
-                    continue
-                commission_pack = await CommissionPackRepository().get(is_default=True)
-                result = await calcs_data_rate(
-                    input_method=input_method,
-                    output_method=output_method,
-                    commission_pack=commission_pack,
-                    input_value=3_000_00,
-                )
-                if not result:
-                    continue
-                await RatePairRepository().create(
-                    input_method=input_method,
-                    output_method=output_method,
-                    rate_decimal=result.rate_decimal,
-                    rate=result.rate,
-                )
+        for commission_pack in await CommissionPackRepository().get_list():
+            input_methods: list[Method] = []
+            for input_currency in await CurrencyRepository().get_list():
+                input_methods += [
+                    input_method
+                    for input_method in await MethodRepository().get_list(currency=input_currency)
+                ]
+            output_methods: list[Method] = []
+            for output_currency in await CurrencyRepository().get_list():
+                output_methods += [
+                    output_method
+                    for output_method in await MethodRepository().get_list(currency=output_currency)
+                ]
+            for input_method in input_methods:
+                for output_method in output_methods:
+                    if input_method.currency.id_str == output_method.currency.id_str:
+                        continue
+                    result = await calcs_data_rate(
+                        input_method=input_method,
+                        output_method=output_method,
+                        commission_pack=commission_pack,
+                        input_value=3_000_00,
+                    )
+                    if not result:
+                        continue
+                    await RatePairRepository().create(
+                        commission_pack=commission_pack,
+                        input_method=input_method,
+                        output_method=output_method,
+                        rate_decimal=result.rate_decimal,
+                        rate=result.rate,
+                    )
         return {}
 
     @session_required(permissions=['rates'], can_root=True)

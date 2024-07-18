@@ -15,7 +15,8 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, String
+from sqlalchemy import Column, BigInteger, Boolean, String, ForeignKey
+from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
 
@@ -24,7 +25,8 @@ class TelegramPost(Base):
     __tablename__ = 'telegrams_posts'
 
     id = Column(BigInteger, primary_key=True)
-    chat_id = Column(BigInteger)
+    commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
+    commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
     message_id = Column(BigInteger)
     text = Column(String(length=512))
     is_deleted = Column(Boolean, default=False)

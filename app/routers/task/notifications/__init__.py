@@ -16,15 +16,13 @@
 
 
 from app.utils import Router
-from .create import router as router_send_image
-from .update import router as router_update_image
+from .send import router as router_send
 
 
 router = Router(
-    prefix='/telegrams',
+    prefix='/notifications',
     routes_included=[
-        router_send_image,
-        router_update_image,
+        router_send,
     ],
-    tags=['Telegrams'],
+    tags=['Notifications'],
 )

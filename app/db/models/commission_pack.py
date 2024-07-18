@@ -15,7 +15,7 @@
 #
 
 
-from sqlalchemy import Column, BigInteger, Boolean, ForeignKey
+from sqlalchemy import Column, BigInteger, Boolean, ForeignKey, String
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -28,5 +28,6 @@ class CommissionPack(Base):
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
     telegram_chat_id = Column(BigInteger, nullable=True)
+    filename = Column(String(length=32), nullable=True)
     is_default = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

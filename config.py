@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     flower_password: str
 
     telegram_token: str
-    telegram_chat_id: int
     telegram_manager: str
     telegram_about: str
     telegram_info: str

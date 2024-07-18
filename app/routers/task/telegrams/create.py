@@ -18,20 +18,20 @@
 from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services.notification import NotificationService
+from app.services.telegram_post import TelegramPostService
 from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/images/send',
+    prefix='/create',
 )
 
 
-class TelegramSendImageSchema(BaseModel):
+class TelegramCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
 
 
 @router.get()
-async def route(schema: TelegramSendImageSchema = Depends()):
-    result = await NotificationService().send_image_by_task(token=schema.token)
+async def route(schema: TelegramCreateSchema = Depends()):
+    result = await TelegramPostService().create_by_task(token=schema.token)
     return Response(**result)
