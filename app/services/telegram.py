@@ -23,7 +23,7 @@ from app.repositories import TelegramPostRepository, CommissionPackRepository
 from app.services.base import BaseService
 from app.utils.bot.image import image_create, get_post_keyboard, get_post_text
 from app.utils.decorators import session_required
-from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFound, TelegramPostNotFound
+from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFound
 from config import settings
 
 
