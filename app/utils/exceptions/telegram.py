@@ -26,8 +26,3 @@ class TelegramImagePathNotFound(ApiException):
 class TelegramMessageNotFound(ApiException):
     code = 13001
     message = 'CommissionPack #{commission_pack_id} message not found'
-
-
-class TelegramPostNotFound(ApiException):
-    code = 13002
-    message = 'CommissionPack #{commission_pack_id} not found post #{message_id}'

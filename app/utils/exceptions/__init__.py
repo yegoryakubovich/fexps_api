@@ -31,7 +31,7 @@ from .request import RequestStateWrong, RequestStateNotPermission, RequestRateNo
 from .requisite import RequisiteMinimumValueError, RequisiteActiveOrdersExistsError, RequisiteStateWrong, \
     RequisiteNotEnough
 from .role import RoleAlreadyExist
-from .telegram import TelegramImagePathNotFound, TelegramMessageNotFound, TelegramPostNotFound
+from .telegram import TelegramImagePathNotFound, TelegramMessageNotFound
 from .text import TextDoesNotExist, TextAlreadyExist, TextPackDoesNotExist, TextTranslationDoesNotExist, \
     TextTranslationAlreadyExist
 from .wallet import WalletLimitReached, WalletCountLimitReached, NotEnoughFundsOnBalance, SystemWalletNotExists, \

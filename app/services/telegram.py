@@ -81,10 +81,9 @@ class TelegramService(BaseService):
                 continue
             telegram_post = await TelegramPostRepository().get(commission_pack=commission_pack)
             if not telegram_post:
-                raise TelegramPostNotFound(
+                raise TelegramMessageNotFound(
                     kwargs={
                         'commission_pack_id': commission_pack.id,
-                        'message_id': telegram_post.message_id,
                     },
                 )
             image_path = await image_create(commission_pack=commission_pack)
