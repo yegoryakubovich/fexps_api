@@ -18,7 +18,7 @@
 from fastapi import Depends
 from pydantic import Field, BaseModel
 
-from app.services.telegram_post import TelegramPostService
+from app.services.telegram import TelegramService
 from app.utils import Router, Response
 
 
@@ -33,5 +33,5 @@ class TelegramCreateSchema(BaseModel):
 
 @router.get()
 async def route(schema: TelegramCreateSchema = Depends()):
-    result = await TelegramPostService().create_by_task(token=schema.token)
+    result = await TelegramService().create_by_task(token=schema.token)
     return Response(**result)

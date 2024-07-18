@@ -27,7 +27,7 @@ from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFo
 from config import settings
 
 
-class TelegramPostService(BaseService):
+class TelegramService(BaseService):
     model = TelegramPost
 
     @session_required(permissions=['telegrams'], can_root=True)
@@ -84,6 +84,7 @@ class TelegramPostService(BaseService):
                 raise TelegramPostNotFound(
                     kwargs={
                         'commission_pack_id': commission_pack.id,
+                        'message_id': telegram_post.message_id,
                     },
                 )
             image_path = await image_create(commission_pack=commission_pack)
