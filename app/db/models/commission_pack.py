@@ -27,5 +27,6 @@ class CommissionPack(Base):
     id = Column(BigInteger, primary_key=True)
     name_text_id = Column(BigInteger, ForeignKey('texts.id'))
     name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
+    telegram_chat_id = Column(BigInteger, nullable=True)
     is_default = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)
