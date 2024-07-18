@@ -75,10 +75,19 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file='.env')
 
-    def get_mysql_host(self) -> str:
+    def get_mysql_uri(self):
+        mysql_host = self.mysql_host
         if self.test:
-            return '192.168.31.40'
-        return self.mysql_host
+            mysql_host = '192.168.31.40'
+        return (
+            f'mysql+aiomysql://'
+            f'{self.mysql_user}:'
+            f'{self.mysql_password}@'
+            f'{mysql_host}:'
+            f'{self.mysql_port}/'
+            f'{self.mysql_name}?'
+            f'charset=utf8mb4'
+        )
 
     def get_self_url(self):
         if self.test:

@@ -21,16 +21,7 @@ from sqlalchemy.orm import sessionmaker
 
 from config import settings
 
-
-MYSQL_USER = settings.mysql_user
-MYSQL_PASSWORD = settings.mysql_password
-MYSQL_HOST = settings.get_mysql_host()
-MYSQL_PORT = settings.mysql_port
-MYSQL_NAME = settings.mysql_name
-
-ASYNC_URI = f'mysql+aiomysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_NAME}?charset=utf8mb4'
-
-engine = create_async_engine(ASYNC_URI, pool_pre_ping=True, max_overflow=-1)
+engine = create_async_engine(settings.get_mysql_uri(), pool_pre_ping=True, max_overflow=-1)
 # noinspection PyTypeChecker
 SessionLocal = sessionmaker(
     autocommit=False,
