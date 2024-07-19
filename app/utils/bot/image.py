@@ -89,11 +89,11 @@ async def image_create(commission_pack: CommissionPack, ):
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
     for input_currency_id_str, output_currency_id_str in settings.telegram_rate_pairs:
-        input_currency = await CurrencyRepository().get_by_id_str(id_str=input_currency_id_str)
+        input_currency = await CurrencyRepository().get(id_str=input_currency_id_str)
         input_method = await MethodRepository().get(currency=input_currency, is_rate_default=True)
         if not input_method:
             continue
-        output_currency = await CurrencyRepository().get_by_id_str(id_str=output_currency_id_str)
+        output_currency = await CurrencyRepository().get(id_str=output_currency_id_str)
         output_method = await MethodRepository().get(currency=output_currency, is_rate_default=True)
         if not output_method:
             continue
