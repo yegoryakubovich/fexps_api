@@ -15,23 +15,11 @@
 #
 
 
-from fastapi import Depends
-from pydantic import Field, BaseModel
+import logging
 
-from app.services.notification import NotificationService
-from app.utils import Router, Response
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
-router = Router(
-    prefix='/send',
-)
-
-
-class TelegramSendNotificationSchema(BaseModel):
-    token: str = Field(min_length=32, max_length=64)
-
-
-@router.get()
-async def route(schema: TelegramSendNotificationSchema = Depends()):
-    result = await NotificationService().send_notification_by_task(token=schema.token)
-    return Response(**result)
+async def telegram_create():
+    logging.info('Start telegram_create')
+    await fexps_api_client.task.telegrams.create()

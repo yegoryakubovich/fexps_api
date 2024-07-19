@@ -13,13 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-import logging
-
-from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
-
-
-async def telegram_update_image():
-    logging.info('Start telegram_update_image')
-    await fexps_api_client.task.telegrams.update_image()

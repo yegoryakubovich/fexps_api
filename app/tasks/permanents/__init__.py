@@ -21,6 +21,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.tasks.permanents.files.keys.close_check import file_key_close_check
+from app.tasks.permanents.notifications.send import notification_send
 from app.tasks.permanents.rates.keep import rate_keep
 from app.tasks.permanents.rates.keep_pair import rate_keep_pair
 from app.tasks.permanents.rates.parsers.bybit import rate_parse_bybit
@@ -30,9 +31,8 @@ from app.tasks.permanents.requests.states.input_reserved import request_state_in
 from app.tasks.permanents.requests.states.output_reserved import request_state_output_reserved_check
 from app.tasks.permanents.requisites.empty_check import empty_check
 from app.tasks.permanents.sync_gd import sync as go_sync_gd
-from app.tasks.permanents.telegram.send_image import telegram_send_image
-from app.tasks.permanents.telegram.send_notification import telegram_send_notification
-from app.tasks.permanents.telegram.update_image import telegram_update_image
+from app.tasks.permanents.telegrams.create import telegram_create
+from app.tasks.permanents.telegrams.update import telegram_update
 from app.utils.logger import config_logger
 
 TASKS = []
@@ -57,7 +57,7 @@ TASKS += [
 ]
 # Telegram
 TASKS += [
-    telegram_send_notification,
+    notification_send,
 ]
 
 
@@ -87,16 +87,16 @@ async def start_app() -> None:
         minute=59,
     )
     scheduler.add_job(
-        name='telegram_image_poster',
-        func=telegram_send_image,
+        name='telegram_create',
+        func=telegram_create,
         misfire_grace_time=30,
         trigger='cron',
         hour=12,
         minute=1,
     )
     scheduler.add_job(
-        name='telegram_image_updater',
-        func=telegram_update_image,
+        name='telegram_update',
+        func=telegram_update,
         misfire_grace_time=30,
         trigger='cron',
         minute=1,
