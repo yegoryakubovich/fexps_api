@@ -27,7 +27,7 @@ class CommissionPackValueRepository(BaseRepository[CommissionPackValue]):
 
     async def get_by_value(self, commission_pack: CommissionPack, value: int) -> CommissionPackValue:
         custom_where = and_(self.model.value_from <= value, value <= self.model.value_to)
-        result = await self.get(custom_where=custom_where)
+        result = await self.get(custom_where=custom_where, commission_pack=commission_pack)
         if not result:
             custom_where = and_(self.model.value_from <= value, self.model.value_to == 0)
             result = await self.get(custom_where=custom_where, commission_pack=commission_pack)

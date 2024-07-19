@@ -82,7 +82,7 @@ def image_draw_center(image_draw, coordinates, text):
     )
 
 
-async def image_create(commission_pack: CommissionPack, ):
+async def image_create(commission_pack: CommissionPack):
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
     image_input_path = f'{settings.path_telegram}/source/{commission_pack.filename}'
     image_output_path = f'{settings.path_telegram}/images/{commission_pack.filename}'
