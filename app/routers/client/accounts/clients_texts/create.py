@@ -29,7 +29,7 @@ router = Router(
 class AccountClientTextCreateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
     client_text_id: int = Field()
-    value: str = Field(min_length=1, max_length=128)
+    value: str = Field(min_length=1, max_length=2048)
 
 
 @router.post()
