@@ -71,8 +71,8 @@ class RateService(BaseService):
         for method in await MethodRepository().get_list():
             for rate_type in [RateTypes.INPUT, RateTypes.OUTPUT]:
                 rate = await calcs_rate_requisite(method=method, rate_type=rate_type)
-                # rate = None
                 source = RateSources.REQUISITE
+                rate = None  # turn off requisite rate
                 if not rate:
                     rate = await calcs_rate_default(method=method, rate_type=rate_type)
                     source = RateSources.DEFAULT

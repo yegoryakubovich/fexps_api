@@ -82,13 +82,40 @@ def image_draw_center(image_draw, coordinates, text):
     )
 
 
-async def image_create(commission_pack: CommissionPack):
+async def get_pair_rate(
+        commission_pack: CommissionPack,
+        input_method: Method,
+        output_method: Method,
+) -> Optional[tuple]:
+    rate_pair = await RatePairRepository().get_actual(
+        commission_pack=commission_pack,
+        input_method=input_method,
+        output_method=output_method,
+    )
+    if not rate_pair:
+        return
+    rate_float = value_to_float(value=rate_pair.rate, decimal=rate_pair.rate_decimal)
+    if f'{input_method.currency.id_str}{output_method.currency.id_str}' in ['usdusdt', 'usdtusd']:
+        rate_float = (1 - rate_float) * 100
+        if rate_float < 0:
+            rate_float = -rate_float
+        type_ = 'percent'
+    else:
+        if rate_float < 1:
+            rate_float = 1 / rate_float
+        type_ = 'value'
+    return round(rate_float, 2), type_
+
+
+async def post_create_sowapay(commission_pack: CommissionPack) -> list[dict]:
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
-    image_input_path = f'{settings.path_telegram}/source/{commission_pack.filename}'
-    image_output_path = f'{settings.path_telegram}/images/{commission_pack.filename}'
+    image_input_path = f'{settings.path_telegram}/source/sowapay.png'
+    image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
-    for input_currency_id_str, output_currency_id_str in settings.telegram_rate_pairs:
+    for input_currency_id_str, output_currency_id_str in [
+        ('rub', 'usd'), ('usd', 'rub'), ('usdt', 'usd'), ('usd', 'usdt'),
+    ]:
         input_currency = await CurrencyRepository().get(id_str=input_currency_id_str)
         input_method = await MethodRepository().get(currency=input_currency, is_rate_default=True)
         if not input_method:
@@ -120,29 +147,11 @@ async def image_create(commission_pack: CommissionPack):
         fill='#ffffff',
     )
     image.save(image_output_path)
-    return image_output_path
-
-
-async def get_pair_rate(
-        commission_pack: CommissionPack,
-        input_method: Method,
-        output_method: Method,
-) -> Optional[tuple]:
-    rate_pair = await RatePairRepository().get_actual(
-        commission_pack=commission_pack,
-        input_method=input_method,
-        output_method=output_method,
-    )
-    if not rate_pair:
-        return
-    rate_float = value_to_float(value=rate_pair.rate, decimal=rate_pair.rate_decimal)
-    if f'{input_method.currency.id_str}{output_method.currency.id_str}' in ['usdusdt', 'usdtusd']:
-        rate_float = (1 - rate_float) * 100
-        if rate_float < 0:
-            rate_float = -rate_float
-        type_ = 'percent'
-    else:
-        if rate_float < 1:
-            rate_float = 1 / rate_float
-        type_ = 'value'
-    return round(rate_float, 2), type_
+    return [
+        {
+            'name': 'default',
+            'image': image_output_path,
+            'text': get_post_text(),
+            'reply_markup': get_post_keyboard(),
+        },
+    ]

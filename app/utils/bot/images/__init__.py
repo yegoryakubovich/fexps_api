@@ -13,20 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from sqlalchemy import Column, BigInteger, Boolean, String, ForeignKey, JSON
-from sqlalchemy.orm import relationship
-
-from app.db.base_class import Base
-
-
-class TelegramPost(Base):
-    __tablename__ = 'telegrams_posts'
-
-    id = Column(BigInteger, primary_key=True)
-    commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
-    commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
-    data = Column(JSON())
-    text = Column(String(length=512))
-    is_deleted = Column(Boolean, default=False)

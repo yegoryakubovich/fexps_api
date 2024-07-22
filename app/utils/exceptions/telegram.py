@@ -20,7 +20,7 @@ from .base import ApiException
 
 class TelegramImagePathNotFound(ApiException):
     code = 13000
-    message = 'CommissionPack #{commission_pack_id} not found file {filename}'
+    message = 'CommissionPack #{commission_pack_id} not found file'
 
 
 class TelegramMessageNotFound(ApiException):

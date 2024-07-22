@@ -41,12 +41,6 @@ class Settings(BaseSettings):
     telegram_about: str
     telegram_info: str
     telegram_reviews: str
-    telegram_rate_pairs: list = [
-        ('rub', 'usd'),
-        ('usd', 'rub'),
-        ('usdt', 'usd'),
-        ('usd', 'usdt'),
-    ]
 
     root_token: str
     site_url: str
