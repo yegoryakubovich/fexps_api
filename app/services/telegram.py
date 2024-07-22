@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
+import asyncio
 
 from aiogram import Bot
 from aiogram.types import FSInputFile, InputMediaPhoto
@@ -21,6 +21,7 @@ from aiogram.types import FSInputFile, InputMediaPhoto
 from app.db.models import Session, TelegramPost, Actions, CommissionPackTelegramTypes
 from app.repositories import TelegramPostRepository, CommissionPackRepository
 from app.services.base import BaseService
+from app.utils.bot.images.fexps import post_create_fexps
 from app.utils.bot.images.sowapay import post_create_sowapay
 from app.utils.decorators import session_required
 from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFound
@@ -39,7 +40,7 @@ class TelegramService(BaseService):
                 continue
             posts_datas = None
             if commission_pack.telegram_type == CommissionPackTelegramTypes.FEXPS:
-                posts_datas = None
+                posts_datas = await post_create_fexps(commission_pack=commission_pack)
             elif commission_pack.telegram_type == CommissionPackTelegramTypes.SOWAPAY:
                 posts_datas = await post_create_sowapay(commission_pack=commission_pack)
             if not posts_datas:
@@ -76,6 +77,7 @@ class TelegramService(BaseService):
                     ]
                     continue
                 messages_data[name] = message.message_id
+                await asyncio.sleep(0.1)
             if not messages_data:
                 continue
             telegram_post = await TelegramPostRepository().create(commission_pack=commission_pack, data=messages_data)
@@ -110,7 +112,7 @@ class TelegramService(BaseService):
             message_data = telegram_post.data
             posts_datas = None
             if commission_pack.telegram_type == CommissionPackTelegramTypes.FEXPS:
-                posts_datas = None
+                posts_datas = await post_create_fexps(commission_pack=commission_pack)
             elif commission_pack.telegram_type == CommissionPackTelegramTypes.SOWAPAY:
                 posts_datas = await post_create_sowapay(commission_pack=commission_pack)
             if not posts_datas:
@@ -143,6 +145,7 @@ class TelegramService(BaseService):
                         text=text,
                         reply_markup=reply_markup,
                     )
+                await asyncio.sleep(0.1)
             await self.create_action(
                 model=telegram_post,
                 action=Actions.UPDATE,

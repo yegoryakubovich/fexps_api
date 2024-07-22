@@ -36,13 +36,8 @@ class Settings(BaseSettings):
     flower_user: str
     flower_password: str
 
-    telegram_token: str
-    telegram_manager: str
-    telegram_about: str
-    telegram_info: str
-    telegram_reviews: str
-
     root_token: str
+    telegram_token: str
     site_url: str
     self_url: str
     sync_db_table_name: str

@@ -27,8 +27,9 @@ from app.utils.value import value_to_float
 from config import settings
 
 WEEK_DAY = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье']
-MONTH_DAY = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня']
-MONTH_DAY += ['июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря']
+MONTH_DAY = [
+    'января', 'февраля', 'марта', 'апреля', 'мая', 'июня' 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+]
 
 COORDINATES_RATES = {
     'usdrub': [[1455, 280], [1792, 415]],
@@ -53,12 +54,12 @@ def get_post_text() -> str:
 def get_post_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url=settings.telegram_manager)],
+            [InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url='https://t.me/sowapay_manager')],
             [
-                InlineKeyboardButton(text='🤔 О НАС', url=settings.telegram_about),
-                InlineKeyboardButton(text='💬 ОТЗЫВЫ', url=settings.telegram_reviews),
+                InlineKeyboardButton(text='🤔 О НАС', url='https://t.me/sowapay/3'),
+                InlineKeyboardButton(text='💬 ОТЗЫВЫ', url='https://t.me/sowapay/96'),
             ],
-            [InlineKeyboardButton(text='💰 КАК ПРОХОДИТ ОБМЕН', url=settings.telegram_info)],
+            [InlineKeyboardButton(text='💰 КАК ПРОХОДИТ ОБМЕН', url='https://t.me/sowapay/4')],
         ],
     )
     return keyboard
@@ -144,7 +145,7 @@ async def post_create_sowapay(commission_pack: CommissionPack) -> list[dict]:
     image_draw.text(
         (1245, 116),
         font=FONT_JETBRAINSMONO_REGULAR,
-        text='{}'.format(date_now.strftime('%Y-%m-%d %H:%M (UTC)')),
+        text='{}'.format(date_now.strftime('%Y-%m-%d %H:%M UTC')),
         fill='#ffffff',
     )
     image.save(image_output_path)
