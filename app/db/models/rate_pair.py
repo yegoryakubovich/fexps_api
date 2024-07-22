@@ -27,8 +27,17 @@ class RatePair(Base):
     __tablename__ = 'rates_pairs'
 
     id = Column(BigInteger, primary_key=True)
-    commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
-    commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
+    commission_pack_value_id = Column(
+        BigInteger,
+        ForeignKey('commissions_packs_values.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    commission_pack_value = relationship(
+        'CommissionPackValue',
+        foreign_keys=commission_pack_value_id,
+        uselist=False,
+        lazy='selectin',
+    )
     input_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'))
     input_method = relationship(argument='Method', foreign_keys=input_method_id, uselist=False, lazy='selectin')
     output_method_id = Column(BigInteger, ForeignKey('methods.id', ondelete='SET NULL'))

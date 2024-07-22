@@ -17,7 +17,7 @@
 
 from app.db.models import Rate, Session, RateTypes, RateSources, Method
 from app.repositories import CurrencyRepository, RateParseRepository, MethodRepository, RateRepository, \
-    CommissionPackRepository, RatePairRepository
+    CommissionPackRepository, RatePairRepository, CommissionPackValueRepository
 from app.services.base import BaseService
 from app.utils.calcs.rates.basic.data_rate import calcs_data_rate
 from app.utils.calcs.rates.bybit import calcs_rate_bybit
@@ -33,37 +33,46 @@ class RateService(BaseService):
     @session_required(permissions=['rates'], can_root=True)
     async def keep_pair_by_task(self, session: Session):
         for commission_pack in await CommissionPackRepository().get_list():
-            input_methods: list[Method] = []
-            for input_currency in await CurrencyRepository().get_list():
-                input_methods += [
-                    input_method
-                    for input_method in await MethodRepository().get_list(currency=input_currency)
-                ]
-            output_methods: list[Method] = []
-            for output_currency in await CurrencyRepository().get_list():
-                output_methods += [
-                    output_method
-                    for output_method in await MethodRepository().get_list(currency=output_currency)
-                ]
-            for input_method in input_methods:
-                for output_method in output_methods:
-                    if input_method.currency.id_str == output_method.currency.id_str:
-                        continue
-                    result = await calcs_data_rate(
-                        input_method=input_method,
-                        output_method=output_method,
-                        commission_pack=commission_pack,
-                        input_value=3_000_00,
+            commissions_packs_values = await CommissionPackValueRepository().get_list(commission_pack=commission_pack)
+            for commission_pack_value in commissions_packs_values:
+                if commission_pack_value.value_to == 0:
+                    input_value = commission_pack_value.value_from + 1_000_00
+                else:
+                    input_value = round(
+                        (commission_pack_value.value_to - commission_pack_value.value_from) /
+                        2 + commission_pack_value.value_from
                     )
-                    if not result:
-                        continue
-                    await RatePairRepository().create(
-                        commission_pack=commission_pack,
-                        input_method=input_method,
-                        output_method=output_method,
-                        rate_decimal=result.rate_decimal,
-                        rate=result.rate,
-                    )
+                input_methods: list[Method] = []
+                for input_currency in await CurrencyRepository().get_list():
+                    input_methods += [
+                        input_method
+                        for input_method in await MethodRepository().get_list(currency=input_currency)
+                    ]
+                output_methods: list[Method] = []
+                for output_currency in await CurrencyRepository().get_list():
+                    output_methods += [
+                        output_method
+                        for output_method in await MethodRepository().get_list(currency=output_currency)
+                    ]
+                for input_method in input_methods:
+                    for output_method in output_methods:
+                        if input_method.currency.id_str == output_method.currency.id_str:
+                            continue
+                        result = await calcs_data_rate(
+                            input_method=input_method,
+                            output_method=output_method,
+                            commission_pack=commission_pack,
+                            input_value=input_value,
+                        )
+                        if not result:
+                            continue
+                        await RatePairRepository().create(
+                            commission_pack_value=commission_pack_value,
+                            input_method=input_method,
+                            output_method=output_method,
+                            rate_decimal=result.rate_decimal,
+                            rate=result.rate,
+                        )
         return {}
 
     @session_required(permissions=['rates'], can_root=True)

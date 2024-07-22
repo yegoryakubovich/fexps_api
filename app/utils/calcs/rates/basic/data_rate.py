@@ -47,7 +47,7 @@ async def calcs_data_rate(
     input_value_float = value_to_float(value=input_value)
     input_currency_value_float = input_value_float * input_rate_float
     # commission
-    commission = await get_input_commission(commission_pack=commission_pack, value=input_value)
+    commission = await get_input_commission(commission_pack=commission_pack, value=input_value, value_turn_off=True)
     commission_float = value_to_float(value=commission)
     # output values
     output_value_float = input_value_float - commission_float

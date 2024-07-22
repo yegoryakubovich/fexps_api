@@ -21,8 +21,8 @@ from typing import Optional
 from PIL import Image, ImageDraw, ImageFont
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-from app.db.models import Method, CommissionPack
-from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository
+from app.db.models import Method, CommissionPack, CommissionPackValue
+from app.repositories import RatePairRepository, CurrencyRepository, MethodRepository, CommissionPackValueRepository
 from app.utils.value import value_to_float
 from config import settings
 
@@ -83,12 +83,12 @@ def image_draw_center(image_draw, coordinates, text):
 
 
 async def get_pair_rate(
-        commission_pack: CommissionPack,
+        commission_pack_value: CommissionPackValue,
         input_method: Method,
         output_method: Method,
 ) -> Optional[tuple]:
     rate_pair = await RatePairRepository().get_actual(
-        commission_pack=commission_pack,
+        commission_pack_value=commission_pack_value,
         input_method=input_method,
         output_method=output_method,
     )
@@ -113,6 +113,7 @@ async def post_create_sowapay(commission_pack: CommissionPack) -> list[dict]:
     image_output_path = f'{settings.path_telegram}/images/sowapay.png'
     image = Image.open(image_input_path)
     image_draw = ImageDraw.Draw(image)
+    commission_pack_value = await CommissionPackValueRepository().get(commission_pack=commission_pack)
     for input_currency_id_str, output_currency_id_str in [
         ('rub', 'usd'), ('usd', 'rub'), ('usdt', 'usd'), ('usd', 'usdt'),
     ]:
@@ -125,7 +126,7 @@ async def post_create_sowapay(commission_pack: CommissionPack) -> list[dict]:
         if not output_method:
             continue
         rate_raw = await get_pair_rate(
-            commission_pack=commission_pack,
+            commission_pack_value=commission_pack_value,
             input_method=input_method,
             output_method=output_method,
         )

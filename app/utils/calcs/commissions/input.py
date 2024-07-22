@@ -22,13 +22,19 @@ from app.repositories import CommissionPackValueRepository
 from app.utils.value import value_to_float, value_to_int
 
 
-async def get_input_commission(commission_pack: CommissionPack, value: int) -> int:
+async def get_input_commission(
+        commission_pack: CommissionPack,
+        value: int,
+        value_turn_off: bool = False,
+) -> int:
     commission_pack_value = await CommissionPackValueRepository().get_by_value(
         commission_pack=commission_pack,
         value=value,
     )
     value_float = value_to_float(value=value)
     commission_value_float = value_to_float(value=commission_pack_value.value)
+    if value_turn_off:
+        commission_value_float = 0
     commission_percent_float = value_to_float(value=commission_pack_value.percent)
     commission_float = commission_value_float + (value_float - commission_value_float) * commission_percent_float / 100
     return value_to_int(value=commission_float, round_method=math.ceil)
