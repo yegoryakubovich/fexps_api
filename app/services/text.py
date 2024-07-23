@@ -143,7 +143,7 @@ class TextService(BaseService):
         else:
             new_key = text.key
         await TextRepository().update(
-            model=text,
+            text,
             key=new_key,
             value_default=value_default,
         )
@@ -164,9 +164,7 @@ class TextService(BaseService):
             create_text_pack: bool = True,
     ) -> dict:
         text = await TextRepository().get_by_key(key=key)
-        await TextRepository().delete(
-            model=text,
-        )
+        await TextRepository().delete(text)
         await self.create_action(
             model=text,
             action=Actions.DELETE,

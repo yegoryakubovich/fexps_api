@@ -20,8 +20,8 @@ from .create import router as router_create
 from .delete import router as router_delete
 from .get import router as router_get
 from .get_list import router as router_get_list
+from .update import router as router_update
 from .values import router as router_values
-
 
 router = Router(
     prefix='/commissions/packs',
@@ -30,6 +30,7 @@ router = Router(
         router_create,
         router_get,
         router_get_list,
+        router_update,
         router_delete,
     ],
     tags=['CommissionsPacks'],

@@ -18,7 +18,7 @@ from typing import Optional
 from app.db.models import Text, Language
 from app.repositories.base import BaseRepository
 from app.repositories.text_translation import TextTranslationRepository
-from app.utils.exceptions import ModelDoesNotExist, NoRequiredParameters, TextAlreadyExist
+from app.utils.exceptions import ModelDoesNotExist, TextAlreadyExist
 
 
 class TextRepository(BaseRepository[Text]):
@@ -52,17 +52,9 @@ class TextRepository(BaseRepository[Text]):
 
     async def create(self, key: str, value_default: str) -> Text:
         if await self.get(key=key):
-            raise TextAlreadyExist(kwargs={'key': key})
-        return await super().create(key=key, value_default=value_default)
-
-    async def update_text(self, db_obj: Text, value_default: str = None, new_key: str = None):
-        if value_default:
-            await self.update(db_obj, value_default=value_default)
-        if new_key:
-            await self.update(db_obj, key=new_key)
-        if not value_default and not new_key:
-            raise NoRequiredParameters(
+            raise TextAlreadyExist(
                 kwargs={
-                    'parameters': ['value_default', 'new_key']
-                }
+                    'key': key,
+                },
             )
+        return await super().create(key=key, value_default=value_default)

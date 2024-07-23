@@ -26,19 +26,20 @@ from app.utils.exceptions import ParameterContainError
 
 
 router = Router(
-    prefix='/create',
+    prefix='/update',
 )
 
 
-class CommissionPackCreateSchema(BaseModel):
+class CommissionPackUpdateSchema(BaseModel):
     token: str = Field(min_length=32, max_length=64)
+    id_: int = Field()
     name: str = Field(min_length=1, max_length=1024)
     telegram_chat_id: Optional[int] = Field(default=None)
     telegram_type: Optional[str] = Field(default=None, min_length=1, max_length=1024)
-    is_default: Optional[bool] = Field(default=False)
+    is_default: bool = Field(default=False)
 
     @model_validator(mode='after')
-    def check_scheme(self) -> 'CommissionPackCreateSchema':
+    def check_scheme(self) -> 'CommissionPackUpdateSchema':
         if self.telegram_type not in [None, CommissionPackTelegramTypes.FEXPS, CommissionPackTelegramTypes.SOWAPAY]:
             raise ParameterContainError(
                 kwargs={
@@ -50,9 +51,10 @@ class CommissionPackCreateSchema(BaseModel):
 
 
 @router.post()
-async def route(schema: CommissionPackCreateSchema):
-    result = await CommissionPackService().create_by_admin(
+async def route(schema: CommissionPackUpdateSchema):
+    result = await CommissionPackService().update_by_admin(
         token=schema.token,
+        id_=schema.id_,
         name=schema.name,
         telegram_chat_id=schema.telegram_chat_id,
         telegram_type=schema.telegram_type,

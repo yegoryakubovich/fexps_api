@@ -55,7 +55,7 @@ class TextTranslationService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'text_key': text_key,
-                'language': language,
+                'language': language.id_str,
                 'value': value,
                 'by_admin': True,
             },
@@ -91,7 +91,7 @@ class TextTranslationService(BaseService):
             parameters={
                 'updater': f'session_{session.id}',
                 'text_key': text_key,
-                'language': language,
+                'language': language.id_str,
                 'value': value,
                 'by_admin': True,
             },
@@ -120,7 +120,7 @@ class TextTranslationService(BaseService):
             parameters={
                 'deleter': f'session_{session.id}',
                 'text_key': text_key,
-                'language': language,
+                'language': language.id_str,
                 'by_admin': True,
             },
         )

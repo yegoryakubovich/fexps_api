@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from typing import Optional
 
 from app.db.models import Session, CommissionPack, Actions
@@ -22,6 +21,7 @@ from app.repositories import TextPackRepository, WalletRepository, CommissionPac
     CommissionPackValueRepository, TextRepository
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
+from app.services.text import TextService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 
@@ -34,6 +34,8 @@ class CommissionPackService(BaseService):
             self,
             session: Session,
             name: str,
+            telegram_chat_id: Optional[int],
+            telegram_type: Optional[str],
             is_default: bool,
     ) -> dict:
         name_text = await TextRepository().create(
@@ -43,6 +45,8 @@ class CommissionPackService(BaseService):
         await TextPackRepository().create_all()
         commission_pack = await CommissionPackRepository().create(
             name_text=name_text,
+            telegram_chat_id=telegram_chat_id,
+            telegram_type=telegram_type,
             is_default=is_default,
         )
         await self.create_action(
@@ -51,6 +55,8 @@ class CommissionPackService(BaseService):
             parameters={
                 'creator': f'session_{session.id}',
                 'name_text': name_text.key,
+                'telegram_chat_id': telegram_chat_id,
+                'telegram_type': telegram_type,
                 'is_default': is_default,
             },
         )
@@ -80,6 +86,38 @@ class CommissionPackService(BaseService):
                 for commission_pack in await CommissionPackRepository().get_list()
             ],
         }
+
+    @session_required(permissions=['commissions_packs'])
+    async def update_by_admin(
+            self,
+            session: Session,
+            id_: int,
+            name: str,
+            telegram_chat_id: Optional[int],
+            telegram_type: Optional[str],
+            is_default: bool,
+    ) -> dict:
+        commission_pack = await CommissionPackRepository().get_by_id(id_=id_)
+        updates = {}
+        await TextService().update_by_admin(session=session, key=commission_pack.name_text.key, value_default=name)
+        if commission_pack.telegram_chat_id != telegram_chat_id:
+            updates['telegram_chat_id'] = telegram_chat_id
+        if commission_pack.telegram_type != telegram_type:
+            updates['telegram_type'] = telegram_type
+        if commission_pack.is_default != is_default:
+            updates['is_default'] = is_default
+        if updates:
+            await CommissionPackRepository().update(commission_pack, **updates)
+            await self.create_action(
+                model=commission_pack,
+                action=Actions.UPDATE,
+                parameters={
+                    'updater': f'session_{session.id}',
+                    'name': name,
+                    **updates,
+                },
+            )
+        return {}
 
     @session_required(permissions=['commissions_packs'])
     async def delete_by_admin(
@@ -116,5 +154,7 @@ class CommissionPackService(BaseService):
         return {
             'id': commission_pack.id,
             'name_text': commission_pack.name_text.key,
+            'telegram_chat_id': commission_pack.telegram_chat_id,
+            'telegram_type': commission_pack.telegram_type,
             'is_default': commission_pack.is_default,
         }
