@@ -20,10 +20,10 @@ from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
     MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes, \
-    RequestTypes
+    RequestTypes, Account
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
     FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
-    RequestRequisiteRepository, WalletBanRequisiteRepository
+    RequestRequisiteRepository, WalletBanRequisiteRepository, MessageRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
@@ -66,7 +66,7 @@ class OrderService(BaseService):
                 ),
             )
         return {
-            'order': await self.generate_order_dict(order=order),
+            'order': await self.generate_order_dict(order=order, account=account),
         }
 
     @session_required()
@@ -107,7 +107,8 @@ class OrderService(BaseService):
                         order_ids.append(order.id)
         return {
             'orders': [
-                await self.generate_order_dict(order=order) for order in orders
+                await self.generate_order_dict(order=order, account=account)
+                for order in orders
             ],
         }
 
@@ -132,7 +133,7 @@ class OrderService(BaseService):
             )
         return {
             'orders': [
-                await self.generate_order_dict(order=order)
+                await self.generate_order_dict(order=order, account=account)
                 for order in await OrderRepository().get_list(request=request)
             ],
         }
@@ -152,7 +153,7 @@ class OrderService(BaseService):
         )
         return {
             'orders': [
-                await self.generate_order_dict(order=order)
+                await self.generate_order_dict(order=order, account=account)
                 for order in await OrderRepository().get_list(requisite=requisite)
             ],
         }
@@ -433,13 +434,16 @@ class OrderService(BaseService):
         return {}
 
     @staticmethod
-    async def generate_order_dict(order: Order) -> Optional[dict]:
+    async def generate_order_dict(order: Order, account: Optional[Account] = None) -> Optional[dict]:
         if not order:
             return
         method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
         order_request = await OrderRequestRepository().get(order=order, state=OrderRequestStates.WAIT)
         if order_request:
             order_request = await OrderRequestService().generate_order_request_dict(order_request=order_request)
+        messages_not_read = None
+        if account:
+            messages_not_read = await MessageRepository().get_list_no_read(account=account, order=order)
         return {
             'id': order.id,
             'type': order.type,
@@ -457,6 +461,7 @@ class OrderService(BaseService):
             'input_scheme_fields': order.input_scheme_fields,
             'input_fields': order.input_fields,
             'order_request': order_request,
+            'chat_is_read': bool(messages_not_read),
         }
 
     @staticmethod

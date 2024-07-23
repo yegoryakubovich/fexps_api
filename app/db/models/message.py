@@ -44,4 +44,5 @@ class Message(Base):
     order = relationship('Order', foreign_keys=order_id, uselist=False, lazy='selectin')
     role = Column(String(length=32))
     text = Column(Text)
+    is_read = Column(Boolean, default=False)
     is_deleted = Column(Boolean, default=False)

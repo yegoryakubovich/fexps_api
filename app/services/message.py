@@ -35,54 +35,6 @@ class MessageService(BaseService):
     model = Message
 
     @session_required()
-    async def get(
-            self,
-            session: Session,
-            id_: int,
-    ) -> dict:
-        account = session.account
-        message = await MessageRepository().get_by_id(id_=id_)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[message.order.request.wallet, message.order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Order',
-                    'id_value': message.order.id,
-                },
-            ),
-        )
-        return {
-            'message': await self.generate_message_dict(message=message),
-        }
-
-    @session_required()
-    async def get_list(
-            self,
-            session: Session,
-            order_id: int,
-    ) -> dict:
-        account = session.account
-        order = await OrderRepository().get_by_id(id_=order_id)
-        await WalletService().check_permission(
-            account=account,
-            wallets=[order.request.wallet, order.requisite.wallet],
-            exception=OrderNotPermission(
-                kwargs={
-                    'field': 'Order',
-                    'id_value': order.id,
-                },
-            ),
-        )
-        messages = await MessageRepository().get_list(order_id=order_id)
-        return {
-            'messages': [
-                await self.generate_message_dict(message=message)
-                for message in messages
-            ]
-        }
-
-    @session_required()
     async def chat(
             self,
             session: Session,
@@ -134,6 +86,57 @@ class MessageService(BaseService):
             order_id=order.id,
         )
         return await self.generate_message_dict(message=message)
+
+    @session_required()
+    async def get(
+            self,
+            session: Session,
+            id_: int,
+    ) -> dict:
+        account = session.account
+        message = await MessageRepository().get_by_id(id_=id_)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[message.order.request.wallet, message.order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': message.order.id,
+                },
+            ),
+        )
+        if session.account_id != message.account_id:
+            await MessageRepository().update(message, is_read=True)
+        return {
+            'message': await self.generate_message_dict(message=message),
+        }
+
+    @session_required()
+    async def get_list(
+            self,
+            session: Session,
+            order_id: int,
+    ) -> dict:
+        account = session.account
+        order = await OrderRepository().get_by_id(id_=order_id)
+        await WalletService().check_permission(
+            account=account,
+            wallets=[order.request.wallet, order.requisite.wallet],
+            exception=OrderNotPermission(
+                kwargs={
+                    'field': 'Order',
+                    'id_value': order.id,
+                },
+            ),
+        )
+        messages = []
+        for message in await MessageRepository().get_list(order_id=order_id):
+            if session.account_id != message.account_id:
+                await MessageRepository().update(message, is_read=True)
+            messages.append(await self.generate_message_dict(message=message))
+        return {
+            'messages': messages,
+        }
 
     async def send_to_chat(
             self,

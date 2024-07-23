@@ -15,9 +15,17 @@
 #
 
 
-from app.db.models import Message
+from typing import List
+
+from sqlalchemy.sql.operators import and_
+
+from app.db.models import Message, Account
 from app.repositories.base import BaseRepository
 
 
 class MessageRepository(BaseRepository[Message]):
     model = Message
+
+    async def get_list_no_read(self, account: Account, **filters) -> List[Message]:
+        custom_where = and_(self.model.account != account, self.model.is_read == False)
+        return await self.get_list(custom_where=custom_where, **filters)
