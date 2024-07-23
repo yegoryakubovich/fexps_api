@@ -138,13 +138,6 @@ class TelegramService(BaseService):
                         ),
                         reply_markup=reply_markup,
                     )
-                else:
-                    await bot.edit_message_text(
-                        chat_id=commission_pack.telegram_chat_id,
-                        message_id=message_id,
-                        text=text,
-                        reply_markup=reply_markup,
-                    )
                 await asyncio.sleep(0.1)
             await self.create_action(
                 model=telegram_post,
