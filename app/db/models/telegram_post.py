@@ -28,5 +28,4 @@ class TelegramPost(Base):
     commission_pack_id = Column(BigInteger, ForeignKey('commissions_packs.id', ondelete='SET NULL'), nullable=True)
     commission_pack = relationship('CommissionPack', foreign_keys=commission_pack_id, uselist=False, lazy='selectin')
     data = Column(JSON())
-    text = Column(String(length=512))
     is_deleted = Column(Boolean, default=False)

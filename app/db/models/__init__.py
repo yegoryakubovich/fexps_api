@@ -16,7 +16,7 @@
 
 
 from .action import Action, Actions
-from .client_text import ClientText
+from .client_text import ClientText, ClientTextTypes
 from .commission_pack import CommissionPack, CommissionPackTelegramTypes
 from .currency import Currency
 from .file import File

@@ -21,11 +21,18 @@ from sqlalchemy.orm import relationship
 from app.db.base_class import Base
 
 
+class ClientTextTypes:
+    REQUEST_INPUT = 'request_input'
+    REQUEST_OUTPUT = 'request_output'
+    REQUEST_ALL = 'request_all'
+
+
 class ClientText(Base):
     __tablename__ = 'clients_texts'
 
     id = Column(BigInteger, primary_key=True)
     key = Column(String(length=128))
+    type = Column(String(length=32))
     name_text_id = Column(BigInteger, ForeignKey('texts.id', ondelete='SET NULL'), nullable=True)
     name_text = relationship('Text', foreign_keys=name_text_id, uselist=False, lazy='selectin')
     is_deleted = Column(Boolean, default=False)

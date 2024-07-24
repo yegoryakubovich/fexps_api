@@ -95,5 +95,6 @@ class ClientTextService(BaseService):
         return {
             'id': client_text.id,
             'key': client_text.key,
+            'type': client_text.type,
             'name_text': client_text.name_text.key,
         }
