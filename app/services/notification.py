@@ -16,6 +16,7 @@
 
 
 import asyncio
+import logging
 from typing import Optional, List
 
 from aiogram import Bot
@@ -573,16 +574,17 @@ class NotificationService(BaseService):
                 field_value = input_fields.get(item_key)
                 if not field_value:
                     continue
+                i = len(payment_data) + 1
+                field_name = await TextRepository().get_by_key_or_none(key=item_text_key, language=account.language)
                 if item_type == MethodFieldTypes.IMAGE:
                     files += [await FileRepository().get_by_id_str(id_str=id_str) for id_str in field_value]
+                    payment_data.append(f'4.{i}. {field_name}: Image')
                 else:
-                    i = len(payment_data) + 1
-                    field_name = await TextRepository().get_by_key_or_none(key=item_text_key, language=account.language)
-                    payment_data.append(f'4.{i}. {field_name}: {field_value}')
+                    payment_data.append(f'4.{i}. {field_name}: <code>{field_value}</code>')
             await self.create(
                 account=account,
                 notification_type=NotificationTypes.REQUEST,
-                text_key='notification_request_order_input_confirmation',
+                text_key='notification_request_order_output_confirmation',
                 files=files,
                 request_id=request.id,
                 order_id=order.id,
@@ -826,12 +828,17 @@ class NotificationService(BaseService):
                 field_value = input_fields.get(item_key)
                 if not field_value:
                     continue
+                i = len(payment_data) + 1
+                field_name = await TextRepository().get_by_key_or_none(key=item_text_key, language=account.language)
                 if item_type == MethodFieldTypes.IMAGE:
                     files += [await FileRepository().get_by_id_str(id_str=id_str) for id_str in field_value]
+                    payment_data.append(f'4.{i}. {field_name}: Image')
                 else:
-                    i = len(payment_data) + 1
-                    field_name = await TextRepository().get_by_key_or_none(key=item_text_key, language=account.language)
-                    payment_data.append(f'4.{i}. {field_name}: {field_value}')
+                    payment_data.append(f'4.{i}. {field_name}: <code>{field_value}</code>')
+            logging.critical(requisite_fields)
+            logging.critical(requisite_data)
+            logging.critical(input_fields)
+            logging.critical(payment_data)
             await self.create(
                 account=account,
                 notification_type=NotificationTypes.REQUISITE,
