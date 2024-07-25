@@ -23,8 +23,8 @@ from app.repositories import MessageRepository, OrderRepository, WalletAccountRe
 from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.file import FileService
+from app.services.notification import NotificationService
 from app.services.wallet import WalletService
-from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderNotPermission
 from app.utils.websockets.chat import chat_connections_manager_fastapi
@@ -70,21 +70,20 @@ class MessageService(BaseService):
                     continue
                 await OrderFileRepository().create_not_exists(order=order, file=file_key.file)
                 await MessageFileRepository().create_not_exists(message=message, file=file_key.file)
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.request.wallet,
-            notification_type=NotificationTypes.CHAT,
-            account_id_black_list=[account.id],
-            text_key='notification_chat_new_message',
-            order_id=order.id,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.CHAT,
-            account_id_black_list=[account.id],
-            text_key='notification_chat_new_message',
-            order_id=order.id,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.request.wallet,
+        #     notification_type=NotificationTypes.CHAT,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_chat_new_message',
+        #     order_id=order.id,
+        # )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.requisite.wallet,
+        #     notification_type=NotificationTypes.CHAT,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_chat_new_message',
+        #     order_id=order.id,
+        # )
         return await self.generate_message_dict(message=message)
 
     @session_required()

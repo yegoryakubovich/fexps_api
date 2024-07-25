@@ -19,13 +19,14 @@ from typing import Optional
 
 from app.db.models import AccountClientText, Account
 from app.repositories.base import BaseRepository
+from app.repositories.client_text import ClientTextRepository
 from app.utils.exceptions import ModelDoesNotExist
 
 
 class AccountClientTextRepository(BaseRepository[AccountClientText]):
     model = AccountClientText
 
-    async def get_by_account_and_id(self, account: Account, id_: int) -> Optional[model]:
+    async def get_by_account_and_id(self, account: Account, id_: int) -> Optional[AccountClientText]:
         result = await self.get(account=account, id=id_)
         if not result:
             raise ModelDoesNotExist(
@@ -36,3 +37,9 @@ class AccountClientTextRepository(BaseRepository[AccountClientText]):
                 },
             )
         return result
+
+    async def get_by_key(self, key: str, **kwargs) -> Optional[AccountClientText]:
+        client_text = await ClientTextRepository().get(key=key)
+        if not client_text:
+            return
+        return await self.get(client_text=client_text, **kwargs)

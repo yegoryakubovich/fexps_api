@@ -30,3 +30,11 @@ def value_to_int(value: Optional[float], decimal: int = 2, round_method=round) -
     if not value and value != 0:
         return
     return round_method(value * (10 ** decimal))
+
+
+def value_to_str(value: Optional[float]) -> Optional[str]:
+    if isinstance(value, str):
+        value = value.replace(',', '.')
+    if not value and value != 0:
+        return ''
+    return f'{float(value):_}'.replace('_', ' ')

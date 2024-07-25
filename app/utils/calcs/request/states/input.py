@@ -20,9 +20,9 @@ import logging
 from app.db.models import Request, RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons, \
     NotificationTypes
 from app.repositories import RequestRepository, OrderRepository, WalletBanRequestRepository
+from app.services.notification import NotificationService
 from app.services.transfer_system import TransferSystemService
 from app.services.wallet_ban import WalletBanService
-from app.utils.bot.notification import BotNotification
 
 
 async def request_check_state_input(request: Request):
@@ -58,7 +58,7 @@ async def request_check_state_input(request: Request):
         await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
     logging.info(f'Request #{request.id}    {request.state}->{next_state}')
     await RequestRepository().update(request, state=next_state, difference_rate=difference_rate)
-    await BotNotification().send_notification_by_wallet(
+    await NotificationService().create_notification_by_wallet(
         wallet=request.wallet,
         notification_type=NotificationTypes.REQUEST,
         text_key=f'notification_request_update_state_{next_state}',

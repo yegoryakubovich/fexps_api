@@ -13,18 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+
 import asyncio
 
 from aiogram import Bot
+from aiogram.enums import ParseMode
 from aiogram.types import FSInputFile, InputMediaPhoto
 
 from app.db.models import Session, TelegramPost, Actions, CommissionPackTelegramTypes
 from app.repositories import TelegramPostRepository, CommissionPackRepository
 from app.services.base import BaseService
-from app.utils.bot.images.fexps import post_create_fexps
-from app.utils.bot.images.sowapay import post_create_sowapay
 from app.utils.decorators import session_required
 from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFound
+from app.utils.telegram_images.fexps import post_create_fexps
+from app.utils.telegram_images.sowapay import post_create_sowapay
 from config import settings
 
 
@@ -68,6 +71,7 @@ class TelegramService(BaseService):
                         chat_id=commission_pack.telegram_chat_id,
                         text=text,
                         reply_markup=reply_markup,
+                        parse_mode=ParseMode.HTML,
                     )
                 if not message:
                     warnings += [

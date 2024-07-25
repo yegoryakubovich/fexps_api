@@ -20,7 +20,7 @@ from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
     MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes, \
-    RequestTypes, Account
+    RequestTypes, Account, File
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
     FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
     RequestRequisiteRepository, WalletBanRequisiteRepository, MessageRepository
@@ -29,13 +29,13 @@ from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.message import MessageService
 from app.services.method import MethodService
+from app.services.notification import NotificationService
 from app.services.order_request import OrderRequestService
 from app.services.request import RequestService
 from app.services.requisite import RequisiteService
 from app.services.transfer import TransferService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
-from app.utils.bot.notification import BotNotification
 from app.utils.calcs.request.states.input import request_check_state_input
 from app.utils.calcs.request.states.output import request_check_state_output
 from app.utils.decorators import session_required
@@ -207,23 +207,22 @@ class OrderService(BaseService):
             role=MessageRoles.SYSTEM,
             text=f'order_update_state_{next_state}',
         )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.request.wallet,
+        #     notification_type=NotificationTypes.ORDER,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_order_update_state',
+        #     order_id=order.id,
+        #     state=next_state,
+        # )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.requisite.wallet,
+        #     notification_type=NotificationTypes.ORDER,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_order_update_state',
+        #     order_id=order.id,
+        #     state=next_state,
+        # )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -297,10 +296,12 @@ class OrderService(BaseService):
                 continue
             text = await TextRepository().get_by_key(key=field_scheme['name_text_key'])
             if field_scheme['type'] == MethodFieldTypes.IMAGE:
+                files = []
                 for file_key in await FileKeyRepository().get_list(key=field_value):
                     if not file_key.file:
                         continue
                     await OrderFileRepository().create(order=order, file=file_key.file)
+                    files.append(file_key.file.id_str)
                 await MessageService().send_to_chat(
                     token=token,
                     order_id=order.id,
@@ -308,7 +309,7 @@ class OrderService(BaseService):
                     text=text.value_default,
                     files_key=field_value,
                 )
-                input_fields[field_key] = 'added'
+                input_fields[field_key] = files
             else:
                 await MessageService().send_to_chat(
                     token=token,
@@ -324,23 +325,12 @@ class OrderService(BaseService):
             role=MessageRoles.SYSTEM,
             text=f'order_update_state_{next_state}',
         )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
+        if order.type == OrderTypes.INPUT:
+            await NotificationService().create_notification_request_order_input_confirmation(order=order)
+            await NotificationService().create_notification_requisite_order_input_confirmation(order=order)
+        elif order.type == OrderTypes.OUTPUT:
+            await NotificationService().create_notification_request_order_output_confirmation(order=order)
+            await NotificationService().create_notification_requisite_order_output_confirmation(order=order)
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -402,23 +392,22 @@ class OrderService(BaseService):
             role=MessageRoles.SYSTEM,
             text=f'order_update_state_{next_state}',
         )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            account_id_black_list=[account.id],
-            text_key='notification_order_update_state',
-            order_id=order.id,
-            state=next_state,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.request.wallet,
+        #     notification_type=NotificationTypes.ORDER,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_order_update_state',
+        #     order_id=order.id,
+        #     state=next_state,
+        # )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=order.requisite.wallet,
+        #     notification_type=NotificationTypes.ORDER,
+        #     account_id_black_list=[account.id],
+        #     text_key='notification_order_update_state',
+        #     order_id=order.id,
+        #     state=next_state,
+        # )
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

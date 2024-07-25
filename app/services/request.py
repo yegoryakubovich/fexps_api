@@ -21,7 +21,7 @@ from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    NotificationTypes, RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
+    RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
     CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository, \
     RequisiteRepository
@@ -30,12 +30,12 @@ from app.services.action import ActionService
 from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
 from app.services.method import MethodService
+from app.services.notification import NotificationService
 from app.services.order_request import OrderRequestService
 from app.services.requisite_data import RequisiteDataService
 from app.services.transfer_system import TransferSystemService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
-from app.utils.bot.notification import BotNotification
 from app.utils.calcs.request.rate.all import calcs_request_rate_all
 from app.utils.calcs.request.rate.check import calcs_request_check_rate
 from app.utils.calcs.request.rate.input import calcs_request_rate_input
@@ -71,6 +71,7 @@ class RequestService(BaseService):
             input_value: Optional[int],
             output_value: Optional[int],
     ) -> dict:
+        account = session.account
         start_value, end_value = input_value, output_value
         wallet = await WalletRepository().get_by_id(id_=wallet_id)
         input_method, output_method, output_requisite_data = None, None, None
@@ -154,12 +155,7 @@ class RequestService(BaseService):
         )
         if wallet_ban:
             await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
-        await BotNotification().send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST,
-            text_key='notification_request_create',
-            request_id=request.id,
-        )
+        await NotificationService().create_notification_request_create(request=request)
         await self.create_action(
             model=request,
             action=Actions.CREATE,
@@ -425,12 +421,12 @@ class RequestService(BaseService):
             )
             await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await RequestRepository().update(request, state=next_state)
-        await BotNotification().send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST,
-            text_key=f'notification_request_update_state_{next_state}',
-            request_id=request.id,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=request.wallet,
+        #     notification_type=NotificationTypes.REQUEST,
+        #     text_key=f'notification_request_update_state_{next_state}',
+        #     request_id=request.id,
+        # )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -463,13 +459,13 @@ class RequestService(BaseService):
             ),
         )
         await RequestRepository().update(request, name=name)
-        await BotNotification().send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.REQUEST,
-            text_key=f'notification_request_update_name',
-            request_id=request.id,
-            name=name,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=request.wallet,
+        #     notification_type=NotificationTypes.REQUEST,
+        #     text_key=f'notification_request_update_name',
+        #     request_id=request.id,
+        #     name=name,
+        # )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -495,12 +491,7 @@ class RequestService(BaseService):
             request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
             if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
                 await RequestService().rate_fixed_off(request=request)
-                await BotNotification().send_notification_by_wallet(
-                    wallet=request.wallet,
-                    notification_type=NotificationTypes.REQUEST,
-                    text_key=f'notification_request_rate_fixed_stop',
-                    request_id=request.id,
-                )
+                await NotificationService().create_notification_request_rate_fixed_stop(request=request)
         return {}
 
     @session_required(permissions=['requests'], can_root=True)
@@ -522,12 +513,12 @@ class RequestService(BaseService):
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
-            await BotNotification().send_notification_by_wallet(
-                wallet=request.wallet,
-                notification_type=NotificationTypes.REQUEST,
-                text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
-                request_id=request.id,
-            )
+            # await NotificationService().create_notification_by_wallet(
+            #     wallet=request.wallet,
+            #     notification_type=NotificationTypes.REQUEST,
+            #     text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
+            #     request_id=request.id,
+            # )
         return {}
 
     @session_required(permissions=['requests'], can_root=True)
@@ -554,29 +545,10 @@ class RequestService(BaseService):
                 for wait_order in waiting_orders:
                     logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
                     await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
-                    bot_notification = BotNotification()
-                    await bot_notification.send_notification_by_wallet(
-                        wallet=wait_order.request.wallet,
-                        notification_type=NotificationTypes.ORDER,
-                        text_key='notification_order_update_state',
-                        order_id=wait_order.id,
-                        state=OrderStates.PAYMENT,
-                    )
-                    await bot_notification.send_notification_by_wallet(
-                        wallet=wait_order.requisite.wallet,
-                        notification_type=NotificationTypes.ORDER,
-                        text_key='notification_order_update_state',
-                        order_id=wait_order.id,
-                        state=OrderStates.PAYMENT,
-                    )
+                    await NotificationService().create_notification_requisite_order_input_create(order=wait_order)
                 logging.info(f'request #{request.id}   {request.state}->{RequestStates.INPUT}')
                 await RequestRepository().update(request, state=RequestStates.INPUT)
-                await BotNotification().send_notification_by_wallet(
-                    wallet=request.wallet,
-                    notification_type=NotificationTypes.REQUEST,
-                    text_key=f'notification_request_update_state_{RequestStates.INPUT}',
-                    request_id=request.id,
-                )
+                await NotificationService().create_notification_request_orders_input_create(request=request)
                 logging.info(f'request input reservation #{request.id}    finished')
                 continue
             # create missing orders
@@ -647,30 +619,11 @@ class RequestService(BaseService):
                 for wait_order in waiting_orders:
                     logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
                     await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
-                    bot_notification = BotNotification()
-                    await bot_notification.send_notification_by_wallet(
-                        wallet=wait_order.request.wallet,
-                        notification_type=NotificationTypes.ORDER,
-                        text_key='notification_order_update_state',
-                        order_id=wait_order.id,
-                        state=OrderStates.PAYMENT,
-                    )
-                    await bot_notification.send_notification_by_wallet(
-                        wallet=wait_order.requisite.wallet,
-                        notification_type=NotificationTypes.ORDER,
-                        text_key='notification_order_update_state',
-                        order_id=wait_order.id,
-                        state=OrderStates.PAYMENT,
-                    )
-                if not waiting_orders:
-                    logging.info(f'request #{request.id}    {request.state}->{RequestStates.OUTPUT}')
-                    await RequestRepository().update(request, state=RequestStates.OUTPUT)  # Started next state
-                    await BotNotification().send_notification_by_wallet(
-                        wallet=request.wallet,
-                        notification_type=NotificationTypes.REQUEST,
-                        text_key=f'notification_request_update_state_{RequestStates.OUTPUT}',
-                        request_id=request.id,
-                    )
+                    await NotificationService().create_notification_requisite_order_output_create(order=wait_order)
+                logging.info(f'request #{request.id}    {request.state}->{RequestStates.OUTPUT}')
+                await RequestRepository().update(request, state=RequestStates.OUTPUT)
+                await NotificationService().create_notification_request_orders_output_create(request=request)
+                logging.info(f'request output reservation #{request.id}    finished')
                 continue
             # create missing orders
             need_currency_value = await calcs_requisites_output_need_currency_value(request=request)

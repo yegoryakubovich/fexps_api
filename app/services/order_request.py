@@ -20,11 +20,11 @@ from typing import Optional
 
 from app.db.models import Session, Actions, OrderRequest, OrderRequestTypes, OrderRequestStates, Order, OrderStates, \
     OrderCanceledReasons, MessageRoles, NotificationTypes, OrderTypes, RequestStates
-from app.repositories import OrderRepository, OrderRequestRepository, WalletAccountRepository
+from app.repositories import OrderRepository, OrderRequestRepository
 from app.services.base import BaseService
 from app.services.message import MessageService
+from app.services.notification import NotificationService
 from app.services.wallet import WalletService
-from app.utils.bot.notification import BotNotification
 from app.utils.decorators import session_required
 from app.utils.exceptions import OrderStateWrong, OrderNotPermission, OrderRequestStateNotPermission, \
     OrderRequestAlreadyExists, RequisiteNotEnough
@@ -68,7 +68,6 @@ class OrderRequestService(BaseService):
             )
         order_request, data = None, {}
         await self.check_have_order_request(order=order)
-        bot_notification = BotNotification()
         if type_ == OrderRequestTypes.CANCEL:
             if order.type == OrderTypes.INPUT:
                 if order.state in [OrderStates.WAITING, OrderStates.PAYMENT]:
@@ -134,18 +133,39 @@ class OrderRequestService(BaseService):
                 role=MessageRoles.SYSTEM,
                 text=f'order_request_create_{type_}',
             )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_create_{type_}',
-            order_id=order.id,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=order.requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_create_{type_}',
-            order_id=order.id,
-        )
+            if type_ == OrderRequestTypes.CANCEL:
+                await NotificationService().create_notification_request_order_request_two_sided_cancel_request(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_two_sided_cancel_request(
+                    order_request=order_request,
+                )
+            elif type_ == OrderRequestTypes.RECREATE:
+                await NotificationService().create_notification_request_order_request_two_sided_recreate_request(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_two_sided_recreate_request(
+                    order_request=order_request,
+                )
+            elif type_ == OrderRequestTypes.UPDATE_VALUE:
+                await NotificationService().create_notification_request_order_request_two_sided_edit_value_request(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_two_sided_edit_value_request(
+                    order_request=order_request,
+                )
+            # await NotificationService().create_notification_by_wallet(
+            #     wallet=order.request.wallet,
+            #     notification_type=NotificationTypes.ORDER,
+            #     text_key=f'notification_order_request_create_{type_}',
+            #     order_id=order.id,
+            # )
+            # await NotificationService().create_notification_by_wallet(
+            #     wallet=order.requisite.wallet,
+            #     notification_type=NotificationTypes.ORDER,
+            #     text_key=f'notification_order_request_create_{type_}',
+            #     order_id=order.id,
+            # )
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,
@@ -311,7 +331,6 @@ class OrderRequestService(BaseService):
         from app.services.order import OrderService
         order = order_request.order
         request = order.request
-        requisite = order.requisite
         if state == OrderRequestStates.COMPLETED:
             await OrderService().order_cancel_related(order=order)
             await OrderRepository().update(
@@ -323,25 +342,33 @@ class OrderRequestService(BaseService):
             if request.state == RequestStates.OUTPUT:
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
+            if canceled_reason == OrderCanceledReasons.ONE_SIDED:
+                await NotificationService().create_notification_request_order_request_one_sided_cancel_finish(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_one_sided_cancel_finish(
+                    order_request=order_request,
+                )
+            elif canceled_reason == OrderCanceledReasons.TWO_SIDED:
+                await NotificationService().create_notification_request_order_request_two_sided_cancel_finish(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_two_sided_cancel_finish(
+                    order_request=order_request,
+                )
+        elif state == OrderRequestStates.CANCELED:
+            await NotificationService().create_notification_request_order_request_two_sided_cancel_cancel(
+                order_request=order_request,
+            )
+            await NotificationService().create_notification_requisite_order_request_two_sided_cancel_cancel(
+                order_request=order_request,
+            )
         await OrderRequestRepository().update(order_request, state=state)
         await MessageService().send_to_chat(
             token=token,
             order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-        )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-            order_id=order.id,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-            order_id=order.id,
         )
 
     @staticmethod
@@ -355,7 +382,6 @@ class OrderRequestService(BaseService):
         from app.services.order import OrderService
         order = order_request.order
         request = order.request
-        requisite = order.request
         if state == OrderRequestStates.COMPLETED:
             await OrderService().order_recreate_related(order=order)
             await OrderRepository().update(
@@ -367,25 +393,33 @@ class OrderRequestService(BaseService):
             if request.state == RequestStates.OUTPUT:
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
+            if canceled_reason == OrderCanceledReasons.ONE_SIDED:
+                await NotificationService().create_notification_request_order_request_one_sided_recreate_finish(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_one_sided_recreate_finish(
+                    order_request=order_request,
+                )
+            elif canceled_reason == OrderCanceledReasons.TWO_SIDED:
+                await NotificationService().create_notification_request_order_request_two_sided_recreate_finish(
+                    order_request=order_request,
+                )
+                await NotificationService().create_notification_requisite_order_request_two_sided_recreate_finish(
+                    order_request=order_request,
+                )
+        elif state == OrderRequestStates.CANCELED:
+            await NotificationService().create_notification_request_order_request_two_sided_recreate_cancel(
+                order_request=order_request,
+            )
+            await NotificationService().create_notification_requisite_order_request_two_sided_recreate_cancel(
+                order_request=order_request,
+            )
         await OrderRequestRepository().update(order_request, state=state)
         await MessageService().send_to_chat(
             token=token,
             order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-        )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-            order_id=order.id,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}_{canceled_reason}',
-            order_id=order.id,
         )
 
     @staticmethod
@@ -425,23 +459,23 @@ class OrderRequestService(BaseService):
             if request.state == RequestStates.OUTPUT:
                 request_state = RequestStates.OUTPUT_RESERVATION
             await RequestService().rate_fixed_off(request=request, state=request_state)
+            await NotificationService().create_notification_request_order_request_two_sided_edit_value_finish(
+                order_request=order_request,
+            )
+            await NotificationService().create_notification_requisite_order_request_two_sided_edit_value_finish(
+                order_request=order_request,
+            )
+        elif state == OrderRequestStates.CANCELED:
+            await NotificationService().create_notification_request_order_request_two_sided_edit_value_cancel(
+                order_request=order_request,
+            )
+            await NotificationService().create_notification_requisite_order_request_two_sided_edit_value_cancel(
+                order_request=order_request,
+            )
         await OrderRequestRepository().update(order_request, state=state)
         await MessageService().send_to_chat(
             token=token,
             order_id=order.id,
             role=MessageRoles.SYSTEM,
             text=f'order_request_finished_{order_request.type}_{state}',
-        )
-        bot_notification = BotNotification()
-        await bot_notification.send_notification_by_wallet(
-            wallet=request.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}',
-            order_id=order.id,
-        )
-        await bot_notification.send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.ORDER,
-            text_key=f'notification_order_request_finished_{order_request.type}_{state}',
-            order_id=order.id,
         )

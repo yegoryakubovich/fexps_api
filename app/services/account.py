@@ -28,7 +28,7 @@ from app.repositories import AccountRepository, CountryRepository, LanguageRepos
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.base import BaseService
 from app.services.file import FileService
-from app.utils.bot.notification import BotNotification
+from app.services.notification import NotificationService
 from app.utils.crypto import create_salt, create_hash_by_string_and_salt
 from app.utils.decorators import session_required
 from app.utils.exceptions import InvalidPassword, InvalidUsername, ModelAlreadyExist, WrongPassword
@@ -218,7 +218,7 @@ class AccountService(BaseService):
             password_salt = await create_salt()
             password_hash = await create_hash_by_string_and_salt(string=new_password, salt=password_salt)
         await AccountRepository().update(account, password_salt=password_salt, password_hash=password_hash)
-        await BotNotification().create_notification(
+        await NotificationService().create(
             account=account,
             notification_type=NotificationTypes.GLOBAL,
             text_key='notification_global_password_change',

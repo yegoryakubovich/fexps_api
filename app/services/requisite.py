@@ -26,10 +26,10 @@ from app.services.account_role_check_premission import AccountRoleCheckPermissio
 from app.services.base import BaseService
 from app.services.currency import CurrencyService
 from app.services.method import MethodService
+from app.services.notification import NotificationService
 from app.services.requisite_data import RequisiteDataService
 from app.services.wallet import WalletService
 from app.services.wallet_ban import WalletBanService
-from app.utils.bot.notification import BotNotification
 from app.utils.calcs.requisites.value import calcs_requisites_values_calc
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequisiteStateWrong, RequisiteActiveOrdersExistsError
@@ -108,12 +108,7 @@ class RequisiteService(BaseService):
         )
         if wallet_ban:
             await WalletBanRequisiteRepository().create(wallet_ban=wallet_ban, requisite=requisite)
-        await BotNotification().send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.REQUISITE,
-            text_key='notification_requisite_create',
-            requisite_id=requisite.id,
-        )
+        await NotificationService().create_notification_requisite_create(requisite=requisite)
         await self.create_action(
             model=requisite,
             action=Actions.CREATE,
@@ -218,12 +213,12 @@ class RequisiteService(BaseService):
                 },
             )
         await RequisiteRepository().update(requisite, state=next_state)
-        await BotNotification().send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.REQUISITE,
-            text_key=f'notification_requisite_update_state_{next_state}',
-            requisite_id=requisite.id,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=requisite.wallet,
+        #     notification_type=NotificationTypes.REQUISITE,
+        #     text_key=f'notification_requisite_update_state_{next_state}',
+        #     requisite_id=requisite.id,
+        # )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -257,12 +252,12 @@ class RequisiteService(BaseService):
                 },
             )
         await RequisiteRepository().update(requisite, state=next_state)
-        await BotNotification().send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.REQUISITE,
-            text_key=f'notification_requisite_update_state_{next_state}',
-            requisite_id=requisite.id,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=requisite.wallet,
+        #     notification_type=NotificationTypes.REQUISITE,
+        #     text_key=f'notification_requisite_update_state_{next_state}',
+        #     requisite_id=requisite.id,
+        # )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -315,12 +310,12 @@ class RequisiteService(BaseService):
                 value=-requisite.value,
             )
         await RequisiteRepository().update(requisite, state=next_state)
-        await BotNotification().send_notification_by_wallet(
-            wallet=requisite.wallet,
-            notification_type=NotificationTypes.REQUISITE,
-            text_key=f'notification_requisite_update_state_{next_state}',
-            requisite_id=requisite.id,
-        )
+        # await NotificationService().create_notification_by_wallet(
+        #     wallet=requisite.wallet,
+        #     notification_type=NotificationTypes.REQUISITE,
+        #     text_key=f'notification_requisite_update_state_{next_state}',
+        #     requisite_id=requisite.id,
+        # )
         await self.create_action(
             model=requisite,
             action=Actions.UPDATE,
@@ -418,7 +413,7 @@ class RequisiteService(BaseService):
             if active_order:
                 continue
             await RequisiteRepository().update(requisite, state=RequisiteStates.STOP)
-            await BotNotification().send_notification_by_wallet(
+            await NotificationService().create_notification_by_wallet(
                 wallet=requisite.wallet,
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_auto_update_state_stop',

@@ -55,6 +55,7 @@ from .session import Session
 from .transfer_system import TransferSystem, TransferSystemTypes
 from .wallet_account import WalletAccount, WalletAccountRoles
 
+from .notification_history_file import NotificationHistoryFile
 from .request import Request, RequestTypes, RequestStates
 from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
