@@ -21,10 +21,10 @@ from math import ceil
 from typing import Optional
 
 from app.db.models import Session, Request, Actions, RequestStates, RequestTypes, OrderStates, \
-    RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons
+    RateTypes, OrderTypes, OrderRequestTypes, WalletBanReasons, Account
 from app.repositories import WalletAccountRepository, OrderRepository, MethodRepository, RequisiteDataRepository, \
     CommissionPackValueRepository, RateRepository, RequestRepository, WalletRepository, WalletBanRequestRepository, \
-    RequisiteRepository
+    RequisiteRepository, AccountClientTextRepository
 from app.services.account_role_check_premission import AccountRoleCheckPermissionService
 from app.services.action import ActionService
 from app.services.base import BaseService
@@ -49,6 +49,7 @@ from app.utils.calcs.requisites.need_value.input_currency_value import \
 from app.utils.calcs.requisites.need_value.output_currency_value import calcs_requisites_output_need_currency_value
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
+from app.utils.value import value_to_str, value_to_float
 from config import settings
 
 
@@ -354,6 +355,7 @@ class RequestService(BaseService):
             input_states = [RequestStates.INPUT_RESERVATION]
             if request.type in input_types and request.state in input_states:
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
+                await NotificationService().create_notification_request_cancel(request=request)
                 return {}
             output_types = [RequestTypes.OUTPUT]
             output_states = [RequestStates.OUTPUT_RESERVATION]
@@ -365,6 +367,7 @@ class RequestService(BaseService):
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
                 await RequestRepository().update(request, state=RequestStates.CANCELED)
+                await NotificationService().create_notification_request_cancel(request=request)
                 return {}
         if request.state in [RequestStates.INPUT]:
             await request_check_state_input(request=request)
@@ -421,12 +424,6 @@ class RequestService(BaseService):
             )
             await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
         await RequestRepository().update(request, state=next_state)
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=request.wallet,
-        #     notification_type=NotificationTypes.REQUEST,
-        #     text_key=f'notification_request_update_state_{next_state}',
-        #     request_id=request.id,
-        # )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -459,13 +456,6 @@ class RequestService(BaseService):
             ),
         )
         await RequestRepository().update(request, name=name)
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=request.wallet,
-        #     notification_type=NotificationTypes.REQUEST,
-        #     text_key=f'notification_request_update_name',
-        #     request_id=request.id,
-        #     name=name,
-        # )
         await self.create_action(
             model=request,
             action=Actions.UPDATE,
@@ -490,7 +480,7 @@ class RequestService(BaseService):
                 continue
             request_action_delta = time_now.replace(tzinfo=None) - request_action.datetime.replace(tzinfo=None)
             if request_action_delta >= datetime.timedelta(minutes=settings.request_rate_fixed_minutes):
-                await RequestService().rate_fixed_off(request=request)
+                await self.rate_fixed_off(request=request)
                 await NotificationService().create_notification_request_rate_fixed_stop(request=request)
         return {}
 
@@ -513,12 +503,7 @@ class RequestService(BaseService):
                 )
                 await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
             await RequestRepository().update(request, state=RequestStates.CANCELED)
-            # await NotificationService().create_notification_by_wallet(
-            #     wallet=request.wallet,
-            #     notification_type=NotificationTypes.REQUEST,
-            #     text_key=f'notification_request_update_state_{RequestStates.CANCELED}',
-            #     request_id=request.id,
-            # )
+            await NotificationService().create_notification_request_cancel(request=request)
         return {}
 
     @session_required(permissions=['requests'], can_root=True)
@@ -545,6 +530,7 @@ class RequestService(BaseService):
                 for wait_order in waiting_orders:
                     logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
                     await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                    await NotificationService().create_notification_request_order_input_create(order=wait_order)
                     await NotificationService().create_notification_requisite_order_input_create(order=wait_order)
                 logging.info(f'request #{request.id}   {request.state}->{RequestStates.INPUT}')
                 await RequestRepository().update(request, state=RequestStates.INPUT)
@@ -619,6 +605,7 @@ class RequestService(BaseService):
                 for wait_order in waiting_orders:
                     logging.info(f'order #{wait_order.id}    {wait_order.state}->{OrderStates.PAYMENT}')
                     await OrderRepository().update(wait_order, state=OrderStates.PAYMENT)
+                    await NotificationService().create_notification_request_order_output_create(order=wait_order)
                     await NotificationService().create_notification_requisite_order_output_create(order=wait_order)
                 logging.info(f'request #{request.id}    {request.state}->{RequestStates.OUTPUT}')
                 await RequestRepository().update(request, state=RequestStates.OUTPUT)
@@ -702,6 +689,108 @@ class RequestService(BaseService):
             'confirmation_delta': confirmation_delta,
             'rate_fixed_delta': rate_fixed_delta,
         }
+
+    async def get_client_text(self, request: Request, account: Account) -> str:
+        account_client_text = await AccountClientTextRepository().get_by_key(
+            key=f'request_{request.type}_{request.state}',
+            account=account,
+        )
+        if not account_client_text or not account_client_text.value:
+            return ''
+        request_dict = await self.generate_request_dict(request=request)
+        input_currency_value = None
+        if request.input_currency_value:
+            input_currency_value = value_to_float(
+                value=request.input_currency_value,
+                decimal=request.input_method.currency.decimal,
+            )
+        input_rate = value_to_float(value=request.input_rate, decimal=request.rate_decimal)
+        input_value = value_to_float(value=request.input_value)
+        output_value = value_to_float(value=request.output_rate)
+        output_rate = value_to_float(value=request.output_rate, decimal=request.rate_decimal)
+        output_currency_value = None
+        if request.output_currency_value:
+            output_currency_value = value_to_float(
+                value=request.output_currency_value,
+                decimal=request.output_method.currency.decimal,
+            )
+        input_method = None
+        if request.input_method:
+            input_method = request.input_method.name_text.value_default
+        output_method = None
+        if request.output_method:
+            output_method = request.output_method.name_text.value_default
+        input_orders, output_orders = [], []
+        for i, order in enumerate(await OrderRepository().get_list(request=request)):
+            method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
+            currency_value: str = value_to_str(
+                value=value_to_float(value=order.currency_value, decimal=method.currency.decimal),
+            )
+            data = [
+                ', '.join([f'{value}' for key, value in order.requisite_fields.items()]),
+                ' '.join([currency_value, method.currency.id_str.upper()])
+            ]
+            if order.type == OrderTypes.INPUT:
+                input_orders += [' -> '.join(data)]
+            elif order.type == OrderTypes.OUTPUT:
+                output_orders += [' -> '.join(data)]
+        if len(input_orders) > 1:
+            for i, input_order in enumerate(input_orders):
+                input_orders[i] = f'{i + 1}. {input_order}'
+        if len(output_orders) > 1:
+            for i, output_order in enumerate(output_orders):
+                output_orders[i] = f'{i + 1}. {output_order}'
+        return account_client_text.value.format(
+            name=request.name,
+            type=request.type,
+            state=request.state,
+            commission=request.commission,
+            rate=request.rate,
+            input_currency_value=input_currency_value,
+            input_rate=input_rate,
+            input_value=input_value,
+            output_value=output_value,
+            output_rate=output_rate,
+            output_currency_value=output_currency_value,
+            date=request_dict['date'],
+            confirmation_delta=request_dict['confirmation_delta'],
+            rate_fixed_delta=request_dict['rate_fixed_delta'],
+            input_method=input_method,
+            input_orders='\n'.join(input_orders),
+            output_method=output_method,
+            output_orders='\n'.join(output_orders),
+        )
+
+    @staticmethod
+    async def get_client_text_create(request: Request, account: Account) -> str:
+        account_client_text = await AccountClientTextRepository().get_by_key(
+            key=f'request_{request.type}_create',
+            account=account,
+        )
+        if not account_client_text or not account_client_text.value:
+            return ''
+        input_currency_value = None
+        if request.input_currency_value:
+            input_currency_value = value_to_float(
+                value=request.input_currency_value,
+                decimal=request.input_method.currency.decimal,
+            )
+        input_value = value_to_float(value=request.input_value)
+        output_value = value_to_float(value=request.output_rate)
+        output_currency_value = None
+        if request.output_currency_value:
+            output_currency_value = value_to_float(
+                value=request.output_currency_value,
+                decimal=request.output_method.currency.decimal,
+            )
+        return account_client_text.value.format(
+            type=request.type,
+            state='create',
+            input_currency_value=input_currency_value,
+            input_value=input_value,
+            output_value=output_value,
+            output_currency_value=output_currency_value,
+        )
 
     @staticmethod
     async def rate_fixed_off(request: Request, **kwargs):

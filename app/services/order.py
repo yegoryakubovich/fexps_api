@@ -19,8 +19,8 @@ import math
 from typing import Optional
 
 from app.db.models import Session, Order, OrderTypes, OrderStates, Actions, MethodFieldTypes, OrderRequestStates, \
-    MessageRoles, NotificationTypes, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes, \
-    RequestTypes, Account, File
+    MessageRoles, TransferTypes, Request, Requisite, WalletBanReasons, RequestRequisiteTypes, \
+    RequestTypes, Account
 from app.repositories import WalletAccountRepository, TextRepository, OrderRequestRepository, OrderFileRepository, \
     FileKeyRepository, OrderRepository, RequestRepository, RequisiteRepository, WalletBanRequestRepository, \
     RequestRequisiteRepository, WalletBanRequisiteRepository, MessageRepository
@@ -207,22 +207,12 @@ class OrderService(BaseService):
             role=MessageRoles.SYSTEM,
             text=f'order_update_state_{next_state}',
         )
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.request.wallet,
-        #     notification_type=NotificationTypes.ORDER,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_order_update_state',
-        #     order_id=order.id,
-        #     state=next_state,
-        # )
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.requisite.wallet,
-        #     notification_type=NotificationTypes.ORDER,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_order_update_state',
-        #     order_id=order.id,
-        #     state=next_state,
-        # )
+        if order.type == OrderTypes.INPUT:
+            await NotificationService().create_notification_request_order_input_reject(order=order)
+            await NotificationService().create_notification_requisite_order_input_reject(order=order)
+        elif order.type == OrderTypes.OUTPUT:
+            await NotificationService().create_notification_request_order_output_reject(order=order)
+            await NotificationService().create_notification_requisite_order_output_reject(order=order)
         await self.create_action(
             model=order,
             action=Actions.UPDATE,
@@ -392,22 +382,12 @@ class OrderService(BaseService):
             role=MessageRoles.SYSTEM,
             text=f'order_update_state_{next_state}',
         )
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.request.wallet,
-        #     notification_type=NotificationTypes.ORDER,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_order_update_state',
-        #     order_id=order.id,
-        #     state=next_state,
-        # )
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.requisite.wallet,
-        #     notification_type=NotificationTypes.ORDER,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_order_update_state',
-        #     order_id=order.id,
-        #     state=next_state,
-        # )
+        if order.type == OrderTypes.INPUT:
+            await NotificationService().create_notification_request_order_input_complete(order=order)
+            await NotificationService().create_notification_requisite_order_input_complete(order=order)
+        elif order.type == OrderTypes.OUTPUT:
+            await NotificationService().create_notification_request_order_output_complete(order=order)
+            await NotificationService().create_notification_requisite_order_output_complete(order=order)
         await self.create_action(
             model=order,
             action=Actions.UPDATE,

@@ -25,10 +25,9 @@ from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaDocument, FSInputFile
 
 from app.db.models import NotificationSetting, Session, Actions, NotificationStates, Wallet, Account, NotificationTypes, \
-    Requisite, RequestTypes, Request, Order, OrderTypes, File, MethodFieldTypes, OrderRequest
+    Requisite, RequestTypes, Request, Order, File, MethodFieldTypes, OrderRequest
 from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, TextRepository, \
-    WalletAccountRepository, AccountClientTextRepository, OrderRepository, NotificationHistoryFileRepository, \
-    FileRepository
+    WalletAccountRepository, NotificationHistoryFileRepository, FileRepository
 from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
@@ -53,24 +52,25 @@ class NotificationService(BaseService):
             return
         if not notification_setting.is_active:
             return
+        if notification_type == NotificationTypes.SYSTEM and not notification_setting.is_system:
+            return
         if notification_type == NotificationTypes.REQUEST and not notification_setting.is_request:
             return
         if notification_type == NotificationTypes.REQUISITE and not notification_setting.is_requisite:
-            return
-        if notification_type == NotificationTypes.ORDER and not notification_setting.is_order:
             return
         if notification_type == NotificationTypes.CHAT and not notification_setting.is_chat:
             return
         if notification_type == NotificationTypes.TRANSFER and not notification_setting.is_transfer:
             return
-        if notification_type == NotificationTypes.GLOBAL and not notification_setting.is_global:
-            return
+
         text = await TextRepository().get_by_key_or_none(key=text_key, language=account.language)
+        if kwargs:
+            text = text.format(**kwargs)
         notification_history = await NotificationHistoryRepository().create(
             notification_setting=notification_setting,
             type=notification_type,
             state=NotificationStates.WAIT,
-            text=text.format(**kwargs),
+            text=text,
         )
         if files is None:
             files = []
@@ -86,7 +86,7 @@ class NotificationService(BaseService):
                 'state': NotificationStates.WAIT,
                 'text_key': text_key,
                 'language': account.language.id_str,
-                'text': text.format(**kwargs),
+                'text': text,
             },
         )
 
@@ -166,38 +166,80 @@ class NotificationService(BaseService):
     async def update_settings(
             self,
             session: Session,
-            is_request: bool,
-            is_requisite: bool,
-            is_order: bool,
-            is_chat: bool,
-            is_transfer: bool,
-            is_global: bool,
-            is_active: bool,
+            is_active: Optional[bool],
+            is_system: Optional[bool],
+            is_system_email: Optional[bool],
+            is_system_telegram: Optional[bool],
+            is_system_push: Optional[bool],
+            is_request: Optional[bool],
+            is_request_email: Optional[bool],
+            is_request_telegram: Optional[bool],
+            is_request_push: Optional[bool],
+            is_requisite: Optional[bool],
+            is_requisite_email: Optional[bool],
+            is_requisite_telegram: Optional[bool],
+            is_requisite_push: Optional[bool],
+            is_chat: Optional[bool],
+            is_chat_email: Optional[bool],
+            is_chat_telegram: Optional[bool],
+            is_chat_push: Optional[bool],
+            is_transfer: Optional[bool],
+            is_transfer_email: Optional[bool],
+            is_transfer_telegram: Optional[bool],
+            is_transfer_push: Optional[bool],
     ) -> dict:
         account = session.account
         notification_setting = await NotificationSettingRepository().get_by_account(account=account)
         await NotificationSettingRepository().update(
             notification_setting,
-            is_request=is_request,
-            is_requisite=is_requisite,
-            is_order=is_order,
-            is_chat=is_chat,
-            is_transfer=is_transfer,
-            is_global=is_global,
             is_active=is_active,
+            is_system=is_system,
+            is_system_email=is_system_email,
+            is_system_telegram=is_system_telegram,
+            is_system_push=is_system_push,
+            is_request=is_request,
+            is_request_email=is_request_email,
+            is_request_telegram=is_request_telegram,
+            is_request_push=is_request_push,
+            is_requisite=is_requisite,
+            is_requisite_email=is_requisite_email,
+            is_requisite_telegram=is_requisite_telegram,
+            is_requisite_push=is_requisite_push,
+            is_chat=is_chat,
+            is_chat_email=is_chat_email,
+            is_chat_telegram=is_chat_telegram,
+            is_chat_push=is_chat_push,
+            is_transfer=is_transfer,
+            is_transfer_email=is_transfer_email,
+            is_transfer_telegram=is_transfer_telegram,
+            is_transfer_push=is_transfer_push,
         )
         await self.create_action(
             model=notification_setting,
             action=Actions.UPDATE,
             parameters={
                 'updater': f'session_{session.id}',
-                'is_request': is_request,
-                'is_requisite': is_requisite,
-                'is_order': is_order,
-                'is_chat': is_chat,
-                'is_transfer': is_transfer,
-                'is_global': is_global,
                 'is_active': is_active,
+                'is_system': is_system,
+                'is_system_email': is_system_email,
+                'is_system_telegram': is_system_telegram,
+                'is_system_push': is_system_push,
+                'is_request': is_request,
+                'is_request_email': is_request_email,
+                'is_request_telegram': is_request_telegram,
+                'is_request_push': is_request_push,
+                'is_requisite': is_requisite,
+                'is_requisite_email': is_requisite_email,
+                'is_requisite_telegram': is_requisite_telegram,
+                'is_requisite_push': is_requisite_push,
+                'is_chat': is_chat,
+                'is_chat_email': is_chat_email,
+                'is_chat_telegram': is_chat_telegram,
+                'is_chat_push': is_chat_push,
+                'is_transfer': is_transfer,
+                'is_transfer_email': is_transfer_email,
+                'is_transfer_telegram': is_transfer_telegram,
+                'is_transfer_push': is_transfer_push,
             },
         )
         return {}
@@ -284,88 +326,115 @@ class NotificationService(BaseService):
             'id': notification_setting.id,
             'telegram_id': notification_setting.telegram_id,
             'username': username,
-            'is_request': notification_setting.is_request,
-            'is_requisite': notification_setting.is_requisite,
-            'is_order': notification_setting.is_order,
-            'is_chat': notification_setting.is_chat,
-            'is_transfer': notification_setting.is_transfer,
-            'is_global': notification_setting.is_global,
             'is_active': notification_setting.is_active,
+            'is_system': notification_setting.is_system,
+            'is_system_email': notification_setting.is_system_email,
+            'is_system_telegram': notification_setting.is_system_telegram,
+            'is_system_push': notification_setting.is_system_push,
+            'is_request': notification_setting.is_request,
+            'is_request_email': notification_setting.is_request_email,
+            'is_request_telegram': notification_setting.is_request_telegram,
+            'is_request_push': notification_setting.is_request_push,
+            'is_requisite': notification_setting.is_requisite,
+            'is_requisite_email': notification_setting.is_requisite_email,
+            'is_requisite_telegram': notification_setting.is_requisite_telegram,
+            'is_requisite_push': notification_setting.is_requisite_push,
+            'is_chat': notification_setting.is_chat,
+            'is_chat_email': notification_setting.is_chat_email,
+            'is_chat_telegram': notification_setting.is_chat_telegram,
+            'is_chat_push': notification_setting.is_chat_push,
+            'is_transfer': notification_setting.is_transfer,
+            'is_transfer_email': notification_setting.is_transfer_email,
+            'is_transfer_telegram': notification_setting.is_transfer_telegram,
+            'is_transfer_push': notification_setting.is_transfer_push,
         }
+
+    """
+    SYSTEM
+    """
+
+    async def create_notification_global_session_new_auth(self, account: Account):
+        await self.create(
+            account=account,
+            notification_type=NotificationTypes.SYSTEM,
+            text_key='notification_system_session_new_auth',
+        )
 
     """
     REQUEST
     """
 
     async def create_notification_request_create(self, request: Request):
-        input_str, output_str = '', ''
-        input_currency_value_float, input_value_float = None, None
-        output_value_float, output_currency_value_float = None, None
+        from app.services.request import RequestService
+        input_currency_value_str = ''
+        if request.input_currency_value:
+            input_currency_value = value_to_str(
+                value=value_to_float(
+                    value=request.input_currency_value,
+                    decimal=request.input_method.currency.decimal,
+                ),
+            )
+            input_currency_id_str = request.input_method.currency.id_str.upper()
+            input_method_name = request.input_method.name_text.value_default
+            input_currency_value_str = f'{input_currency_value} {input_currency_id_str} ({input_method_name})'
+        input_value_str = value_to_str(value=value_to_float(value=request.input_value))
+        output_value_str = value_to_str(value=value_to_float(value=request.output_rate))
+        output_currency_value_str = ''
+        if request.output_currency_value:
+            output_currency_value = value_to_str(
+                value=value_to_float(
+                    value=request.output_currency_value,
+                    decimal=request.output_method.currency.decimal,
+                ),
+            )
+            output_currency_id_str = request.output_method.currency.id_str.upper()
+            output_method_name = request.output_method.name_text.value_default
+            output_currency_value_str = f'{output_currency_value} {output_currency_id_str} ({output_method_name})'
+        request_value_info = ''
         if request.type == RequestTypes.ALL:
-            input_currency_value_float = value_to_float(
-                value=request.input_currency_value,
-                decimal=request.input_method.currency.decimal,
-            )
-            input_str = ' '.join([
-                f'{input_currency_value_float}',
-                request.input_method.currency.id_str.upper(),
-                f'({request.input_method.name_text.value_default})',
-            ])
-            output_currency_value_float = value_to_float(
-                value=request.output_currency_value,
-                decimal=request.output_method.currency.decimal,
-            )
-            output_str = ' '.join([
-                f'{output_currency_value_float}',
-                request.output_method.currency.id_str.upper(),
-                f'({request.output_method.name_text.value_default})',
-            ])
+            request_value_info = f'{input_currency_value_str} -> {output_currency_value_str}'
         elif request.type == RequestTypes.INPUT:
-            input_currency_value_float = value_to_float(
-                value=request.input_currency_value,
-                decimal=request.input_method.currency.decimal,
-            )
-            input_str = ' '.join([
-                f'{input_currency_value_float}',
-                request.input_method.currency.id_str.upper(),
-                f'({request.input_method.name_text.value_default})',
-            ])
-            input_value_float = value_to_float(value=request.input_value)
-            output_str = f'{input_value_float}'
+            request_value_info = f'{input_currency_value_str} -> {input_value_str}'
         elif request.type == RequestTypes.OUTPUT:
-            output_value_float = value_to_float(value=request.output_value)
-            input_str = f'{output_value_float}'
-            output_currency_value_float = value_to_float(
-                value=request.output_currency_value,
-                decimal=request.output_method.currency.decimal,
-            )
-            output_str = ' '.join([
-                f'{output_currency_value_float}',
-                request.output_method.currency.id_str.upper(),
-                f'({request.output_method.name_text.value_default})',
-            ])
+            request_value_info = f'{output_value_str} -> {output_currency_value_str}'
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
-            client_text_str = ''
-            account_client_text = await AccountClientTextRepository().get_by_key(
-                key=f'request_{request.type}_create',
-                account=account,
-            )
-            if account_client_text and account_client_text.value:
-                client_text_str = account_client_text.value.format(
-                    type=request.type,
-                    state='create',
-                    input_currency_value=input_currency_value_float,
-                    input_value=input_value_float,
-                    output_value=output_value_float,
-                    output_currency_value=output_currency_value_float,
-                )
+            client_text_str = await RequestService().get_client_text_create(request=request, account=account)
+            if client_text_str:
                 client_text_str = f'\n<code>{client_text_str}</code>\n'
             await self.create(
                 account=account,
                 notification_type=NotificationTypes.REQUEST,
                 text_key='notification_request_create',
                 request_id=request.id,
-                request_value_info=f'{input_str} -> {output_str}',
+                request_value_info=request_value_info,
+                client_text=client_text_str,
+            )
+
+    async def create_notification_request_complete(self, request: Request):
+        from app.services.request import RequestService
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            client_text_str = await RequestService().get_client_text(request=request, account=account)
+            if client_text_str:
+                client_text_str = f'\n<code>{client_text_str}</code>\n'
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_complete',
+                request_id=request.id,
+                client_text=client_text_str,
+            )
+
+    async def create_notification_request_cancel(self, request: Request):
+        from app.services.request import RequestService
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            client_text_str = await RequestService().get_client_text(request=request, account=account)
+            if client_text_str:
+                client_text_str = f'\n<code>{client_text_str}</code>\n'
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_cancel',
+                request_id=request.id,
                 client_text=client_text_str,
             )
 
@@ -380,76 +449,9 @@ class NotificationService(BaseService):
 
     async def create_notification_request_orders_input_create(self, request: Request):
         from app.services.request import RequestService
-        request_dict = await RequestService().generate_request_dict(request=request)
-        input_currency_value = None
-        if request.input_currency_value:
-            input_currency_value = value_to_float(
-                value=request.input_currency_value,
-                decimal=request.input_method.currency.decimal,
-            )
-        input_rate = value_to_float(value=request.input_rate, decimal=request.rate_decimal)
-        input_value = value_to_float(value=request.input_value)
-        output_value = value_to_float(value=request.output_rate)
-        output_rate = value_to_float(value=request.output_rate, decimal=request.rate_decimal)
-        output_currency_value = None
-        if request.output_currency_value:
-            output_currency_value = value_to_float(
-                value=request.output_currency_value,
-                decimal=request.output_method.currency.decimal,
-            )
-        input_method = None
-        if request.input_method:
-            input_method = request.input_method.name_text.value_default
-        output_method = None
-        if request.output_method:
-            output_method = request.output_method.name_text.value_default
-        input_orders, output_orders = [], []
-        for i, order in enumerate(await OrderRepository().get_list(request=request)):
-            method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
-            currency_value: str = value_to_str(
-                value=value_to_float(value=order.currency_value, decimal=method.currency.decimal),
-            )
-            data = [
-                ', '.join([f'{value}' for key, value in order.requisite_fields.items()]),
-                ' '.join([currency_value, method.currency.id_str.upper()])
-            ]
-            if order.type == OrderTypes.INPUT:
-                input_orders += [' -> '.join(data)]
-            elif order.type == OrderTypes.OUTPUT:
-                output_orders += [' -> '.join(data)]
-        if len(input_orders) > 1:
-            for i, input_order in enumerate(input_orders):
-                input_orders[i] = f'{i + 1}. {input_order}'
-        if len(output_orders) > 1:
-            for i, output_order in enumerate(output_orders):
-                output_orders[i] = f'{i + 1}. {output_order}'
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
-            client_text_str = ''
-            account_client_text = await AccountClientTextRepository().get_by_key(
-                key=f'request_{request.type}_{request.state}',
-                account=account,
-            )
-            if account_client_text and account_client_text.value:
-                client_text_str = account_client_text.value.format(
-                    name=request.name,
-                    type=request.type,
-                    state=request.state,
-                    commission=request.commission,
-                    rate=request.rate,
-                    input_currency_value=input_currency_value,
-                    input_rate=input_rate,
-                    input_value=input_value,
-                    output_value=output_value,
-                    output_rate=output_rate,
-                    output_currency_value=output_currency_value,
-                    date=request_dict['date'],
-                    confirmation_delta=request_dict['confirmation_delta'],
-                    rate_fixed_delta=request_dict['rate_fixed_delta'],
-                    input_method=input_method,
-                    input_orders='\n'.join(input_orders),
-                    output_method=output_method,
-                    output_orders='\n'.join(output_orders),
-                )
+            client_text_str = await RequestService().get_client_text(request=request, account=account)
+            if client_text_str:
                 client_text_str = f'\n<code>{client_text_str}</code>\n'
             await self.create(
                 account=account,
@@ -461,77 +463,9 @@ class NotificationService(BaseService):
 
     async def create_notification_request_orders_output_create(self, request: Request):
         from app.services.request import RequestService
-        request_dict = await RequestService().generate_request_dict(request=request)
-        input_currency_value = None
-        if request.input_currency_value:
-            input_currency_value = value_to_float(
-                value=request.input_currency_value,
-                decimal=request.input_method.currency.decimal,
-            )
-        input_rate = value_to_float(value=request.input_rate, decimal=request.rate_decimal)
-        input_value = value_to_float(value=request.input_value)
-        output_value = value_to_float(value=request.output_rate)
-        output_rate = value_to_float(value=request.output_rate, decimal=request.rate_decimal)
-        output_currency_value = None
-        if request.output_currency_value:
-            output_currency_value = value_to_float(
-                value=request.output_currency_value,
-                decimal=request.output_method.currency.decimal,
-            )
-        input_method = None
-        if request.input_method:
-            input_method = request.input_method.name_text.value_default
-        output_method = None
-        if request.output_method:
-            output_method = request.output_method.name_text.value_default
-
-        input_orders, output_orders = [], []
-        for i, order in enumerate(await OrderRepository().get_list(request=request)):
-            method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
-            currency_value: str = value_to_str(
-                value=value_to_float(value=order.currency_value, decimal=method.currency.decimal),
-            )
-            order_str = ' -> '.join([
-                ', '.join([f'{value}' for key, value in order.requisite_fields.items()]),
-                ' '.join([currency_value, method.currency.id_str.upper()])
-            ])
-            if order.type == OrderTypes.INPUT:
-                input_orders.append(order_str)
-            elif order.type == OrderTypes.OUTPUT:
-                output_orders.append(order_str)
-        if len(input_orders) > 1:
-            for i, input_order in enumerate(input_orders):
-                input_orders[i] = f'{i + 1}. {input_order}'
-        if len(output_orders) > 1:
-            for i, output_order in enumerate(output_orders):
-                output_orders[i] = f'{i + 1}. {output_order}'
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
-            client_text_str = ''
-            account_client_text = await AccountClientTextRepository().get_by_key(
-                key=f'request_{request.type}_{request.state}',
-                account=account,
-            )
-            if account_client_text and account_client_text.value:
-                client_text_str = account_client_text.value.format(
-                    name=request.name,
-                    type=request.type,
-                    state=request.state,
-                    commission=request.commission,
-                    rate=request.rate,
-                    input_currency_value=input_currency_value,
-                    input_rate=input_rate,
-                    input_value=input_value,
-                    output_value=output_value,
-                    output_rate=output_rate,
-                    output_currency_value=output_currency_value,
-                    date=request_dict['date'],
-                    confirmation_delta=request_dict['confirmation_delta'],
-                    rate_fixed_delta=request_dict['rate_fixed_delta'],
-                    input_method=input_method,
-                    input_orders='\n'.join(input_orders),
-                    output_method=output_method,
-                    output_orders='\n'.join(output_orders),
-                )
+            client_text_str = await RequestService().get_client_text(request=request, account=account)
+            if client_text_str:
                 client_text_str = f'\n<code>{client_text_str}</code>\n'
             await self.create(
                 account=account,
@@ -539,6 +473,38 @@ class NotificationService(BaseService):
                 text_key='notification_request_orders_output_create',
                 request_id=request.id,
                 client_text=client_text_str,
+            )
+
+    async def create_notification_request_order_input_create(self, order: Order):
+        request = order.request
+        currency = order.requisite.currency
+        method = order.requisite.input_method or order.requisite.output_method
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_input_create',
+                request_id=request.id,
+                order_id=order.id,
+                currency_value=value_to_float(value=order.currency_value, decimal=currency.decimal),
+                currency=currency.id_str.upper(),
+                method=method.name_text.value_default,
+            )
+
+    async def create_notification_request_order_output_create(self, order: Order):
+        request = order.request
+        currency = order.requisite.currency
+        method = order.requisite.input_method or order.requisite.output_method
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_output_create',
+                request_id=request.id,
+                order_id=order.id,
+                currency_value=value_to_float(value=order.currency_value, decimal=currency.decimal),
+                currency=currency.id_str.upper(),
+                method=method.name_text.value_default,
             )
 
     async def create_notification_request_order_input_confirmation(self, order: Order):
@@ -554,9 +520,8 @@ class NotificationService(BaseService):
 
     async def create_notification_request_order_output_confirmation(self, order: Order):
         request = order.request
-        requisite = order.requisite
-        currency = requisite.currency
-        method = requisite.input_method or requisite.output_method
+        currency = order.requisite.currency
+        method = order.requisite.input_method or order.requisite.output_method
         requisite_fields, input_fields = order.requisite_fields, order.input_fields
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
             requisite_data = []
@@ -595,6 +560,50 @@ class NotificationService(BaseService):
                 ),
                 currency=currency.id_str.upper(),
                 payment_data='\n'.join(payment_data),
+            )
+
+    async def create_notification_request_order_input_complete(self, order: Order):
+        request = order.request
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_input_complete',
+                request_id=request.id,
+                order_id=order.id,
+            )
+
+    async def create_notification_request_order_output_complete(self, order: Order):
+        request = order.request
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_output_complete',
+                request_id=request.id,
+                order_id=order.id,
+            )
+
+    async def create_notification_request_order_input_reject(self, order: Order):
+        request = order.request
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_input_reject',
+                request_id=request.id,
+                order_id=order.id,
+            )
+
+    async def create_notification_request_order_output_reject(self, order: Order):
+        request = order.request
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUEST,
+                text_key='notification_request_order_output_reject',
+                request_id=request.id,
+                order_id=order.id,
             )
 
     async def create_notification_request_order_request_one_sided_cancel_finish(
@@ -866,6 +875,46 @@ class NotificationService(BaseService):
                 order_id=order.id,
             )
 
+    async def create_notification_requisite_order_input_complete(self, order: Order):
+        requisite = order.requisite
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUISITE,
+                text_key='notification_requisite_order_input_complete',
+                requisite_id=requisite.id,
+            )
+
+    async def create_notification_requisite_order_output_complete(self, order: Order):
+        requisite = order.requisite
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUISITE,
+                text_key='notification_requisite_order_output_complete',
+                requisite_id=requisite.id,
+            )
+
+    async def create_notification_requisite_order_input_reject(self, order: Order):
+        requisite = order.requisite
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUISITE,
+                text_key='notification_requisite_order_input_reject',
+                requisite_id=requisite.id,
+            )
+
+    async def create_notification_requisite_order_output_reject(self, order: Order):
+        requisite = order.requisite
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.REQUISITE,
+                text_key='notification_requisite_order_output_reject',
+                requisite_id=requisite.id,
+            )
+
     async def create_notification_requisite_order_request_one_sided_cancel_finish(
             self,
             order_request: OrderRequest,
@@ -877,21 +926,6 @@ class NotificationService(BaseService):
                 account=account,
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_request_one_sided_cancel_finish',
-                requisite_id=requisite.id,
-                order_id=order.id,
-            )
-
-    async def create_notification_requisite_order_request_one_sided_recreate_finish(
-            self,
-            order_request: OrderRequest,
-    ):
-        order = order_request.order
-        requisite = order.requisite
-        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
-            await self.create(
-                account=account,
-                notification_type=NotificationTypes.REQUISITE,
-                text_key='notification_requisite_order_request_one_sided_recreate_finish',
                 requisite_id=requisite.id,
                 order_id=order.id,
             )
@@ -937,21 +971,6 @@ class NotificationService(BaseService):
                 order_id=order.id,
             )
 
-    async def create_notification_requisite_order_request_two_sided_recreate_request(
-            self,
-            order_request: OrderRequest,
-    ):
-        order = order_request.order
-        requisite = order.requisite
-        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
-            await self.create(
-                account=account,
-                notification_type=NotificationTypes.REQUISITE,
-                text_key='notification_requisite_order_request_two_sided_recreate_request',
-                requisite_id=requisite.id,
-                order_id=order.id,
-            )
-
     async def create_notification_requisite_order_request_two_sided_edit_value_finish(
             self,
             order_request: OrderRequest,
@@ -978,21 +997,6 @@ class NotificationService(BaseService):
                 account=account,
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_request_two_sided_cancel_finish',
-                requisite_id=requisite.id,
-                order_id=order.id,
-            )
-
-    async def create_notification_requisite_order_request_two_sided_recreate_finish(
-            self,
-            order_request: OrderRequest,
-    ):
-        order = order_request.order
-        requisite = order.requisite
-        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
-            await self.create(
-                account=account,
-                notification_type=NotificationTypes.REQUISITE,
-                text_key='notification_requisite_order_request_two_sided_recreate_finish',
                 requisite_id=requisite.id,
                 order_id=order.id,
             )
@@ -1027,24 +1031,28 @@ class NotificationService(BaseService):
                 order_id=order.id,
             )
 
-    async def create_notification_requisite_order_request_two_sided_recreate_cancel(
-            self,
-            order_request: OrderRequest,
-    ):
-        order = order_request.order
-        requisite = order.requisite
-        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
-            await self.create(
-                account=account,
-                notification_type=NotificationTypes.REQUISITE,
-                text_key='notification_requisite_order_request_two_sided_recreate_cancel',
-                requisite_id=requisite.id,
-                order_id=order.id,
-            )
+    """
+    CHAT
+    """
 
-    """
-    OTHER
-    """
+    async def create_notification_chat_order_new_message(
+            self,
+            order: Order,
+            black_list: list
+    ):
+        if not black_list:
+            black_list = []
+        for wallet in [order.request.wallet, order.requisite.wallet]:
+            for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=wallet):
+                if account.id in black_list:
+                    continue
+                await self.create(
+                    account=account,
+                    notification_type=NotificationTypes.CHAT,
+                    text_key='notification_chat_order_new_message',
+                    order_id=order.id,
+                )
+                black_list.append(account.id)
 
     async def create_notification_by_wallet(
             self,

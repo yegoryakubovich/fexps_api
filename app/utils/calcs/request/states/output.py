@@ -44,6 +44,7 @@ async def request_check_state_output(request: Request):
         await TransferSystemService().payment_difference(request=request, value=difference, from_banned_value=True)
         difference_rate += difference
     await RequestRepository().update(request, state=RequestStates.COMPLETED, difference_rate=difference_rate)
+    await NotificationService().create_notification_request_complete(request=request)
     await NotificationService().create_notification_by_wallet(
         wallet=request.wallet,
         notification_type=NotificationTypes.REQUEST,

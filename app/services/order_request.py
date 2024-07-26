@@ -144,7 +144,7 @@ class OrderRequestService(BaseService):
                 await NotificationService().create_notification_request_order_request_two_sided_recreate_request(
                     order_request=order_request,
                 )
-                await NotificationService().create_notification_requisite_order_request_two_sided_recreate_request(
+                await NotificationService().create_notification_requisite_order_request_two_sided_cancel_request(
                     order_request=order_request,
                 )
             elif type_ == OrderRequestTypes.UPDATE_VALUE:
@@ -154,18 +154,6 @@ class OrderRequestService(BaseService):
                 await NotificationService().create_notification_requisite_order_request_two_sided_edit_value_request(
                     order_request=order_request,
                 )
-            # await NotificationService().create_notification_by_wallet(
-            #     wallet=order.request.wallet,
-            #     notification_type=NotificationTypes.ORDER,
-            #     text_key=f'notification_order_request_create_{type_}',
-            #     order_id=order.id,
-            # )
-            # await NotificationService().create_notification_by_wallet(
-            #     wallet=order.requisite.wallet,
-            #     notification_type=NotificationTypes.ORDER,
-            #     text_key=f'notification_order_request_create_{type_}',
-            #     order_id=order.id,
-            # )
         await self.create_action(
             model=order_request,
             action=Actions.CREATE,
@@ -397,21 +385,21 @@ class OrderRequestService(BaseService):
                 await NotificationService().create_notification_request_order_request_one_sided_recreate_finish(
                     order_request=order_request,
                 )
-                await NotificationService().create_notification_requisite_order_request_one_sided_recreate_finish(
+                await NotificationService().create_notification_requisite_order_request_one_sided_cancel_finish(
                     order_request=order_request,
                 )
             elif canceled_reason == OrderCanceledReasons.TWO_SIDED:
                 await NotificationService().create_notification_request_order_request_two_sided_recreate_finish(
                     order_request=order_request,
                 )
-                await NotificationService().create_notification_requisite_order_request_two_sided_recreate_finish(
+                await NotificationService().create_notification_requisite_order_request_two_sided_cancel_finish(
                     order_request=order_request,
                 )
         elif state == OrderRequestStates.CANCELED:
             await NotificationService().create_notification_request_order_request_two_sided_recreate_cancel(
                 order_request=order_request,
             )
-            await NotificationService().create_notification_requisite_order_request_two_sided_recreate_cancel(
+            await NotificationService().create_notification_requisite_order_request_two_sided_cancel_cancel(
                 order_request=order_request,
             )
         await OrderRequestRepository().update(order_request, state=state)

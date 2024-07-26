@@ -17,7 +17,7 @@
 
 from typing import Optional
 
-from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions, NotificationTypes
+from app.db.models import Message, Session, Actions, OrderTypes, MessageUserPositions
 from app.repositories import MessageRepository, OrderRepository, WalletAccountRepository, MessageFileRepository, \
     OrderFileRepository, FileKeyRepository
 from app.services.action import ActionService
@@ -42,6 +42,7 @@ class MessageService(BaseService):
             role: Optional[str] = None,
             text: Optional[str] = None,
             files_key: Optional[str] = None,
+            from_code: bool = False,
     ):
         account = session.account
         order = await OrderRepository().get_by_id(id_=order_id)
@@ -70,20 +71,8 @@ class MessageService(BaseService):
                     continue
                 await OrderFileRepository().create_not_exists(order=order, file=file_key.file)
                 await MessageFileRepository().create_not_exists(message=message, file=file_key.file)
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.request.wallet,
-        #     notification_type=NotificationTypes.CHAT,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_chat_new_message',
-        #     order_id=order.id,
-        # )
-        # await NotificationService().create_notification_by_wallet(
-        #     wallet=order.requisite.wallet,
-        #     notification_type=NotificationTypes.CHAT,
-        #     account_id_black_list=[account.id],
-        #     text_key='notification_chat_new_message',
-        #     order_id=order.id,
-        # )
+        if not from_code:
+            await NotificationService().create_notification_chat_order_new_message(order=order, black_list=[account.id])
         return await self.generate_message_dict(message=message)
 
     @session_required()
@@ -145,7 +134,14 @@ class MessageService(BaseService):
             text: str = None,
             files_key: str = None,
     ):
-        message = await self.chat(token=token, order_id=order_id, text=text, role=role, files_key=files_key)
+        message = await self.chat(
+            token=token,
+            order_id=order_id,
+            text=text,
+            role=role,
+            files_key=files_key,
+            from_code=True,
+        )
         await chat_connections_manager_fastapi.send(data=message, order_id=order_id)
 
     @staticmethod
