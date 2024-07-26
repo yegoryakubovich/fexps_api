@@ -724,6 +724,8 @@ class RequestService(BaseService):
             output_currency = request.output_method.currency.id_str.upper()
         input_orders, output_orders = [], []
         for i, order in enumerate(await OrderRepository().get_list(request=request)):
+            if order.state == OrderStates.CANCELED:
+                continue
             method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
             currency_value: str = value_to_str(
                 value=value_to_float(value=order.currency_value, decimal=method.currency.decimal),
