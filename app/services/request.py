@@ -714,12 +714,14 @@ class RequestService(BaseService):
                 value=request.output_currency_value,
                 decimal=request.output_method.currency.decimal,
             )
-        input_method = None
+        input_method, input_currency = None, None
         if request.input_method:
             input_method = request.input_method.name_text.value_default
-        output_method = None
+            input_currency = request.input_method.currency.id_str.upper()
+        output_method, output_currency = None, None
         if request.output_method:
             output_method = request.output_method.name_text.value_default
+            output_currency = request.output_method.currency.id_str.upper()
         input_orders, output_orders = [], []
         for i, order in enumerate(await OrderRepository().get_list(request=request)):
             method = order.request.input_method if order.type == OrderTypes.INPUT else order.request.output_method
@@ -756,8 +758,10 @@ class RequestService(BaseService):
             confirmation_delta=request_dict['confirmation_delta'],
             rate_fixed_delta=request_dict['rate_fixed_delta'],
             input_method=input_method,
+            input_currency=input_currency,
             input_orders='\n'.join(input_orders),
             output_method=output_method,
+            output_currency=output_currency,
             output_orders='\n'.join(output_orders),
         )
 
@@ -783,9 +787,17 @@ class RequestService(BaseService):
                 value=request.output_currency_value,
                 decimal=request.output_method.currency.decimal,
             )
+        input_currency = None
+        if request.input_method:
+            input_currency = request.input_method.currency.id_str.upper()
+        output_currency = None
+        if request.output_method:
+            output_currency = request.output_method.currency.id_str.upper()
         return account_client_text.value.format(
             type=request.type,
             state='create',
+            input_currency=input_currency,
+            output_currency=output_currency,
             input_currency_value=input_currency_value,
             input_value=input_value,
             output_value=output_value,
