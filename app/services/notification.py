@@ -52,17 +52,21 @@ class NotificationService(BaseService):
             return
         if not notification_setting.is_active:
             return
-        if notification_type == NotificationTypes.SYSTEM and not notification_setting.is_system:
-            return
-        if notification_type == NotificationTypes.REQUEST and not notification_setting.is_request:
-            return
-        if notification_type == NotificationTypes.REQUISITE and not notification_setting.is_requisite:
-            return
-        if notification_type == NotificationTypes.CHAT and not notification_setting.is_chat:
-            return
-        if notification_type == NotificationTypes.TRANSFER and not notification_setting.is_transfer:
-            return
-
+        if notification_type == NotificationTypes.SYSTEM:
+            if not notification_setting.is_system or not notification_setting.is_system_telegram:
+                return
+        if notification_type == NotificationTypes.REQUEST:
+            if not notification_setting.is_request or not notification_setting.is_request_telegram:
+                return
+        if notification_type == NotificationTypes.REQUISITE:
+            if not notification_setting.is_requisite or not notification_setting.is_requisite_telegram:
+                return
+        if notification_type == NotificationTypes.CHAT:
+            if not notification_setting.is_chat or not notification_setting.is_chat_telegram:
+                return
+        if notification_type == NotificationTypes.TRANSFER:
+            if not notification_setting.is_transfer or not notification_setting.is_transfer_telegram:
+                return
         text = await TextRepository().get_by_key_or_none(key=text_key, language=account.language)
         if kwargs:
             text = text.format(**kwargs)
