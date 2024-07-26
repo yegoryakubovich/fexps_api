@@ -413,12 +413,12 @@ class RequisiteService(BaseService):
             if active_order:
                 continue
             await RequisiteRepository().update(requisite, state=RequisiteStates.STOP)
-            await NotificationService().create_notification_by_wallet(
-                wallet=requisite.wallet,
-                notification_type=NotificationTypes.REQUISITE,
-                text_key='notification_requisite_auto_update_state_stop',
-                requisite_id=requisite.id,
-            )
+            # await NotificationService().create_notification_by_wallet(
+            #     wallet=requisite.wallet,
+            #     notification_type=NotificationTypes.REQUISITE,
+            #     text_key='notification_requisite_auto_update_state_stop',
+            #     requisite_id=requisite.id,
+            # )
         return {}
 
     @staticmethod

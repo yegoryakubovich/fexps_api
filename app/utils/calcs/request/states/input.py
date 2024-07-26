@@ -17,8 +17,7 @@
 
 import logging
 
-from app.db.models import Request, RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons, \
-    NotificationTypes
+from app.db.models import Request, RequestStates, OrderTypes, OrderStates, RequestTypes, WalletBanReasons
 from app.repositories import RequestRepository, OrderRepository, WalletBanRequestRepository
 from app.services.notification import NotificationService
 from app.services.transfer_system import TransferSystemService
@@ -46,9 +45,7 @@ async def request_check_state_input(request: Request):
         await TransferSystemService().payment_difference(request=request, value=difference, from_banned_value=True)
         difference_rate += difference
     await TransferSystemService().payment_commission(request=request, from_banned_value=True)
-    next_state = RequestStates.OUTPUT_RESERVATION
     if request.type == RequestTypes.INPUT:
-        next_state = RequestStates.COMPLETED
         result_input_value = request.input_value - request.commission
         wallet_ban = await WalletBanService().create_related(
             wallet=request.wallet,
@@ -56,11 +53,14 @@ async def request_check_state_input(request: Request):
             reason=WalletBanReasons.BY_REQUEST,
         )
         await WalletBanRequestRepository().create(wallet_ban=wallet_ban, request=request)
-    logging.info(f'Request #{request.id}    {request.state}->{next_state}')
-    await RequestRepository().update(request, state=next_state, difference_rate=difference_rate)
-    await NotificationService().create_notification_by_wallet(
-        wallet=request.wallet,
-        notification_type=NotificationTypes.REQUEST,
-        text_key=f'notification_request_update_state_{next_state}',
-        request_id=request.id,
-    )
+    if request.type == RequestTypes.INPUT:
+        logging.info(f'Request #{request.id}    {request.state}->{RequestStates.COMPLETED}')
+        await RequestRepository().update(request, state=RequestStates.COMPLETED, difference_rate=difference_rate)
+        await NotificationService().create_notification_request_complete(request=request)
+    else:
+        logging.info(f'Request #{request.id}    {request.state}->{RequestStates.OUTPUT_RESERVATION}')
+        await RequestRepository().update(
+            request,
+            state=RequestStates.OUTPUT_RESERVATION,
+            difference_rate=difference_rate,
+        )

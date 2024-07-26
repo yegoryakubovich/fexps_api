@@ -17,7 +17,7 @@
 
 import logging
 
-from app.db.models import Request, RequestStates, OrderTypes, OrderStates, NotificationTypes
+from app.db.models import Request, RequestStates, OrderTypes, OrderStates
 from app.repositories import RequestRepository, OrderRepository
 from app.services.notification import NotificationService
 from app.services.transfer_system import TransferSystemService
@@ -45,9 +45,3 @@ async def request_check_state_output(request: Request):
         difference_rate += difference
     await RequestRepository().update(request, state=RequestStates.COMPLETED, difference_rate=difference_rate)
     await NotificationService().create_notification_request_complete(request=request)
-    await NotificationService().create_notification_by_wallet(
-        wallet=request.wallet,
-        notification_type=NotificationTypes.REQUEST,
-        text_key=f'notification_request_update_state_{RequestStates.COMPLETED}',
-        request_id=request.id,
-    )

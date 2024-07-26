@@ -23,8 +23,8 @@ from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaDocument, FSInputFile
 
-from app.db.models import NotificationSetting, Session, Actions, NotificationStates, Wallet, Account, NotificationTypes, \
-    Requisite, RequestTypes, Request, Order, File, MethodFieldTypes, OrderRequest
+from app.db.models import NotificationSetting, Session, Actions, NotificationStates, Account, NotificationTypes, \
+    Requisite, RequestTypes, Request, Order, File, MethodFieldTypes, OrderRequest, Transfer
 from app.repositories import NotificationSettingRepository, NotificationHistoryRepository, TextRepository, \
     WalletAccountRepository, NotificationHistoryFileRepository, FileRepository
 from app.services.base import BaseService
@@ -1061,22 +1061,28 @@ class NotificationService(BaseService):
                 )
                 black_list.append(account.id)
 
-    async def create_notification_by_wallet(
-            self,
-            wallet: Wallet,
-            notification_type: str,
-            text_key: str,
-            account_id_black_list: list[int] = None,
-            **kwargs,
-    ):
-        if not account_id_black_list:
-            account_id_black_list = []
-        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=wallet):
-            if account.id in account_id_black_list:
-                continue
+    """
+    TRANSFER
+    """
+
+    async def create_notification_transfer_send(self, transfer: Transfer):
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=transfer.wallet_from):
             await self.create(
                 account=account,
-                notification_type=notification_type,
-                text_key=text_key,
-                **kwargs,
+                notification_type=NotificationTypes.CHAT,
+                text_key='notification_transfer_send',
+                value=value_to_str(value_to_float(value=transfer.value)),
+                coin_name=settings.coin_name,
+                wallet_to_id=transfer.wallet_to_id,
+            )
+
+    async def create_notification_transfer_receive(self, transfer: Transfer):
+        for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=transfer.wallet_to):
+            await self.create(
+                account=account,
+                notification_type=NotificationTypes.CHAT,
+                text_key='notification_transfer_receive',
+                value=value_to_str(value_to_float(value=transfer.value)),
+                coin_name=settings.coin_name,
+                wallet_from_id=transfer.wallet_from_id,
             )
