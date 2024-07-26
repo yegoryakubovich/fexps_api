@@ -16,7 +16,6 @@
 
 
 import asyncio
-import logging
 from typing import Optional, List
 
 from aiogram import Bot
@@ -357,7 +356,7 @@ class NotificationService(BaseService):
     SYSTEM
     """
 
-    async def create_notification_global_session_new_auth(self, account: Account):
+    async def create_notification_system_session_new_auth(self, account: Account):
         await self.create(
             account=account,
             notification_type=NotificationTypes.SYSTEM,
@@ -527,6 +526,8 @@ class NotificationService(BaseService):
         currency = order.requisite.currency
         method = order.requisite.input_method or order.requisite.output_method
         requisite_fields, input_fields = order.requisite_fields, order.input_fields
+        if not input_fields:
+            input_fields = {}
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=request.wallet):
             requisite_data = []
             for item in order.requisite_scheme_fields:
@@ -825,6 +826,8 @@ class NotificationService(BaseService):
         currency = requisite.currency
         method = requisite.input_method or requisite.output_method
         requisite_fields, input_fields = order.requisite_fields, order.input_fields
+        if not input_fields:
+            input_fields = {}
         for account in await WalletAccountRepository().get_accounts_by_wallet(wallet=requisite.wallet):
             requisite_data = []
             for item in order.requisite_scheme_fields:
@@ -848,10 +851,6 @@ class NotificationService(BaseService):
                     payment_data.append(f'4.{i}. {field_name}: Image')
                 else:
                     payment_data.append(f'4.{i}. {field_name}: <code>{field_value}</code>')
-            logging.critical(requisite_fields)
-            logging.critical(requisite_data)
-            logging.critical(input_fields)
-            logging.critical(payment_data)
             await self.create(
                 account=account,
                 notification_type=NotificationTypes.REQUISITE,
@@ -887,6 +886,7 @@ class NotificationService(BaseService):
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_input_complete',
                 requisite_id=requisite.id,
+                order_id=order.id,
             )
 
     async def create_notification_requisite_order_output_complete(self, order: Order):
@@ -897,6 +897,7 @@ class NotificationService(BaseService):
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_output_complete',
                 requisite_id=requisite.id,
+                order_id=order.id,
             )
 
     async def create_notification_requisite_order_input_reject(self, order: Order):
@@ -907,6 +908,7 @@ class NotificationService(BaseService):
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_input_reject',
                 requisite_id=requisite.id,
+                order_id=order.id,
             )
 
     async def create_notification_requisite_order_output_reject(self, order: Order):
@@ -917,6 +919,7 @@ class NotificationService(BaseService):
                 notification_type=NotificationTypes.REQUISITE,
                 text_key='notification_requisite_order_output_reject',
                 requisite_id=requisite.id,
+                order_id=order.id,
             )
 
     async def create_notification_requisite_order_request_one_sided_cancel_finish(
@@ -1042,7 +1045,7 @@ class NotificationService(BaseService):
     async def create_notification_chat_order_new_message(
             self,
             order: Order,
-            black_list: list
+            black_list: Optional[list] = None,
     ):
         if not black_list:
             black_list = []
