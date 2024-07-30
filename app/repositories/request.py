@@ -32,9 +32,17 @@ class RequestRepository(BaseRepository[Request]):
         custom_order = self.model.id.asc()
         return await self.get_list(custom_order=custom_order, **filters)
 
-    async def get_list_not_finished(self, **filters) -> List[Request]:
-        custom_where = or_(self.model.state == RequestStates.INPUT, self.model.state == RequestStates.INPUT_RESERVATION)
+    async def get_active(self, **filters) -> List[Request]:
+        active_states = [
+            RequestStates.CONFIRMATION,
+            RequestStates.INPUT_RESERVATION,
+            RequestStates.INPUT,
+            RequestStates.OUTPUT_RESERVATION,
+            RequestStates.OUTPUT,
+        ]
+        custom_where = self.model.state.in_(active_states)
         return await self.get_list(custom_where=custom_where, **filters)
+
 
     async def search(
             self,

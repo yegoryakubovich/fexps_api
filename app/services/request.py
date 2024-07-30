@@ -470,7 +470,7 @@ class RequestService(BaseService):
     @session_required(permissions=['requests'], can_root=True)
     async def rate_fixed_by_task(self, session: Session):
         time_now = datetime.datetime.now(datetime.timezone.utc)
-        for request in await RequestRepository().get_list_not_finished(rate_fixed=True):
+        for request in await RequestRepository().get_active(rate_fixed=True):
             request_action = await ActionService().get_action(
                 model=request,
                 action=Actions.UPDATE,

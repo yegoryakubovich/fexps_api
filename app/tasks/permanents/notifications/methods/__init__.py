@@ -13,18 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from app.utils import Router
-from .methods import router as router_methods
-from .send import router as router_send
-
-
-router = Router(
-    prefix='/notifications',
-    routes_included=[
-        router_send,
-        router_methods,
-    ],
-    tags=['Notifications'],
-)

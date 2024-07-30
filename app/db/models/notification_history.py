@@ -40,10 +40,25 @@ class NotificationHistory(Base):
     __tablename__ = 'notifications_histories'
 
     id = Column(BigInteger, primary_key=True)
-    notification_setting_id = Column(BigInteger, ForeignKey('notifications_settings.id', ondelete='SET NULL'))
+    notification_setting_id = Column(
+        BigInteger,
+        ForeignKey('notifications_settings.id', ondelete='SET NULL'),
+        nullable=True,
+    )
     notification_setting = relationship(
         'NotificationSetting',
         foreign_keys=notification_setting_id,
+        uselist=False,
+        lazy='selectin',
+    )
+    notification_method_id = Column(
+        BigInteger,
+        ForeignKey('notifications_methods.id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    notification_method = relationship(
+        'NotificationMethod',
+        foreign_keys=notification_method_id,
         uselist=False,
         lazy='selectin',
     )

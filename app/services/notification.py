@@ -67,7 +67,7 @@ class NotificationService(BaseService):
             if not notification_setting.is_transfer or not notification_setting.is_transfer_telegram:
                 return
         text = await TextRepository().get_by_key_or_none(key=text_key, language=account.language)
-        text = value_replace(value=text, **kwargs)
+        text = value_replace(text, **kwargs)
         notification_history = await NotificationHistoryRepository().create(
             notification_setting=notification_setting,
             type=notification_type,
@@ -249,7 +249,10 @@ class NotificationService(BaseService):
     @session_required(permissions=['notifications'], can_root=True)
     async def send_notification_by_task(self, session: Session):
         bot = Bot(token=settings.telegram_token)
-        for notification_history in await NotificationHistoryRepository().get_list(state=NotificationStates.WAIT):
+        for notification_history in await NotificationHistoryRepository().get_list(
+                state=NotificationStates.WAIT,
+                notification_method=None,
+        ):
             notification_setting = notification_history.notification_setting
             account = notification_setting.account
             state = NotificationStates.SUCCESS
@@ -307,7 +310,7 @@ class NotificationService(BaseService):
                 model=notification_history,
                 action=Actions.UPDATE,
                 parameters={
-                    'notification_history': notification_history.id,
+                    'notification_setting': notification_setting.id,
                     'state': state,
                     'error': error,
                 },

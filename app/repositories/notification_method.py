@@ -15,16 +15,9 @@
 #
 
 
-from app.utils import Router
-from .methods import router as router_methods
-from .send import router as router_send
+from app.db.models import NotificationMethod
+from app.repositories.base import BaseRepository
 
 
-router = Router(
-    prefix='/notifications',
-    routes_included=[
-        router_send,
-        router_methods,
-    ],
-    tags=['Notifications'],
-)
+class NotificationMethodRepository(BaseRepository[NotificationMethod]):
+    model = NotificationMethod

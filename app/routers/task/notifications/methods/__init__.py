@@ -16,15 +16,12 @@
 
 
 from app.utils import Router
-from .methods import router as router_methods
 from .send import router as router_send
 
 
 router = Router(
-    prefix='/notifications',
+    prefix='/methods',
     routes_included=[
         router_send,
-        router_methods,
     ],
-    tags=['Notifications'],
 )

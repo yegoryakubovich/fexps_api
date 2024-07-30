@@ -39,7 +39,7 @@ def value_to_str(value: Optional[float]) -> Optional[str]:
     return f'{float(value):_}'.replace('_', ' ')
 
 
-def value_replace(value: str, **kwargs):
+def value_replace(value_: str, **kwargs):
     for key, item in kwargs.items():
-        value = value.replace('{' + str(key) + '}', str(item))
-    return value
+        value_ = value_.replace('{' + str(key) + '}', str(item))
+    return value_

@@ -15,16 +15,24 @@
 #
 
 
-from app.utils import Router
-from .methods import router as router_methods
-from .send import router as router_send
+from fastapi import Depends
+from pydantic import Field, BaseModel
+
+from app.services.notification import NotificationService
+from app.services.notification_method import NotificationMethodService
+from app.utils import Router, Response
 
 
 router = Router(
-    prefix='/notifications',
-    routes_included=[
-        router_send,
-        router_methods,
-    ],
-    tags=['Notifications'],
+    prefix='/send',
 )
+
+
+class TelegramSendNotificationSchema(BaseModel):
+    token: str = Field(min_length=32, max_length=64)
+
+
+@router.get()
+async def route(schema: TelegramSendNotificationSchema = Depends()):
+    result = await NotificationMethodService().send_notification_by_task(token=schema.token)
+    return Response(**result)

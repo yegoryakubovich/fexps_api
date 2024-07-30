@@ -41,6 +41,7 @@ from .text_translation import TextTranslation
 from .wallet import Wallet
 
 from .account import Account
+from .notification_method import NotificationMethod
 from .role_permission import RolePermission
 from .transfer import Transfer, TransferTypes
 from .wallet_ban import WalletBan, WalletBanReasons

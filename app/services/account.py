@@ -220,7 +220,7 @@ class AccountService(BaseService):
         await AccountRepository().update(account, password_salt=password_salt, password_hash=password_hash)
         await NotificationService().create(
             account=account,
-            notification_type=NotificationTypes.GLOBAL,
+            notification_type=NotificationTypes.SYSTEM,
             text_key='notification_global_password_change',
         )
         action_parameters = {

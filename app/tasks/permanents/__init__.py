@@ -21,6 +21,7 @@ from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from app.tasks.permanents.files.keys.close_check import file_key_close_check
+from app.tasks.permanents.notifications.methods.send import notification_method_send
 from app.tasks.permanents.notifications.send import notification_send
 from app.tasks.permanents.rates.keep import rate_keep
 from app.tasks.permanents.rates.keep_pair import rate_keep_pair
@@ -55,9 +56,10 @@ TASKS += [
 TASKS += [
     empty_check,
 ]
-# Telegram
+# Notification
 TASKS += [
     notification_send,
+    notification_method_send,
 ]
 
 

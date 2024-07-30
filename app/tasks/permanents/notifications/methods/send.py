@@ -15,16 +15,17 @@
 #
 
 
-from app.utils import Router
-from .methods import router as router_methods
-from .send import router as router_send
+import asyncio
+import logging
+
+from app.tasks.permanents.utils.fexps_api_client import fexps_api_client
 
 
-router = Router(
-    prefix='/notifications',
-    routes_included=[
-        router_send,
-        router_methods,
-    ],
-    tags=['Notifications'],
-)
+async def notification_method_send():
+    logging.info('Start notification_method_send')
+    while True:
+        try:
+            await fexps_api_client.task.notifications.methods.send()
+            await asyncio.sleep(2)
+        except ValueError as e:
+            logging.critical(f'Exception \n {e}')
