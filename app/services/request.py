@@ -269,7 +269,7 @@ class RequestService(BaseService):
                 )
             )
         return {
-            'request': await self.generate_request_dict(request=request)
+            'request': await self.generate_request_dict(request=request, account=account),
         }
 
     @session_required()
@@ -300,11 +300,11 @@ class RequestService(BaseService):
             is_partner=is_partner,
             page=page,
         )
-        requests = []
-        for _request in _requests:
-            requests.append(await self.generate_request_dict(request=_request))
         return {
-            'requests': requests,
+            'requests': [
+                await self.generate_request_dict(request=_request, account=account)
+                for _request in _requests
+            ],
             'results': results,
             'pages': ceil(results / settings.items_per_page),
             'page': page,
@@ -645,27 +645,7 @@ class RequestService(BaseService):
                 )
         return {}
 
-    @staticmethod
-    async def generate_request_dict(request: Request) -> dict:
-        create_action = await ActionService().get_action(model=request, action=Actions.CREATE)
-        date = create_action.datetime.strftime(settings.datetime_format)
-        confirmation_delta = None
-        if request.state == RequestStates.CONFIRMATION and create_action:
-            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_create = create_action.datetime.replace(tzinfo=datetime.timezone.utc)
-            time_delta = datetime.timedelta(minutes=settings.request_confirmation_check)
-            confirmation_delta = (time_delta - (time_now - time_create)).seconds
-        update_action = await ActionService().get_action(
-            model=request,
-            action=Actions.UPDATE,
-            state=RequestStates.INPUT_RESERVATION,
-        )
-        rate_fixed_delta = None
-        if request.rate_fixed and update_action:
-            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
-            time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
-            time_delta = datetime.timedelta(minutes=settings.request_rate_fixed_minutes)
-            rate_fixed_delta = (time_delta - (time_now - time_update)).seconds
+    async def generate_request_dict(self, request: Request, account: Account = None) -> dict:
         input_method = None
         if request.input_method:
             input_method = await MethodService().generate_method_dict(method=request.input_method)
@@ -675,6 +655,9 @@ class RequestService(BaseService):
                 requisite_data=request.output_requisite_data,
             )
             output_method = await MethodService().generate_method_dict(method=request.output_method)
+        client_text = None
+        if account:
+            client_text = await self.get_client_text(request=request, account=account)
         return {
             'id': request.id,
             'name': request.name,
@@ -696,9 +679,8 @@ class RequestService(BaseService):
             'output_value': request.output_value,
             'output_rate': request.output_rate,
             'output_currency_value': request.output_currency_value,
-            'date': date,
-            'confirmation_delta': confirmation_delta,
-            'rate_fixed_delta': rate_fixed_delta,
+            'client_text': client_text,
+            **await self.get_time_deltas(request=request),
         }
 
     async def get_client_text(self, request: Request, account: Account) -> str:
@@ -708,7 +690,6 @@ class RequestService(BaseService):
         )
         if not account_client_text or not account_client_text.value:
             return ''
-        request_dict = await self.generate_request_dict(request=request)
         input_currency_value = None
         if request.input_currency_value:
             input_currency_value = value_to_float(
@@ -769,9 +750,7 @@ class RequestService(BaseService):
             output_value=output_value,
             output_rate=output_rate,
             output_currency_value=output_currency_value,
-            date=request_dict['date'],
-            confirmation_delta=request_dict['confirmation_delta'],
-            rate_fixed_delta=request_dict['rate_fixed_delta'],
+            **await self.get_time_deltas(request=request),
             input_method=input_method,
             input_currency=input_currency,
             input_orders='\n'.join(input_orders),
@@ -834,3 +813,30 @@ class RequestService(BaseService):
                 'rate_fixed': False,
             },
         )
+
+    @staticmethod
+    async def get_time_deltas(request: Request) -> dict:
+        create_action = await ActionService().get_action(model=request, action=Actions.CREATE)
+        date = create_action.datetime.strftime(settings.datetime_format)
+        confirmation_delta = None
+        if request.state == RequestStates.CONFIRMATION and create_action:
+            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
+            time_create = create_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_delta = datetime.timedelta(minutes=settings.request_confirmation_check)
+            confirmation_delta = (time_delta - (time_now - time_create)).seconds
+        update_action = await ActionService().get_action(
+            model=request,
+            action=Actions.UPDATE,
+            state=RequestStates.INPUT_RESERVATION,
+        )
+        rate_fixed_delta = None
+        if request.rate_fixed and update_action:
+            time_now = datetime.datetime.now(tz=datetime.timezone.utc)
+            time_update = update_action.datetime.replace(tzinfo=datetime.timezone.utc)
+            time_delta = datetime.timedelta(minutes=settings.request_rate_fixed_minutes)
+            rate_fixed_delta = (time_delta - (time_now - time_update)).seconds
+        return {
+            'date': date,
+            'confirmation_delta': confirmation_delta,
+            'rate_fixed_delta': rate_fixed_delta,
+        }

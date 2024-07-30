@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     path_telegram: str = 'assets/telegram'
 
     items_per_page: int = 10
-    request_confirmation_check: int = 5
+    request_confirmation_check: int = 30
     request_rate_fixed_minutes: int = 60
     file_key_close_minutes: int = 60
     rate_actual_minutes: int = 120

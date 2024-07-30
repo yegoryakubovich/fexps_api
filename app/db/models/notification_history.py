@@ -51,17 +51,6 @@ class NotificationHistory(Base):
         uselist=False,
         lazy='selectin',
     )
-    notification_method_id = Column(
-        BigInteger,
-        ForeignKey('notifications_methods.id', ondelete='SET NULL'),
-        nullable=True,
-    )
-    notification_method = relationship(
-        'NotificationMethod',
-        foreign_keys=notification_method_id,
-        uselist=False,
-        lazy='selectin',
-    )
     type = Column(String(length=32))
     state = Column(String(length=32))
     text = Column(Text)
