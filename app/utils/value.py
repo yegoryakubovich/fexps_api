@@ -13,8 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import logging
 from typing import Optional
 
 
@@ -38,3 +37,9 @@ def value_to_str(value: Optional[float]) -> Optional[str]:
     if not value and value != 0:
         return ''
     return f'{float(value):_}'.replace('_', ' ')
+
+
+def value_replace(value: str, **kwargs):
+    for key, item in kwargs.items():
+        value = value.replace('{' + str(key) + '}', str(item))
+    return value

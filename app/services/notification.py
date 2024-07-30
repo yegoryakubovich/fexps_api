@@ -31,7 +31,7 @@ from app.services.base import BaseService
 from app.utils.crypto import create_id_str
 from app.utils.decorators import session_required
 from app.utils.exceptions import NotificationTelegramAlreadyLinked, NotificationAccountNotFound
-from app.utils.value import value_to_float, value_to_str
+from app.utils.value import value_to_float, value_to_str, value_replace
 from config import settings
 
 
@@ -67,8 +67,7 @@ class NotificationService(BaseService):
             if not notification_setting.is_transfer or not notification_setting.is_transfer_telegram:
                 return
         text = await TextRepository().get_by_key_or_none(key=text_key, language=account.language)
-        if kwargs:
-            text = text.format(**kwargs)
+        text = value_replace(value=text, **kwargs)
         notification_history = await NotificationHistoryRepository().create(
             notification_setting=notification_setting,
             type=notification_type,

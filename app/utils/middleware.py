@@ -23,6 +23,7 @@ from pydantic import ValidationError
 from app.utils import ApiException
 from app.utils.response import ResponseState, Response
 from app.utils.validation_error import validation_error
+from app.utils.value import value_replace
 
 
 class Middleware:
@@ -35,7 +36,7 @@ class Middleware:
                 error={
                     'code': e.code,
                     'kwargs': e.kwargs,
-                    'message': e.message.format(**e.kwargs),
+                    'message': value_replace(e.message, **e.kwargs),
                 }
             )
         except ValidationError as e:

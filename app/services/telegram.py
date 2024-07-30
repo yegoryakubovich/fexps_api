@@ -28,6 +28,7 @@ from app.utils.decorators import session_required
 from app.utils.exceptions import TelegramImagePathNotFound, TelegramMessageNotFound
 from app.utils.telegram_images.fexps import post_create_fexps
 from app.utils.telegram_images.sowapay import post_create_sowapay
+from app.utils.value import value_replace
 from config import settings
 
 
@@ -48,7 +49,8 @@ class TelegramService(BaseService):
                 posts_datas = await post_create_sowapay(commission_pack=commission_pack)
             if not posts_datas:
                 warnings += [
-                    TelegramImagePathNotFound.message.format(
+                    value_replace(
+                        TelegramImagePathNotFound.message,
                         commission_pack_id=commission_pack.id,
                     ),
                 ]
@@ -75,7 +77,8 @@ class TelegramService(BaseService):
                     )
                 if not message:
                     warnings += [
-                        TelegramMessageNotFound.message.format(
+                        value_replace(
+                            TelegramMessageNotFound.message,
                             commission_pack_id=commission_pack.id,
                         ),
                     ]
@@ -108,7 +111,8 @@ class TelegramService(BaseService):
             telegram_post = await TelegramPostRepository().get(commission_pack=commission_pack)
             if not telegram_post:
                 warnings += [
-                    TelegramMessageNotFound.message.format(
+                    value_replace(
+                        TelegramMessageNotFound.message,
                         commission_pack_id=commission_pack.id,
                     ),
                 ]
@@ -121,7 +125,8 @@ class TelegramService(BaseService):
                 posts_datas = await post_create_sowapay(commission_pack=commission_pack)
             if not posts_datas:
                 warnings += [
-                    TelegramImagePathNotFound.message.format(
+                    value_replace(
+                        TelegramImagePathNotFound.message,
                         commission_pack_id=commission_pack.id,
                     ),
                 ]

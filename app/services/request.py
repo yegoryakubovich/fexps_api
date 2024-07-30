@@ -49,7 +49,7 @@ from app.utils.calcs.requisites.need_value.input_currency_value import \
 from app.utils.calcs.requisites.need_value.output_currency_value import calcs_requisites_output_need_currency_value
 from app.utils.decorators import session_required
 from app.utils.exceptions import RequestRateNotFound, RequestStateWrong, RequestStateNotPermission, RequestFoundOrders
-from app.utils.value import value_to_str, value_to_float
+from app.utils.value import value_to_str, value_to_float, value_replace
 from config import settings
 
 
@@ -744,7 +744,8 @@ class RequestService(BaseService):
         if len(output_orders) > 1:
             for i, output_order in enumerate(output_orders):
                 output_orders[i] = f'{i + 1}. {output_order}'
-        return account_client_text.value.format(
+        return value_replace(
+            account_client_text.value,
             name=request.name,
             type=request.type,
             state=request.state,
@@ -795,7 +796,8 @@ class RequestService(BaseService):
         output_currency = None
         if request.output_method:
             output_currency = request.output_method.currency.id_str.upper()
-        return account_client_text.value.format(
+        return value_replace(
+            account_client_text.value,
             type=request.type,
             state='create',
             input_currency=input_currency,
