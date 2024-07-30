@@ -60,6 +60,7 @@ from .notification_history_file import NotificationHistoryFile
 from .request import Request, RequestTypes, RequestStates
 from .requisite import Requisite, RequisiteTypes, RequisiteStates
 
+from .notification_method_history import NotificationMethodHistory, NotificationMethodStates
 from .order import Order, OrderTypes, OrderStates, OrderCanceledReasons
 from .request_requisite import RequestRequisite, RequestRequisiteTypes
 from .wallet_ban_request import WalletBanRequest

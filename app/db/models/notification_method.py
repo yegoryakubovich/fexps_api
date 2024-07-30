@@ -31,6 +31,4 @@ class NotificationMethod(Base):
     language = relationship('Language', foreign_keys=language_id, uselist=False, lazy='selectin')
     telegram_id = Column(BigInteger)
     is_active = Column(Boolean, default=False)
-    is_system = Column(Boolean, default=True)
-    is_requisite = Column(Boolean, default=True)
     is_deleted = Column(Boolean, default=False)

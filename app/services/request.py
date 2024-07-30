@@ -31,6 +31,7 @@ from app.services.base import BaseService
 from app.services.commission_pack_value import CommissionPackValueService
 from app.services.method import MethodService
 from app.services.notification import NotificationService
+from app.services.notification_method import NotificationMethodService
 from app.services.order_request import OrderRequestService
 from app.services.requisite_data import RequisiteDataService
 from app.services.transfer_system import TransferSystemService
@@ -547,6 +548,11 @@ class RequestService(BaseService):
             )
             if not result:
                 logging.info(f'request input reservation #{request.id}    not result')
+                await NotificationMethodService().create_notification_method_requisite_need_input(
+                    value=need_currency_value,
+                    method=request.input_method,
+                    request=request,
+                )
                 continue
             for requisite_item in result.requisite_items:
                 requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)
@@ -622,6 +628,11 @@ class RequestService(BaseService):
                 request=request,
             )
             if not result:
+                await NotificationMethodService().create_notification_method_requisite_need_output(
+                    value=need_currency_value,
+                    method=request.output_method,
+                    request=request,
+                )
                 continue
             for requisite_item in result.requisite_items:
                 requisite = await RequisiteRepository().get_by_id(id_=requisite_item.requisite_id)

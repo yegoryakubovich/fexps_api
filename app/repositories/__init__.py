@@ -36,6 +36,7 @@ from .method import MethodRepository
 from .notification_history import NotificationHistoryRepository
 from .notification_history_file import NotificationHistoryFileRepository
 from .notification_method import NotificationMethodRepository
+from .notification_method_history import NotificationMethodHistoryRepository
 from .notification_setting import NotificationSettingRepository
 from .order import OrderRepository
 from .order_file import OrderFileRepository

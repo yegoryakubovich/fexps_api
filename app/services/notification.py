@@ -21,7 +21,7 @@ from typing import Optional, List
 from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramForbiddenError
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaDocument, FSInputFile
+from aiogram.types import InputMediaDocument, FSInputFile
 
 from app.db.models import NotificationSetting, Session, Actions, NotificationStates, Account, NotificationTypes, \
     Requisite, RequestTypes, Request, Order, File, MethodFieldTypes, OrderRequest, Transfer
@@ -249,10 +249,7 @@ class NotificationService(BaseService):
     @session_required(permissions=['notifications'], can_root=True)
     async def send_notification_by_task(self, session: Session):
         bot = Bot(token=settings.telegram_token)
-        for notification_history in await NotificationHistoryRepository().get_list(
-                state=NotificationStates.WAIT,
-                notification_method=None,
-        ):
+        for notification_history in await NotificationHistoryRepository().get_list(state=NotificationStates.WAIT):
             notification_setting = notification_history.notification_setting
             account = notification_setting.account
             state = NotificationStates.SUCCESS
