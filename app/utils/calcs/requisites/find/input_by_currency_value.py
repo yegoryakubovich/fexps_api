@@ -38,7 +38,12 @@ async def calcs_requisite_input_by_currency_value(
     requisite_params = {'type': RequisiteTypes.OUTPUT, 'output_method': method, 'state': RequisiteStates.ENABLE}
     if process:
         requisite_params['in_process'] = False
-    for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
+    if method.currency.id_str.lower() == 'usd':
+        requisites = await RequisiteRepository().get_list(**requisite_params)
+        requisites = requisites[::-1]
+    else:
+        requisites = await RequisiteRepository().get_list_output_by_rate(**requisite_params)
+    for requisite in requisites:
         await calcs_requisite_process_change(requisite=requisite, in_process=True, process=process)
         if request and await RequestRequisiteRepository().get(
                 request=request,
@@ -90,5 +95,4 @@ async def calcs_requisite_input_by_currency_value(
             process=process,
         )
         return
-
     return RequisiteDataScheme(requisite_items=requisite_items, currency_value=result_currency_value)

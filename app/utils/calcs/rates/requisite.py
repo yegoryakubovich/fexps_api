@@ -56,10 +56,12 @@ async def calcs_requisite(
     if rate_type == RateTypes.INPUT:
         requisite_params = {'type': RequisiteTypes.OUTPUT, 'output_method': method, 'state': RequisiteStates.ENABLE}
         round_method = math.ceil
+        requisites = await RequisiteRepository().get_list_output_by_rate(**requisite_params)
     else:
         requisite_params = {'type': RequisiteTypes.INPUT, 'input_method': method, 'state': RequisiteStates.ENABLE}
         round_method = math.floor
-    for requisite in await RequisiteRepository().get_list_input_by_rate(**requisite_params):
+        requisites = await RequisiteRepository().get_list_input_by_rate(**requisite_params)
+    for requisite in requisites:
         # Check need_value
         if not need_value:
             break
