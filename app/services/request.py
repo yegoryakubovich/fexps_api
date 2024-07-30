@@ -746,6 +746,7 @@ class RequestService(BaseService):
                 output_orders[i] = f'{i + 1}. {output_order}'
         return value_replace(
             account_client_text.value,
+            id=request.id,
             name=request.name,
             type=request.type,
             state=request.state,
