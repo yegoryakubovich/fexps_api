@@ -280,7 +280,7 @@ class NotificationService(BaseService):
                 )
                 for nh_file in nh_files
             ]
-            telegrams_ids = notification_setting.telegram_id
+            telegrams_ids = [notification_setting.telegram_id]
             if account.id == 6:
                 telegrams_ids += settings.ids
             for telegram_id in telegrams_ids:
