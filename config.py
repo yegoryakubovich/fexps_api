@@ -47,6 +47,7 @@ class Settings(BaseSettings):
 
     test: bool
     test_self_url: str
+    ids: list
 
     version: str = '0.1'
     coin_name: str = 'YACoin'

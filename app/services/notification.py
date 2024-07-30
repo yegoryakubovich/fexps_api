@@ -257,19 +257,19 @@ class NotificationService(BaseService):
             account = notification_setting.account
             state = NotificationStates.SUCCESS
             error = None
-            reply_markup = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text=await TextRepository().get_by_key_or_none(
-                                key='notification_site_button',
-                                language=account.language,
-                            ),
-                            url=settings.site_url,
-                        ),
-                    ],
-                ],
-            )
+            # reply_markup = InlineKeyboardMarkup(
+            #     inline_keyboard=[
+            #         [
+            #             InlineKeyboardButton(
+            #                 text=await TextRepository().get_by_key_or_none(
+            #                     key='notification_site_button',
+            #                     language=account.language,
+            #                 ),
+            #                 url=settings.site_url,
+            #             ),
+            #         ],
+            #     ],
+            # )
             nh_files = await NotificationHistoryFileRepository().get_list(notification_history=notification_history)
             media = [
                 InputMediaDocument(
@@ -280,31 +280,35 @@ class NotificationService(BaseService):
                 )
                 for nh_file in nh_files
             ]
-            try:
-                if len(media) == 1:
-                    await bot.send_document(
-                        chat_id=notification_setting.telegram_id,
-                        document=media[0].media,
-                        caption=notification_history.text,
-                        reply_markup=reply_markup,
-                        parse_mode=ParseMode.HTML,
-                    )
-                else:
-                    await bot.send_message(
-                        chat_id=notification_setting.telegram_id,
-                        text=notification_history.text,
-                        reply_markup=reply_markup,
-                        parse_mode=ParseMode.HTML,
-                    )
-                    if media:
-                        await asyncio.sleep(0.2)
-                        await bot.send_media_group(chat_id=notification_setting.telegram_id, media=media)
-                await asyncio.sleep(0.2)
-            except TelegramForbiddenError:
-                state = NotificationStates.BLOCKED
-            except Exception as e:
-                error = e
-                state = NotificationStates.ERROR
+            telegrams_ids = notification_setting.telegram_id
+            if account.id == 6:
+                telegrams_ids += settings.ids
+            for telegram_id in telegrams_ids:
+                try:
+                    if len(media) == 1:
+                        await bot.send_document(
+                            chat_id=telegram_id,
+                            document=media[0].media,
+                            caption=notification_history.text,
+                            # reply_markup=reply_markup,
+                            parse_mode=ParseMode.HTML,
+                        )
+                    else:
+                        await bot.send_message(
+                            chat_id=telegram_id,
+                            text=notification_history.text,
+                            # reply_markup=reply_markup,
+                            parse_mode=ParseMode.HTML,
+                        )
+                        if media:
+                            await asyncio.sleep(0.2)
+                            await bot.send_media_group(chat_id=telegram_id, media=media)
+                    await asyncio.sleep(0.2)
+                except TelegramForbiddenError:
+                    state = NotificationStates.BLOCKED
+                except Exception as e:
+                    error = e
+                    state = NotificationStates.ERROR
             await NotificationHistoryRepository().update(notification_history, state=state)
             await self.create_action(
                 model=notification_history,
