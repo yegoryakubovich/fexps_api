@@ -60,6 +60,7 @@ def get_post_text() -> str:
     date_now = datetime.datetime.now(tz=datetime.timezone.utc)
     return '\n'.join([
         f'С Вами Finance Express! 🐆',
+        f'',
         f'🗓 Наступило {date_now.day} {MONTH_DAY[date_now.month - 1]}!',
         f'Прекрасная возможность обменять деньги по ВЫГОДНОМУ курсу🤝.',
     ])
@@ -68,7 +69,7 @@ def get_post_text() -> str:
 def get_post_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url='http://manager.tg.fexps.com/')],
+            [InlineKeyboardButton(text='➡️ СДЕЛАТЬ ОБМЕН', url='https://t.me/fexps_obmen/')],
             [
                 InlineKeyboardButton(text='🤔 О НАС', url='http://about.tg.fexps.com/'),
                 InlineKeyboardButton(text='💬 ОТЗЫВЫ', url='http://reviews.tg.fexps.com/'),
